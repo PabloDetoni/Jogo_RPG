@@ -1,3 +1,5 @@
+#ALUNOS: Pablo Detoni, Lucas Garcia e Uener Peres
+
 # Documentação do projeto
 
 Esta pasta reúne toda a documentação conceitual do jogo para Análise e Projeto de Sistemas (TI23L) e Desenvolvimento Web 2. Ela substitui qualquer versão anterior de diagramas, requisitos ou especificação; em caso de dúvida, vale o que está aqui.
