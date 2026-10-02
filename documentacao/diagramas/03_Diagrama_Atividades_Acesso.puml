@@ -1,0 +1,60 @@
+@startuml Atividades_Acesso
+title Diagrama de Atividades — Acesso ao jogo
+start
+:Abrir a Tela Inicial\n(nome, apresentação, Como jogar,\nIniciar jogo, Ranking, Configurações);
+note right
+  Ranking, Como jogar e Configurações
+  (som e tema) podem ser abertos aqui, sem conta.
+end note
+:Clicar em "Iniciar jogo";
+if (Como quer jogar?) then (convidado)
+  if (Já existe progresso de convidado neste navegador?) then (sim)
+    :Carregar o progresso de convidado do navegador\n(partida não terminada é apagada);
+  else (não)
+    :Exibir a narrativa inicial;
+    :Escolher a classe inicial\n(cria o primeiro personagem, que é o primeiro Líder);
+  endif
+else (com conta)
+  if (Já tem conta?) then (não)
+    repeat
+      :Preencher e-mail, senha e apelido;
+      backward:Mostrar o que está errado;
+    repeat while (Dados válidos e apelido livre?) is (não) not (sim)
+    :Criar a conta e enviar o e-mail de confirmação;
+    :Jogador confirma o e-mail pelo link recebido;
+  endif
+  repeat
+    :Informar e-mail e senha;
+    if (Esqueceu a senha?) then (sim)
+      :Enviar link de recuperação para o e-mail da conta;
+      :Jogador redefine a senha pelo link;
+    endif
+  repeat while (Credenciais válidas?) is (não) not (sim)
+  if (E-mail confirmado?) then (não)
+    #lightyellow:Avisar e oferecer o reenvio\ndo e-mail de confirmação;
+    stop
+  endif
+  if (Conta já tem sessão ativa?) then (sim)
+    #mistyrose:Notificar "conta em uso"\n(outra máquina ou outra aba);
+    stop
+  endif
+  :Criar sessão ativa e iniciar o heartbeat (a cada 1 min);
+  if (Primeiro acesso da conta?) then (sim)
+    if (Conta criada a partir do modo convidado?) then (sim)
+      :Transferir todo o progresso do convidado para a conta;
+      :Salvar progresso no Supabase;
+    else (não)
+      :Exibir a narrativa inicial;
+      :Escolher a classe inicial\n(cria o primeiro personagem, que é o primeiro Líder);
+    endif
+  else (não)
+    if (Há progresso no navegador com a mesma versão do banco?) then (sim)
+      :Recuperar o progresso do navegador\n(partida não terminada é apagada);
+    else (não)
+      :Carregar o progresso do Supabase;
+    endif
+  endif
+endif
+#palegreen:Entrar no Reino;
+stop
+@enduml

@@ -1,0 +1,48 @@
+@startuml Atividades_Guilda
+title Diagrama de Atividades — Guilda (missões e contratos)
+start
+:Abrir a Guilda no Reino;
+if (Missões ou contratos?) then (missões)
+  if (Tem missão ativa?) then (não)
+    :Escolher uma missão no quadro\n(matar, coletar, entregar ou explorar);
+    :Aceitar a missão (o progresso começa a contar agora);
+    note right
+      O progresso soma entre partidas.
+      Coletar conta ao pegar o item.
+      Explorar exige visitar o local.
+    end note
+  else (sim)
+    switch (O que fazer?)
+    case (Acompanhar)
+      :Ver o progresso da missão;
+    case (Entregar)
+      if (Objetivo cumprido neste momento?) then (sim)
+        if (Missão de entrega?) then (sim)
+          :Consumir os itens exigidos (precisa possuí-los agora);
+        endif
+        #palegreen:Dar a recompensa: ouro e XP\n(XP dividido igualmente entre os personagens permanentes);
+      else (não)
+        :Mostrar o que ainda falta;
+      endif
+    case (Abandonar)
+      :Mostrar a multa (10% do ouro da recompensa);
+      if (Confirmar o abandono?) then (sim)
+        #lightyellow:Cobrar a multa (o ouro nunca fica negativo)\ne encerrar a missão;
+      endif
+    endswitch
+  endif
+else (contratos)
+  :Listar só as classes que o jogador ainda não possui;
+  if (Tipo de contrato?) then (temporário)
+    :Pagar o contrato temporário;
+    :Personagem entra no grupo por N partidas\n(nível e equipamento fixos, não evolui,\nnão recebe XP, não pode ser Líder);
+  else (permanente)
+    :Pagar o contrato permanente;
+    :Criar o personagem no nível 1\n(evolui, aparece nas Árvores e pode ser equipado na Forja);
+    if (Havia temporário da mesma classe?) then (sim)
+      :Encerrar o contrato temporário daquela classe;
+    endif
+  endif
+endif
+stop
+@enduml

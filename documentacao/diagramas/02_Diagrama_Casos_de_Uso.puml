@@ -1,0 +1,125 @@
+@startuml Diagrama_Casos_de_Uso
+' Diagrama de Casos de Uso - versao final (02/10/2026)
+' Troque [Nome do Jogo] pelo nome final quando ele for definido.
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #FFF6E0
+  BorderColor #5A4632
+}
+
+actor "Jogador" as J
+
+rectangle "Sistema: [Nome do Jogo]" {
+
+  package "Informações e preferências" {
+    usecase "UC10\nConsultar instruções do jogo" as UC10
+    usecase "UC11\nVisualizar Ranking" as UC11
+    usecase "UC12\nVisualizar histórico de partidas" as UC12
+    usecase "UC13\nVisualizar conquistas" as UC13
+    usecase "UC14\nConfigurar preferências\n(música, som, tema)" as UC14
+  }
+
+  package "Conta e acesso" {
+    usecase "UC01\nJogar como convidado" as UC01
+    usecase "UC02\nCadastrar conta" as UC02
+    usecase "UC03\nTransferir progresso do convidado" as UC03
+    usecase "UC04\nAutenticar-se" as UC04
+    usecase "UC05\nNotificar conta em uso" as UC05
+    usecase "UC06\nRecuperar senha" as UC06
+    usecase "UC07\nEscolher classe inicial" as UC07
+    usecase "UC08\nEncerrar sessão" as UC08
+  }
+
+  usecase "UC09\nSalvar progresso" as UC09 #E6F0FA
+
+  package "Partida" {
+    usecase "UC26\nIniciar partida" as UC26
+    usecase "UC27\nSelecionar bioma" as UC27
+    usecase "UC28\nEscolher ponto de partida\n(dificuldade)" as UC28
+    usecase "UC29\nSelecionar Líder" as UC29
+    usecase "UC30\nPreparar mochila da partida" as UC30
+    usecase "UC31\nJogar partida" as UC31
+    usecase "UC32\nCombater monstros" as UC32
+    usecase "UC33\nUsar habilidade" as UC33
+    usecase "UC34\nEnfrentar Boss" as UC34
+    usecase "UC35\nExplorar e coletar recursos" as UC35
+    usecase "UC36\nUsar item" as UC36
+    usecase "UC37\nLevantar aliado desmaiado" as UC37
+    usecase "UC38\nPausar partida" as UC38
+    usecase "UC39\nRetornar ao Reino" as UC39
+    usecase "UC40\nFugir com a Pedra de Retorno" as UC40
+    usecase "UC41\nEncerrar partida" as UC41
+    usecase "UC42\nVisualizar resumo da partida" as UC42
+    usecase "UC43\nJogar minijogo do Planalto\n(Fazenda, Mina, Lago)" as UC43
+  }
+
+  package "Reino" {
+    usecase "UC15\nGerenciar Mochila" as UC15
+    usecase "UC16\nNegociar no Mercado" as UC16
+    usecase "UC17\nGerenciar equipamentos (Forja)" as UC17
+    usecase "UC18\nFabricar equipamento" as UC18
+    usecase "UC19\nGerenciar personagens\n(Árvores de Habilidades)" as UC19
+    usecase "UC20\nRedefinir atributos" as UC20
+    usecase "UC21\nGerenciar missões (Guilda)" as UC21
+    usecase "UC22\nAceitar missão" as UC22
+    usecase "UC23\nEntregar missão" as UC23
+    usecase "UC24\nAbandonar missão" as UC24
+    usecase "UC25\nContratar personagem (Guilda)" as UC25
+  }
+}
+
+' ---------- Associações ----------
+J -- UC10
+J -- UC11
+J -- UC13
+J -- UC14
+J -- UC01
+J -- UC02
+J -- UC04
+J -- UC08
+J -- UC26
+J -- UC31
+J -- UC43
+J -- UC15
+J -- UC16
+J -- UC17
+J -- UC19
+J -- UC21
+J -- UC25
+
+' ---------- <<include>> (caso base ..> caso incluído) ----------
+UC03 ..> UC09 : <<include>>
+UC08 ..> UC09 : <<include>>
+UC26 ..> UC27 : <<include>>
+UC26 ..> UC29 : <<include>>
+UC26 ..> UC09 : <<include>>
+UC31 ..> UC41 : <<include>>
+UC41 ..> UC42 : <<include>>
+UC41 ..> UC09 : <<include>>
+
+' ---------- <<extend>> (extensão ..> caso base) ----------
+UC03 ..> UC02 : <<extend>>
+UC05 ..> UC04 : <<extend>>
+UC06 ..> UC04 : <<extend>>
+UC07 ..> UC04 : <<extend>>
+UC07 ..> UC01 : <<extend>>
+UC12 ..> UC11 : <<extend>>
+UC18 ..> UC17 : <<extend>>
+UC20 ..> UC19 : <<extend>>
+UC22 ..> UC21 : <<extend>>
+UC23 ..> UC21 : <<extend>>
+UC24 ..> UC21 : <<extend>>
+UC28 ..> UC26 : <<extend>>
+UC30 ..> UC26 : <<extend>>
+UC32 ..> UC31 : <<extend>>
+UC33 ..> UC32 : <<extend>>
+UC34 ..> UC32 : <<extend>>
+UC35 ..> UC31 : <<extend>>
+UC36 ..> UC31 : <<extend>>
+UC37 ..> UC31 : <<extend>>
+UC38 ..> UC31 : <<extend>>
+UC39 ..> UC31 : <<extend>>
+UC40 ..> UC31 : <<extend>>
+@enduml

@@ -1,0 +1,80 @@
+@startuml Atividades_Partida
+title Diagrama de Atividades — Partida
+start
+:Clicar em "Jogar" no Reino;
+repeat
+  :Mostrar o mapa em ovo;
+  if (Destino?) then (Planalto)
+    :Jogar o minijogo (Fazenda, Mina ou Lago);
+    :Guardar os recursos e dividir o XP entre os personagens permanentes\n(não é partida: sem taxa e sem ranking);
+    :Voltar ao Reino;
+    stop
+  endif
+  :Selecionar o bioma;
+  if (Já descobriu outras regiões deste bioma?) then (sim)
+    :Escolher o ponto de partida\n(Fácil, Média, Difícil ou Muito difícil = domínio do Boss);
+  else (não)
+    :Nascer no ponto inicial (zona segura perto do Reino);
+  endif
+  :Preparação: escolher o Líder (sempre um personagem permanente);
+  if (Levar itens?) then (sim)
+    :Preparar a mochila da partida\n(capacidade pela Força do grupo, fixa durante a partida);
+  endif
+  if (Começar partida?) then (não, voltar)
+    :Voltar ao Reino (não conta como partida);
+    stop
+  endif
+  :Salvar progresso (navegador e, com conta, Supabase);
+  :Carregar o bioma reiniciado\n(todos os personagens possuídos e contratados vão juntos);
+  repeat
+    :Jogo em andamento: explorar, combater, coletar,\nusar habilidades e itens;
+    note right
+      A cada 3 min o progresso é guardado no navegador.
+      Se o navegador fechar no meio, a partida é descartada:
+      nada é ganho nem perdido.
+    end note
+    switch (O que aconteceu?)
+    case (Esc fora de combate)
+      :Pausar: Continuar, Configurações, Como jogar, Voltar ao Reino;
+    case (Personagem desmaiou)
+      :Contagem de 30 s (Ressurreição ou ajuda de 5 s);
+      if (Levantado a tempo?) then (não)
+        if (Era o Líder?) then (sim)
+          :Partida termina: Líder não levantado;
+        else (não)
+          :Pedra de Retorno leva o aliado ao Reino (perdido);
+        endif
+      endif
+    case (Todos desmaiaram)
+      :Cutscene: todos desmaiados;
+    case (Q fora de combate)
+      :Contagem de 15 s\n(volta a 15 s se entrar em combate, Q de novo cancela);
+    case (F)
+      :Mostrar o custo da fuga;
+      if (F de novo (confirmar)?) then (sim)
+        :Contagem de 5 s\n(se todos desmaiarem antes, vira Derrota);
+      endif
+    endswitch
+  repeat while (A partida terminou?) is (não) not (sim)
+  switch (Como terminou?)
+  case (Retorno normal)
+    if (Nenhum desmaio e pontuação acima do mínimo?) then (sim)
+      #palegreen:GRANDE VITÓRIA\ntaxa 0% e +10% de ouro e pontuação;
+    else (não)
+      #honeydew:VITÓRIA\ntaxa dos personagens perdidos;
+    endif
+  case (Fuga ou Líder não levantado)
+    #lightyellow:RETORNO FORÇADO (amarelo);
+  case (Todos desmaiaram)
+    #mistyrose:DERROTA;
+  endswitch
+  :Quem estiver desmaiado conta como perdido.\nXP e itens coletados são mantidos;
+  :Calcular a taxa sobre o ouro ganho\n(distância em linha reta desde o ponto inicial,\nfuga e todos desmaiam pela posição do Líder,\nno domínio de Boss os pontos de Boss somam);
+  :Calcular a pontuação\n(base × (1 − taxa), Grande Vitória +10%);
+  :Exibir o resumo: resultado, motivo, ouro, taxa,\nXP, pontuação, tempo total e ativo;
+  :Restaurar vida e mana do grupo.\nContratos temporários perdem uma partida;
+  :Salvar progresso (navegador e, com conta, Supabase);
+repeat while (Jogar novamente?) is (sim) not (não)
+:Voltar ao Reino;
+stop
+@enduml
