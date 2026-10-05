@@ -12,19 +12,15 @@ const pos = posicoes.preparacao
 // (O "Voltar ao Mapa" é decisão de 04/10/2026; o diagrama de Partida só tem "Voltar ao Reino".)
 export default function Preparacao() {
   const { estado, acoes } = useJogo()
-  const permanentes = estado.personagens.filter((p) => p.permanente)
-  const temLider = permanentes.some((p) => p.classe === estado.partida.lider)
+  const { personagens: permanentes, lider } = estado.progresso
+  const temLider = permanentes.some((p) => p.classe === lider)
 
   return (
     <Tela>
       <Area em={pos.tituloLider}>Escolha o Líder</Area>
       <Area em={pos.lideres} className="lista">
         {permanentes.map((p) => (
-          <Botao
-            key={p.classe}
-            selecionado={estado.partida.lider === p.classe}
-            onClick={() => acoes.escolherLider(p.classe)}
-          >
+          <Botao key={p.classe} selecionado={lider === p.classe} onClick={() => acoes.escolherLider(p.classe)}>
             {nomeDaClasse(p.classe)}
           </Botao>
         ))}

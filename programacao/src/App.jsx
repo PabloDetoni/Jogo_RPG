@@ -1,3 +1,4 @@
+import Avisos from './componentes/Avisos.jsx'
 import PainelDev from './componentes/PainelDev.jsx'
 import { useJogo } from './estado/contexto.js'
 import ProvedorDoJogo from './estado/ProvedorDoJogo.jsx'
@@ -26,6 +27,7 @@ function Jogo() {
           const JanelaAberta = componentesDasJanelas[id]
           return <JanelaAberta key={id} />
         })}
+        <Avisos />
       </div>
       {import.meta.env.DEV && <PainelDev />}
     </>

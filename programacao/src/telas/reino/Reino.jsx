@@ -10,15 +10,16 @@ const pos = posicoes.reino
 // Hub do jogo (RF19). Salão da Glória e Configurações vêm dos cantos de <Tela>.
 export default function Reino() {
   const { estado, acoes } = useJogo()
-  const { tipoJogador, partida } = estado
+  const { tipoJogador, progresso } = estado
   const apelido = tipoJogador === 'conta' ? 'Apelido da conta' : 'Convidado'
-  const lider = partida.lider ? nomeDaClasse(partida.lider) : 'nenhum'
+  const lider = progresso.lider ? nomeDaClasse(progresso.lider) : 'nenhum'
+  const missao = progresso.missaoAtiva ? 'em andamento' : 'nenhuma'
 
   return (
     <Tela>
-      {/* HUD do Reino: apelido, Líder, ouro e missão ativa (valores falsos) */}
+      {/* HUD do Reino: apelido, Líder, ouro e missão ativa (RF19) */}
       <Area em={pos.hud}>
-        {apelido} · Líder: {lider} · Ouro: 0 · Missão: nenhuma
+        {apelido} · Líder: {lider} · Ouro: {progresso.ouro} · Missão: {missao}
       </Area>
       <Botao em={pos.guilda} onClick={() => acoes.irPara('guilda')}>
         Guilda

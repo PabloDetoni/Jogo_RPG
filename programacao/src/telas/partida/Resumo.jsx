@@ -12,8 +12,9 @@ const pos = posicoes.resumo
 // Resumo da partida (RF51). Por enquanto os números são todos zero.
 export default function Resumo() {
   const { estado, acoes } = useJogo()
-  const resultado = resultados[estado.ultimoResultado]
-  const bioma = biomas.find((b) => b.id === estado.partida.bioma)
+  const { ultimoResultado } = estado
+  const resultado = ultimoResultado ? resultados[ultimoResultado.resultado] : undefined
+  const bioma = biomas.find((b) => b.id === ultimoResultado?.bioma)
 
   const linhas = [
     ['Motivo', resultado?.motivo ?? '—'],

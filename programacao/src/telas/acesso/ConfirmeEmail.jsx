@@ -17,7 +17,7 @@ export default function ConfirmeEmail() {
         Abra o link para poder jogar com a sua conta.
       </Area>
       {/* Botão de teste: some quando o login de verdade entrar (etapa 8) */}
-      <Botao em={pos.jaConfirmei} onClick={() => acoes.entrar('conta')}>
+      <Botao em={pos.jaConfirmei} onClick={acoes.confirmarConta}>
         Já confirmei (teste)
       </Botao>
       <Botao em={pos.voltarAoLogin} onClick={() => acoes.irPara('login')}>

@@ -13,7 +13,7 @@ export default function ArvoresHabilidades() {
   const abas = classes.map((classe) => ({
     id: classe.id,
     nome: classe.nome,
-    desativada: !estado.personagens.some((p) => p.classe === classe.id && p.permanente),
+    desativada: !estado.progresso.personagens.some((p) => p.classe === classe.id),
   }))
 
   return (

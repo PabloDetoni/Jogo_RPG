@@ -1,44 +1,99 @@
 import { resultados } from '../dados/resultados.js'
 import { segundosRetornoNormal } from '../dados/regras.js'
-import { telas } from '../dados/telas.js'
+import { navegar } from './navegacao.js'
+import { novoPersonagem, progressoInicial } from './progresso.js'
 
-// Estado falso, só em memória: recarregar a página volta tudo para cá.
-export const estadoInicial = {
-  tela: 'telaInicial',
-  anteriores: [], // caminho de telas até aqui, usado pelo Voltar
-  janelas: [], // janelas abertas por cima da tela; a última fica no topo
-  tipoJogador: 'nenhum', // 'nenhum', 'convidado' ou 'conta'
-  personagens: [], // { classe, permanente }
-  partida: { bioma: null, pontoPartida: null, lider: null },
-  segundosRetorno: null, // contagem do retorno ao Reino; null = parada
-  ultimoResultado: null, // id de dados/resultados.js
-  preferencias: { musica: true, som: true, tema: 'claro' },
+// Estado global do jogo. Só "progresso" vai para o salvamento do convidado;
+// as preferências são salvas à parte (salvamento/preferenciasLocais.js); o resto vive só na memória.
+export function criarEstadoInicial(preferencias) {
+  return {
+    // Telas e janelas
+    tela: 'telaInicial',
+    anteriores: [], // caminho de telas até aqui, usado pelo Voltar
+    janelas: [], // janelas abertas por cima da tela; a última fica no topo
+    avisos: [], // mensagens para o jogador: { id, texto }
+    proximoIdDeAviso: 1,
+
+    // Quem está jogando. Toda visita começa na Tela inicial (diagrama de Acesso).
+    tipoJogador: 'nenhum', // 'nenhum', 'convidado' ou 'conta'
+    perfilLocal: null, // 'convidado' quando o progresso é salvo neste navegador; null = nada é salvo
+
+    // O que fica salvo
+    progresso: progressoInicial(),
+
+    // Partida
+    escolhasDaPartida: { bioma: null, pontoPartida: null },
+    partidaAtual: null, // { bioma, pontoPartida, lider, iniciadaEm }, de "Começar partida" até o resultado
+    segundosRetorno: null, // contagem do retorno ao Reino; null = parada
+    ultimoResultado: null, // { resultado, bioma }, mostrado no Resumo
+
+    preferencias,
+
+    // Sobe a cada momento de salvamento (RF09); o ProvedorDoJogo grava quando muda
+    pedidosDeSalvamento: 0,
+  }
 }
 
 // Usado pelo painel de desenvolvimento para alternar o tipo de jogador.
 export const proximoTipoJogador = { nenhum: 'convidado', convidado: 'conta', conta: 'convidado' }
 
-// Troca de tela e fecha as janelas abertas.
-// Numa tela raiz, o caminho é esquecido. Numa tela que já está no caminho, o caminho é cortado até ela.
-function navegar(estado, destino) {
-  let anteriores = []
-  if (!telas[destino].raiz) {
-    const caminho = [...estado.anteriores, estado.tela]
-    const posicao = caminho.indexOf(destino)
-    anteriores = posicao >= 0 ? caminho.slice(0, posicao) : caminho
-  }
+// O que vai para o navegador num salvamento.
+// Da partida em andamento vai só a descrição: os ganhos dela nunca são salvos antes do fim (RF12).
+export function dadosParaSalvar(estado) {
+  const { partidaAtual } = estado
   return {
-    ...estado,
-    tela: destino,
-    anteriores,
-    janelas: [],
-    segundosRetorno: destino === 'partida' ? estado.segundosRetorno : null,
+    perfil: estado.perfilLocal,
+    progresso: estado.progresso,
+    partidaEmAndamento: partidaAtual && {
+      bioma: partidaAtual.bioma,
+      pontoPartida: partidaAtual.pontoPartida,
+      lider: partidaAtual.lider,
+      iniciadaEm: partidaAtual.iniciadaEm,
+    },
   }
 }
 
+const avisoPartidaDescartada =
+  'A última partida não terminou (a página fechou no meio) e foi descartada. Nada foi ganho nem perdido.'
+const avisoSalvamentoEstragado =
+  'Não deu para ler o progresso salvo neste navegador, então o jogo começou do zero. Uma cópia do que estava salvo foi guardada à parte.'
+const avisoVersaoMaisNova =
+  'Este progresso foi salvo por uma versão mais nova do jogo. Para não estragá-lo, nada será salvo nesta aba.'
+
+function comAviso(estado, texto) {
+  return {
+    ...estado,
+    avisos: [...estado.avisos, { id: estado.proximoIdDeAviso, texto }],
+    proximoIdDeAviso: estado.proximoIdDeAviso + 1,
+  }
+}
+
+function pedirSalvamento(estado) {
+  return { ...estado, pedidosDeSalvamento: estado.pedidosDeSalvamento + 1 }
+}
+
+// Sem personagem é o primeiro acesso: narrativa e escolha da classe (RF07).
+function destinoAoEntrar(estado) {
+  return estado.progresso.personagens.length > 0 ? 'reino' : 'narrativaInicial'
+}
+
+function comProgresso(estado, mudancas) {
+  return { ...estado, progresso: { ...estado.progresso, ...mudancas } }
+}
+
 function encerrarPartida(estado, resultado) {
+  const { partidaAtual, progresso } = estado
+  let novo = { ...estado, segundosRetorno: null, ultimoResultado: { resultado, bioma: partidaAtual?.bioma ?? null } }
+
+  // Os ganhos (ouro com taxa, XP, itens) entram aqui na etapa 5.
+  // Toda partida conta, até entrar e sair logo em seguida (RF34).
+  if (partidaAtual) {
+    const { estatisticas } = progresso
+    novo = comProgresso(novo, { estatisticas: { ...estatisticas, partidasJogadas: estatisticas.partidasJogadas + 1 } })
+  }
+
   const destino = resultados[resultado].cutscene ? 'cutsceneDerrota' : 'resumo'
-  return navegar({ ...estado, ultimoResultado: resultado, segundosRetorno: null }, destino)
+  return navegar(pedirSalvamento({ ...novo, partidaAtual: null }), destino)
 }
 
 export function atualizarEstado(estado, acao) {
@@ -63,43 +118,84 @@ export function atualizarEstado(estado, acao) {
       if (estado.tela === 'partida') return { ...estado, janelas: ['pausa'] }
       return estado
 
-    // Entrar, "Já confirmei" e Jogar como convidado.
-    // Sem personagem, é o primeiro acesso: narrativa e escolha de classe (RF07).
-    // Personagens do convidado continuam na conta criada (RF03).
-    case 'entrar': {
-      const destino = estado.personagens.length > 0 ? 'reino' : 'narrativaInicial'
-      return navegar({ ...estado, tipoJogador: acao.tipoJogador }, destino)
+    case 'mostrarAviso':
+      return comAviso(estado, acao.texto)
+
+    case 'fecharAviso':
+      return { ...estado, avisos: estado.avisos.filter((aviso) => aviso.id !== acao.id) }
+
+    // "Jogar como convidado": o progresso vem do navegador (o ProvedorDoJogo carrega e manda aqui).
+    case 'entrarComoConvidado': {
+      const { carregamento } = acao
+      let novo = {
+        ...estado,
+        tipoJogador: 'convidado',
+        perfilLocal: carregamento.situacao === 'formatoNovo' ? null : 'convidado',
+        progresso: carregamento.progresso,
+        partidaAtual: null,
+      }
+      if (carregamento.partidaDescartada) novo = pedirSalvamento(comAviso(novo, avisoPartidaDescartada))
+      if (carregamento.situacao === 'corrompido') novo = comAviso(novo, avisoSalvamentoEstragado)
+      if (carregamento.situacao === 'formatoNovo') novo = comAviso(novo, avisoVersaoMaisNova)
+      return navegar(novo, destinoAoEntrar(novo))
     }
 
-    // Só para o painel de desenvolvimento
+    // Login → Entrar: conta que já existia. Não mistura o progresso do convidado (RF03).
+    // Até a etapa 8 a conta é de teste: começa vazia e nada dela é salvo.
+    case 'entrarNaConta': {
+      const novo = { ...estado, tipoJogador: 'conta', perfilLocal: null, progresso: progressoInicial() }
+      return navegar(novo, destinoAoEntrar(novo))
+    }
+
+    // "Já confirmei": primeiro login da conta criada. Se ela foi criada a partir do
+    // convidado, o progresso dele vai junto (RF03); senão, a conta começa vazia.
+    case 'confirmarConta': {
+      const veioDoConvidado = estado.perfilLocal === 'convidado'
+      const novo = {
+        ...estado,
+        tipoJogador: 'conta',
+        perfilLocal: null,
+        progresso: veioDoConvidado ? estado.progresso : progressoInicial(),
+      }
+      return navegar(novo, destinoAoEntrar(novo))
+    }
+
+    // Só para o painel de desenvolvimento: muda o que as telas mostram, não o que é salvo
     case 'trocarTipoJogador':
       return { ...estado, tipoJogador: proximoTipoJogador[estado.tipoJogador] }
 
-    // A classe inicial é permanente e vira o primeiro Líder (RF07).
+    // A classe inicial é permanente e vira o primeiro Líder (RF07). A escolha não se repete.
     case 'escolherClasseInicial':
+      if (estado.progresso.personagens.length > 0) return navegar(estado, 'reino')
       return navegar(
-        {
-          ...estado,
-          personagens: [{ classe: acao.classe, permanente: true }],
-          partida: { ...estado.partida, lider: acao.classe },
-        },
+        pedirSalvamento(comProgresso(estado, { personagens: [novoPersonagem(acao.classe)], lider: acao.classe })),
         'reino',
       )
 
     case 'escolherBioma':
-      return navegar({ ...estado, partida: { ...estado.partida, bioma: acao.bioma } }, 'pontoPartida')
+      return navegar(
+        { ...estado, escolhasDaPartida: { ...estado.escolhasDaPartida, bioma: acao.bioma } },
+        'pontoPartida',
+      )
 
     case 'escolherPontoPartida':
       return navegar(
-        { ...estado, partida: { ...estado.partida, pontoPartida: acao.pontoPartida } },
+        { ...estado, escolhasDaPartida: { ...estado.escolhasDaPartida, pontoPartida: acao.pontoPartida } },
         'preparacao',
       )
 
+    // O Líder é sempre um personagem permanente (RF33)
     case 'escolherLider':
-      return { ...estado, partida: { ...estado.partida, lider: acao.classe } }
+      if (!estado.progresso.personagens.some((p) => p.classe === acao.classe)) return estado
+      return comProgresso(estado, { lider: acao.classe })
 
-    case 'comecarPartida':
-      return navegar({ ...estado, segundosRetorno: null }, 'partida')
+    // "Começar partida" salva o progresso (RF34), já marcando a partida em andamento.
+    case 'comecarPartida': {
+      const { lider, personagens } = estado.progresso
+      if (!personagens.some((p) => p.classe === lider)) return estado
+      const partidaAtual = { ...estado.escolhasDaPartida, lider, iniciadaEm: acao.agora }
+      return navegar(pedirSalvamento({ ...estado, partidaAtual, segundosRetorno: null }), 'partida')
+    }
 
     // "Voltar ao Reino" da pausa: não tem atalho, passa pela contagem (RF45).
     case 'iniciarRetorno':

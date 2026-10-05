@@ -125,6 +125,34 @@ body {
   gap: 0.5em;
 }
 
+.nota {
+  font-size: 1.15cqw;
+}
+
+/* Mensagens por cima da tela (componentes/Avisos.jsx) */
+.avisos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  font-size: 1.4cqw;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  max-width: 64cqw;
+  padding: 0.6em 1em;
+  background: var(--janela);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+  text-align: left;
+}
+
+.aviso p {
+  margin: 0;
+}
+
 .abas {
   display: flex;
   flex-wrap: wrap;

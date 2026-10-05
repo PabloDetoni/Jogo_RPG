@@ -11,6 +11,7 @@ export const posicoes = {
     salaoGloria: { x: 9, y: 11 },
     configuracoes: { x: 93, y: 11 },
   },
+  avisos: { x: 50, y: 30 }, // mensagens por cima da tela (partida descartada, aba ocupada...)
 
   // ---------- Acesso ----------
   telaInicial: {
@@ -24,6 +25,7 @@ export const posicoes = {
     criarConta: { x: 38, y: 69 },
     esqueciSenha: { x: 62, y: 69 },
     jogarComoConvidado: { x: 50, y: 81 },
+    avisoConvidado: { x: 50, y: 89 },
     voltar: { x: 10, y: 90 },
   },
   criarConta: {
