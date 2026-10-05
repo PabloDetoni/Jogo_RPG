@@ -1,111 +1,233 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+/* CSS mínimo do esqueleto. As cores ficam em variáveis por causa do tema claro/escuro.
+   Tamanhos em "cqw" (1% da largura da caixa 16:9): tudo cresce e encolhe junto com ela. */
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+* {
   box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+html,
+body,
+#root {
+  height: 100%;
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+body {
+  background: #111;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
+#root {
+  display: grid;
+  place-items: center;
+}
+
+/* Caixa 16:9 centralizada que cabe na janela */
+.moldura {
+  --tela: #b3b3b3;
+  --janela: #d4d4d4;
+  --botao: #e6e6e6;
+  --texto: #111;
+  --borda: #333;
+
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  container-type: size;
+  overflow: hidden;
+}
+
+.moldura[data-tema='escuro'] {
+  --tela: #4d4d4d;
+  --janela: #3a3a3a;
+  --botao: #666;
+  --texto: #f2f2f2;
+  --borda: #ddd;
+}
+
+.tela {
+  position: absolute;
+  inset: 0;
+  background: var(--tela);
+  color: var(--texto);
+  font-size: 1.5cqw;
+}
+
+/* O tema muda telas e menus, não a partida (Conceito §15) */
+.tela-partida {
+  --tela: #8f8f8f;
+  --botao: #dcdcdc;
+  --texto: #111;
+  --borda: #333;
+}
+
+/* Centraliza o elemento no ponto (x, y) de dados/posicoes.js */
+.posicionado {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 3.5cqw;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.botao {
+  font: inherit;
+  padding: 0.35em 0.8em;
+  background: var(--botao);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.botao:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.botao[aria-pressed='true'],
+.botao[aria-selected='true'] {
+  background: var(--texto);
+  color: var(--tela);
+}
+
+.botao-grande {
+  font-size: 2.2cqw;
+  padding: 0.4em 1.6em;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  width: 30cqw;
+}
+
+.campo input {
+  font: inherit;
+  padding: 0.25em 0.4em;
+}
+
+.area {
+  width: max-content;
+  max-width: 80cqw;
+  text-align: center;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.abas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3em;
+  width: 92cqw;
+  font-size: 1.2cqw;
+}
+
+.resultado {
+  font-size: 3cqw;
+  font-weight: bold;
+  padding: 0.1em 0.6em;
+}
+
+.resultado-amarelo {
+  background: #f2c230;
+  color: #111;
+}
+
+.detalhes {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  gap: 0.4em 1.2em;
+  margin: 0;
+  text-align: left;
+}
+
+.detalhes dd {
+  margin: 0;
+  font-weight: bold;
+}
+
+/* Janelas por cima da tela */
+.janela-fundo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.45);
+  font-size: 1.5cqw;
+}
+
+.janela {
+  min-width: 34cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 1em 1.8em;
+  background: var(--janela);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+}
+
+.janela h2 {
+  margin: 0 0 0.3em;
+  text-align: center;
+}
+
+.janela h3 {
+  margin: 0.4em 0 0;
+  font-size: 1em;
+}
+
+.janela p {
+  margin: 0;
+}
+
+.linha {
+  display: flex;
+  gap: 0.5em;
+}
+
+.linha > .botao {
+  flex: 1;
+}
+
+/* Painel de desenvolvimento (só em npm run dev) */
+.painel-dev {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #fffbe6;
+  color: #111;
+  border: 1px solid #333;
+  font: 12px/1.4 system-ui, sans-serif;
+}
+
+/* Faixa do título: é por ela que se arrasta o painel */
+.painel-dev-alca {
+  margin: -6px -8px 0;
   padding: 4px 8px;
-  background: var(--code-bg);
+  background: #f0e2a0;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.painel-dev-alca:active {
+  cursor: grabbing;
 }

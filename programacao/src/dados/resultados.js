@@ -1,0 +1,8 @@
+// Os 4 resultados da partida (RF47). Não existe empate.
+// amarelo: aparece em amarelo no resumo. cutscene: passa pela cutscene antes do resumo.
+export const resultados = {
+  grandeVitoria: { nome: 'Grande Vitória', motivo: 'Retorno normal' },
+  vitoria: { nome: 'Vitória', motivo: 'Retorno normal' },
+  retornoForcado: { nome: 'Retorno forçado', motivo: 'Fuga com a Pedra de Retorno', amarelo: true },
+  derrota: { nome: 'Derrota', motivo: 'Todos os personagens desmaiaram', cutscene: true },
+}
