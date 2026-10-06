@@ -15,7 +15,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC05 | Notificar conta em uso | «extend» de UC04 | — | Condição: a conta já tem uma sessão ativa | Bloqueia o acesso e avisa que a conta está aberta em outra máquina ou aba. |
 | UC06 | Recuperar senha | «extend» de UC04 | — | Condição: o jogador esqueceu a senha | Envia um link de recuperação ao e-mail da conta para redefinir a senha. |
 | UC07 | Escolher classe inicial | «extend» de UC01 e de UC04 | — | Condição: primeiro acesso (convidado novo ou conta nova sem progresso de convidado) | Mostra a narrativa inicial e as 5 classes; cria o primeiro personagem, que é o primeiro Líder. |
-| UC08 | Encerrar sessão | Associação | «include» UC09 | — | Sai da conta salvando o progresso e volta à Tela Inicial. |
+| UC08 | Encerrar sessão | Associação | «include» UC09 | — | Sai da conta (ou, no modo convidado, sai do jogo) salvando o progresso; a página recarrega e volta à Tela Inicial. |
 
 ## Compartilhado
 
@@ -28,10 +28,10 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
 | UC10 | Consultar instruções do jogo | Associação | — | — | Mostra os controles e as regras básicas (Como jogar). |
-| UC11 | Visualizar Ranking | Associação | Estendido por UC12 | — | Consulta as abas do ranking, mesmo sem login. |
-| UC12 | Visualizar histórico de partidas | «extend» de UC11 | — | Condição: jogador logado com conta | Lista todas as partidas do próprio jogador, 20 por página. |
-| UC13 | Visualizar conquistas | Associação | — | — | Mostra as conquistas, o progresso e as recompensas. |
-| UC14 | Configurar preferências | Associação | — | — | Liga ou desliga música e efeitos, troca o tema e acessa as opções de conta. |
+| UC11 | Visualizar Ranking | Associação | Estendido por UC12 | — | Abre o Salão da Glória e consulta as abas do ranking, mesmo sem login. |
+| UC12 | Visualizar histórico de partidas | «extend» de UC11 | — | Condição: jogador logado com conta | Lista todas as partidas do próprio jogador, 20 por página, numa aba do Salão da Glória. |
+| UC13 | Visualizar conquistas | Associação | — | — | Mostra as conquistas, o progresso e as recompensas, numa aba do Salão da Glória. |
+| UC14 | Configurar preferências | Associação | — | — | Liga ou desliga Música e Som, troca o tema e, fora da partida, acessa as opções de conta. |
 
 ## Reino
 
@@ -53,7 +53,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
-| UC26 | Iniciar partida | Associação | «include» UC27, UC29 e UC09; estendido por UC28 e UC30 | — | Abre o mapa, passa pela preparação e começa a partida. |
+| UC26 | Iniciar partida | Associação | «include» UC27, UC29 e UC09; estendido por UC28 e UC30 | — | Abre o mapa, passa pela preparação e começa a partida. Da preparação dá para voltar ao Mapa ou ao Reino. |
 | UC27 | Selecionar bioma | Incluído por UC26 | — | — | Escolhe Floresta, Deserto, Tundra ou Vulcânico no mapa em ovo. |
 | UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil. |
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
@@ -70,4 +70,18 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC40 | Fugir com a Pedra de Retorno | «extend» de UC31 | — | Condição: o jogador confirma a fuga | Foge com o grupo inteiro em 5 segundos, mesmo em combate, pagando a taxa de fuga. |
 | UC41 | Encerrar partida | Incluído por UC31 | «include» UC42 e UC09 | — | Define o resultado e calcula taxa, ouro, XP e pontuação. |
 | UC42 | Visualizar resumo da partida | Incluído por UC41 | — | — | Mostra o resumo e permite jogar de novo sem recarregar a página. |
-| UC43 | Jogar minijogo do Planalto | Associação | — | — | Joga na Fazenda, na Mina ou no Lago para conseguir recursos e XP. |
+| UC43 | Jogar minijogo do Planalto | Associação | — | — | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. |
+
+## Alterações do projeto
+
+Decisões tomadas durante a programação (outubro de 2026). As descrições acima já estão com o texto novo; nenhum caso de uso foi criado ou removido, e os relacionamentos do diagrama não mudaram.
+
+| Caso de uso | O que mudou |
+|---|---|
+| UC08 | O convidado também encerra a sessão ("Sair do jogo"); sair recarrega a página. |
+| UC11, UC12, UC13 | Ranking, Histórico e Conquistas ficam juntos no Salão da Glória. |
+| UC14 | "Efeitos" passou a se chamar Som; na partida, as opções de conta não aparecem. |
+| UC26 | A preparação permite voltar ao Mapa, além do Reino. |
+| UC43 | O minijogo é acessado pelo Mapa e volta ao Mapa. |
+
+Os requisitos ligados a cada mudança estão na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

@@ -69,6 +69,8 @@ Como jogador, quero sair da conta sabendo que meu progresso foi salvo.
 
 Critérios de aceite:
 - Ao sair, o progresso é enviado ao Supabase antes de voltar à Tela Inicial.
+- O convidado tem "Sair do jogo", que salva no navegador.
+- Sair recarrega a página e volta à Tela Inicial.
 - Requisitos atendidos: RF08, RF10.
 
 ### HU09 · Salvar progresso (UC09)
@@ -76,7 +78,7 @@ Critérios de aceite:
 Como jogador, quero que meu progresso seja salvo automaticamente para não perder o que conquistei.
 
 Critérios de aceite:
-- O navegador guarda o estado a cada 3 minutos.
+- O navegador guarda o estado a cada 3 minutos, ao escolher a classe inicial e quando a aba é fechada ou escondida.
 - Uma versão antiga nunca sobrescreve uma mais nova.
 - Requisitos atendidos: RF09, RF10, RF11, RF12.
 
@@ -93,6 +95,7 @@ Critérios de aceite:
 Como jogador, quero ver o ranking para comparar meu desempenho com o de outros jogadores.
 
 Critérios de aceite:
+- O botão de Ranking abre o Salão da Glória.
 - Abas: Melhores pontuações, Nível total, Por classe, Ouro, Monstros e Maior duração.
 - Minha linha aparece destacada quando estou logado.
 - Requisitos atendidos: RF14, RF15.
@@ -102,7 +105,7 @@ Critérios de aceite:
 Como jogador, quero ver o histórico das minhas partidas para acompanhar minha evolução.
 
 Critérios de aceite:
-- Só eu vejo as minhas partidas.
+- O histórico é uma aba do Salão da Glória, e só eu vejo as minhas partidas.
 - Cada partida mostra data, bioma, resultado, tempo ativo, pontuação e ouro.
 - Requisitos atendidos: RF16.
 
@@ -111,6 +114,7 @@ Critérios de aceite:
 Como jogador, quero acompanhar minhas conquistas para ter metas extras.
 
 Critérios de aceite:
+- As conquistas ficam numa aba do Salão da Glória, para convidado e conta.
 - Conquistas concluídas aparecem marcadas.
 - Requisitos atendidos: RF17.
 
@@ -120,7 +124,8 @@ Como jogador, quero controlar som e tema a qualquer momento, inclusive no meio d
 
 Critérios de aceite:
 - Funciona antes do login.
-- Na partida, as Configurações abrem sem pausar e M muta o jogo.
+- Música e Som têm liga/desliga separados.
+- Na partida, as Configurações abrem sem pausar, sem as opções de conta, e M muta o jogo.
 - Requisitos atendidos: RF14, RF18.
 
 ### HU15 · Gerenciar Mochila (UC15)
@@ -222,6 +227,7 @@ Critérios de aceite:
 Como jogador, quero preparar e começar uma partida para explorar um bioma.
 
 Critérios de aceite:
+- Da Preparação dá para voltar ao Mapa ou ao Reino.
 - Voltar antes de "Começar partida" não gasta partida.
 - Ao começar, o progresso é salvo.
 - Requisitos atendidos: RF30, RF34, RF10.
@@ -231,7 +237,7 @@ Critérios de aceite:
 Como jogador, quero escolher o bioma para decidir onde vou jogar.
 
 Critérios de aceite:
-- Os biomas são separados; para trocar, volto ao Reino.
+- Os biomas são separados; para trocar antes de começar, volto ao Mapa.
 - Requisitos atendidos: RF30, RF31.
 
 ### HU28 · Escolher ponto de partida (dificuldade) (UC28)
@@ -327,6 +333,7 @@ Como jogador, quero pausar o jogo quando estiver seguro para fazer uma pausa ou 
 
 Critérios de aceite:
 - Em combate, aparece "Você não pode pausar agora".
+- "Voltar ao Reino" no menu de pausa inicia o retorno de 15 s, sem atalho.
 - Requisitos atendidos: RF37, RF44.
 
 ### HU39 · Retornar ao Reino (UC39)
@@ -372,4 +379,19 @@ Como jogador, quero jogar os minijogos do Planalto para conseguir recursos sem c
 Critérios de aceite:
 - Não conta como partida, não tem taxa e não entra no ranking.
 - O XP é dividido entre os personagens permanentes.
+- Entro pelo Mapa e, ao sair, volto ao Mapa.
 - Requisitos atendidos: RF54, RF50.
+
+## Alterações do projeto
+
+Decisões tomadas durante a programação (outubro de 2026). Os critérios acima já estão com o texto novo:
+
+- **HU08:** o convidado também tem "Sair do jogo"; sair recarrega a página.
+- **HU09:** o jogo também salva ao escolher a classe inicial e quando a aba fecha ou é escondida.
+- **HU11, HU12 e HU13:** Ranking, Histórico e Conquistas ficam no Salão da Glória.
+- **HU14:** Música e Som separados; na partida, sem as opções de conta.
+- **HU26 e HU27:** da Preparação dá para voltar ao Mapa e trocar de bioma sem passar pelo Reino.
+- **HU38:** o "Voltar ao Reino" da pausa passa pelo retorno de 15 s.
+- **HU43:** o minijogo volta ao Mapa.
+
+O motivo de cada mudança está na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

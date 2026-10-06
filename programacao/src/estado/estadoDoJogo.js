@@ -1,5 +1,6 @@
 import { resultados } from '../dados/resultados.js'
 import { segundosRetornoNormal } from '../dados/regras.js'
+import { gastarPartidaDosContratos } from '../regras/guilda.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
@@ -86,10 +87,14 @@ function encerrarPartida(estado, resultado) {
   let novo = { ...estado, segundosRetorno: null, ultimoResultado: { resultado, bioma: partidaAtual?.bioma ?? null } }
 
   // Os ganhos (ouro com taxa, XP, itens) entram aqui na etapa 5.
-  // Toda partida conta, até entrar e sair logo em seguida (RF34).
+  // Toda partida conta, até entrar e sair logo em seguida (RF34), e cada contrato temporário
+  // perde uma partida (RF52). Partida interrompida não passa por aqui (RF12).
   if (partidaAtual) {
     const { estatisticas } = progresso
-    novo = comProgresso(novo, { estatisticas: { ...estatisticas, partidasJogadas: estatisticas.partidasJogadas + 1 } })
+    novo = comProgresso(novo, {
+      estatisticas: { ...estatisticas, partidasJogadas: estatisticas.partidasJogadas + 1 },
+      contratosTemporarios: gastarPartidaDosContratos(progresso.contratosTemporarios),
+    })
   }
 
   const destino = resultados[resultado].cutscene ? 'cutsceneDerrota' : 'resumo'

@@ -1,6 +1,14 @@
+import { atributoMaximo } from '../dados/balanceamento.js'
 import { biomas, pontosDePartida } from '../dados/biomas.js'
-import { classes } from '../dados/classes.js'
-import { nivelInicial, nivelMaximo } from '../dados/regras.js'
+import { atributos, atributosIniciaisDaClasse, classes } from '../dados/classes.js'
+import { espacosDeEquipamento } from '../dados/equipamento.js'
+import { tiposDeMissao } from '../dados/missoes.js'
+import {
+  habilidadesAtivasNoMaximo,
+  nivelInicial,
+  nivelMaximo,
+  nivelMaximoDaHabilidade,
+} from '../dados/regras.js'
 import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
 
 // Progresso do jogador: é tudo o que fica salvo (no navegador para o convidado; no Supabase
@@ -10,20 +18,90 @@ import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
 // ao encerrar. Assim, se a página fechar no meio, o progresso salvo é o do começo da partida (RF12).
 export function progressoInicial() {
   return {
-    personagens: [], // permanentes, um por classe: { classe, nivel, xp }
-    contratosTemporarios: [], // { classe, partidasRestantes } (etapa 7)
+    personagens: [], // permanentes, um por classe (ver novoPersonagem)
+    contratosTemporarios: [], // { classe, partidasRestantes, nivel } (regras/guilda.js)
     lider: null, // classe do Líder atual; sempre um personagem permanente (RF33)
     ouro: 0,
-    mochila: [], // itens da Mochila do Reino (etapa 7)
-    missaoAtiva: null, // uma por vez (etapa 7)
+    mochila: [], // Mochila do Reino: { id, quantidade } (o catálogo entra na etapa 7)
+    missaoAtiva: null, // uma por vez: { id, tipo, alvo, quantidade, progresso, recompensa: { ouro, xp } }
     regioesDescobertas: {}, // bioma → regiões já descobertas, ex.: { floresta: ['facil'] } (etapa 6)
     conquistas: {}, // conquista → progresso (etapa 9)
     estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0 },
   }
 }
 
+// xp: o que o personagem já juntou dentro do nível atual (regras/xp.js).
+// pontosDeAtributo e pontosDeHabilidade: ganhos ao subir de nível e ainda não usados (RF55).
+// habilidades: habilidade → nível (1 a 5); ativas: até 3 delas (RF24). A lista de habilidades
+// do beta (TASK-010) ainda não existe; a primeira de cada classe, gratuita, entra com ela.
+// equipamento: espaço → item (RF22).
 export function novoPersonagem(classe) {
-  return { classe, nivel: nivelInicial, xp: 0 }
+  return {
+    classe,
+    nivel: nivelInicial,
+    xp: 0,
+    atributos: atributosIniciaisDaClasse(classe),
+    pontosDeAtributo: 0,
+    pontosDeHabilidade: 0,
+    habilidades: {},
+    ativas: [],
+    equipamento: {},
+  }
+}
+
+function normalizarHabilidades(salvas) {
+  const resultado = {}
+  for (const [id, nivel] of Object.entries(ehObjeto(salvas) ? salvas : {})) {
+    if (Number.isInteger(nivel) && nivel >= 1) resultado[id] = Math.min(nivel, nivelMaximoDaHabilidade)
+  }
+  return resultado
+}
+
+// Só habilidades que o personagem tem, sem repetir, no máximo 3
+function normalizarAtivas(salvas, habilidades) {
+  const lista = Array.isArray(salvas) ? salvas : []
+  return [...new Set(lista.filter((id) => typeof id === 'string' && id in habilidades))].slice(
+    0,
+    habilidadesAtivasNoMaximo,
+  )
+}
+
+const espacosValidos = new Set(espacosDeEquipamento.map((espaco) => espaco.id))
+
+function normalizarEquipamento(salvo) {
+  const resultado = {}
+  for (const [espaco, item] of Object.entries(ehObjeto(salvo) ? salvo : {})) {
+    if (espacosValidos.has(espaco) && typeof item === 'string' && item) resultado[espaco] = item
+  }
+  return resultado
+}
+
+// Atributo que falta ou não é número volta ao inicial da classe; o resto fica entre 0 e o máximo.
+function normalizarAtributos(salvos, classe) {
+  const iniciais = atributosIniciaisDaClasse(classe)
+  const dados = ehObjeto(salvos) ? salvos : {}
+  const resultado = {}
+  for (const { id } of atributos) {
+    const valor = dados[id]
+    resultado[id] = Number.isInteger(valor) ? Math.min(Math.max(valor, 0), atributoMaximo) : iniciais[id]
+  }
+  return resultado
+}
+
+// Missão salva com formato errado é descartada (o jogador pode aceitar outra na Guilda)
+function normalizarMissao(missao) {
+  if (!ehObjeto(missao) || !tiposDeMissao.includes(missao.tipo)) return null
+  if (typeof missao.id !== 'string' || typeof missao.alvo !== 'string') return null
+  if (!Number.isInteger(missao.quantidade) || missao.quantidade < 1) return null
+  const recompensa = ehObjeto(missao.recompensa) ? missao.recompensa : {}
+  return {
+    id: missao.id,
+    tipo: missao.tipo,
+    alvo: missao.alvo,
+    quantidade: missao.quantidade,
+    progresso: Math.min(inteiroNaoNegativo(missao.progresso), missao.quantidade),
+    recompensa: { ouro: inteiroNaoNegativo(recompensa.ouro), xp: inteiroNaoNegativo(recompensa.xp) },
+  }
 }
 
 const classesValidas = new Set(classes.map((classe) => classe.id))
@@ -40,10 +118,17 @@ export function normalizarProgresso(dados) {
   for (const personagem of Array.isArray(dados.personagens) ? dados.personagens : []) {
     if (!ehObjeto(personagem) || !classesValidas.has(personagem.classe)) continue
     if (personagens.some((outro) => outro.classe === personagem.classe)) continue // um por classe
+    const habilidades = normalizarHabilidades(personagem.habilidades)
     personagens.push({
       ...personagem,
       nivel: inteiroEntre(personagem.nivel, nivelInicial, nivelMaximo, nivelInicial),
       xp: inteiroNaoNegativo(personagem.xp),
+      atributos: normalizarAtributos(personagem.atributos, personagem.classe),
+      pontosDeAtributo: inteiroNaoNegativo(personagem.pontosDeAtributo),
+      pontosDeHabilidade: inteiroNaoNegativo(personagem.pontosDeHabilidade),
+      habilidades,
+      ativas: normalizarAtivas(personagem.ativas, habilidades),
+      equipamento: normalizarEquipamento(personagem.equipamento),
     })
   }
   const temPermanente = (classe) => personagens.some((personagem) => personagem.classe === classe)
@@ -54,8 +139,17 @@ export function normalizarProgresso(dados) {
     if (!ehObjeto(contrato) || !classesValidas.has(contrato.classe) || temPermanente(contrato.classe)) continue
     if (!Number.isInteger(contrato.partidasRestantes) || contrato.partidasRestantes < 1) continue
     if (contratosTemporarios.some((outro) => outro.classe === contrato.classe)) continue
-    contratosTemporarios.push(contrato)
+    contratosTemporarios.push({
+      classe: contrato.classe,
+      partidasRestantes: contrato.partidasRestantes,
+      nivel: inteiroEntre(contrato.nivel, nivelInicial, nivelMaximo, nivelInicial),
+    })
   }
+
+  // Itens da Mochila do Reino: id e quantidade inteira maior que zero
+  const mochila = (Array.isArray(dados.mochila) ? dados.mochila : []).filter(
+    (item) => ehObjeto(item) && typeof item.id === 'string' && item.id && Number.isInteger(item.quantidade) && item.quantidade > 0,
+  )
 
   const regioesDescobertas = {}
   const regioesSalvas = ehObjeto(dados.regioesDescobertas) ? dados.regioesDescobertas : {}
@@ -72,8 +166,8 @@ export function normalizarProgresso(dados) {
     contratosTemporarios,
     lider: temPermanente(dados.lider) ? dados.lider : (personagens[0]?.classe ?? null),
     ouro: inteiroNaoNegativo(dados.ouro),
-    mochila: Array.isArray(dados.mochila) ? dados.mochila.filter(ehObjeto) : [],
-    missaoAtiva: ehObjeto(dados.missaoAtiva) ? dados.missaoAtiva : null,
+    mochila: mochila.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+    missaoAtiva: normalizarMissao(dados.missaoAtiva),
     regioesDescobertas,
     conquistas: ehObjeto(dados.conquistas) ? dados.conquistas : {},
     estatisticas: {

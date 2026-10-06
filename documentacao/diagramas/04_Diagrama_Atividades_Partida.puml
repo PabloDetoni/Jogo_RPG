@@ -1,30 +1,49 @@
 @startuml Atividades_Partida
 title Diagrama de Atividades — Partida
+' Cores parecidas com as da primeira versão do PNG
+skinparam ActivityBackgroundColor #FFF6E0
+skinparam ActivityBorderColor #7A6440
+skinparam ActivityDiamondBackgroundColor #E4EEFA
+skinparam ActivityDiamondBorderColor #3A6898
+skinparam ArrowColor #444444
+skinparam NoteBackgroundColor #FFFBE0
+skinparam NoteBorderColor #C8B560
 start
 :Clicar em "Jogar" no Reino;
 repeat
-  :Mostrar o mapa em ovo;
-  if (Destino?) then (Planalto)
-    :Jogar o minijogo (Fazenda, Mina ou Lago);
-    :Guardar os recursos e dividir o XP entre os personagens permanentes\n(não é partida: sem taxa e sem ranking);
-    :Voltar ao Reino;
-    stop
-  endif
-  :Selecionar o bioma;
-  if (Já descobriu outras regiões deste bioma?) then (sim)
-    :Escolher o ponto de partida\n(Fácil, Média, Difícil ou Muito difícil = domínio do Boss);
-  else (não)
-    :Nascer no ponto inicial (zona segura perto do Reino);
-  endif
-  :Preparação: escolher o Líder (sempre um personagem permanente);
-  if (Levar itens?) then (sim)
-    :Preparar a mochila da partida\n(capacidade pela Força do grupo, fixa durante a partida);
-  endif
-  if (Começar partida?) then (não, voltar)
-    :Voltar ao Reino (não conta como partida);
-    stop
-  endif
-  :Salvar progresso (navegador e, com conta, Supabase);
+  ' Alteração de 04/10/2026: o minijogo e a Preparação voltam ao Mapa
+  repeat
+    :Mostrar o mapa em ovo;
+    switch (Destino?)
+    case (Voltar ao Reino)
+      :Voltar ao Reino;
+      stop
+    case (Planalto)
+      :Jogar o minijogo (Fazenda, Mina ou Lago);
+      :Guardar os recursos e dividir o XP entre os personagens permanentes\n(não é partida: sem taxa e sem ranking);
+      :Voltar ao Mapa;
+    case (Bioma)
+      :Selecionar o bioma;
+      if (Já descobriu outras regiões deste bioma?) then (sim)
+        :Escolher o ponto de partida\n(Fácil, Média, Difícil ou Muito difícil = domínio do Boss);
+      else (não)
+        :Nascer no ponto inicial (zona segura perto do Reino);
+      endif
+      :Preparação: escolher o Líder (sempre um personagem permanente);
+      if (Levar itens?) then (sim)
+        :Preparar a mochila da partida\n(capacidade pela Força do grupo, fixa durante a partida);
+      endif
+      switch (Na Preparação?)
+      case (Voltar ao Reino)
+        :Voltar ao Reino (não conta como partida);
+        stop
+      case (Voltar ao Mapa)
+        :Voltar ao Mapa (não conta como partida);
+      case (Começar partida)
+        :Salvar progresso (navegador e, com conta, Supabase);
+      endswitch
+    endswitch
+  repeat while (A partida começou?) is (não) not (sim)
   :Carregar o bioma reiniciado\n(todos os personagens possuídos e contratados vão juntos);
   repeat
     :Jogo em andamento: explorar, combater, coletar,\nusar habilidades e itens;

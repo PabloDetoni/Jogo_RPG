@@ -23,6 +23,11 @@ Esta pasta reúne a documentação conceitual do projeto para Análise e Projeto
 | [Histórias de Usuário](docAdicional/07_Historias_de_Usuario.md) | Uma história de usuário para cada caso de uso, com critérios de aceite |
 | [Requisitos](docAdicional/08_Requisitos.md) | Requisitos funcionais e não funcionais |
 | [Matriz de Rastreabilidade](docAdicional/09_Matriz_de_Rastreabilidade.md) | Ligação entre casos de uso, requisitos, histórias e diagramas de atividades |
+| [Balanceamento](Balanceamento.md) | Todos os números do jogo (XP, atributos, taxas, ouro, peso, contratos) e seus limites. Gerado pelo código: não edite à mão |
+
+## Alterações do projeto
+
+Durante a programação, algumas decisões mudaram ou completaram esta documentação. Os textos já estão atualizados, e cada documento termina com uma seção **Alterações do projeto** que lista o que mudou e por quê (a lista completa, com os motivos, está nos [Requisitos](docAdicional/08_Requisitos.md#alterações-do-projeto)). O Conceito do jogo tem a mesma seção no fim. O Diagrama de Atividades da Partida foi atualizado: o minijogo e a Preparação voltam ao Mapa.
 
 ## Números
 
