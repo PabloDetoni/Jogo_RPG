@@ -209,14 +209,38 @@ Pontuação base = monstros × 10 + ouro ganho × 1 + recursos × 5 + bônus de 
 | A mesma, mas fugiu com F no meio | 3.200 | Retorno forçado | 18% | 1.640 | 2.624 |
 | Exemplo do Conceito: base 5.100, todos desmaiam no meio | 5.100 | Derrota | 25% | 3.825 | 3.825 |
 
+## Combate de teste (arena da Fase 1, provisório)
+
+Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o combate e vão mudar quando as habilidades de verdade chegarem (TASK-010). Distâncias em pixels da arena (1.600 × 900). Vida máxima = Vitalidade × **10**.
+
+| Classe | Vida (nível 1) | Ataque de teste | Dano | Recarga | Detalhe |
+| --- | --- | --- | --- | --- | --- |
+| Guerreiro | 120 | Espada: varre um arco na frente | 25 | 0,4 s | arco de 120°, alcance 70 |
+| Mago | 80 | Bola mágica: explode em área | 30 | 1,5 s | cresce de 10 a 26; explosão de raio 90 |
+| Tanque | 180 | Escudo: bloqueia; o clique empurra | 8 | 0,6 s | escudo de 70 px; empurrão até 90 |
+| Sacerdote | 80 | Aura: cura quem está dentro | cura 8 por pulso | 6 s | raio 150; pulso a cada 0,5 s por 3 s |
+| Arqueiro | 60 | Flecha: rápida, um alvo só | 18 | 0,35 s | 900 px/s, até 700 |
+
+- Andar: **220 px/s**, igual na diagonal.
+- Esquiva (Espaço): avança **160 px** em 0,15 s, sem levar dano; recarga de **0,8 s**.
+- Depois de levar um golpe, **0,5 s** de imunidade (RF36).
+- Líder sem vida: Derrota depois de **2 s** (provisório até a TASK-044, que traz o desmaio de 30 s).
+
+| Inimigo | Vida | Dano | Velocidade | Persegue a | Desiste a | Recarga | Detalhe |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Mob vermelho | 60 | 12 | 140 px/s | 350 px | 550 px | 1,2 s | aviso de 0,5 s, bote de 120 px |
+| Atirador | 40 | 8 | 110 px/s | 600 px | 800 px | 1,8 s | fica entre 300 e 450 px; tiro de 220 px/s |
+
+Boneco de treino: **300** de vida, recupera tudo depois de **3 s** sem apanhar.
+
 ## Ainda sem valor (a decidir)
 
 Valores do Conceito §19 que ainda não existem no código:
 
 - XP e ouro por monstro; bônus de Boss na pontuação; chance de drop dos Bosses;
-- dano, custo de mana e recarga das habilidades; recarga da esquiva; duração da imunidade;
+- dano, custo de mana e recarga das habilidades de verdade (a arena usa um ataque de teste por classe);
 - vida devolvida e fragilidade na ajuda de 5 s; fortalecimento da Ressurreição;
 - preços do Mercado e da Forja e do pergaminho;
 - peso de cada item; tempo que um item fica no chão;
-- tamanho dos domínios de Boss; raio de detecção e território dos mobs;
+- tamanho dos domínios de Boss; território dos mobs no mundo de verdade (a arena tem raios de teste);
 - recompensas de missões e conquistas.

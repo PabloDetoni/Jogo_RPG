@@ -132,14 +132,10 @@ export const posicoes = {
     voltarAoReino: { x: 10, y: 90 },
     voltarAoMapa: { x: 27, y: 90 },
   },
+  // HUD e barra de teste ficam em CSS (cantos da caixa); aqui só o aviso do retorno ao Reino
   partida: {
-    dica: { x: 50, y: 25 },
-    retorno: { x: 50, y: 45 },
-    cancelarRetorno: { x: 50, y: 56 },
-    grandeVitoria: { x: 20, y: 80 },
-    vitoria: { x: 40, y: 80 },
-    retornoForcado: { x: 60, y: 80 },
-    derrota: { x: 80, y: 80 },
+    retorno: { x: 50, y: 8 },
+    cancelarRetorno: { x: 50, y: 15 },
   },
   cutsceneDerrota: {
     mensagem: { x: 50, y: 45 },

@@ -259,3 +259,134 @@ body {
 .painel-dev-alca:active {
   cursor: grabbing;
 }
+
+/* Partida (Fase 1, parte 5a): o Phaser embaixo; HUD, retorno e barra de teste por cima.
+   O que fica por cima não pega o clique, a não ser os botões: o resto do clique vai para o jogo. */
+.arena {
+  position: absolute;
+  inset: 0;
+}
+
+.arena canvas {
+  display: block;
+}
+
+.hud {
+  position: absolute;
+  left: 1.2cqw;
+  top: 1.2cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  padding: 0.6em 0.8em;
+  background: rgb(15 20 30 / 0.6);
+  color: #f5f5f5;
+  border: 2px solid #1c2230;
+  font-size: 0.95cqw;
+  pointer-events: none;
+}
+
+.hud p {
+  margin: 0;
+}
+
+.hud-classe {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 1.15cqw;
+  font-weight: bold;
+}
+
+.hud-cor {
+  width: 1em;
+  height: 1em;
+  border: 2px solid #fff;
+}
+
+.medidor {
+  display: grid;
+  grid-template-columns: 4.2em 8em 4.5em;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.medidor-barra {
+  height: 0.75em;
+  background: #1c2230;
+  border: 1px solid #000;
+}
+
+.medidor-cheio {
+  display: block;
+  height: 100%;
+  background: #8fd3ff;
+}
+
+.medidor-vida .medidor-cheio {
+  background: #4be04b;
+}
+
+.hud-dica {
+  font-size: 0.85cqw;
+  opacity: 0.85;
+}
+
+.hud-alerta {
+  color: #ff8f8f;
+  font-weight: bold;
+}
+
+.faixa-da-partida {
+  padding: 0.3em 0.9em;
+  background: rgb(15 20 30 / 0.8);
+  color: #fff;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.barra-de-teste {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em 1.2em;
+  padding: 0.4em 0.8em;
+  background: rgb(15 20 30 / 0.8);
+  border-top: 2px dashed #ffd23f;
+  color: #f5f5f5;
+  font-size: 0.95cqw;
+}
+
+.quebra-de-linha {
+  flex-basis: 100%;
+  height: 0;
+}
+
+.selo-teste {
+  padding: 0.1em 0.5em;
+  background: #ffd23f;
+  color: #111;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+
+.grupo-de-teste {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.botao-teste {
+  padding: 0.15em 0.6em;
+  border-width: 1px;
+}
+
+.fps {
+  min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
+}

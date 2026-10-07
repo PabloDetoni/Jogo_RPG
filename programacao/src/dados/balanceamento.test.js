@@ -6,6 +6,7 @@ import { xpParaSubir, xpTotalAteONivel } from '../regras/xp.js'
 import {
   atributoMaximo,
   capacidadePorPontoDeForca,
+  combateDeTeste,
   contratos,
   distanciaAteABorda,
   minimoDaGrandeVitoria,
@@ -120,6 +121,74 @@ describe('limites da mochila e da pontuação', () => {
   it('pesos da pontuação e mínimo da Grande Vitória são números positivos', () => {
     for (const peso of Object.values(pesosDaPontuacao)) expect(peso).toBeGreaterThanOrEqual(0)
     expect(minimoDaGrandeVitoria).toBeGreaterThan(0)
+  })
+})
+
+describe('limites do combate de teste (Fase 1, parte 5a)', () => {
+  const { personagem, esquiva, ataques, mobVermelho, atirador, boneco } = combateDeTeste
+
+  it('todo número é positivo e finito', () => {
+    const conferir = (objeto, caminho) => {
+      for (const [chave, valor] of Object.entries(objeto)) {
+        if (typeof valor === 'object') conferir(valor, `${caminho}.${chave}`)
+        else expect(Number.isFinite(valor) && valor > 0, `${caminho}.${chave} = ${valor}`).toBe(true)
+      }
+    }
+    conferir(combateDeTeste, 'combateDeTeste')
+  })
+
+  it('vida de 1 a 1.000 em todo o grupo, até no máximo de Vitalidade', () => {
+    const vidaMaxima = atributoMaximo * combateDeTeste.vidaPorPontoDeVitalidade
+    expect(vidaMaxima).toBeLessThanOrEqual(1000)
+    for (const classe of classes) {
+      expect(classe.atributosIniciais.vitalidade * combateDeTeste.vidaPorPontoDeVitalidade).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('esquiva com recarga curta (até 2 s) e mais rápida que andar', () => {
+    expect(esquiva.recargaMs).toBeLessThanOrEqual(2000)
+    expect((esquiva.distancia / esquiva.ms) * 1000).toBeGreaterThan(personagem.velocidade)
+  })
+
+  it('Mago e Sacerdote têm recarga longa; Guerreiro e Arqueiro, curta', () => {
+    for (const curto of ['guerreiro', 'arqueiro']) {
+      for (const longo of ['mago', 'sacerdote']) expect(ataques[curto].recargaMs).toBeLessThan(ataques[longo].recargaMs)
+    }
+  })
+
+  it('a flecha é mais rápida que a bola mágica, e a bola cresce enquanto voa', () => {
+    expect(ataques.arqueiro.velocidade).toBeGreaterThan(ataques.mago.velocidade)
+    expect(ataques.mago.raioFinal).toBeGreaterThan(ataques.mago.raioInicial)
+  })
+
+  it('a aura cura menos do que um Sacerdote tem de vida a cada pulso', () => {
+    const vidaDoSacerdote = classes.find((c) => c.id === 'sacerdote').atributosIniciais.vitalidade * combateDeTeste.vidaPorPontoDeVitalidade
+    expect(ataques.sacerdote.curaPorPulso).toBeLessThan(vidaDoSacerdote)
+    expect(ataques.sacerdote.msDeDuracao).toBeLessThan(ataques.sacerdote.recargaMs)
+  })
+
+  it('todo inimigo tem os números que a base dos inimigos usa (sem eles, a posição vira NaN)', () => {
+    const exigidos = ['vida', 'tamanho', 'velocidade', 'raioDeDeteccao', 'raioDeDesistencia', 'raioDoPasseio', 'dano', 'empurrao']
+    for (const inimigo of [mobVermelho, atirador]) {
+      for (const chave of exigidos) expect(inimigo[chave], chave).toBeGreaterThan(0)
+    }
+  })
+
+  it('os inimigos desistem mais longe do que detectam, e o Líder consegue fugir deles', () => {
+    for (const inimigo of [mobVermelho, atirador]) expect(inimigo.raioDeDesistencia).toBeGreaterThan(inimigo.raioDeDeteccao)
+    expect(mobVermelho.velocidade).toBeLessThan(personagem.velocidade)
+    expect(atirador.distanciaMinima).toBeLessThan(atirador.distanciaMaxima)
+    expect(atirador.distanciaMaxima).toBeLessThan(atirador.raioDeDeteccao)
+  })
+
+  it('o tiro do atirador é lento o bastante para esquivar, e o aviso do golpe dura pelo menos 0,2 s', () => {
+    expect(atirador.velocidadeDoTiro).toBeLessThan(personagem.velocidade * 2)
+    expect(mobVermelho.msDeAviso).toBeGreaterThanOrEqual(200)
+    expect(atirador.msDeAviso).toBeGreaterThanOrEqual(200)
+  })
+
+  it('o boneco aguenta vários golpes', () => {
+    expect(boneco.vida).toBeGreaterThan(ataques.mago.dano * 3)
   })
 })
 

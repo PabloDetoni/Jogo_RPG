@@ -28,10 +28,11 @@ Durante o `npm run dev` aparece um **painel de desenvolvimento** num canto da te
 src/
   componentes/  peças de tela reaproveitadas: Tela, Botao, Campo, Area, Abas, Janela, Avisos, PainelDev
   telas/        uma tela por arquivo, separadas em acesso/, reino/ e partida/
+  jogo/         a partida em Phaser: cenas/, entidades/ (Líder, aliados, inimigos), ataques/ e a ponte com o React
   janelas/      janelas que abrem por cima da tela: Configurações, Pausa, Como jogar
   estado/       estado global (um reducer) e o formato do progresso do jogador
   salvamento/   salvamento no navegador (modo convidado) e o controle de uma aba só
-  regras/       regras puras do jogo (taxa, XP, atributos, mochila, fim da partida, Guilda), cada uma com teste
+  regras/       regras puras do jogo (taxa, XP, atributos, mochila, fim da partida, Guilda, combate), cada uma com teste
   dados/        TODOS os números do jogo e as listas fixas (classes, biomas, resultados, posições na tela)
   testes/       ajudantes dos testes (navegador e relógio falsos)
 scripts/        gerador do Balanceamento.md
@@ -48,7 +49,8 @@ scripts/        gerador do Balanceamento.md
 - **Regras puras e testadas.** Cada arquivo de `src/regras` só recebe dados e devolve o resultado, sem tela e sem salvamento, e tem um `.test.js` ao lado.
 - **O progresso não muda durante a partida (RF12).** Ouro, XP e itens ganhos ficam na partida atual e só entram no progresso ao encerrar. Se a aba fechar no meio, a partida é descartada e nada do que foi ganho conta.
 - **Salvamento do convidado.** O progresso vai para o `localStorage` com o formato `{ formato, versao, salvoEm, progresso, partidaEmAndamento }`. Ele é salvo a cada 3 minutos, ao fechar ou esconder a aba e em cada momento importante (classe escolhida, começo e fim da partida). Um save estragado é guardado como cópia e não trava o jogo. Se o jogo estiver aberto em duas abas, só uma joga (Web Locks).
-- **Partida em canvas com Phaser** (a partir da etapa 5), na pasta `src/jogo/`. O Phaser desenha o mundo; o HUD, os menus e as janelas continuam em React.
+- **Partida em canvas com Phaser 4** (etapa 5), na pasta `src/jogo/`. O Phaser desenha e move; o HUD, os menus, as janelas e a barra de teste continuam em React. Os dois só conversam pela ponte (`src/jogo/ponte.js`), poucas vezes por segundo. O Phaser só é baixado quando a Partida abre, e quem decide dano, recarga, perseguição e cura são as regras puras de `src/regras/combate.js`.
+- **Arena de teste (Fase 1, parte 5a).** Hoje a Partida é uma arena com quadrados, para testar o combate: WASD anda, o mouse mira, o clique ataca e o Espaço esquiva. A barra de teste, embaixo, troca a classe do Líder, enche o grupo, cria inimigos e liga o modo invencível. No `npm run dev`, o jogo fica em `window.__jogoDaPartida`, para testes no navegador.
 - **Contas com Supabase** (etapa 8). As chaves ficam num `.env`, que nunca vai para o GitHub.
 - **Nomes em português**: telas, componentes, variáveis e funções.
 
@@ -58,7 +60,7 @@ scripts/        gerador do Balanceamento.md
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser)
+5. Partida com quadrados (Phaser) ← em andamento (parte 5a feita)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)

@@ -104,6 +104,18 @@ describe('o que cada tela mostra', () => {
     expect(html).not.toContain('>Salão da Glória</button>')
   })
 
+  it('Partida: a arena ocupa a caixa (sem título), com HUD e a barra de teste por cima', () => {
+    const html = desenhar('partida', 'convidado')
+    expect(html).toContain('class="arena"')
+    expect(html).not.toContain('<h1')
+    expect(html).toContain('Carregando a arena')
+    expect(html).toContain('TESTE')
+    for (const botao of ['Grande Vitória', 'Derrota', 'Encher grupo', 'Criar mob vermelho', 'Criar atirador', 'Guerreiro', 'Arqueiro']) {
+      expect(html).toContain(`>${botao}</button>`)
+    }
+    expect(html).toContain('Voltando ao Reino em <!-- -->7<!-- --> s')
+  })
+
   it('Configurações: convidado pode criar conta e sair; conta só sai', () => {
     const convidado = desenhar('reino', 'convidado')
     expect(convidado).toContain('>Criar conta</button>')

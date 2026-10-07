@@ -1,6 +1,6 @@
 # Plano até a entrega (03/12/2026)
 
-Atualizado em 06/10/2026, com a Fase 0 feita (falta só o commit, que fica com vocês). Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
+Atualizado em 06/10/2026: Fase 0 feita e enviada ao GitHub (commit `d938108`); Fase 1, parte 5a (arena de teste com Phaser) feita, esperando o teste visual do Pablo e o commit. Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
 
 **Regra deste plano:** cumprir todos os requisitos da pasta `documentacao`. A auditoria sugere cortes (seção 12 dela), mas cortar uma funcionalidade é deixar de cumprir um requisito. Por isso, aqui os cortes só entram se o grupo decidir, e o que for cortado vai para o Conceito como "fora do beta".
 
@@ -39,7 +39,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 | TASK-002 Limpar o Vite, CLAUDE.md, commit | FALTA POUCO, COM VOCÊS: só o commit. As sobras do Vite foram apagadas (06/10, com a autorização do Pablo). O CLAUDE.md está atualizado (06/10): Salão da Glória com as Conquistas, Phaser, formato do save, link para este plano e commits com o Pablo |
 | TEST-001 Conferir as telas no navegador | FALTA POUCO: 18 telas conferidas por prints no Edge (04/10), sem sobreposição; falta o seu roteiro em 1366×768 |
 | TASK-003 Quadro no Trello | COM VOCÊS (posso gerar o texto de cada card) |
-| TASK-004 Protótipo de combate | A FAZER: vira a parte 5a da Fase 1 |
+| TASK-004 Protótipo de combate | FEITO (06/10) na parte 5a: arena de teste com Phaser 4.2.1, Líder, 5 ataques de teste e 2 inimigos. Falta o teste visual do Pablo |
 
 ### EPIC-02 · Documentação sincronizada
 | Item | Situação |
@@ -85,7 +85,9 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 | TEST-003 Limites das regras | FEITO (06/10): valores negativos, ouro ganho 0 e quantidade 0 testados; limites dos contratos no `balanceamento.test.js`. São 266 testes ao todo |
 
 ### EPIC-06 · Partida jogável (etapa 5)
-TASK-004, TASK-040 a TASK-046, TASK-048, TASK-049 e TEST-004: **A FAZER** na Fase 1.
+- **TASK-004 (protótipo de combate) e TASK-042 (grupo seguindo o Líder):** FEITO (06/10), parte 5a. Arena de teste de 1600 × 900 com pedras e boneco de treino; Líder com WASD, mira no mouse, esquiva e o ataque de teste da classe; o grupo inteiro do save seguindo em formação e contornando pedras; mob vermelho (persegue, avisa, dá o bote e desiste) e atirador (testa o escudo do Tanque); HUD e barra de teste em React. Regras em `regras/combate.js` e `regras/grupoDaPartida.js`, com testes; 56 conferências no navegador. Falta o teste visual do Pablo.
+- **Provisório até a TASK-044:** Líder sem vida → Derrota depois de 2 s, mesmo com aliados de pé (a doc pede 30 s para levantar e Retorno forçado).
+- **TASK-040, TASK-041, TASK-043 a TASK-046, TASK-048, TASK-049 e TEST-004:** A FAZER nas partes 5b e 5c.
 TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
@@ -150,11 +152,11 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 ## 4. Próximos passos, em ordem
 
 **Comigo:**
-1. Fase 1, parte 5a: instalar o Phaser (já aprovado), criar `src/jogo/` e pôr o Líder e o grupo andando, com os ataques de cada classe (TASK-004 e TASK-042). Antes de programar, mostro o resumo do que vou fazer.
+1. Esperar o teste visual da parte 5a e ajustar o que o Pablo pedir (tempo da esquiva, força dos golpes, cores).
+2. Fase 1, parte 5b: IA de combate dos aliados (TASK-043), desmaio e resgate (TASK-044), Sacerdote e uma habilidade (TASK-045 e TASK-046). Antes de programar, mostro o plano curto.
 
 **Com vocês**, já:
-- commitar a etapa 4 e a Fase 0 (código, documentação, CLAUDE.md e este plano);
-- se existir o "prompt do combate", me mandar antes da parte 5a;
+- fazer o teste visual da arena (roteiro no relatório da parte 5a) e commitar a parte 5a;
 - criar o quadro no Trello (TASK-003);
 - perguntar ao professor o formato dos protótipos e se haverá apresentação (TASK-120);
 - criar o projeto de teste no Supabase para a prova do e-mail (TASK-090);
@@ -168,7 +170,7 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 | 2 | Commit ao fim de cada tarefa | **DECIDIDO: não.** Os commits ficam com o Pablo. |
 | 3 | Imagens dos diagramas | **FEITO:** PlantUML 1.2024.8 (roda no Java 8 do computador), baixado fora do repositório. O PNG antigo do diagrama 04 não tinha sido gerado do `.puml`; o novo é, então os dois agora dizem a mesma coisa. |
 | 4 | Conceito em Word e PDF | **FEITO:** o texto original ficou como estava, com a seção 21 "Alterações do projeto" no fim; o PDF foi exportado pelo Word. |
-| 5 | Cor do Guerreiro | Vermelho, como no protótipo 06 (o prompt do combate dizia azul) |
+| 5 | Cor do Guerreiro | Por enquanto **azul (provisório)**, como pede o prompt do combate; vermelho é a cor dos inimigos na arena. O protótipo 06 usa vermelho: decisão do grupo |
 | 6 | Tema padrão | Escuro, como os protótipos |
 | 7 | Horas por semana de cada um e quem pega o Reino em paralelo | Decisão do grupo |
 | 8 | Nome do jogo, hospedagem, origem dos sons | Decisão do grupo, até 19/10 |

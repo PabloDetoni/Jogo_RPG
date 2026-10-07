@@ -5,15 +5,18 @@ import Botao from './Botao.jsx'
 import { estiloPosicao } from './posicao.js'
 
 // Fundo cinza de toda tela, com o nome dela e os botões dos cantos.
-export default function Tela({ className = '', children }) {
+// semTitulo: para a Partida, onde o jogo ocupa a caixa inteira.
+export default function Tela({ className = '', semTitulo = false, children }) {
   const { estado, acoes } = useJogo()
   const tela = telas[estado.tela]
 
   return (
     <div className={`tela ${className}`}>
-      <h1 className="titulo posicionado" style={estiloPosicao(posicoes.titulo)}>
-        {tela.nome}
-      </h1>
+      {!semTitulo && (
+        <h1 className="titulo posicionado" style={estiloPosicao(posicoes.titulo)}>
+          {tela.nome}
+        </h1>
+      )}
 
       {children}
 

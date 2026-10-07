@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import {
   atributoMaximo,
   capacidadePorPontoDeForca,
+  combateDeTeste,
   contratos,
   curvaDeXp,
   curvaDosAtributos,
@@ -248,16 +249,62 @@ escrever(
   ),
 )
 
+const combate = combateDeTeste
+const segundos = (ms) => `${numero(ms / 1000, ms % 1000 ? 2 : 0).replace(/,?0+$/, '')} s`
+const ataque = combate.ataques
+const ataquesDeTeste = {
+  guerreiro: ['Espada: varre um arco na frente', `${ataque.guerreiro.dano}`, `arco de ${ataque.guerreiro.aberturaGraus}°, alcance ${ataque.guerreiro.alcance}`],
+  arqueiro: ['Flecha: rápida, um alvo só', `${ataque.arqueiro.dano}`, `${numero(ataque.arqueiro.velocidade)} px/s, até ${ataque.arqueiro.alcance}`],
+  mago: ['Bola mágica: explode em área', `${ataque.mago.dano}`, `cresce de ${ataque.mago.raioInicial} a ${ataque.mago.raioFinal}; explosão de raio ${ataque.mago.raioDaExplosao}`],
+  sacerdote: ['Aura: cura quem está dentro', `cura ${ataque.sacerdote.curaPorPulso} por pulso`, `raio ${ataque.sacerdote.raio}; pulso a cada ${segundos(ataque.sacerdote.msEntrePulsos)} por ${segundos(ataque.sacerdote.msDeDuracao)}`],
+  tanque: ['Escudo: bloqueia; o clique empurra', `${ataque.tanque.dano}`, `escudo de ${ataque.tanque.larguraDoEscudo} px; empurrão até ${ataque.tanque.alcanceDoEmpurrao}`],
+}
+const inimigosDeTeste = [
+  ['Mob vermelho', combate.mobVermelho, `aviso de ${segundos(combate.mobVermelho.msDeAviso)}, bote de ${combate.mobVermelho.distanciaDoBote} px`],
+  ['Atirador', combate.atirador, `fica entre ${combate.atirador.distanciaMinima} e ${combate.atirador.distanciaMaxima} px; tiro de ${combate.atirador.velocidadeDoTiro} px/s`],
+]
+escrever(
+  '## Combate de teste (arena da Fase 1, provisório)',
+  `Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o combate e vão mudar quando as habilidades de verdade chegarem (TASK-010). Distâncias em pixels da arena (1.600 × 900). Vida máxima = Vitalidade × **${combate.vidaPorPontoDeVitalidade}**.`,
+  tabela(
+    ['Classe', 'Vida (nível 1)', 'Ataque de teste', 'Dano', 'Recarga', 'Detalhe'],
+    classes.map((classe) => {
+      const [nome, dano, detalhe] = ataquesDeTeste[classe.id]
+      return [classe.nome, numero(classe.atributosIniciais.vitalidade * combate.vidaPorPontoDeVitalidade), nome, dano, segundos(ataque[classe.id].recargaMs), detalhe]
+    }),
+  ),
+  lista(
+    `Andar: **${combate.personagem.velocidade} px/s**, igual na diagonal.`,
+    `Esquiva (Espaço): avança **${combate.esquiva.distancia} px** em ${segundos(combate.esquiva.ms)}, sem levar dano; recarga de **${segundos(combate.esquiva.recargaMs)}**.`,
+    `Depois de levar um golpe, **${segundos(combate.personagem.msDeImunidade)}** de imunidade (RF36).`,
+    `Líder sem vida: Derrota depois de **${segundos(combate.msAteADerrota)}** (provisório até a TASK-044, que traz o desmaio de 30 s).`,
+  ),
+  tabela(
+    ['Inimigo', 'Vida', 'Dano', 'Velocidade', 'Persegue a', 'Desiste a', 'Recarga', 'Detalhe'],
+    inimigosDeTeste.map(([nome, valores, detalhe]) => [
+      nome,
+      numero(valores.vida),
+      numero(valores.dano),
+      `${valores.velocidade} px/s`,
+      `${valores.raioDeDeteccao} px`,
+      `${valores.raioDeDesistencia} px`,
+      segundos(valores.recargaMs ?? valores.msEntreTiros),
+      detalhe,
+    ]),
+  ),
+  `Boneco de treino: **${numero(combate.boneco.vida)}** de vida, recupera tudo depois de **${segundos(combate.boneco.msParaRecuperar)}** sem apanhar.`,
+)
+
 escrever(
   '## Ainda sem valor (a decidir)',
   'Valores do Conceito §19 que ainda não existem no código:',
   lista(
     'XP e ouro por monstro; bônus de Boss na pontuação; chance de drop dos Bosses;',
-    'dano, custo de mana e recarga das habilidades; recarga da esquiva; duração da imunidade;',
+    'dano, custo de mana e recarga das habilidades de verdade (a arena usa um ataque de teste por classe);',
     'vida devolvida e fragilidade na ajuda de 5 s; fortalecimento da Ressurreição;',
     'preços do Mercado e da Forja e do pergaminho;',
     'peso de cada item; tempo que um item fica no chão;',
-    'tamanho dos domínios de Boss; raio de detecção e território dos mobs;',
+    'tamanho dos domínios de Boss; território dos mobs no mundo de verdade (a arena tem raios de teste);',
     'recompensas de missões e conquistas.',
   ),
 )
