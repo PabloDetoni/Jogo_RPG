@@ -132,10 +132,12 @@ export const posicoes = {
     voltarAoReino: { x: 10, y: 90 },
     voltarAoMapa: { x: 27, y: 90 },
   },
-  // HUD e barra de teste ficam em CSS (cantos da caixa); aqui só o aviso do retorno ao Reino
+  // HUD (faixa de cima) e barra de teste (faixa de baixo) têm a altura de dados/arenaDeTeste.js.
+  // Configurações fica dentro da faixa do HUD, à direita, para não cobrir a área jogável.
   partida: {
-    retorno: { x: 50, y: 8 },
-    cancelarRetorno: { x: 50, y: 15 },
+    configuracoes: { x: 92.5, y: 5.3 },
+    retorno: { x: 50, y: 14 },
+    cancelarRetorno: { x: 50, y: 20 },
   },
   cutsceneDerrota: {
     mensagem: { x: 50, y: 45 },

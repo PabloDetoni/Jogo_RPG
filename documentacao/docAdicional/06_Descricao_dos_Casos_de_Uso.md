@@ -64,7 +64,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele. |
 | UC35 | Explorar e coletar recursos | «extend» de UC31 | — | — | Revela o minimapa e coleta materiais e itens. |
 | UC36 | Usar item | «extend» de UC31 | — | Condição: há item na mochila da partida | Usa um item em si (E) ou em um aliado (R) pela Mochila. |
-| UC37 | Levantar aliado desmaiado | «extend» de UC31 | — | Condição: aliado desmaiado dentro dos 30 s e área limpa | Levanta um aliado com a ajuda de 5 segundos. |
+| UC37 | Levantar aliado desmaiado | «extend» de UC31 | — | Condição: aliado desmaiado dentro dos 30 s e área limpa (nenhum inimigo vivo perto dele) | Levanta um aliado com a ajuda de 5 segundos: basta ficar parado perto, sem tecla. |
 | UC38 | Pausar partida | «extend» de UC31 | — | Condição: o grupo está fora de combate | Pausa o jogo com Esc e abre o menu de pausa. |
 | UC39 | Retornar ao Reino | «extend» de UC31 | — | Condição: o grupo está fora de combate | Volta ao Reino sem custo depois de 15 segundos (tecla Q ou menu de pausa). |
 | UC40 | Fugir com a Pedra de Retorno | «extend» de UC31 | — | Condição: o jogador confirma a fuga | Foge com o grupo inteiro em 5 segundos, mesmo em combate, pagando a taxa de fuga. |
@@ -83,5 +83,6 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 | UC14 | "Efeitos" passou a se chamar Som; na partida, as opções de conta não aparecem. |
 | UC26 | A preparação permite voltar ao Mapa, além do Reino. |
 | UC43 | O minijogo é acessado pelo Mapa e volta ao Mapa. |
+| UC37 | "Área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha quando alguém fica parado perto. |
 
 Os requisitos ligados a cada mudança estão na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

@@ -4,7 +4,6 @@ import {
   circuloTocaRetangulo,
   circuloTocaRetanguloGirado,
   curaDaAura,
-  desvioDePedras,
   devePerseguir,
   fracaoDaRecarga,
   noArco,
@@ -175,44 +174,14 @@ describe('curaDaAura', () => {
   })
 })
 
-describe('desvio de pedras', () => {
+describe('segmentoCortaRetangulo (linha de visão, usada no caminho)', () => {
   const pedra = { x: 100, y: 0, largura: 40, altura: 40 } // de 80 a 120 em x, de -20 a 20 em y
 
-  it('segmentoCortaRetangulo: atravessa, passa por cima ou para antes', () => {
+  it('atravessa, passa por cima ou para antes', () => {
     expect(segmentoCortaRetangulo({ x: 0, y: 0 }, { x: 200, y: 0 }, pedra)).toBe(true)
     expect(segmentoCortaRetangulo({ x: 0, y: -30 }, { x: 200, y: -30 }, pedra)).toBe(false)
     expect(segmentoCortaRetangulo({ x: 0, y: 0 }, { x: 70, y: 0 }, pedra)).toBe(false)
     expect(segmentoCortaRetangulo({ x: 100, y: -100 }, { x: 100, y: 100 }, pedra)).toBe(true)
-  })
-
-  it('caminho livre: vai direto ao alvo', () => {
-    expect(desvioDePedras({ x: 0, y: -60 }, { x: 200, y: -60 }, [pedra], 18)).toEqual({ x: 200, y: -60 })
-  })
-
-  it('pedra no meio: vai antes a um canto dela, por um caminho que não corta a pedra', () => {
-    const ponto = desvioDePedras({ x: 0, y: 0 }, { x: 200, y: 0 }, [pedra], 18)
-    expect(ponto.x).toBeLessThan(100) // um canto do lado de cá
-    expect(Math.abs(ponto.y)).toBeGreaterThan(20 + 18)
-    expect(segmentoCortaRetangulo({ x: 0, y: 0 }, ponto, { ...pedra, largura: 40 + 36, altura: 40 + 36 })).toBe(false)
-  })
-
-  it('escolhe o lado que deixa o caminho mais curto', () => {
-    const indoParaBaixo = desvioDePedras({ x: 0, y: 10 }, { x: 200, y: 10 }, [pedra], 18)
-    expect(indoParaBaixo.y).toBeGreaterThan(0)
-  })
-
-  it('prefere o canto de onde já se vê o alvo, mesmo que outro pareça mais perto', () => {
-    // Acima da pedra, perto do canto esquerdo; o alvo está embaixo, à direita
-    const ponto = desvioDePedras({ x: 54, y: -56 }, { x: 160, y: 30 }, [pedra], 18)
-    expect(ponto.x).toBeGreaterThan(100)
-    expect(segmentoCortaRetangulo(ponto, { x: 160, y: 30 }, { ...pedra, largura: 76, altura: 76 })).toBe(false)
-  })
-
-  it('já no canto, segue para o próximo canto do mesmo lado', () => {
-    const primeiro = desvioDePedras({ x: 0, y: 0 }, { x: 200, y: 0 }, [pedra], 18)
-    const segundo = desvioDePedras(primeiro, { x: 200, y: 0 }, [pedra], 18)
-    expect(segundo.x).toBeGreaterThan(100)
-    expect(Math.sign(segundo.y)).toBe(Math.sign(primeiro.y))
   })
 })
 

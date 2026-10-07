@@ -17,7 +17,7 @@ export default function Resumo() {
   const bioma = biomas.find((b) => b.id === ultimoResultado?.bioma)
 
   const linhas = [
-    ['Motivo', resultado?.motivo ?? '—'],
+    ['Motivo', ultimoResultado?.motivo ?? resultado?.motivo ?? '—'],
     ['Bioma', bioma?.nome ?? '—'],
     ['Ouro ganho', 0],
     ['Taxa', '0%'],

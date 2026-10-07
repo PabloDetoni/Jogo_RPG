@@ -1,18 +1,27 @@
 import { combateDeTeste } from '../dados/balanceamento.js'
 import { atributosIniciaisDaClasse, classes } from '../dados/classes.js'
+import { manaMaxima, manaPorSegundo } from './habilidades.js'
 
-// Quem vai para a partida e com quanta vida (Fase 1, parte 5a).
-// Cada membro do grupo: { classe, vidaMaxima, lider, temporario, deTeste? }
+// Quem vai para a partida, com quanta vida e quanta mana (Fase 1).
+// Cada membro do grupo: { classe, vidaMaxima, manaMaxima, manaPorSegundo, lider, temporario, deTeste? }
 
 // Vida máxima na arena de teste: Vitalidade × vidaPorPontoDeVitalidade (provisório)
 export function vidaMaximaPelaVitalidade(vitalidade) {
   return Math.max(1, Math.round(vitalidade * combateDeTeste.vidaPorPontoDeVitalidade))
 }
 
+// Vida pela Vitalidade, mana pela Inteligência e a volta da mana pela Sabedoria
+function numerosDoMembro(atributos) {
+  return {
+    vidaMaxima: vidaMaximaPelaVitalidade(atributos.vitalidade),
+    manaMaxima: manaMaxima(atributos.inteligencia),
+    manaPorSegundo: manaPorSegundo(atributos.sabedoria),
+  }
+}
+
 // Membro criado só na memória da partida (barra de teste); nunca vai para o save
 export function membroDeTeste(classe, lider = false) {
-  const { vitalidade } = atributosIniciaisDaClasse(classe)
-  return { classe, vidaMaxima: vidaMaximaPelaVitalidade(vitalidade), lider, temporario: true, deTeste: true }
+  return { classe, ...numerosDoMembro(atributosIniciaisDaClasse(classe)), lider, temporario: true, deTeste: true }
 }
 
 // Todos os personagens permanentes e os contratados temporários vão juntos (RF34), com o Líder
@@ -21,19 +30,15 @@ export function membroDeTeste(classe, lider = false) {
 export function montarGrupoDaPartida(progresso, lider) {
   const permanentes = progresso.personagens.map((personagem) => ({
     classe: personagem.classe,
-    vitalidade: personagem.atributos?.vitalidade ?? atributosIniciaisDaClasse(personagem.classe).vitalidade,
+    atributos: { ...atributosIniciaisDaClasse(personagem.classe), ...personagem.atributos },
     temporario: false,
   }))
   const temporarios = progresso.contratosTemporarios
     .filter((contrato) => !permanentes.some((personagem) => personagem.classe === contrato.classe))
-    .map((contrato) => ({
-      classe: contrato.classe,
-      vitalidade: atributosIniciaisDaClasse(contrato.classe).vitalidade,
-      temporario: true,
-    }))
+    .map((contrato) => ({ classe: contrato.classe, atributos: atributosIniciaisDaClasse(contrato.classe), temporario: true }))
   const grupo = [...permanentes, ...temporarios].map((membro) => ({
     classe: membro.classe,
-    vidaMaxima: vidaMaximaPelaVitalidade(membro.vitalidade),
+    ...numerosDoMembro(membro.atributos),
     lider: membro.classe === lider,
     temporario: membro.temporario,
   }))

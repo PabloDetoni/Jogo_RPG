@@ -13,7 +13,9 @@ export function criarJogo(elemento, { ponte, grupo }) {
     height: tamanhoDaArena.altura,
     backgroundColor: coresDaArena.chao,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-    physics: { default: 'arcade', arcade: { debug: false } },
+    // overlapBias: até quantos px dentro um do outro a física ainda separa os corpos (o padrão, 4, desiste cedo
+    // demais quando o navegador está lento e deixa um corpo "enterrado" no outro)
+    physics: { default: 'arcade', arcade: { debug: false, overlapBias: 16 } },
     disableContextMenu: true,
     banner: false,
     audio: { noAudio: true }, // o som entra na etapa 9

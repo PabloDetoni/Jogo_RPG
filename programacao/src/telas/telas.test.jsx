@@ -95,6 +95,7 @@ describe('o que cada tela mostra', () => {
     const html = desenhar('resumo', 'convidado')
     expect(html).toContain('resultado-amarelo')
     expect(html).toContain('Floresta')
+    expect(html).toContain('Fuga com a Pedra de Retorno') // sem motivo vindo da partida, o padrão
   })
 
   it('Partida: Configurações sem opções de conta e sem Salão da Glória', () => {
@@ -110,7 +111,20 @@ describe('o que cada tela mostra', () => {
     expect(html).not.toContain('<h1')
     expect(html).toContain('Carregando a arena')
     expect(html).toContain('TESTE')
-    for (const botao of ['Grande Vitória', 'Derrota', 'Encher grupo', 'Criar mob vermelho', 'Criar atirador', 'Guerreiro', 'Arqueiro']) {
+    const botoes = [
+      'Grande Vitória',
+      'Derrota',
+      'Encher grupo',
+      'Juntar todos',
+      'Criar mob vermelho',
+      'Criar atirador',
+      'Recarregar habilidades',
+      'Derrubar aliado',
+      'Derrubar Líder',
+      'Guerreiro',
+      'Arqueiro',
+    ]
+    for (const botao of botoes) {
       expect(html).toContain(`>${botao}</button>`)
     }
     expect(html).toContain('Voltando ao Reino em <!-- -->7<!-- --> s')
@@ -123,6 +137,12 @@ describe('o que cada tela mostra', () => {
     const conta = desenhar('reino', 'conta')
     expect(conta).toContain('>Sair da conta</button>')
     expect(conta).not.toContain('>Criar conta</button>')
+  })
+
+  it('Painel de desenvolvimento: tem o símbolo de dev e o botão de minimizar', () => {
+    const html = desenhar('reino', 'convidado')
+    expect(html).toContain('&lt;/&gt;')
+    expect(html).toContain('aria-label="Minimizar o painel"')
   })
 
   it('problema no salvamento aparece como aviso', () => {

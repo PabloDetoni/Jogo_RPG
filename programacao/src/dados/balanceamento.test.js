@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { manaMaxima, manaPorSegundo } from '../regras/habilidades.js'
 import { capacidadeDaMochila } from '../regras/mochila.js'
 import { efeitoDoAtributo } from '../regras/atributos.js'
 import { taxaNaDistancia } from '../regras/taxa.js'
@@ -143,6 +144,81 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
     for (const classe of classes) {
       expect(classe.atributosIniciais.vitalidade * combateDeTeste.vidaPorPontoDeVitalidade).toBeGreaterThanOrEqual(1)
     }
+  })
+
+  it('separação: zona menor que um corpo e aliado sai da frente do Líder mais rápido do que ele anda', () => {
+    const { separacao } = combateDeTeste
+    expect(separacao.folga).toBeLessThan(personagem.tamanho / 2)
+    const parteDoAliado = separacao.pesoDoLider / (separacao.pesoDoLider + 1)
+    expect(separacao.forca * parteDoAliado).toBeGreaterThan(personagem.velocidade)
+    expect(separacao.forca).toBeLessThanOrEqual(personagem.velocidade * 2) // afasta sem tranco
+  })
+
+  it('travamento: percebe em menos de 1 s e manda ao ponto livre em até 3 s', () => {
+    const { travamento } = combateDeTeste
+    expect(travamento.msDaJanela).toBeLessThanOrEqual(1000)
+    expect(travamento.fracaoMinima).toBeLessThan(1)
+    expect(travamento.nivelDoPontoLivre).toBeGreaterThanOrEqual(3) // antes, escorrega e dá a volta
+    expect(travamento.msDaJanela * travamento.nivelDoPontoLivre).toBeLessThanOrEqual(3000)
+    expect(travamento.msDoDeslize).toBeLessThanOrEqual(300) // desliza depressa, sem parecer teletransporte
+  })
+
+  it('a grade do caminho é fina o bastante para passar entre as pedras', () => {
+    expect(combateDeTeste.caminho.celula).toBeLessThanOrEqual(personagem.tamanho / 2)
+  })
+
+  it('desmaio: a área limpa é maior que o bote do mob, e dá para ficar perto de quem caiu', () => {
+    const { desmaio, separacao } = combateDeTeste
+    expect(desmaio.raioDaAreaLimpa).toBeGreaterThan(mobVermelho.alcanceDoBote + mobVermelho.distanciaDoBote)
+    expect(desmaio.raioDaAreaLimpa).toBeLessThan(mobVermelho.raioDeDeteccao)
+    // A zona dos dois corpos acaba antes do raio da ajuda: quem ajuda consegue chegar perto
+    expect(desmaio.raioDaAjuda).toBeGreaterThan(personagem.tamanho + separacao.folga + 4)
+    expect(desmaio.msDeFragilidade).toBeLessThanOrEqual(30000)
+    expect(desmaio.danoExtraFragil).toBeLessThanOrEqual(1)
+  })
+
+  it('mana: a habilidade de teste de cada classe cabe na mana inicial, e a mana enche entre 10 s e 90 s', () => {
+    for (const classe of classes) {
+      const { inteligencia, sabedoria } = classe.atributosIniciais
+      const maxima = manaMaxima(inteligencia)
+      expect(combateDeTeste.habilidades[classe.id].custoDeMana).toBeLessThanOrEqual(maxima)
+      const segundosParaEncher = maxima / manaPorSegundo(sabedoria)
+      expect(segundosParaEncher).toBeGreaterThanOrEqual(10)
+      expect(segundosParaEncher).toBeLessThanOrEqual(90)
+    }
+  })
+
+  it('Ressurreição: gasta muita mana e tem recarga longa, de cerca de 3 min (Conceito §7)', () => {
+    const { sacerdote } = combateDeTeste.habilidades
+    const manaDoSacerdote = manaMaxima(atributoInicial('sacerdote', 'inteligencia'))
+    expect(sacerdote.custoDeMana).toBeGreaterThanOrEqual(manaDoSacerdote / 2)
+    expect(sacerdote.recargaMs).toBeGreaterThanOrEqual(120000)
+    expect(sacerdote.recargaMs).toBeLessThanOrEqual(240000)
+    expect(sacerdote.raio).toBeLessThan(ataques.sacerdote.raio) // área pequena: precisa estar perto
+  })
+
+  it('habilidades valem mais que o ataque comum da classe', () => {
+    const { habilidades } = combateDeTeste
+    expect(habilidades.arqueiro.dano).toBeGreaterThanOrEqual(ataques.arqueiro.dano * 2)
+    expect(habilidades.arqueiro.velocidade).toBeGreaterThan(ataques.arqueiro.velocidade)
+    expect(habilidades.arqueiro.alcance).toBeGreaterThanOrEqual(1600) // cruza o mapa
+    expect(habilidades.guerreiro.raio).toBeGreaterThan(ataques.guerreiro.alcance)
+    expect(habilidades.mago.raio).toBeGreaterThan(ataques.mago.raioDaExplosao)
+    expect(habilidades.tanque.reducaoDeDano).toBeLessThan(1) // provocando, ainda leva algum dano
+    for (const habilidade of Object.values(habilidades)) expect(habilidade.recargaMs).toBeGreaterThan(ataques.guerreiro.recargaMs)
+  })
+
+  it('IA: a corrente é maior que a luta, e Arqueiro e Mago atacam de longe sem passar do alcance', () => {
+    const { ia, raioDaFormacao } = combateDeTeste
+    expect(ia.raioDaCorrente).toBeGreaterThan(ia.raioDeCombate)
+    expect(ia.raioDeCombate).toBeGreaterThan(raioDaFormacao)
+    expect(ia.raioDeVolta).toBeLessThan(ia.raioDaCorrente)
+    expect(ia.raioDeVolta).toBeGreaterThan(raioDaFormacao)
+    expect(ia.distanciaDoArqueiro.minima).toBeGreaterThan(mobVermelho.alcanceDoBote + mobVermelho.distanciaDoBote)
+    expect(ia.distanciaDoArqueiro.maxima).toBeLessThan(ataques.arqueiro.alcance)
+    expect(ia.distanciaDoMago.maxima).toBeLessThan(ataques.mago.alcance)
+    expect(ia.raioDeAtracaoDoTanque).toBeLessThan(mobVermelho.raioDeDeteccao)
+    expect(ia.limiteParaCurar).toBeLessThan(1)
   })
 
   it('esquiva com recarga curta (até 2 s) e mais rápida que andar', () => {

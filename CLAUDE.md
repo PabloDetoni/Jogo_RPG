@@ -5,15 +5,24 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Pastas
 Código em `programacao/` (rodar npm lá); documentação em `documentacao/` (fonte de verdade). O caminho até a entrega e a situação de cada item da auditoria (TASK/DOC/TEST) ficam no `PLANO.md` da raiz.
-Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint` e `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites).
+Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) e `npm run testar:navegador` (roteiro da partida num Edge escondido).
 
 ## Stack e arquitetura
 - React na interface (obrigatório) + Supabase (contas e dados). A partida é desenhada com Phaser 4 (canvas) em `src/jogo/` (cenas, entidades, ataques); HUD, menus, janelas e a barra de teste continuam em React.
-- Phaser e React só conversam pela ponte (`src/jogo/ponte.js`): o Phaser manda a situação 8 vezes por segundo e avisa eventos; o React manda comandos e a pausa. O Phaser só carrega ao abrir a Partida (import dinâmico em `ArenaDaPartida.jsx`), e nunca há dois jogos ao mesmo tempo. No `npm run dev`, o jogo fica em `window.__jogoDaPartida` para testes no navegador.
+- Phaser e React só conversam pela ponte (`src/jogo/ponte.js`): o Phaser manda a situação 8 vezes por segundo e o "fimDaPartida" (desmaio); o React manda comandos e a pausa. O Phaser só carrega ao abrir a Partida (import dinâmico em `ArenaDaPartida.jsx`), e nunca há dois jogos ao mesmo tempo. No `npm run dev`, o jogo fica em `window.__jogoDaPartida` para testes no navegador.
+- Roteiro de testes no navegador: `npm run testar:navegador` liga o Vite e um Edge escondido, joga a arena e confere tudo (prints em `programacao/testes-do-navegador/`, fora do git). Rodar no fim de cada parte e acrescentar as conferências do que for novo.
+- Na partida, o HUD (faixa de cima) e a barra de teste (faixa de baixo) ficam fora da área jogável: a borda da arena é a beira delas (`dados/arenaDeTeste.js`).
 - Imagens são só fundo. Textos, botões e áreas clicáveis são componentes React por cima.
 - Primeiro funcional, depois bonito: no início cada classe é um quadrado colorido e os ataques são quadradinhos.
 - Estado global em `src/estado/` (um reducer); salvamento no navegador em `src/salvamento/`, no formato `{ formato, versao, salvoEm, progresso, partidaEmAndamento }`. Campo novo no progresso entra pelo `normalizarProgresso`; campo que muda de nome ou lugar pede um formato novo com migração (`formato.js`). Durante a partida o progresso salvo não muda: os ganhos ficam na partida atual e só entram no progresso ao encerrar (RF12).
-- Regras puras (taxa, XP, atributos, mochila, fim da partida, Guilda, combate, grupo da partida) em `src/regras/`, cada uma com teste ao lado. No combate, o Phaser só desenha e move; dano, recarga, perseguição, empurrão, cura, acerto e desvio de pedras vêm de `regras/combate.js`. Valores da documentação em `src/dados/regras.js` e `taxas.js`; provisórios só em `src/dados/balanceamento.js`. Os testes de limite em `balanceamento.test.js` barram números absurdos.
+- Regras puras (taxa, XP, atributos, mochila, fim da partida, Guilda, combate, movimento, grupo da partida, IA, desmaio, habilidades) em `src/regras/`, cada uma com teste ao lado. Na partida, o Phaser só desenha e move:
+  - dano, recarga, empurrão, cura e acerto vêm de `regras/combate.js`;
+  - separação entre corpos, escorregar (pedras, borda e outros corpos), desfazer sobreposições depois da física, caminho em volta das pedras (grade), travamento e ponto livre vêm de `regras/movimento.js`;
+  - alvos e posições da IA (aliados e inimigos) vêm de `regras/iaDosAliados.js`;
+  - os 30 s, a ajuda de 5 s, a área limpa e o fim por desmaio vêm de `regras/desmaio.js`;
+  - mana e uso das teclas 1 a 3 vêm de `regras/habilidades.js`.
+- Valores da documentação ficam em `src/dados/regras.js` e `taxas.js`; os provisórios, só em `src/dados/balanceamento.js`. Os testes de limite em `balanceamento.test.js` barram números absurdos.
+- Habilidades de teste (uma por classe, tecla 1, até a TASK-010) ficam em `dados/habilidades.js` e o efeito de cada uma em `jogo/habilidades/`.
 
 ## Regras que moldam as telas
 - Conta: e-mail e senha, apelido único, confirmação de e-mail obrigatória e "esqueci minha senha". Dá para jogar como convidado (salvo só no navegador); ao criar conta, o progresso do convidado vai para a conta. Uma conta = uma sessão ativa.
@@ -29,6 +38,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint` e `npm run balancea
 - Nomes de telas, componentes e variáveis em português.
 - Números do jogo (taxas, XP, atributos, peso) ficam em arquivos de dados, nunca espalhados no código.
 - Hitboxes separadas das imagens, para trocar a arte sem quebrar nada. Na partida, a hitbox é uma zona de física invisível e o desenho segue ela (`jogo/entidades/Entidade.js`). Cores das classes em `dados/classes.js`; mapa, cores e posições da arena em `dados/arenaDeTeste.js`.
+- Na partida, cada entidade diz para onde quer andar (`andar`/`parar`) e a cena decide a velocidade final (`CenaArena.moverTodos`: separação, escorregar e destravar; `corrigirSobreposicoes` desfaz o que a física deixou um dentro do outro); para andar, ninguém chama `setVelocity` direto. Nascer ou reaparecer sempre passa por `lugarLivre` (nunca em pedra, fora da borda ou em cima de outro).
 - Não instalar bibliotecas sem perguntar (já aprovadas: Vitest e Phaser). Plano antes de qualquer mudança grande.
 - Commits ficam com o Pablo: não commitar sem ele pedir.
 - Decisão que muda a documentação: atualizar o texto do documento e registrar na seção "Alterações do projeto" dele (no Conceito, a seção 21, sem reescrever o original). O PNG do diagrama sai do `.puml` pelo PlantUML.
@@ -59,7 +69,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint` e `npm run balancea
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser) ← em andamento (Fase 1 do `PLANO.md`): parte 5a feita (arena, Líder, grupo, 5 ataques de teste, 2 inimigos); faltam a 5b (IA dos aliados, desmaio) e a 5c (Q, F, pausa em combate, HUD, fim com números reais)
+5. Partida com quadrados (Phaser) ← em andamento (Fase 1 do `PLANO.md`): 5a (arena, Líder, grupo, ataques, inimigos) e 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste) feitas; falta a 5c (Q, F, pausa em combate, HUD completo, fim com números reais)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)

@@ -8,9 +8,10 @@ const config = combateDeTeste.ataques.arqueiro
 // Arqueiro: bolinha pequena e muito rápida, em linha reta. Some ao acertar alguém, uma pedra ou a borda;
 // acerta um alvo só.
 export default class Flecha extends Projetil {
-  constructor(cena, lider, angulo) {
-    const saida = lider.tamanho * 0.7
-    super(cena, lider.x + Math.cos(angulo) * saida, lider.y + Math.sin(angulo) * saida, angulo, config.velocidade, config.raio, coresDaArena.flecha)
+  constructor(cena, dono, angulo) {
+    const saida = dono.tamanho * 0.7
+    super(cena, dono.x + Math.cos(angulo) * saida, dono.y + Math.sin(angulo) * saida, angulo, config.velocidade, config.raio, coresDaArena.flecha)
+    this.dono = dono
     this.risco = cena.add.rectangle(this.x, this.y, 28, 3, coresDaArena.flecha, 0.55).setOrigin(1, 0.5).setRotation(angulo)
   }
 
@@ -25,7 +26,7 @@ export default class Flecha extends Projetil {
       } else {
         const alvo = this.cena.alvoAtingido(circulo)
         if (alvo) {
-          this.cena.acertar(alvo, config.dano, this.origemDoEmpurrao, config.empurrao)
+          this.cena.acertar(alvo, config.dano, this.origemDoEmpurrao, config.empurrao, this.dono)
           acabou = true
         }
       }

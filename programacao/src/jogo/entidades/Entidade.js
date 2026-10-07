@@ -26,6 +26,16 @@ export default class Entidade {
     this.balanco = 0 // fase do esticar e achatar ao andar
     this.fimDoPiscar = 0
     this.fimDoEmpurrao = 0
+    this.vetorDoEmpurrao = { x: 0, y: 0 }
+
+    // Movimento: cada um diz para onde quer andar (andar/parar); quem decide a velocidade final é a cena,
+    // somando a separação dos outros corpos e as manobras para destravar (CenaArena.moverTodos).
+    this.querida = { x: 0, y: 0 }
+    this.peso = 1 // na separação, o mais pesado se mexe menos
+    this.travamento = null // registro do detector de travamento (regras/movimento.js)
+    this.manobra = null // manobra para destravar em andamento
+    this.deslizando = false // indo depressa para o ponto livre mais próximo
+    this.separandoAte = 0 // depois do "Juntar todos": até quando a separação é só pela zona (sem a batida dura)
   }
 
   get x() {
@@ -36,8 +46,33 @@ export default class Entidade {
     return this.corpo.y
   }
 
+  get raio() {
+    return this.tamanho / 2
+  }
+
+  // Quem não se mexe na separação (o boneco; os caídos, em Personagem)
+  get fixo() {
+    return !this.podeSerEmpurrado
+  }
+
   retangulo() {
     return { x: this.x, y: this.y, largura: this.tamanho, altura: this.tamanho }
+  }
+
+  andar(velocidade) {
+    this.querida = velocidade
+  }
+
+  parar() {
+    this.querida = { x: 0, y: 0 }
+  }
+
+  // Põe o corpo num ponto, parado (nascer, reaparecer, "Juntar todos")
+  colocarEm(x, y) {
+    this.corpo.body.reset(x, y)
+    this.parar()
+    this.travamento = null
+    this.manobra = null
   }
 
   definirCor(cor) {
@@ -54,6 +89,7 @@ export default class Entidade {
   // Empurrão: a velocidade vira o vetor dado por alguns milissegundos, e o controle volta depois
   empurrar(vetor, ms) {
     if (!this.podeSerEmpurrado || !this.corpo.body) return
+    this.vetorDoEmpurrao = { x: vetor.x, y: vetor.y }
     this.corpo.body.setVelocity(vetor.x, vetor.y)
     this.fimDoEmpurrao = this.cena.time.now + ms
   }
@@ -101,12 +137,12 @@ export default class Entidade {
   }
 }
 
-// Barra de vida pequena em cima de quem a tem (Líder, mobs e boneco)
+// Barra pequena em cima de quem a tem: vida (grupo, mobs e boneco) e mana (grupo, mais fina)
 export class BarraDeVida {
-  constructor(cena, largura, cor = 0x4be04b) {
+  constructor(cena, largura, cor = 0x4be04b, altura = 4) {
     this.largura = largura
-    this.fundo = cena.add.rectangle(0, 0, largura + 4, 8, coresDaArena.contorno).setDepth(camadas.textos - 2)
-    this.preenchimento = cena.add.rectangle(0, 0, largura, 4, cor).setOrigin(0, 0.5).setDepth(camadas.textos - 2)
+    this.fundo = cena.add.rectangle(0, 0, largura + 4, altura + 4, coresDaArena.contorno).setDepth(camadas.textos - 2)
+    this.preenchimento = cena.add.rectangle(0, 0, largura, altura, cor).setOrigin(0, 0.5).setDepth(camadas.textos - 2)
   }
 
   atualizar(x, y, fracao) {

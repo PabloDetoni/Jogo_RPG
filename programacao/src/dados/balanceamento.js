@@ -50,10 +50,67 @@ export const combateDeTeste = {
   personagem: { tamanho: 40, velocidade: 220, msDeImunidade: 500, msDeEmpurrao: 150 },
   // Esquiva (Espaço): avanço curto, sem gastar mana e sem levar dano durante o avanço
   esquiva: { distancia: 160, ms: 150, recargaMs: 800 },
-  // Provisório até a TASK-044: Líder sem vida → Derrota depois deste tempo
-  msAteADerrota: 2000,
+  // Desmaio e resgate (TASK-044). Os 30 s, os 5 s e os 10% da vida vêm de dados/regras.js (RF43).
+  // Área limpa (aprovada pelo Pablo em 06/10): nenhum inimigo vivo a menos de raioDaAreaLimpa de quem caiu.
+  // Ajuda: alguém de pé, parado (sem tentar andar), a até raioDaAjuda de quem caiu. Sem tecla.
+  // Quem é levantado pela ajuda fica frágil: leva danoExtraFragil a mais (0,5 = +50%) por msDeFragilidade.
+  desmaio: { raioDaAreaLimpa: 250, raioDaAjuda: 60, msDeFragilidade: 10000, danoExtraFragil: 0.5 },
+  // Mana (TASK-046): máxima = base + Inteligência × porInteligencia; volta sozinha:
+  // regeneracaoBase + Sabedoria × regeneracaoPorSabedoria por segundo. A vida não volta sozinha.
+  mana: { base: 20, porInteligencia: 5, regeneracaoBase: 0.5, regeneracaoPorSabedoria: 0.15 },
+  // IA dos aliados (TASK-043). Corrente: se o Líder passa de raioDaCorrente, todos largam a luta e voltam
+  // até ficarem a raioDeVolta dele. Só lutam com inimigos a até raioDeCombate do Líder.
+  // Arqueiro e Mago atacam de longe, dentro da faixa de distância. Mobs a até raioDeAtracaoDoTanque do
+  // Tanque vão nele. O Sacerdote cura quem está abaixo de limiteParaCurar da vida (0,7 = 70%).
+  ia: {
+    raioDaCorrente: 420,
+    raioDeVolta: 160,
+    raioDeCombate: 380,
+    distanciaDoArqueiro: { minima: 220, maxima: 320 },
+    distanciaDoMago: { minima: 260, maxima: 420 },
+    raioDeAtracaoDoTanque: 260,
+    limiteParaCurar: 0.7,
+  },
+  // Habilidades de TESTE (tecla 1), uma por classe, até a TASK-010. Nomes em dados/habilidades.js.
+  habilidades: {
+    // Giro: golpe em volta de si
+    guerreiro: { custoDeMana: 20, recargaMs: 5000, dano: 35, raio: 100, empurrao: 320 },
+    // Tiro perfurante: atravessa os inimigos e cruza o mapa (para em pedra e na borda)
+    arqueiro: { custoDeMana: 25, recargaMs: 6000, dano: 60, velocidade: 1400, raio: 8, alcance: 1800, empurrao: 220 },
+    // Meteoro: cai onde o mouse aponta (até o alcance) depois do aviso no chão
+    mago: { custoDeMana: 35, recargaMs: 8000, dano: 50, raio: 130, alcance: 600, msDeQueda: 700, empurrao: 400 },
+    // Provocação: os mobs no raio vão no Tanque, que leva (1 - reducaoDeDano) do dano enquanto dura
+    tanque: { custoDeMana: 15, recargaMs: 10000, raio: 300, msDeDuracao: 4000, reducaoDeDano: 0.5 },
+    // Ressurreição (Conceito §7): levanta os caídos no raio com vida cheia, imunidade e fortalecimento
+    sacerdote: {
+      custoDeMana: 60,
+      recargaMs: 180000,
+      raio: 120,
+      msDeImunidade: 2000,
+      msDeFortalecimento: 8000,
+      bonusDeDano: 0.2,
+    },
+  },
   // Grupo: distância das vagas em volta do Líder
   raioDaFormacao: 80,
+  // Zona em volta de cada corpo (ninguém fica em cima de ninguém). A zona de dois corpos vai até a soma das
+  // metades + folga; dentro dela, os dois se afastam aos poucos, até "forca" px/s quando um está em cima do outro.
+  // O Líder é mais pesado: quando ele esbarra, quem sai do caminho são os aliados.
+  separacao: { folga: 10, forca: 320, pesoDoLider: 4, pesoDoInimigo: 1.5 },
+  // Quem anda sozinho e quase não sai do lugar: a cada janela, se andou menos que a fração do que queria,
+  // o travamento sobe um nível (escorrega, escorrega para o outro lado, dá a volta e, no último nível,
+  // desliza depressa até o ponto livre mais próximo, com essa folga em volta).
+  // Abaixo da velocidade mínima (px/s) ele não está "tentando andar" (por exemplo, freando ao chegar na vaga).
+  travamento: {
+    msDaJanela: 600,
+    fracaoMinima: 0.25,
+    velocidadeMinima: 60,
+    nivelDoPontoLivre: 4,
+    msDoDeslize: 150,
+    folgaDoPontoLivre: 12,
+  },
+  // Caminho em volta das pedras: a arena vira uma grade de quadradinhos deste tamanho (px)
+  caminho: { celula: 20, msEntreRecalculos: 500 },
   // Ataque de teste de cada classe (clique esquerdo). "empurrao" = velocidade do empurrão no alvo
   ataques: {
     guerreiro: { dano: 25, alcance: 70, aberturaGraus: 120, recargaMs: 400, empurrao: 260 },

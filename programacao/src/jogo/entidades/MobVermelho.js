@@ -1,12 +1,15 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { combateDeTeste } from '../../dados/balanceamento.js'
-import { podeUsar, retangulosSeTocam, velocidadeDoMovimento } from '../../regras/combate.js'
+import { podeUsar, velocidadeDoMovimento } from '../../regras/combate.js'
 import Inimigo from './Inimigo.js'
 
 const config = combateDeTeste.mobVermelho
 const velocidadeDoBote = config.distanciaDoBote / (config.msDeBote / 1000)
+// O bote para ao encostar (ninguém atravessa ninguém, e quem anda para a poucos px do outro);
+// a folga conta esse encostar como acerto
+const aumentar = (retangulo, folga) => ({ ...retangulo, largura: retangulo.largura + folga, altura: retangulo.altura + folga })
 
-// Mob vermelho (corpo a corpo). Estados:
+// Mob vermelho (corpo a corpo). Ataca quem do grupo ele estiver perseguindo (o Tanque perto atrai). Estados:
 // passeando → perseguindo → avisando (pisca e encolhe) → bote (avanço curto) → descansando → perseguindo
 export default class MobVermelho extends Inimigo {
   constructor(cena, x, y) {
@@ -16,47 +19,49 @@ export default class MobVermelho extends Inimigo {
 
   atualizar(agora) {
     if (this.morto || this.estaSendoEmpurrado(agora)) return
-    const lider = this.cena.lider
-    const corpo = this.corpo.body
 
     if (this.estado === 'passeando' || this.estado === 'perseguindo') {
-      if (!this.decidirPerseguicao(lider, agora)) {
+      const alvo = this.decidirAlvo(agora)
+      if (!alvo) {
         this.passear(agora)
         return
       }
-      const ate = this.distanciaAte(lider)
+      const ate = this.distanciaAte(alvo)
       if (ate <= config.alcanceDoBote && podeUsar(agora, this.ultimoBote, config.recargaMs)) {
         this.avisar(agora)
         return
       }
-      // Chega perto e espera a recarga sem colar no Líder
-      const velocidade =
-        ate <= config.alcanceDoBote * 0.7 ? { x: 0, y: 0 } : this.velocidadeAte(lider, config.velocidade)
-      corpo.setVelocity(velocidade.x, velocidade.y)
+      // Chega perto e espera a recarga sem colar no alvo
+      if (ate <= config.alcanceDoBote * 0.7) this.parar()
+      else this.andar(this.velocidadeAte(alvo, config.velocidade))
       return
     }
 
     if (this.estado === 'avisando') {
-      corpo.setVelocity(0, 0)
-      if (agora >= this.fimDoAviso) this.darBote(agora, lider)
+      this.parar()
+      if (agora >= this.fimDoAviso) this.darBote(agora)
       return
     }
 
     if (this.estado === 'bote') {
-      if (!this.acertouNoBote && !lider.caido && retangulosSeTocam(this.retangulo(), lider.retangulo())) {
-        this.acertouNoBote = true
-        this.cena.inimigoAcertaLider(this, config.dano, config.empurrao)
+      if (!this.acertouNoBote) {
+        // Acerta o primeiro do grupo que encostar, mesmo que não seja o alvo
+        const atingido = this.cena.membroTocado(aumentar(this.retangulo(), 32))
+        if (atingido) {
+          this.acertouNoBote = true
+          this.cena.inimigoAcerta(this, atingido, config.dano, config.empurrao)
+        }
       }
       if (agora >= this.fimDoBote) {
         this.estado = 'descansando'
         this.fimDoDescanso = agora + 350
-        corpo.setVelocity(0, 0)
+        this.parar()
       }
       return
     }
 
     if (this.estado === 'descansando') {
-      corpo.setVelocity(0, 0)
+      this.parar()
       if (agora >= this.fimDoDescanso) this.estado = 'perseguindo'
     }
   }
@@ -65,18 +70,20 @@ export default class MobVermelho extends Inimigo {
   avisar(agora) {
     this.estado = 'avisando'
     this.fimDoAviso = agora + config.msDeAviso
-    this.corpo.body.setVelocity(0, 0)
+    this.parar()
     this.cena.tweens.killTweensOf(this.escalaExtra)
     this.cena.tweens.add({ targets: this.escalaExtra, x: 0.78, y: 0.78, duration: config.msDeAviso, ease: 'Quad.In' })
   }
 
-  darBote(agora, lider) {
+  // O bote vai na direção do alvo (ou de onde ele estava, se caiu durante o aviso)
+  darBote(agora) {
     this.estado = 'bote'
     this.ultimoBote = agora
     this.fimDoBote = agora + config.msDeBote
     this.acertouNoBote = false
-    const velocidade = velocidadeDoMovimento(lider.x - this.x, lider.y - this.y, velocidadeDoBote)
-    this.corpo.body.setVelocity(velocidade.x, velocidade.y)
+    const destino = this.alvo ?? { x: this.x + 1, y: this.y }
+    const velocidade = velocidadeDoMovimento(destino.x - this.x, destino.y - this.y, velocidadeDoBote)
+    this.andar(velocidade)
     const deitado = Math.abs(velocidade.x) > Math.abs(velocidade.y)
     this.deformar(deitado ? 1.4 : 0.75, deitado ? 0.75 : 1.4, 60, 180)
   }

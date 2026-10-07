@@ -1,5 +1,6 @@
 // Regras do combate (Fase 1, parte 5a). Funções puras: recebem números e devolvem o resultado.
 // O Phaser (src/jogo) só desenha e move; dano, recarga, perseguição, empurrão, cura e acerto são decididos aqui.
+// Separação, caminho em volta das pedras e travamento ficam em regras/movimento.js.
 // Posições são { x, y }; um retângulo é { x, y, largura, altura } com x e y no centro; ângulos em radianos.
 
 const limitar = (valor, minimo, maximo) => Math.min(maximo, Math.max(minimo, valor))
@@ -134,31 +135,6 @@ export function segmentoCortaRetangulo(a, b, retangulo) {
     if (entrada > saida) return false
   }
   return true
-}
-
-const aumentar = (retangulo, folga) => ({ ...retangulo, largura: retangulo.largura + 2 * folga, altura: retangulo.altura + 2 * folga })
-
-// Desvio de pedras: se o caminho reto até o alvo bate numa pedra, vai antes até um canto dela.
-// Prefere o canto de onde já se vê o alvo; entre esses, o que deixa o caminho mais curto. Se nenhum canto
-// vê o alvo (a pedra está bem no meio), vai ao canto mais curto e decide de novo de lá.
-// "folga" = metade do corpo de quem anda. Devolve o ponto para onde andar agora.
-export function desvioDePedras(posicao, alvo, pedras, folga) {
-  const pedra = pedras.find((outra) => segmentoCortaRetangulo(posicao, alvo, aumentar(outra, folga)))
-  if (!pedra) return alvo
-  const corpoDaPedra = aumentar(pedra, folga)
-  const contorno = aumentar(pedra, folga + 8)
-  const cantos = [
-    [-1, -1],
-    [1, -1],
-    [1, 1],
-    [-1, 1],
-  ].map(([sx, sy]) => ({ x: contorno.x + (sx * contorno.largura) / 2, y: contorno.y + (sy * contorno.altura) / 2 }))
-  const custo = (canto) => distancia(posicao, canto) + distancia(canto, alvo)
-  const maisCurto = (lista) => lista.reduce((melhor, canto) => (custo(canto) < custo(melhor) ? canto : melhor))
-  const alcancaveis = cantos.filter((canto) => distancia(posicao, canto) > 4 && !segmentoCortaRetangulo(posicao, canto, corpoDaPedra))
-  if (alcancaveis.length === 0) return alvo
-  const veemOAlvo = alcancaveis.filter((canto) => !segmentoCortaRetangulo(canto, alvo, corpoDaPedra))
-  return maisCurto(veemOAlvo.length > 0 ? veemOAlvo : alcancaveis)
 }
 
 // Seguir um ponto e frear ao chegar perto (o aliado indo para a vaga dele)

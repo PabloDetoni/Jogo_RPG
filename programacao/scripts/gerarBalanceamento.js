@@ -17,10 +17,20 @@ import {
 } from '../src/dados/balanceamento.js'
 import { biomas } from '../src/dados/biomas.js'
 import { atributos, classes } from '../src/dados/classes.js'
-import { bonusDaGrandeVitoriaPercentual, multaPorAbandonoPercentual, nivelInicial, nivelMaximo } from '../src/dados/regras.js'
+import { habilidadesDeTeste } from '../src/dados/habilidades.js'
+import {
+  bonusDaGrandeVitoriaPercentual,
+  multaPorAbandonoPercentual,
+  nivelInicial,
+  nivelMaximo,
+  segundosDaAjuda,
+  segundosParaLevantar,
+  vidaAoSerAjudadoPercentual,
+} from '../src/dados/regras.js'
 import { resultados } from '../src/dados/resultados.js'
 import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
 import { efeitoComExpoente, pontosDeAtributoAteONivel } from '../src/regras/atributos.js'
+import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
 import { calcularFimDaPartida } from '../src/regras/fimDaPartida.js'
 import { multaDaMissao } from '../src/regras/guilda.js'
 import { capacidadeDaMochila } from '../src/regras/mochila.js'
@@ -277,7 +287,8 @@ escrever(
     `Andar: **${combate.personagem.velocidade} px/s**, igual na diagonal.`,
     `Esquiva (Espaço): avança **${combate.esquiva.distancia} px** em ${segundos(combate.esquiva.ms)}, sem levar dano; recarga de **${segundos(combate.esquiva.recargaMs)}**.`,
     `Depois de levar um golpe, **${segundos(combate.personagem.msDeImunidade)}** de imunidade (RF36).`,
-    `Líder sem vida: Derrota depois de **${segundos(combate.msAteADerrota)}** (provisório até a TASK-044, que traz o desmaio de 30 s).`,
+    `Separação: cada corpo tem uma zona de **${combate.separacao.folga} px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **${combate.separacao.forca} px/s** quando um está em cima do outro. O Líder pesa **${combate.separacao.pesoDoLider}** (os aliados saem da frente dele) e os inimigos, **${numero(combate.separacao.pesoDoInimigo, 1)}**.`,
+    `Travamento: quem anda sozinho e, em **${segundos(combate.travamento.msDaJanela)}**, anda menos de **${numero(combate.travamento.fracaoMinima * 100)}%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível ${combate.travamento.nivelDoPontoLivre}, desliza em **${segundos(combate.travamento.msDoDeslize)}** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **${combate.caminho.celula} px**.`,
   ),
   tabela(
     ['Inimigo', 'Vida', 'Dano', 'Velocidade', 'Persegue a', 'Desiste a', 'Recarga', 'Detalhe'],
@@ -295,13 +306,57 @@ escrever(
   `Boneco de treino: **${numero(combate.boneco.vida)}** de vida, recupera tudo depois de **${segundos(combate.boneco.msParaRecuperar)}** sem apanhar.`,
 )
 
+const hab = combate.habilidades
+const detalheDaHabilidade = {
+  guerreiro: `${hab.guerreiro.dano} de dano em volta, raio ${hab.guerreiro.raio}`,
+  arqueiro: `${hab.arqueiro.dano} de dano, ${numero(hab.arqueiro.velocidade)} px/s, atravessa os inimigos e vai até ${numero(hab.arqueiro.alcance)} px (para em pedra)`,
+  mago: `${hab.mago.dano} de dano, raio ${hab.mago.raio}, até ${hab.mago.alcance} px; cai ${segundos(hab.mago.msDeQueda)} depois do aviso`,
+  tanque: `mobs a até ${hab.tanque.raio} px vão nele por ${segundos(hab.tanque.msDeDuracao)}; leva ${numero((1 - hab.tanque.reducaoDeDano) * 100)}% do dano`,
+  sacerdote: `levanta os caídos a até ${hab.sacerdote.raio} px com vida cheia, ${segundos(hab.sacerdote.msDeImunidade)} imune e +${numero(hab.sacerdote.bonusDeDano * 100)}% de dano por ${segundos(hab.sacerdote.msDeFortalecimento)}`,
+}
+const iaDeTeste = combate.ia
+escrever(
+  '## Partida: mana, habilidades, IA e desmaio (Fase 1, parte 5b, provisório)',
+  `Mana máxima = **${combate.mana.base} + Inteligência × ${combate.mana.porInteligencia}**. Ela volta sozinha: **${numero(combate.mana.regeneracaoBase, 1)} + Sabedoria × ${numero(combate.mana.regeneracaoPorSabedoria, 2)}** por segundo. A vida não volta sozinha (RF38).`,
+  tabela(
+    ['Classe', 'Mana (nível 1)', 'Mana por segundo', 'Habilidade de teste (tecla 1)', 'Custo', 'Recarga', 'O que faz'],
+    classes.map((classe) => {
+      const habilidade = habilidadesDeTeste[classe.id]
+      const numeros = hab[classe.id]
+      return [
+        classe.nome,
+        numero(manaMaxima(classe.atributosIniciais.inteligencia)),
+        numero(manaPorSegundo(classe.atributosIniciais.sabedoria), 1),
+        habilidade.provisoria ? `${habilidade.nome} (provisória)` : `${habilidade.nome} (da documentação)`,
+        numero(numeros.custoDeMana),
+        segundos(numeros.recargaMs),
+        detalheDaHabilidade[classe.id],
+      ]
+    }),
+  ),
+  'As teclas 2 e 3 ficam vazias até as habilidades de verdade (TASK-010). Os números da Ressurreição também são provisórios.',
+  '### IA dos aliados',
+  lista(
+    `Lutam com inimigos a até **${iaDeTeste.raioDeCombate} px** do Líder. Se o Líder passar de **${iaDeTeste.raioDaCorrente} px**, todos largam a luta e voltam até **${iaDeTeste.raioDeVolta} px** dele.`,
+    `Tanque: fica entre o mob e o grupo; mobs a até **${iaDeTeste.raioDeAtracaoDoTanque} px** dele vão nele. Guerreiro: o mob mais próximo.`,
+    `Arqueiro: ataca de **${iaDeTeste.distanciaDoArqueiro.minima} a ${iaDeTeste.distanciaDoArqueiro.maxima} px**. Mago: de **${iaDeTeste.distanciaDoMago.minima} a ${iaDeTeste.distanciaDoMago.maxima} px**, mirando onde há mais mobs juntos.`,
+    `Sacerdote: cura quem está abaixo de **${numero(iaDeTeste.limiteParaCurar * 100)}%** da vida (o Líder primeiro) e levanta os caídos (o Líder primeiro).`,
+  ),
+  '### Desmaio e resgate',
+  lista(
+    `Quem fica sem vida desmaia e tem **${segundosParaLevantar} s** para ser levantado (documentação).`,
+    `Ajuda: alguém de pé, parado a até **${combate.desmaio.raioDaAjuda} px**, por **${segundosDaAjuda} s** seguidos (documentação), com a **área limpa: nenhum inimigo vivo a menos de ${combate.desmaio.raioDaAreaLimpa} px** (decidido em 06/10). Se a área sujar ou o ajudante sair, volta a zero.`,
+    `Quem é levantado pela ajuda volta com **${vidaAoSerAjudadoPercentual}% da vida** (documentação) e fica frágil por **${segundos(combate.desmaio.msDeFragilidade)}**, levando **+${numero(combate.desmaio.danoExtraFragil * 100)}%** de dano.`,
+    'Sem ajuda em 30 s: vira perdido (Pedra de Retorno). Líder não levantado em 30 s: Retorno forçado. Todos caídos: Derrota na hora.',
+  ),
+)
+
 escrever(
   '## Ainda sem valor (a decidir)',
   'Valores do Conceito §19 que ainda não existem no código:',
   lista(
     'XP e ouro por monstro; bônus de Boss na pontuação; chance de drop dos Bosses;',
-    'dano, custo de mana e recarga das habilidades de verdade (a arena usa um ataque de teste por classe);',
-    'vida devolvida e fragilidade na ajuda de 5 s; fortalecimento da Ressurreição;',
+    'dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);',
     'preços do Mercado e da Forja e do pergaminho;',
     'peso de cada item; tempo que um item fica no chão;',
     'tamanho dos domínios de Boss; território dos mobs no mundo de verdade (a arena tem raios de teste);',

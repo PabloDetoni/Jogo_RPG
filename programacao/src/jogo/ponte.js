@@ -1,5 +1,6 @@
 // Ponte entre o React (telas, HUD, barra de teste) e o Phaser (a partida). Os dois só conversam por aqui.
-// Phaser → React: 'situacao' (8 vezes por segundo: vida, classe, recargas, FPS) e 'liderCaiu'.
+// Phaser → React: 'situacao' (8 vezes por segundo: vida, mana, recargas, grupo, FPS) e 'fimDaPartida'
+// ({ resultado, motivo, houveDesmaio, perdidos }, quando todos caem ou o Líder não é levantado em 30 s).
 // React → Phaser: 'comando' ({ tipo, ... } da barra de teste) e a pausa.
 export function criarPonte() {
   const ouvintes = new Map()

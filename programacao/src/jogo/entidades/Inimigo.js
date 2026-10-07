@@ -1,10 +1,13 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
-import { desvioDePedras, devePerseguir, velocidadeDoMovimento } from '../../regras/combate.js'
+import { combateDeTeste } from '../../dados/balanceamento.js'
+import { velocidadeDoMovimento } from '../../regras/combate.js'
+import { alvoDoInimigo, maisProximo } from '../../regras/iaDosAliados.js'
 import { numeroFlutuante, particulas } from '../efeitos.js'
 import Entidade, { BarraDeVida } from './Entidade.js'
 
-// Base dos inimigos: vida e barra, passear à toa em volta de casa, perseguir o Líder dentro do raio
+// Base dos inimigos: vida e barra, passear à toa em volta de casa, perseguir quem do grupo entrar no raio
 // de detecção e desistir depois do raio de desistência (Conceito §11.3), e o "pop" ao morrer.
+// O alvo é escolhido em regras/iaDosAliados.js: o Tanque perto atrai, e a Provocação puxa todos no raio.
 // Cada inimigo tem um "!" quando começa a perseguir e um "?" quando desiste, para dar para ver.
 export default class Inimigo extends Entidade {
   constructor(cena, x, y, config, cor) {
@@ -17,6 +20,9 @@ export default class Inimigo extends Entidade {
     this.destinoDoPasseio = null
     this.proximoPasseio = 0
     this.estado = 'passeando'
+    this.alvo = null // quem do grupo ele persegue
+    this.peso = combateDeTeste.separacao.pesoDoInimigo
+    this.andaSozinho = true
     this.corpo.body.setCollideWorldBounds(true)
   }
 
@@ -28,24 +34,24 @@ export default class Inimigo extends Entidade {
     return Math.hypot(alvo.x - this.x, alvo.y - this.y)
   }
 
-  // Decide entre perseguir e passear. Devolve true se está perseguindo o Líder agora.
-  decidirPerseguicao(lider, agora) {
+  // Decide quem perseguir (ou voltar a passear). Devolve o alvo, ou null se está passeando.
+  decidirAlvo(agora) {
     const perseguia = this.perseguindo
-    const persegue =
-      !lider.caido &&
-      devePerseguir({
-        distancia: this.distanciaAte(lider),
-        perseguindo: perseguia,
-        raioDeDeteccao: this.config.raioDeDeteccao,
-        raioDeDesistencia: this.config.raioDeDesistencia,
-      })
-    if (persegue && !perseguia) {
+    const alvo = alvoDoInimigo(this, this.cena.membrosDePe, {
+      alvoAtual: this.alvo,
+      raioDeDeteccao: this.config.raioDeDeteccao,
+      raioDeDesistencia: this.config.raioDeDesistencia,
+      raioDeAtracao: combateDeTeste.ia.raioDeAtracaoDoTanque,
+      raioDaProvocacao: combateDeTeste.habilidades.tanque.raio,
+    })
+    this.alvo = alvo
+    if (alvo && !perseguia) {
       this.estado = 'perseguindo'
       numeroFlutuante(this.cena, this.x, this.y - this.tamanho, '!', '#ffe14a', 30)
-    } else if (!persegue && perseguia) {
+    } else if (!alvo && perseguia) {
       this.desistir(agora)
     }
-    return persegue
+    return alvo
   }
 
   // Volta a andar à toa em volta de onde estava
@@ -54,22 +60,24 @@ export default class Inimigo extends Entidade {
     this.casa = { x: this.x, y: this.y }
     this.destinoDoPasseio = null
     this.proximoPasseio = agora + 700
-    this.corpo.body.setVelocity(0, 0)
-    if (!this.cena.lider.caido) numeroFlutuante(this.cena, this.x, this.y - this.tamanho, '?', '#ffffff', 28)
+    this.alvo = null
+    this.parar()
+    numeroFlutuante(this.cena, this.x, this.y - this.tamanho, '?', '#ffffff', 28)
   }
 
-  // Apanhou: se estava à toa, vai atrás de quem bateu
+  // Apanhou: se estava à toa, vai atrás de quem do grupo estiver mais perto
   aoApanhar() {
-    if (!this.perseguindo && !this.cena.lider.caido) {
+    const alvo = maisProximo(this, this.cena.membrosDePe)
+    if (!this.perseguindo && alvo) {
+      this.alvo = alvo
       this.estado = 'perseguindo'
       numeroFlutuante(this.cena, this.x, this.y - this.tamanho, '!', '#ffe14a', 30)
     }
   }
 
-  // Velocidade para ir até o alvo contornando as pedras
+  // Velocidade para ir até o alvo contornando as pedras (caminho na grade)
   velocidadeAte(alvo, velocidade) {
-    const destino = desvioDePedras(this, alvo, this.cena.retangulosDosObstaculos, this.tamanho / 2 - 2)
-    return velocidadeDoMovimento(destino.x - this.x, destino.y - this.y, velocidade)
+    return this.cena.navegador.velocidadeAte(this, alvo, velocidade, this.cena.time.now)
   }
 
   passear(agora) {
@@ -81,11 +89,10 @@ export default class Inimigo extends Entidade {
     }
     const destino = this.destinoDoPasseio
     if (!destino || this.distanciaAte(destino) < 8) {
-      this.corpo.body.setVelocity(0, 0)
+      this.parar()
       return
     }
-    const velocidade = velocidadeDoMovimento(destino.x - this.x, destino.y - this.y, this.config.velocidade * 0.4)
-    this.corpo.body.setVelocity(velocidade.x, velocidade.y)
+    this.andar(velocidadeDoMovimento(destino.x - this.x, destino.y - this.y, this.config.velocidade * 0.4))
   }
 
   atualizarDesenho(agora, delta) {

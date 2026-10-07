@@ -1,6 +1,6 @@
 # Plano até a entrega (03/12/2026)
 
-Atualizado em 06/10/2026: Fase 0 feita e enviada ao GitHub (commit `d938108`); Fase 1, parte 5a (arena de teste com Phaser) feita, esperando o teste visual do Pablo e o commit. Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
+Atualizado em 06/10/2026: Fase 0 (commit `d938108`) e Fase 1, parte 5a (commit `1143420`) no GitHub. Ajustes da 5a (colisão e travamento) e parte 5b (IA dos aliados, desmaio, Sacerdote, mana e habilidades) feitos, esperando o teste visual do Pablo e o commit. Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
 
 **Regra deste plano:** cumprir todos os requisitos da pasta `documentacao`. A auditoria sugere cortes (seção 12 dela), mas cortar uma funcionalidade é deixar de cumprir um requisito. Por isso, aqui os cortes só entram se o grupo decidir, e o que for cortado vai para o Conceito como "fora do beta".
 
@@ -39,7 +39,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 | TASK-002 Limpar o Vite, CLAUDE.md, commit | FALTA POUCO, COM VOCÊS: só o commit. As sobras do Vite foram apagadas (06/10, com a autorização do Pablo). O CLAUDE.md está atualizado (06/10): Salão da Glória com as Conquistas, Phaser, formato do save, link para este plano e commits com o Pablo |
 | TEST-001 Conferir as telas no navegador | FALTA POUCO: 18 telas conferidas por prints no Edge (04/10), sem sobreposição; falta o seu roteiro em 1366×768 |
 | TASK-003 Quadro no Trello | COM VOCÊS (posso gerar o texto de cada card) |
-| TASK-004 Protótipo de combate | FEITO (06/10) na parte 5a: arena de teste com Phaser 4.2.1, Líder, 5 ataques de teste e 2 inimigos. Falta o teste visual do Pablo |
+| TASK-004 Protótipo de combate | FEITO (06/10) na parte 5a: arena de teste com Phaser 4.2.1, Líder, 5 ataques de teste e 2 inimigos. Teste visual feito pelo Pablo e commit `1143420` |
 
 ### EPIC-02 · Documentação sincronizada
 | Item | Situação |
@@ -54,7 +54,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 ### EPIC-03 · Conteúdo e balanceamento (Frente B, até 19/10)
 | Item | Situação |
 |---|---|
-| TASK-010 Habilidades do beta | COM VOCÊS. Até lá, uma habilidade provisória por classe |
+| TASK-010 Habilidades do beta | COM VOCÊS. Até lá, uma habilidade de teste por classe na tecla 1 (feito na 5b, em `src/dados/habilidades.js`) |
 | TASK-011 Valores provisórios | FEITO: o `documentacao/Balanceamento.md` é gerado pelo código (agora com os contratos e a multa das missões); falta a aprovação do grupo |
 | TASK-012 Mobs e Boss da Floresta | COM VOCÊS (posso propor uma primeira lista) |
 | TASK-013 Layout da Floresta | COM VOCÊS (posso propor) |
@@ -85,9 +85,29 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 | TEST-003 Limites das regras | FEITO (06/10): valores negativos, ouro ganho 0 e quantidade 0 testados; limites dos contratos no `balanceamento.test.js`. São 266 testes ao todo |
 
 ### EPIC-06 · Partida jogável (etapa 5)
-- **TASK-004 (protótipo de combate) e TASK-042 (grupo seguindo o Líder):** FEITO (06/10), parte 5a. Arena de teste de 1600 × 900 com pedras e boneco de treino; Líder com WASD, mira no mouse, esquiva e o ataque de teste da classe; o grupo inteiro do save seguindo em formação e contornando pedras; mob vermelho (persegue, avisa, dá o bote e desiste) e atirador (testa o escudo do Tanque); HUD e barra de teste em React. Regras em `regras/combate.js` e `regras/grupoDaPartida.js`, com testes; 56 conferências no navegador. Falta o teste visual do Pablo.
-- **Provisório até a TASK-044:** Líder sem vida → Derrota depois de 2 s, mesmo com aliados de pé (a doc pede 30 s para levantar e Retorno forçado).
-- **TASK-040, TASK-041, TASK-043 a TASK-046, TASK-048, TASK-049 e TEST-004:** A FAZER nas partes 5b e 5c.
+- **TASK-004 (protótipo de combate) e TASK-042 (grupo seguindo o Líder):** FEITO (06/10), parte 5a, com o teste visual do Pablo e o commit `1143420`. Arena de teste com pedras e boneco de treino; Líder com WASD, mira no mouse, esquiva e o ataque de teste da classe; o grupo inteiro do save seguindo em formação; mob vermelho e atirador; HUD e barra de teste em React.
+- **Ajustes da 5a (06/10), esperando o teste visual:**
+  - Ninguém fica em cima de ninguém: zona de separação em volta de cada corpo, batida entre todos (inclusive aliados com o Líder), outros corpos tratados como parede ao andar e, depois da física, uma correção que desfaz o que ficou um dentro do outro (`regras/movimento.js`). Num aperto forte contra a pedra, as bordas ainda podem se encostar até cerca de 6 px por um instante.
+  - Ninguém fica preso: caminho numa grade em volta das pedras (substitui o desvio de uma pedra por vez) e anti-travamento (escorrega, dá a volta e, em último caso, desliza até o ponto livre mais próximo).
+  - Ninguém nasce em pedra, fora da borda ou em cima de outro.
+  - HUD numa faixa no topo e barra de teste numa faixa embaixo, fora da área jogável.
+  - Pedras coladas em L na arena e botão "Juntar todos".
+  - Painel de desenvolvimento minimizável ("</> DEV").
+  - Roteiro do navegador no repositório: `npm run testar:navegador` (116 conferências; cada rodada usa uma porta livre e fecha o próprio Edge).
+- **TASK-043 a TASK-046 (parte 5b):** FEITO (06/10), esperando o teste visual do Pablo.
+  - **TASK-043:** IA de cada classe. Tanque atrai, Guerreiro vai no mais próximo, Arqueiro de longe, Mago onde há mais mobs e todos voltam se o Líder se afastar. Os inimigos atacam qualquer um do grupo e os aliados levam dano.
+  - **TASK-044:** desmaio de 30 s, ajuda de 5 s com a área limpa, perdido pela Pedra de Retorno (lugar guardado), Retorno forçado se o Líder não for levantado e Derrota quando todos caem. Fica registrado se houve desmaio. A "Derrota em 2 s" saiu.
+  - **TASK-045:** Sacerdote cura e levanta, sempre o Líder primeiro, e usa a Ressurreição quando tem mana e recarga.
+  - **TASK-046:** mana pela Inteligência, que volta pela Sabedoria; teclas 1 a 3 com custo, recarga e aviso.
+  - Regras em `regras/iaDosAliados.js`, `regras/desmaio.js` e `regras/habilidades.js`, com testes.
+- **Provisório na partida (anotado para não esquecer):**
+  - **Habilidades de teste na tecla 1, até a TASK-010 (19/10):** Giro (Guerreiro), Tiro perfurante (Arqueiro; atravessa os inimigos e para em pedra), Meteoro (Mago) e Provocação (Tanque). A Ressurreição do Sacerdote vem da documentação, mas os números dela são provisórios. As teclas 2 e 3 ficam vazias. Trocar em `src/dados/habilidades.js` e `src/jogo/habilidades/`.
+  - **Todos os números novos** (mana, IA, desmaio, separação, travamento) estão no `balanceamento.js` e no `Balanceamento.md`. A área limpa de 250 px foi aprovada pelo Pablo, mas o valor é provisório.
+  - **Fim da partida sem números reais até a TASK-048:** Retorno forçado e Derrota já saem do desmaio, mas a taxa dos perdidos ainda não é cobrada. Os perdidos (com o lugar onde caíram) e o "houve desmaio" já chegam ao Resumo para a TASK-048 usar.
+  - **HUD:** parte da TASK-049 foi adiantada (mana, habilidades e grupo). Tempo, pontuação, ouro, custo da fuga e minimapa vêm na 5c.
+  - **Pausa a qualquer hora** (ainda sem "em combate") até a TASK-040.
+  - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "Invencível" só para o Líder e os 4 resultados) até a TASK-048 e a TASK-049. Quando ela sair, a faixa de baixo volta a ser área jogável.
+- **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** A FAZER na parte 5c.
 TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
@@ -152,11 +172,11 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 ## 4. Próximos passos, em ordem
 
 **Comigo:**
-1. Esperar o teste visual da parte 5a e ajustar o que o Pablo pedir (tempo da esquiva, força dos golpes, cores).
-2. Fase 1, parte 5b: IA de combate dos aliados (TASK-043), desmaio e resgate (TASK-044), Sacerdote e uma habilidade (TASK-045 e TASK-046). Antes de programar, mostro o plano curto.
+1. Esperar o teste visual dos ajustes da 5a e da 5b e ajustar o que o Pablo pedir.
+2. Fase 1, parte 5c: "em combate", pausa e retorno com Q (TASK-040), fuga com F (TASK-041), fim da partida com números reais (TASK-048), HUD completo e tecla M (TASK-049) e o roteiro dos 4 resultados (TEST-004). Antes de programar, mostro o plano curto.
 
 **Com vocês**, já:
-- fazer o teste visual da arena (roteiro no relatório da parte 5a) e commitar a parte 5a;
+- fazer o teste visual dos ajustes da 5a e da 5b (roteiro no relatório) e commitar;
 - criar o quadro no Trello (TASK-003);
 - perguntar ao professor o formato dos protótipos e se haverá apresentação (TASK-120);
 - criar o projeto de teste no Supabase para a prova do e-mail (TASK-090);
@@ -174,6 +194,8 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 | 6 | Tema padrão | Escuro, como os protótipos |
 | 7 | Horas por semana de cada um e quem pega o Reino em paralelo | Decisão do grupo |
 | 8 | Nome do jogo, hospedagem, origem dos sons | Decisão do grupo, até 19/10 |
+| 9 | "Área limpa" do desmaio (TASK-044) | **DECIDIDO (06/10):** nenhum inimigo vivo a menos de 250 px (provisório) de quem caiu. A ajuda é automática (ficar parado perto, sem tecla) e a Ressurreição não precisa de área limpa. Já está nos Requisitos (RF43), nos Casos de Uso (UC37), nas Histórias (HU37) e no Conceito (21.5) |
+| 10 | HUD | **DECIDIDO (06/10):** faixa no topo, fora da área jogável (ninguém anda embaixo dele) |
 
 ## 6. Decisões levadas para a documentação (DOC-001, feito em 06/10)
 
@@ -195,6 +217,8 @@ Todas as decisões abaixo já estão nos Requisitos, nos Casos de Uso, nas Hist�
   - "Acima do mínimo" quer dizer maior que o mínimo.
   - O XP guardado é o XP dentro do nível atual.
   - O atributo máximo é 100, com a curva de efeito.
+- **Etapa 5, parte 5b (06/10):**
+  - Área limpa = nenhum inimigo vivo perto de quem caiu. A ajuda é automática e volta a zero se a área sujar. A Ressurreição não precisa de área limpa (RF43, UC37, HU37, Conceito 21.5).
 
 ## 7. Como cada tarefa é feita (definição de pronto)
 

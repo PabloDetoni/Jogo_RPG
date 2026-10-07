@@ -224,7 +224,8 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 - Andar: **220 px/s**, igual na diagonal.
 - Esquiva (Espaço): avança **160 px** em 0,15 s, sem levar dano; recarga de **0,8 s**.
 - Depois de levar um golpe, **0,5 s** de imunidade (RF36).
-- Líder sem vida: Derrota depois de **2 s** (provisório até a TASK-044, que traz o desmaio de 30 s).
+- Separação: cada corpo tem uma zona de **10 px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **320 px/s** quando um está em cima do outro. O Líder pesa **4** (os aliados saem da frente dele) e os inimigos, **1,5**.
+- Travamento: quem anda sozinho e, em **0,6 s**, anda menos de **25%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível 4, desliza em **0,15 s** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **20 px**.
 
 | Inimigo | Vida | Dano | Velocidade | Persegue a | Desiste a | Recarga | Detalhe |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -233,13 +234,40 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 
 Boneco de treino: **300** de vida, recupera tudo depois de **3 s** sem apanhar.
 
+## Partida: mana, habilidades, IA e desmaio (Fase 1, parte 5b, provisório)
+
+Mana máxima = **20 + Inteligência × 5**. Ela volta sozinha: **0,5 + Sabedoria × 0,15** por segundo. A vida não volta sozinha (RF38).
+
+| Classe | Mana (nível 1) | Mana por segundo | Habilidade de teste (tecla 1) | Custo | Recarga | O que faz |
+| --- | --- | --- | --- | --- | --- | --- |
+| Guerreiro | 45 | 1,4 | Giro (provisória) | 20 | 5 s | 35 de dano em volta, raio 100 |
+| Mago | 110 | 2,3 | Meteoro (provisória) | 35 | 8 s | 50 de dano, raio 130, até 600 px; cai 0,7 s depois do aviso |
+| Tanque | 40 | 1,4 | Provocação (provisória) | 15 | 1 s | mobs a até 300 px vão nele por 4 s; leva 50% do dano |
+| Sacerdote | 80 | 3,2 | Ressurreição (da documentação) | 60 | 18 s | levanta os caídos a até 120 px com vida cheia, 2 s imune e +20% de dano por 8 s |
+| Arqueiro | 50 | 1,4 | Tiro perfurante (provisória) | 25 | 6 s | 60 de dano, 1.400 px/s, atravessa os inimigos e vai até 1.800 px (para em pedra) |
+
+As teclas 2 e 3 ficam vazias até as habilidades de verdade (TASK-010). Os números da Ressurreição também são provisórios.
+
+### IA dos aliados
+
+- Lutam com inimigos a até **380 px** do Líder. Se o Líder passar de **420 px**, todos largam a luta e voltam até **160 px** dele.
+- Tanque: fica entre o mob e o grupo; mobs a até **260 px** dele vão nele. Guerreiro: o mob mais próximo.
+- Arqueiro: ataca de **220 a 320 px**. Mago: de **260 a 420 px**, mirando onde há mais mobs juntos.
+- Sacerdote: cura quem está abaixo de **70%** da vida (o Líder primeiro) e levanta os caídos (o Líder primeiro).
+
+### Desmaio e resgate
+
+- Quem fica sem vida desmaia e tem **30 s** para ser levantado (documentação).
+- Ajuda: alguém de pé, parado a até **60 px**, por **5 s** seguidos (documentação), com a **área limpa: nenhum inimigo vivo a menos de 250 px** (decidido em 06/10). Se a área sujar ou o ajudante sair, volta a zero.
+- Quem é levantado pela ajuda volta com **10% da vida** (documentação) e fica frágil por **1 s**, levando **+50%** de dano.
+- Sem ajuda em 30 s: vira perdido (Pedra de Retorno). Líder não levantado em 30 s: Retorno forçado. Todos caídos: Derrota na hora.
+
 ## Ainda sem valor (a decidir)
 
 Valores do Conceito §19 que ainda não existem no código:
 
 - XP e ouro por monstro; bônus de Boss na pontuação; chance de drop dos Bosses;
-- dano, custo de mana e recarga das habilidades de verdade (a arena usa um ataque de teste por classe);
-- vida devolvida e fragilidade na ajuda de 5 s; fortalecimento da Ressurreição;
+- dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);
 - preços do Mercado e da Forja e do pergaminho;
 - peso de cada item; tempo que um item fica no chão;
 - tamanho dos domínios de Boss; território dos mobs no mundo de verdade (a arena tem raios de teste);

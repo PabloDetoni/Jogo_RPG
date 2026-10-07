@@ -1,7 +1,9 @@
 import * as Phaser from 'phaser'
 import {
+  areaJogavel,
   boneco as lugarDoBoneco,
   coresDaArena,
+  faixas,
   inicio,
   inimigosIniciais,
   manchas,
@@ -10,18 +12,28 @@ import {
   tamanhoDaArena,
 } from '../../dados/arenaDeTeste.js'
 import { combateDeTeste } from '../../dados/balanceamento.js'
+import { segundosDaAjuda, segundosParaLevantar, vidaAoSerAjudadoPercentual } from '../../dados/regras.js'
 import {
   aplicarDano,
   circuloTocaRetangulo,
-  desvioDePedras,
   fracaoDaRecarga,
   podeUsar,
+  retangulosSeTocam,
   vagaNaFormacao,
   velocidadeDoMovimento,
-  velocidadeParaSeguir,
   vetorDeEmpurrao,
 } from '../../regras/combate.js'
+import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
+import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
+import {
+  acompanharTravamento,
+  desfazerSobreposicoes,
+  escorregar,
+  manobraParaDestravar,
+  pontoLivreMaisProximo,
+  separacao,
+} from '../../regras/movimento.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
 import Escudo from '../ataques/escudo.js'
@@ -33,13 +45,29 @@ import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
 import Inimigo from '../entidades/Inimigo.js'
 import MobVermelho from '../entidades/MobVermelho.js'
 import Personagem from '../entidades/Personagem.js'
+import { efeitosDasHabilidades, temAlvoParaAHabilidade } from '../habilidades/index.js'
+import { pensarAliados } from '../iaDosAliados.js'
+import Navegador from '../navegador.js'
 
-const { personagem, esquiva, ataques, raioDaFormacao, msAteADerrota } = combateDeTeste
+const { personagem, esquiva, ataques, raioDaFormacao, travamento, desmaio } = combateDeTeste
 const { largura, altura } = tamanhoDaArena
+const prazoParaLevantar = segundosParaLevantar * 1000
+const msDaAjuda = segundosDaAjuda * 1000
+const somar = (a, b) => ({ x: a.x + b.x, y: a.y + b.y })
+// Limites da área jogável (entre a faixa do HUD e a da barra de teste)
+const limites = {
+  esquerda: areaJogavel.x - areaJogavel.largura / 2,
+  direita: areaJogavel.x + areaJogavel.largura / 2,
+  topo: areaJogavel.y - areaJogavel.altura / 2,
+  base: areaJogavel.y + areaJogavel.altura / 2,
+}
 const tiposDeInimigo = { mobVermelho: MobVermelho, atirador: Atirador }
+// Área sem borda (para o Líder não escorregar sozinho ao longo da borda quando o jogador anda contra ela)
+const semBorda = { x: areaJogavel.x, y: areaJogavel.y, largura: 1e6, altura: 1e6 }
 
-// A arena de teste da Fase 1, parte 5a (TASK-004 e TASK-042).
+// A arena de teste da Fase 1 (partes 5a e 5b).
 // Recebe da tela de Partida a ponte (src/jogo/ponte.js) e o grupo (regras/grupoDaPartida.js).
+// Avisa pela ponte a situação (8 vezes por segundo) e o fim da partida por desmaio ("fimDaPartida").
 export default class CenaArena extends Phaser.Scene {
   constructor() {
     super('arena')
@@ -52,7 +80,8 @@ export default class CenaArena extends Phaser.Scene {
 
   create() {
     criarTexturas(this)
-    this.physics.world.setBounds(0, 0, largura, altura)
+    // A borda é a beira da área jogável: ninguém anda embaixo do HUD nem da barra de teste
+    this.physics.world.setBounds(limites.esquerda, limites.topo, areaJogavel.largura, areaJogavel.altura)
     this.desenharChao()
 
     // Grupos de física: quem bate em quem
@@ -62,35 +91,50 @@ export default class CenaArena extends Phaser.Scene {
     this.criarPedras()
     this.boneco = new BonecoDeTreino(this, lugarDoBoneco.x, lugarDoBoneco.y)
     this.obstaculos.add(this.boneco.corpo)
-    // O que ninguém atravessa, para quem anda desviar (aliados e inimigos)
+    // O que ninguém atravessa, para quem anda achar o caminho (aliados e inimigos)
     this.retangulosDosObstaculos = [...pedras, this.boneco.retangulo()]
+    this.navegador = new Navegador(areaJogavel, this.retangulosDosObstaculos)
 
-    this.grupo = [] // Líder e aliados (Personagem); o Líder é this.lider
+    this.grupo = [] // Líder e aliados (Personagem) que estão no mapa; o Líder é this.lider
     this.inimigos = []
-    this.projeteis = [] // flechas, bolas mágicas, auras e tiros: tudo que tem atualizar() e destruir()
-    this.escudo = null
+    this.projeteis = [] // flechas, bolas, auras, tiros e habilidades: tudo que tem atualizar() e destruir()
+    this.perdidos = [] // quem a Pedra de Retorno levou: { classe, x, y } (onde caiu, para a taxa na TASK-048)
+    this.houveDesmaio = false // para a Grande Vitória (RF47)
+    this.terminou = false
     this.invencivel = false
+    this.aliadosAjudam = true // barra de teste: desligado, os aliados não levantam ninguém
     this.anguloDaMira = 0
-    this.ultimoAtaque = {} // por classe: trocar de classe na barra de teste não herda a recarga da outra
     this.ultimaEsquiva = null
     this.fimDaEsquiva = 0
-    this.fimDaImunidade = 0
     this.ultimoRastro = 0
 
     this.grupoInicial.forEach((membro, indice) => this.adicionarAoGrupo(membro, indice, this.grupoInicial.length))
     for (const inimigo of inimigosIniciais) this.criarInimigo(inimigo.tipo, inimigo)
-    this.prepararAtaqueDaClasse()
+    this.prepararEscudos()
 
+    // Todos batem em todos (Líder, aliados e inimigos): ninguém atravessa ninguém
+    const podemColidir = (a, b) => this.podemColidir(a.entidade, b.entidade)
+    this.physics.add.collider(this.corposDoGrupo, this.corposDoGrupo, null, podemColidir)
+    this.physics.add.collider(this.corposDoGrupo, this.corposDosInimigos, null, podemColidir)
+    this.physics.add.collider(this.corposDosInimigos, this.corposDosInimigos, null, podemColidir)
+    // As pedras e o boneco vêm por último: se uma batida entre dois corpos empurrou alguém para dentro de
+    // uma pedra, a pedra o põe para fora no mesmo quadro
     this.physics.add.collider(this.corposDoGrupo, this.obstaculos)
     this.physics.add.collider(this.corposDosInimigos, this.obstaculos)
-    this.physics.add.collider(this.corposDosInimigos, this.corposDosInimigos)
-    // Aliados não se empilham; o Líder passa entre eles sem ser travado
-    this.physics.add.collider(this.corposDoGrupo, this.corposDoGrupo, null, (a, b) => !a.entidade.lider && !b.entidade.lider)
 
     // Teclado (só existe enquanto a Partida está aberta) e mouse. Espaço não rola a página.
-    this.teclas = this.input.keyboard.addKeys({ cima: 'W', baixo: 'S', esquerda: 'A', direita: 'D', esquiva: 'SPACE' })
+    this.teclas = this.input.keyboard.addKeys({
+      cima: 'W',
+      baixo: 'S',
+      esquerda: 'A',
+      direita: 'D',
+      esquiva: 'SPACE',
+      habilidade1: 'ONE',
+      habilidade2: 'TWO',
+      habilidade3: 'THREE',
+    })
     this.input.on('pointerdown', (ponteiro) => {
-      if (ponteiro.leftButtonDown()) this.atacar()
+      if (ponteiro.leftButtonDown() && !this.lider.caido) this.usarAtaque(this.lider, this.anguloDaMira)
     })
 
     const pararDeOuvir = [
@@ -112,7 +156,15 @@ export default class CenaArena extends Phaser.Scene {
     for (const mancha of manchas) {
       this.add.ellipse(mancha.x, mancha.y, mancha.largura, mancha.altura, coresDaArena.mancha).setDepth(camadas.manchas)
     }
-    this.add.rectangle(largura / 2, altura / 2, largura - 8, altura - 8).setStrokeStyle(8, coresDaArena.borda).setDepth(camadas.borda)
+    // Faixas do HUD e da barra de teste: fora da área jogável
+    this.add.rectangle(largura / 2, faixas.hud / 2, largura, faixas.hud, coresDaArena.faixa).setDepth(camadas.borda)
+    this.add
+      .rectangle(largura / 2, altura - faixas.barraDeTeste / 2, largura, faixas.barraDeTeste, coresDaArena.faixa)
+      .setDepth(camadas.borda)
+    this.add
+      .rectangle(areaJogavel.x, areaJogavel.y, areaJogavel.largura - 8, areaJogavel.altura - 8)
+      .setStrokeStyle(8, coresDaArena.borda)
+      .setDepth(camadas.borda)
   }
 
   criarPedras() {
@@ -129,7 +181,8 @@ export default class CenaArena extends Phaser.Scene {
 
   adicionarAoGrupo(membro, indice, total) {
     const vaga = membro.lider ? { x: 0, y: 0 } : vagaNaFormacao(indice - 1, Math.max(1, total - 1), raioDaFormacao)
-    const novo = new Personagem(this, membro, inicio.x + vaga.x, inicio.y + vaga.y)
+    const lugar = this.lugarLivre(personagem.tamanho, { x: inicio.x + vaga.x, y: inicio.y + vaga.y })
+    const novo = new Personagem(this, membro, lugar.x, lugar.y)
     this.corposDoGrupo.add(novo.corpo)
     this.grupo.push(novo)
     if (membro.lider) this.lider = novo
@@ -137,18 +190,21 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   criarInimigo(tipo, ponto) {
-    const inimigo = new tiposDeInimigo[tipo](this, ponto.x, ponto.y)
+    const lugar = this.lugarLivre(combateDeTeste[tipo].tamanho, ponto)
+    const inimigo = new tiposDeInimigo[tipo](this, lugar.x, lugar.y)
     this.corposDosInimigos.add(inimigo.corpo)
     this.inimigos.push(inimigo)
     return inimigo
   }
 
-  // O escudo só existe com o Tanque de Líder
-  prepararAtaqueDaClasse() {
-    if (this.lider.classe === 'tanque' && !this.escudo) this.escudo = new Escudo(this, this.lider)
-    if (this.lider.classe !== 'tanque' && this.escudo) {
-      this.escudo.destruir()
-      this.escudo = null
+  // Todo Tanque (Líder ou aliado) tem o escudo; quem deixou de ser Tanque perde o dele
+  prepararEscudos() {
+    for (const membro of this.grupo) {
+      if (membro.classe === 'tanque' && !membro.escudo) membro.escudo = new Escudo(this, membro)
+      if (membro.classe !== 'tanque' && membro.escudo) {
+        membro.escudo.destruir()
+        membro.escudo = null
+      }
     }
   }
 
@@ -156,58 +212,84 @@ export default class CenaArena extends Phaser.Scene {
     return this.grupo.filter((membro) => !membro.lider)
   }
 
+  // Quem os inimigos podem atacar: os do grupo que estão de pé
+  get membrosDePe() {
+    return this.grupo.filter((membro) => !membro.caido)
+  }
+
+  // Ponto livre mais próximo para um corpo deste tamanho: dentro da borda, fora das pedras e sem ninguém em cima.
+  // Vale para começar a partida, Encher grupo e criar inimigos (ninguém nasce em pedra nem em cima de outro).
+  lugarLivre(tamanho, ponto, ignorar = null, folga = 4) {
+    const ocupados = [...this.grupo, ...this.inimigos, this.boneco]
+      .filter((entidade) => entidade && entidade !== ignorar && !entidade.morto)
+      .map((entidade) => ({ x: entidade.x, y: entidade.y, raio: entidade.raio }))
+    const regras = { area: areaJogavel, paredes: this.retangulosDosObstaculos, ocupados, raio: tamanho / 2, folga }
+    return pontoLivreMaisProximo(ponto, regras) ?? { x: ponto.x, y: ponto.y }
+  }
+
   // ---------- A cada quadro ----------
 
   update(tempo, delta) {
+    if (this.terminou) return
     const agora = this.time.now
     const segundos = Math.min(delta, 50) / 1000
     const lider = this.lider
+    this.corrigirSobreposicoes(agora)
 
     if (!lider.caido) {
       const ponteiro = this.input.activePointer
       this.anguloDaMira = Math.atan2(ponteiro.worldY - lider.y, ponteiro.worldX - lider.x)
+      lider.anguloDaMira = this.anguloDaMira
     }
     lider.atualizarMira(this.anguloDaMira)
     this.atualizarLider(agora)
-    this.atualizarAliados()
+    pensarAliados(this, agora)
     for (const inimigo of [...this.inimigos]) inimigo.atualizar(agora)
     this.boneco.atualizar(agora)
+    this.moverTodos(agora, segundos)
 
     this.projeteis = this.projeteis.filter((projetil) => {
       const continua = projetil.atualizar(agora, segundos)
       if (!continua) projetil.destruir()
       return continua
     })
-    this.escudo?.atualizar(this.anguloDaMira)
+    for (const membro of this.grupo) membro.escudo?.atualizar()
+    this.atualizarMana(segundos)
+    this.atualizarDesmaios(agora, Math.min(delta, 50))
+    if (this.terminou) return
 
     for (const entidade of [...this.grupo, ...this.inimigos, this.boneco]) entidade.atualizarDesenho(agora, delta)
-    // Pisca enquanto está imune depois de apanhar
-    const imune = !lider.caido && agora < this.fimDaImunidade
-    lider.visual.setAlpha(lider.caido ? 0.7 : imune && Math.floor(agora / 60) % 2 ? 0.35 : 1)
   }
 
   atualizarLider(agora) {
     const lider = this.lider
-    const corpo = lider.corpo.body
     if (lider.caido) {
-      corpo.setVelocity(0, 0)
+      lider.parar()
       return
     }
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
+    // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
+    ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
+      if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
+    })
 
     if (agora < this.fimDaEsquiva) {
-      corpo.setVelocity(this.velocidadeDaEsquiva.x, this.velocidadeDaEsquiva.y)
+      lider.andar(this.velocidadeDaEsquiva)
       if (agora - this.ultimoRastro > 35) {
         this.ultimoRastro = agora
         rastro(this, lider.x, lider.y, lider.tamanho, lider.cor)
       }
       return
     }
-    if (lider.estaSendoEmpurrado(agora)) return
-    const velocidade = velocidadeDoMovimento(dx, dy, personagem.velocidade)
-    corpo.setVelocity(velocidade.x, velocidade.y)
+    lider.andar(velocidadeDoMovimento(dx, dy, personagem.velocidade))
+  }
+
+  // Para onde o Líder mira: o ângulo e o ponto do mouse (o Meteoro cai nele, até o alcance)
+  miraDoLider() {
+    const ponteiro = this.input.activePointer
+    return { angulo: this.anguloDaMira, ponto: { x: ponteiro.worldX, y: ponteiro.worldY } }
   }
 
   // Esquiva: avanço curto na direção do movimento (parado: na direção da mira), sem levar dano
@@ -217,45 +299,228 @@ export default class CenaArena extends Phaser.Scene {
     this.velocidadeDaEsquiva = velocidadeDoMovimento(direcao.x, direcao.y, esquiva.distancia / (esquiva.ms / 1000))
     this.ultimaEsquiva = agora
     this.fimDaEsquiva = agora + esquiva.ms
+    this.lider.fimDoEmpurrao = 0 // a esquiva tira o Líder do empurrão
     const deitado = Math.abs(this.velocidadeDaEsquiva.x) >= Math.abs(this.velocidadeDaEsquiva.y)
     this.lider.deformar(deitado ? 1.4 : 0.7, deitado ? 0.7 : 1.4, 60, 160)
     particulas(this, this.lider.x, this.lider.y + 16, 0xe8f5d0, 6, 120)
   }
 
-  // Os aliados vão para as vagas em volta do Líder (formação solta), contornando as pedras
-  atualizarAliados() {
-    const aliados = this.aliados
-    aliados.forEach((aliado, indice) => {
-      const vaga = vagaNaFormacao(indice, aliados.length, raioDaFormacao)
-      const alvo = { x: this.lider.x + vaga.x, y: this.lider.y + vaga.y }
-      const destino = desvioDePedras(aliado, alvo, this.retangulosDosObstaculos, aliado.tamanho / 2 - 2)
-      // Só freia na vaga; nos cantos das pedras passa direto
-      const velocidade = velocidadeParaSeguir(aliado, destino, personagem.velocidade * 1.15, destino === alvo ? 60 : 1)
-      aliado.corpo.body.setVelocity(velocidade.x, velocidade.y)
+  // A mana volta sozinha (a Sabedoria define a velocidade); a vida não (RF38)
+  atualizarMana(segundos) {
+    for (const membro of this.grupo) {
+      if (!membro.caido) membro.mana = regenerarMana(membro.mana, membro.manaMaxima, membro.manaPorSegundo, segundos)
+    }
+  }
+
+  // ---------- Movimento de todos (separação, escorregar e destravar) ----------
+
+  // Cada um já disse para onde quer andar (andar/parar). Aqui entra a zona em volta de cada corpo:
+  // quem está perto demais se afasta aos poucos; quem é empurrado contra uma pedra escorrega para o lado;
+  // quem anda sozinho e não sai do lugar tenta outro jeito (regras/movimento.js).
+  moverTodos(agora, segundos) {
+    const andantes = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
+    const corpos = [...andantes, this.boneco].map((entidade) => ({
+      x: entidade.x,
+      y: entidade.y,
+      raio: entidade.raio,
+      peso: entidade.peso,
+      fixo: entidade.fixo,
+    }))
+    const afastamentos = separacao(corpos, combateDeTeste.separacao)
+    const paredes = this.retangulosDosObstaculos
+    this.encerrarSeparacaoSuave(andantes, agora)
+    andantes.forEach((entidade, i) => {
+      if (entidade.deslizando) return
+      const corpo = entidade.corpo.body
+      if (entidade.fixo) {
+        corpo.setVelocity(0, 0)
+        return
+      }
+      const empurrado = entidade.estaSendoEmpurrado(agora)
+      let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
+      if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
+      // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
+      // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo)
+      const outros = this.corposEncostados(entidade, andantes, agora)
+      // Quem anda sozinho escorrega em tudo; o Líder escorrega nos corpos e, nas pedras, só no afastamento
+      // (contra uma pedra, quem manda é o jogador)
+      // (o "segundos" faz cada um olhar à frente o tanto que vai andar neste quadro)
+      const final = entidade.andaSozinho
+        ? escorregar(somar(base, afastamentos[i]), entidade, [...paredes, ...outros], areaJogavel, 4, segundos)
+        : somar(
+            escorregar(base, entidade, outros, semBorda, 4, segundos),
+            escorregar(afastamentos[i], entidade, [...paredes, ...outros], areaJogavel, 4, segundos),
+          )
+      corpo.setVelocity(final.x, final.y)
     })
   }
 
-  // ---------- Ataques do Líder ----------
+  // Retângulos dos corpos perto o bastante para encostar (o boneco já está nas paredes). Logo depois do
+  // "Juntar todos", quem ainda está no bolo não conta: ali a zona separa todo mundo aos poucos.
+  corposEncostados(entidade, andantes, agora) {
+    if (entidade.separandoAte > agora) return []
+    const alcance = entidade.tamanho + 12
+    return andantes
+      .filter((outro) => outro !== entidade && !outro.deslizando && outro.separandoAte <= agora)
+      .filter((outro) => Math.abs(outro.x - entidade.x) < alcance && Math.abs(outro.y - entidade.y) < alcance)
+      .map((outro) => outro.retangulo())
+  }
 
-  atacar() {
-    const lider = this.lider
-    if (lider.caido) return
+  // Depois da física: quem ficou um dentro do outro num aperto (corpos contra a pedra) é afastado pelo tanto
+  // que entrou, sem entrar na pedra (regras/movimento.js). São poucos px por vez, então não dá tranco.
+  corrigirSobreposicoes(agora) {
+    const andantes = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
+    const corpos = andantes.map((entidade) => ({
+      x: entidade.x,
+      y: entidade.y,
+      raio: entidade.raio,
+      fixo: entidade.fixo,
+      ignorar: entidade.deslizando || entidade.separandoAte > agora,
+    }))
+    const posicoes = desfazerSobreposicoes(corpos, this.retangulosDosObstaculos, areaJogavel, 8)
+    andantes.forEach((entidade, i) => {
+      const { x, y } = posicoes[i]
+      if (Math.abs(x - entidade.x) > 0.01 || Math.abs(y - entidade.y) > 0.01) entidade.corpo.body.reset(x, y)
+    })
+  }
+
+  // Quem já saiu do bolo do "Juntar todos" (ninguém mais em cima dele) volta a ter a batida dura
+  encerrarSeparacaoSuave(andantes, agora) {
+    const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < ((a.tamanho + b.tamanho) / 2) * 0.6
+    for (const entidade of andantes) {
+      if (entidade.separandoAte > agora && !andantes.some((outro) => outro !== entidade && emCima(entidade, outro))) {
+        entidade.separandoAte = 0
+      }
+    }
+  }
+
+  // Batida dura sempre: ninguém passa por cima de ninguém. Duas exceções: logo depois do "Juntar todos",
+  // quem ainda está um em cima do outro se separa aos poucos pela zona (sem o tranco da física);
+  // e quem está deslizando para o ponto livre passa por todos.
+  podemColidir(a, b) {
+    if (a.deslizando || b.deslizando) return false
     const agora = this.time.now
-    if (!podeUsar(agora, this.ultimoAtaque[lider.classe] ?? null, ataques[lider.classe].recargaMs)) return
-    this.ultimoAtaque[lider.classe] = agora
-    const angulo = this.anguloDaMira
-    if (lider.classe === 'guerreiro') golpeDeEspada(this, lider, angulo)
-    if (lider.classe === 'arqueiro') this.adicionarProjetil(new Flecha(this, lider, angulo))
-    if (lider.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, lider, angulo))
-    if (lider.classe === 'sacerdote') this.adicionarProjetil(new Aura(this, lider, agora))
-    if (lider.classe === 'tanque') this.escudo.empurrar()
+    if (a.separandoAte <= agora && b.separandoAte <= agora) return true
+    return Math.hypot(a.x - b.x, a.y - b.y) > ((a.tamanho + b.tamanho) / 2) * 0.6
+  }
+
+  // Quase não saiu do lugar tentando andar: escorrega para um lado, depois para o outro, dá a volta e,
+  // por último, desliza até o ponto livre mais próximo.
+  destravar(entidade, base, agora, segundos) {
+    entidade.travamento = acompanharTravamento(
+      entidade.travamento,
+      { agora, segundos, posicao: { x: entidade.x, y: entidade.y }, velocidadeQuerida: base },
+      travamento,
+    )
+    const { nivel } = entidade.travamento
+    if (nivel === 0) {
+      entidade.manobra = null
+      return base
+    }
+    if (!entidade.manobra || entidade.manobra.nivel !== nivel) {
+      const manobra = manobraParaDestravar(nivel, base, travamento.nivelDoPontoLivre)
+      if (manobra.tipo === 'pontoLivre') {
+        this.deslizarParaPontoLivre(entidade)
+        return { x: 0, y: 0 }
+      }
+      entidade.manobra = { ...manobra, nivel }
+    }
+    const velocidade = Math.hypot(base.x, base.y)
+    return { x: entidade.manobra.direcao.x * velocidade, y: entidade.manobra.direcao.y * velocidade }
+  }
+
+  // Último caso: desliza depressa (sem teletransporte) até o lugar livre mais próximo, com folga em volta
+  deslizarParaPontoLivre(entidade) {
+    entidade.travamento = null
+    entidade.manobra = null
+    const ponto = this.lugarLivre(entidade.tamanho, entidade, entidade, travamento.folgaDoPontoLivre)
+    if (Math.hypot(ponto.x - entidade.x, ponto.y - entidade.y) < 4) return
+    entidade.deslizando = true
+    entidade.corpo.body.setVelocity(0, 0)
+    entidade.corpo.body.checkCollision.none = true
+    this.navegador.esquecer(entidade)
+    particulas(this, entidade.x, entidade.y, 0xffffff, 6, 120)
+    const caminho = { x: entidade.x, y: entidade.y }
+    this.tweens.add({
+      targets: caminho,
+      x: ponto.x,
+      y: ponto.y,
+      duration: travamento.msDoDeslize,
+      ease: 'Quad.Out',
+      onUpdate: () => {
+        if (!entidade.morto) entidade.corpo.body.reset(caminho.x, caminho.y)
+      },
+      onComplete: () => {
+        entidade.deslizando = false
+        if (entidade.morto) return
+        entidade.corpo.body.checkCollision.none = false
+        particulas(this, entidade.x, entidade.y, 0xffffff, 6, 120)
+      },
+    })
+  }
+
+  // ---------- Ataques e habilidades (Líder e aliados) ----------
+
+  // Ataque de teste da classe (clique do Líder; a IA usa o mesmo). Devolve true se saiu.
+  usarAtaque(membro, angulo) {
+    if (membro.caido || this.terminou) return false
+    const agora = this.time.now
+    if (!podeUsar(agora, membro.ultimoAtaque, ataques[membro.classe].recargaMs)) return false
+    membro.ultimoAtaque = agora
+    membro.anguloDaMira = angulo
+    if (membro.classe === 'guerreiro') golpeDeEspada(this, membro, angulo)
+    if (membro.classe === 'arqueiro') this.adicionarProjetil(new Flecha(this, membro, angulo))
+    if (membro.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, membro, angulo))
+    if (membro.classe === 'sacerdote') this.adicionarProjetil(new Aura(this, membro, agora))
+    if (membro.classe === 'tanque') membro.escudo?.empurrar()
+    return true
+  }
+
+  // A habilidade dá para usar agora? (para a IA decidir; não avisa nada)
+  habilidadeDisponivel(membro, indice) {
+    const habilidade = membro.habilidades[indice]
+    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : false
+    const agora = this.time.now
+    return podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo }).ok
+  }
+
+  // Habilidade da tecla 1, 2 ou 3 (indice 0, 1 ou 2): gasta mana, começa a recarga e faz o efeito.
+  // Sem mana, em recarga, tecla vazia ou sem alvo: não sai, e o Líder vê o aviso em cima dele.
+  usarHabilidade(membro, indice, mira) {
+    if (membro.caido || this.terminou) return false
+    const agora = this.time.now
+    const habilidade = membro.habilidades[indice]
+    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : true
+    const pode = podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo })
+    if (!pode.ok) {
+      if (membro.lider) numeroFlutuante(this, membro.x, membro.y - 50, avisoDoMotivo[pode.motivo], pode.motivo === 'semMana' ? '#8fd3ff' : '#dddddd', 18)
+      return false
+    }
+    membro.mana = gastarMana(membro.mana, habilidade.custoDeMana)
+    membro.ultimoUsoDaHabilidade[indice] = agora
+    membro.anguloDaMira = mira.angulo
+    const ponto = habilidade.id === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
+    efeitosDasHabilidades[habilidade.id](this, membro, { ...mira, ponto })
+    return true
+  }
+
+  // O Meteoro cai no ponto mirado, mas no máximo até o alcance e dentro da área jogável
+  pontoDoMeteoro(dono, ponto, alcance) {
+    const ate = Math.hypot(ponto.x - dono.x, ponto.y - dono.y)
+    const fator = ate > alcance ? alcance / ate : 1
+    const x = dono.x + (ponto.x - dono.x) * fator
+    const y = dono.y + (ponto.y - dono.y) * fator
+    return {
+      x: Math.min(limites.direita, Math.max(limites.esquerda, x)),
+      y: Math.min(limites.base, Math.max(limites.topo, y)),
+    }
   }
 
   adicionarProjetil(projetil) {
     this.projeteis.push(projetil)
   }
 
-  // Quem os ataques do Líder acertam: os inimigos vivos e o boneco
+  // Quem os ataques do grupo acertam: os inimigos vivos e o boneco
   alvosDoJogador() {
     return [...this.inimigos.filter((inimigo) => !inimigo.morto), this.boneco]
   }
@@ -265,18 +530,24 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   bateEmObstaculo(circulo) {
-    const fora = circulo.x < circulo.raio || circulo.y < circulo.raio || circulo.x > largura - circulo.raio || circulo.y > altura - circulo.raio
+    const fora =
+      circulo.x < limites.esquerda + circulo.raio ||
+      circulo.y < limites.topo + circulo.raio ||
+      circulo.x > limites.direita - circulo.raio ||
+      circulo.y > limites.base - circulo.raio
     return fora || pedras.some((pedra) => circuloTocaRetangulo(circulo, pedra))
   }
 
-  // Golpe do jogador num alvo: dano, pisca branco, número, partículas e empurrão
-  acertar(alvo, dano, origem, forcaDoEmpurrao) {
+  // Golpe do grupo num alvo: dano (mais forte com o fortalecimento da Ressurreição), pisca branco,
+  // número, partículas e empurrão
+  acertar(alvo, dano, origem, forcaDoEmpurrao, autor = null) {
     if (alvo.morto) return
     const agora = this.time.now
-    const { vida, danoFeito } = aplicarDano(alvo.vida, dano)
+    const danoFinal = autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano
+    const { vida, danoFeito } = aplicarDano(alvo.vida, danoFinal)
     alvo.vida = vida
     alvo.piscar()
-    numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, String(alvo.mostraDanoCheio ? Math.round(dano) : danoFeito))
+    numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, String(alvo.mostraDanoCheio ? Math.round(danoFinal) : danoFeito))
     particulas(this, alvo.x, alvo.y, alvo.cor, 8, 220)
     if (forcaDoEmpurrao > 0) alvo.empurrar(vetorDeEmpurrao(origem, alvo, forcaDoEmpurrao), 160)
     alvo.aoApanhar?.(agora)
@@ -284,39 +555,63 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   matarInimigo(inimigo) {
+    this.navegador.esquecer(inimigo)
     inimigo.morrer()
     this.inimigos = this.inimigos.filter((outro) => outro !== inimigo)
   }
 
-  // ---------- Golpes no Líder ----------
+  // ---------- Golpes no grupo ----------
 
-  // Golpe corpo a corpo: o escudo do Tanque bloqueia o que vem da frente
-  inimigoAcertaLider(inimigo, dano, forcaDoEmpurrao) {
-    if (this.escudo?.bloqueiaGolpe(inimigo)) {
-      const { x, y } = this.escudo.retangulo()
-      this.mostrarBloqueado(x, y)
-      inimigo.empurrar(vetorDeEmpurrao(this.lider, inimigo, forcaDoEmpurrao), 220)
-      return 'bloqueado'
-    }
-    return this.liderLevaGolpe(dano, inimigo, forcaDoEmpurrao)
+  // O primeiro do grupo, de pé, que o círculo (tiro) ou o retângulo (bote) toca
+  membroAtingido(circulo) {
+    return this.membrosDePe.find((membro) => circuloTocaRetangulo(circulo, membro.retangulo()))
   }
 
-  // Esquivando, imune depois de apanhar ou com o Invencível ligado, o Líder não leva dano
-  liderLevaGolpe(dano, origem, forcaDoEmpurrao) {
-    const lider = this.lider
+  membroTocado(retangulo) {
+    return this.membrosDePe.find((membro) => retangulosSeTocam(retangulo, membro.retangulo()))
+  }
+
+  // O escudo de algum Tanque no caminho do tiro
+  escudoQueBloqueia(circulo) {
+    return this.grupo.find((membro) => membro.escudo?.bloqueiaTiro(circulo))?.escudo ?? null
+  }
+
+  // Golpe corpo a corpo: o escudo do Tanque bloqueia o que vem da frente
+  inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao) {
+    if (membro.escudo?.bloqueiaGolpe(inimigo)) {
+      const { x, y } = membro.escudo.retangulo()
+      this.mostrarBloqueado(x, y)
+      inimigo.empurrar(vetorDeEmpurrao(membro, inimigo, forcaDoEmpurrao), 220)
+      return 'bloqueado'
+    }
+    return this.membroLevaGolpe(membro, dano, inimigo, forcaDoEmpurrao)
+  }
+
+  // Quem é do grupo leva o golpe (Líder ou aliado). Não leva quem está caído ou imune depois de apanhar;
+  // o Líder também não leva esquivando ou com o Invencível ligado. Frágil leva mais; provocando, menos.
+  membroLevaGolpe(membro, dano, origem, forcaDoEmpurrao) {
     const agora = this.time.now
-    const protegido = lider.caido || this.invencivel || agora < this.fimDaEsquiva || agora < this.fimDaImunidade
+    const protegido =
+      membro.caido || agora < membro.fimDaImunidade || (membro.lider && (this.invencivel || agora < this.fimDaEsquiva))
     if (protegido) return 'protegido'
-    const { vida, danoFeito } = aplicarDano(lider.vida, dano)
-    lider.vida = vida
-    lider.piscar()
-    numeroFlutuante(this, lider.x, lider.y - lider.tamanho * 0.6, `-${danoFeito}`, coresDaArena.danoNoLider)
-    particulas(this, lider.x, lider.y, lider.cor, 8, 200)
-    lider.empurrar(vetorDeEmpurrao(origem, lider, forcaDoEmpurrao), personagem.msDeEmpurrao)
-    this.fimDaImunidade = agora + personagem.msDeImunidade
-    tremerTela(this, 90, 0.004)
-    if (vida <= 0) this.liderCaiu()
+    let danoFinal = dano
+    if (membro.fragil) danoFinal *= 1 + desmaio.danoExtraFragil
+    if (membro.provocando) danoFinal *= 1 - combateDeTeste.habilidades.tanque.reducaoDeDano
+    const { vida, danoFeito } = aplicarDano(membro.vida, danoFinal)
+    membro.vida = vida
+    membro.piscar()
+    numeroFlutuante(this, membro.x, membro.y - membro.tamanho * 0.6, `-${danoFeito}`, membro.lider ? coresDaArena.danoNoLider : '#ffc2c2', membro.lider ? 26 : 20)
+    particulas(this, membro.x, membro.y, membro.cor, 8, 200)
+    membro.empurrar(vetorDeEmpurrao(origem, membro, forcaDoEmpurrao), personagem.msDeEmpurrao)
+    membro.fimDaImunidade = agora + personagem.msDeImunidade
+    if (membro.lider) tremerTela(this, 90, 0.004)
+    if (vida <= 0) this.desmaiar(membro)
     return 'acertou'
+  }
+
+  // Atalho usado pelo roteiro de testes no navegador
+  liderLevaGolpe(dano, origem, forcaDoEmpurrao) {
+    return this.membroLevaGolpe(this.lider, dano, origem, forcaDoEmpurrao)
   }
 
   mostrarBloqueado(x, y) {
@@ -324,25 +619,124 @@ export default class CenaArena extends Phaser.Scene {
     particulas(this, x, y, 0xffffff, 6, 160)
   }
 
-  // Provisório até a TASK-044: sem vida, o Líder cai e, depois de 2 s, a partida termina em Derrota
-  liderCaiu() {
-    this.lider.cair()
-    numeroFlutuante(this, this.lider.x, this.lider.y - 50, 'DESMAIOU', coresDaArena.danoNoLider, 26)
+  // ---------- Desmaio e resgate (TASK-044) ----------
+
+  // Sem vida: desmaia e abre os 30 s. Se era o último de pé, é Derrota na hora.
+  desmaiar(membro) {
+    membro.cair()
+    membro.caidoDesde = this.time.now
+    this.houveDesmaio = true
+    this.navegador.esquecer(membro)
+    numeroFlutuante(this, membro.x, membro.y - 50, 'DESMAIOU', coresDaArena.danoNoLider, 24)
+    this.verificarFim()
     this.avisarSituacao()
-    this.time.delayedCall(msAteADerrota, () => this.ponte.avisar('liderCaiu'))
+  }
+
+  // A cada quadro, para cada caído: os 30 s, a ajuda de 5 s (área limpa) e a Pedra de Retorno
+  atualizarDesmaios(agora, ms) {
+    for (const caido of this.grupo.filter((membro) => membro.caido)) {
+      const segundos = segundosRestantes(caido.caidoDesde, agora, prazoParaLevantar)
+      if (segundos === 0) {
+        if (caido.lider) {
+          this.verificarFim()
+          return
+        }
+        this.perder(caido)
+        continue
+      }
+      const limpa = areaLimpa(caido, this.inimigos, desmaio.raioDaAreaLimpa)
+      const ajudando = this.grupo.some((membro) => estaAjudando(membro, caido, { raioDaAjuda: desmaio.raioDaAjuda, velocidadeQuerida: membro.querida }))
+      caido.progressoDaAjuda = avancarAjuda(caido.progressoDaAjuda, { temAjudante: ajudando, limpa, ms })
+      if (caido.progressoDaAjuda >= msDaAjuda) {
+        this.levantar(caido, { vida: vidaAoLevantar(caido.vidaMaxima, vidaAoSerAjudadoPercentual), fimDaFragilidade: agora + desmaio.msDeFragilidade })
+        continue
+      }
+      caido.mostrarDesmaio({ segundos, fracaoDaAjuda: caido.progressoDaAjuda / msDaAjuda, ajudando, limpa })
+    }
+  }
+
+  // Volta de pé (pela ajuda: pouca vida e frágil; pela Ressurreição: vida cheia, imune e fortalecido)
+  levantar(membro, { vida, fimDaFragilidade = 0, fimDaImunidade = 0, fimDoFortalecimento = 0 }) {
+    membro.levantar(vida)
+    membro.fimDaFragilidade = fimDaFragilidade
+    membro.fimDaImunidade = Math.max(membro.fimDaImunidade, fimDaImunidade)
+    membro.fimDoFortalecimento = fimDoFortalecimento
+    numeroFlutuante(this, membro.x, membro.y - 50, 'DE PÉ!', coresDaArena.numeroDeCura, 24)
+    particulas(this, membro.x, membro.y, 0x9dff9d, 12, 220)
+    this.avisarSituacao()
+  }
+
+  // Sem ajuda em 30 s: a Pedra de Retorno leva o personagem ao Reino. Ele vira perdido e sai do mapa,
+  // e o lugar onde caiu fica guardado (a taxa de cada perdido sai da distância, na TASK-048).
+  perder(membro) {
+    this.perdidos.push({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y) })
+    const brilho = this.add.circle(membro.x, membro.y, membro.tamanho, 0x9fd8ff, 0.7).setDepth(camadas.textos - 4)
+    this.tweens.add({ targets: brilho, scale: 2.5, alpha: 0, duration: 500, onComplete: () => brilho.destroy() })
+    particulas(this, membro.x, membro.y, 0x9fd8ff, 20, 260)
+    numeroFlutuante(this, membro.x, membro.y - 50, 'PERDIDO', '#9fd8ff', 24)
+    membro.perdido = true
+    membro.escudo?.destruir()
+    membro.escudo = null
+    this.navegador.esquecer(membro)
+    this.grupo = this.grupo.filter((outro) => outro !== membro)
+    membro.destruir()
+    this.verificarFim()
+    this.avisarSituacao()
+  }
+
+  // Todos caídos → Derrota; Líder caído há 30 s → Retorno forçado (regras/desmaio.js)
+  verificarFim() {
+    const fim = fimPorDesmaio(this.grupo, this.time.now, prazoParaLevantar)
+    if (fim) this.terminar(fim)
+  }
+
+  terminar({ resultado, motivo }) {
+    if (this.terminou) return
+    this.terminou = true
+    for (const membro of this.grupo) membro.corpo.body?.setVelocity(0, 0)
+    for (const inimigo of this.inimigos) inimigo.corpo.body?.setVelocity(0, 0)
+    this.ponte.avisar('fimDaPartida', { resultado, motivo, houveDesmaio: this.houveDesmaio, perdidos: [...this.perdidos] })
+  }
+
+  // Quem vai ajudar quem (o Sacerdote primeiro; o Líder caído primeiro), para a IA dos aliados.
+  // Com "Aliados ajudam: não" na barra de teste, ninguém vai (para ver os 30 s inteiros).
+  tarefasDeAjuda(dePe) {
+    const caidos = this.grupo.filter((membro) => membro.caido)
+    if (caidos.length === 0 || !this.aliadosAjudam) return new Map()
+    const pares = escolherAjudantes(
+      caidos.map((caido) => ({ id: caido, x: caido.x, y: caido.y, lider: caido.lider, caidoDesde: caido.caidoDesde })),
+      dePe.map((aliado) => ({ id: aliado, x: aliado.x, y: aliado.y, classe: aliado.classe })),
+    )
+    return new Map(pares.map(({ ajudante, caido }) => [ajudante, caido]))
   }
 
   // ---------- Barra de teste (comandos do React) ----------
 
   executarComando(comando) {
+    if (this.terminou) return
     if (comando.tipo === 'trocarClasse') this.trocarClasse(comando.classe)
     if (comando.tipo === 'encherGrupo') this.encherGrupo()
     if (comando.tipo === 'criarInimigo') this.criarInimigoLonge(comando.inimigo)
+    if (comando.tipo === 'juntarTodos') this.juntarTodos()
+    if (comando.tipo === 'recarregarHabilidades') this.recarregarHabilidades()
     if (comando.tipo === 'alternarInvencivel') this.invencivel = !this.invencivel
+    if (comando.tipo === 'derrubarAliado') this.derrubar(this.aliados.find((aliado) => !aliado.caido))
+    if (comando.tipo === 'derrubarLider') this.derrubar(this.lider)
+    if (comando.tipo === 'alternarAjuda') this.aliadosAjudam = !this.aliadosAjudam
+    if (this.terminou) return
     this.avisarSituacao()
   }
 
-  // O Líder continua sendo o mesmo quadrado; se um aliado já era da classe nova, ele fica com a antiga
+  // Teste do desmaio: tira toda a vida de quem está de pé (passa por cima do Invencível)
+  derrubar(membro) {
+    if (!membro || membro.caido) return
+    membro.vida = 0
+    membro.piscar()
+    this.desmaiar(membro)
+  }
+
+  // O Líder continua sendo o mesmo quadrado; se um aliado já era da classe nova, ele fica com a antiga.
+  // Ninguém muda de lugar, então ninguém fica em cima de ninguém.
   trocarClasse(classe) {
     const lider = this.lider
     if (lider.caido || lider.classe === classe) return
@@ -355,21 +749,46 @@ export default class CenaArena extends Phaser.Scene {
       if (aliado.classe === classe) aliado.definirMembro(novos.find((membro) => !membro.lider && membro.classe === classeAntiga))
     }
     lider.definirMembro(novos.find((membro) => membro.lider))
-    this.prepararAtaqueDaClasse()
+    this.prepararEscudos()
     particulas(this, lider.x, lider.y, lider.cor, 12, 200)
   }
 
-  // Um aliado de cada classe que falta, só na memória da partida (o save não muda)
+  // Um aliado de cada classe que falta, só na memória da partida (o save não muda).
+  // Cada um nasce num lugar livre perto da vaga dele em volta do Líder.
   encherGrupo() {
-    const faltam = classesQueFaltam(this.grupo.map((membro) => membro.membro))
+    const faltam = classesQueFaltam([...this.grupo.map((membro) => membro.membro), ...this.perdidos])
+    const total = this.aliados.length + faltam.length
     for (const classe of faltam) {
-      const angulo = Math.random() * Math.PI * 2
-      const lugar = { x: this.lider.x + Math.cos(angulo) * 30, y: this.lider.y + Math.sin(angulo) * 30 }
-      const livre = !this.bateEmObstaculo({ ...lugar, raio: personagem.tamanho / 2 })
-      const novo = new Personagem(this, membroDeTeste(classe), livre ? lugar.x : this.lider.x, livre ? lugar.y : this.lider.y)
+      const vaga = vagaNaFormacao(this.aliados.length, total, raioDaFormacao)
+      const lugar = this.lugarLivre(personagem.tamanho, { x: this.lider.x + vaga.x, y: this.lider.y + vaga.y })
+      const novo = new Personagem(this, membroDeTeste(classe), lugar.x, lugar.y)
       this.corposDoGrupo.add(novo.corpo)
       this.grupo.push(novo)
       particulas(this, novo.x, novo.y, novo.cor, 10, 180)
+    }
+    this.prepararEscudos()
+  }
+
+  // Teste da separação: põe os aliados e os inimigos no mesmo ponto do Líder.
+  // A zona em volta de cada um afasta todos aos poucos.
+  juntarTodos() {
+    const ponto = { x: this.lider.x, y: this.lider.y }
+    const separandoAte = this.time.now + 2000
+    this.lider.separandoAte = separandoAte
+    for (const entidade of [...this.aliados, ...this.inimigos]) {
+      entidade.colocarEm(ponto.x, ponto.y)
+      entidade.separandoAte = separandoAte
+      this.navegador.esquecer(entidade)
+    }
+    particulas(this, ponto.x, ponto.y, 0xffffff, 14, 220)
+  }
+
+  // Teste das habilidades: mana cheia e nenhuma recarga para todo o grupo (a Ressurreição demora 3 min)
+  recarregarHabilidades() {
+    for (const membro of this.grupo) {
+      membro.mana = membro.manaMaxima
+      membro.ultimoUsoDaHabilidade = [null, null, null]
+      particulas(this, membro.x, membro.y, 0x5ab4ff, 8, 160)
     }
   }
 
@@ -378,7 +797,7 @@ export default class CenaArena extends Phaser.Scene {
     const distancia = (ponto) => Math.hypot(ponto.x - this.lider.x, ponto.y - this.lider.y)
     const ponto = pontosDeSurgimento.reduce((maisLonge, outro) => (distancia(outro) > distancia(maisLonge) ? outro : maisLonge))
     const inimigo = this.criarInimigo(tipo, ponto)
-    particulas(this, ponto.x, ponto.y, inimigo.cor, 12, 200)
+    particulas(this, inimigo.x, inimigo.y, inimigo.cor, 12, 200)
   }
 
   definirPausa(pausado) {
@@ -387,16 +806,42 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   avisarSituacao() {
+    if (this.terminou) return
     const agora = this.time.now
     const lider = this.lider
+    const recargaDe = (membro, indice) => {
+      const habilidade = membro.habilidades[indice]
+      if (!habilidade) return null
+      return {
+        nome: habilidade.nome,
+        custo: habilidade.custoDeMana,
+        recarga: fracaoDaRecarga(agora, membro.ultimoUsoDaHabilidade[indice], habilidade.recargaMs),
+        semMana: membro.mana < habilidade.custoDeMana,
+      }
+    }
     this.ponte.avisar('situacao', {
       classe: lider.classe,
       vida: lider.vida,
       vidaMaxima: lider.vidaMaxima,
+      mana: Math.floor(lider.mana),
+      manaMaxima: lider.manaMaxima,
       caido: lider.caido,
-      recargaDoAtaque: fracaoDaRecarga(agora, this.ultimoAtaque[lider.classe] ?? null, ataques[lider.classe].recargaMs),
+      segundosParaLevantar: lider.caido ? segundosRestantes(lider.caidoDesde, agora, prazoParaLevantar) : null,
+      recargaDoAtaque: fracaoDaRecarga(agora, lider.ultimoAtaque, ataques[lider.classe].recargaMs),
       recargaDaEsquiva: fracaoDaRecarga(agora, this.ultimaEsquiva, esquiva.recargaMs),
+      habilidades: lider.habilidades.map((_, indice) => recargaDe(lider, indice)),
+      aliados: this.aliados.map((aliado) => ({
+        classe: aliado.classe,
+        vida: aliado.vida,
+        vidaMaxima: aliado.vidaMaxima,
+        caido: aliado.caido,
+        segundosParaLevantar: aliado.caido ? segundosRestantes(aliado.caidoDesde, agora, prazoParaLevantar) : null,
+        fragil: aliado.fragil,
+      })),
+      perdidos: this.perdidos.map((perdido) => perdido.classe),
+      houveDesmaio: this.houveDesmaio,
       invencivel: this.invencivel,
+      aliadosAjudam: this.aliadosAjudam,
       fps: Math.round(this.game.loop.actualFps),
       tamanhoDoGrupo: this.grupo.length,
       inimigos: this.inimigos.length,

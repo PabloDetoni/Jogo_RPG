@@ -27,8 +27,12 @@ export default function Partida() {
   const grupo = useMemo(() => montarGrupoDaPartida(estado.progresso, lider), [estado.progresso, lider])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
-  // Provisório até a TASK-044: o Líder sem vida leva à Derrota (com a cutscene)
-  useEffect(() => ponte.ouvir('liderCaiu', () => acoes.encerrarPartida('derrota')), [ponte, acoes])
+  // Fim pelo desmaio (TASK-044): todos caídos → Derrota (com a cutscene); Líder não levantado em 30 s →
+  // Retorno forçado. O motivo aparece no Resumo.
+  useEffect(
+    () => ponte.ouvir('fimDaPartida', ({ resultado, ...detalhes }) => acoes.encerrarPartida(resultado, detalhes)),
+    [ponte, acoes],
+  )
   // A pausa congela o jogo; as Configurações não pausam (Conceito §11.8)
   useEffect(() => ponte.definirPausa(pausado), [ponte, pausado])
 
@@ -41,7 +45,7 @@ export default function Partida() {
   }, [contando, acoes])
 
   return (
-    <Tela className="tela-partida" semTitulo>
+    <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes}>
       <ArenaDaPartida ponte={ponte} grupo={grupo} />
       <HudDaPartida situacao={situacao} />
 

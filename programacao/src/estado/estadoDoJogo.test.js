@@ -104,6 +104,14 @@ describe('partida', () => {
     expect(e.tela).toBe('cutsceneDerrota')
   })
 
+  it('fim pelo desmaio: o motivo, se houve desmaio e os perdidos vão para o Resumo (TASK-044)', () => {
+    const detalhes = { motivo: 'Líder não levantado em 30 s', houveDesmaio: true, perdidos: [{ classe: 'tanque', x: 300, y: 400 }] }
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', resultado: 'retornoForcado', detalhes })
+    expect(e.tela).toBe('resumo')
+    expect(e.ultimoResultado).toEqual({ resultado: 'retornoForcado', bioma: 'floresta', ...detalhes })
+    expect(dadosParaSalvar(e).progresso).not.toHaveProperty('perdidos') // o save não muda de formato
+  })
+
   it('Voltar ao Reino pela pausa: 15 s de contagem e depois Vitória (RF45)', () => {
     let e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'esc' }, { tipo: 'iniciarRetorno' })
     expect(e.segundosRetorno).toBe(15)

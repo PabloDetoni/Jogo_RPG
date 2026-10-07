@@ -4,27 +4,33 @@ import { circuloTocaRetanguloGirado, noArco } from '../../regras/combate.js'
 
 const config = combateDeTeste.ataques.tanque
 
-// Tanque: escudo grande sempre na frente, girando com o mouse. Bloqueia os tiros que batem nele e
-// os golpes que vêm da frente. O clique dá um empurrão curto, com pouco dano, que joga o inimigo para trás.
+// Tanque (Líder ou aliado): escudo grande sempre na frente, girando com a mira do dono. Bloqueia os tiros
+// que batem nele e os golpes que vêm da frente. O ataque dá um empurrão curto, com pouco dano, que joga
+// o inimigo para trás. Caído, ninguém segura o escudo.
 export default class Escudo {
-  constructor(cena, lider) {
+  constructor(cena, dono) {
     this.cena = cena
-    this.lider = lider
+    this.dono = dono
     this.angulo = 0
     this.avanco = { distancia: 0 } // o escudo avança um pouco no empurrão
     this.forma = cena.add
-      .rectangle(lider.x, lider.y, config.espessuraDoEscudo, config.larguraDoEscudo, coresDaArena.escudo)
+      .rectangle(dono.x, dono.y, config.espessuraDoEscudo, config.larguraDoEscudo, coresDaArena.escudo)
       .setStrokeStyle(3, coresDaArena.contorno)
   }
 
-  atualizar(angulo) {
+  get ativo() {
+    return !this.dono.caido && !this.dono.morto
+  }
+
+  atualizar() {
+    const angulo = this.dono.anguloDaMira
     this.angulo = angulo
-    this.forma.setVisible(!this.lider.caido) // desmaiado, ninguém segura o escudo
+    this.forma.setVisible(this.ativo)
     const distancia = config.distanciaDoEscudo + this.avanco.distancia
     this.forma
-      .setPosition(this.lider.x + Math.cos(angulo) * distancia, this.lider.y + Math.sin(angulo) * distancia)
+      .setPosition(this.dono.x + Math.cos(angulo) * distancia, this.dono.y + Math.sin(angulo) * distancia)
       .setRotation(angulo)
-      .setDepth(this.lider.y + 3)
+      .setDepth(this.dono.y + 3)
   }
 
   // A espessura fica na direção da mira; a largura, atravessada
@@ -33,23 +39,23 @@ export default class Escudo {
   }
 
   bloqueiaTiro(circulo) {
-    return !this.lider.caido && circuloTocaRetanguloGirado(circulo, this.retangulo(), this.angulo)
+    return this.ativo && circuloTocaRetanguloGirado(circulo, this.retangulo(), this.angulo)
   }
 
   // Golpe corpo a corpo vindo da frente (dentro da abertura do bloqueio)
   bloqueiaGolpe(origem) {
-    return !this.lider.caido && noArco(this.lider, this.angulo, Infinity, config.aberturaDoBloqueioGraus, origem)
+    return this.ativo && noArco(this.dono, this.angulo, Infinity, config.aberturaDoBloqueioGraus, origem)
   }
 
   empurrar() {
     this.cena.tweens.killTweensOf(this.avanco)
     this.cena.tweens.add({ targets: this.avanco, distancia: 24, duration: 70, yoyo: true, ease: 'Quad.Out' })
     for (const alvo of this.cena.alvosDoJogador()) {
-      if (noArco(this.lider, this.angulo, config.alcanceDoEmpurrao + alvo.tamanho / 2, config.aberturaDoBloqueioGraus, alvo)) {
-        this.cena.acertar(alvo, config.dano, this.lider, config.empurrao)
+      if (noArco(this.dono, this.angulo, config.alcanceDoEmpurrao + alvo.tamanho / 2, config.aberturaDoBloqueioGraus, alvo)) {
+        this.cena.acertar(alvo, config.dano, this.dono, config.empurrao, this.dono)
       }
     }
-    this.lider.deformar(1.1, 0.9, 50, 120)
+    this.dono.deformar(1.1, 0.9, 50, 120)
   }
 
   destruir() {

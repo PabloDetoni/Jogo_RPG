@@ -8,6 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+# Prints do roteiro de testes no navegador (npm run testar:navegador)
+testes-do-navegador
 dist
 dist-ssr
 *.local

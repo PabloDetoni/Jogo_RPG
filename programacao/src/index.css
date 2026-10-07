@@ -246,8 +246,12 @@ body {
   font: 12px/1.4 system-ui, sans-serif;
 }
 
-/* Faixa do título: é por ela que se arrasta o painel */
+/* Faixa do título: é por ela que se arrasta o painel; o botão "–" minimiza */
 .painel-dev-alca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin: -6px -8px 0;
   padding: 4px 8px;
   background: #f0e2a0;
@@ -258,6 +262,33 @@ body {
 
 .painel-dev-alca:active {
   cursor: grabbing;
+}
+
+.painel-dev-minimizar {
+  padding: 0 6px;
+  font: inherit;
+  font-weight: bold;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+/* Painel minimizado: um botãozinho no canto, com o símbolo de dev */
+.painel-dev-mini {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 10;
+  padding: 3px 8px;
+  background: #fffbe6;
+  color: #111;
+  border: 1px solid #333;
+  font: bold 12px/1.4 ui-monospace, Consolas, monospace;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.painel-dev-mini:hover {
+  opacity: 1;
 }
 
 /* Partida (Fase 1, parte 5a): o Phaser embaixo; HUD, retorno e barra de teste por cima.
@@ -271,19 +302,100 @@ body {
   display: block;
 }
 
+/* HUD: faixa no topo, fora da área jogável (a altura vem de dados/arenaDeTeste.js).
+   A direita fica livre para o botão Configurações. */
 .hud {
   position: absolute;
-  left: 1.2cqw;
-  top: 1.2cqw;
+  left: 0;
+  right: 0;
+  top: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35em;
-  padding: 0.6em 0.8em;
-  background: rgb(15 20 30 / 0.6);
+  justify-content: center;
+  gap: 0.45em;
+  padding: 0 15cqw 0 1.2cqw;
+  background: rgb(15 20 30 / 0.85);
   color: #f5f5f5;
-  border: 2px solid #1c2230;
-  font-size: 0.95cqw;
+  border-bottom: 2px solid #1c2230;
+  font-size: 0.9cqw;
   pointer-events: none;
+}
+
+.hud-linha {
+  display: flex;
+  align-items: center;
+  gap: 1.3em;
+  white-space: nowrap;
+}
+
+.hud-rotulo {
+  opacity: 0.8;
+}
+
+/* Espaço de ação (ataque, esquiva, teclas 1 a 3): nome em cima, recarga embaixo */
+.hud-espaco {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  min-width: 6.5em;
+}
+
+.hud-espaco .medidor-barra {
+  height: 0.45em;
+}
+
+.hud-espaco .medidor-cheio {
+  background: #8a95a6;
+}
+
+.hud-espaco-pronto .medidor-cheio {
+  background: #8fd3ff;
+}
+
+.hud-espaco-vazio {
+  opacity: 0.45;
+}
+
+.hud-espaco-sem-mana .hud-custo {
+  color: #ff8f8f;
+}
+
+.hud-tecla {
+  display: inline-block;
+  min-width: 1.3em;
+  padding: 0 0.25em;
+  border: 1px solid #f5f5f5;
+  border-radius: 3px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.hud-custo {
+  color: #8fd3ff;
+}
+
+.hud-aliado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.hud-aliado .medidor-barra {
+  width: 4em;
+  height: 0.55em;
+}
+
+.hud-aliado .medidor-cheio {
+  background: #4be04b;
+}
+
+.hud-aliado-caido,
+.hud-estado {
+  color: #ff8f8f;
+}
+
+.hud-perdido {
+  color: #9fd8ff;
 }
 
 .hud p {
@@ -306,9 +418,13 @@ body {
 
 .medidor {
   display: grid;
-  grid-template-columns: 4.2em 8em 4.5em;
+  grid-template-columns: 2.8em 7em 4.6em;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.4em;
+}
+
+.medidor-mana .medidor-cheio {
+  background: #5ab4ff;
 }
 
 .medidor-barra {
@@ -345,6 +461,7 @@ body {
   pointer-events: none;
 }
 
+/* Barra de teste: faixa embaixo, fora da área jogável (a altura vem de dados/arenaDeTeste.js) */
 .barra-de-teste {
   position: absolute;
   left: 0;
@@ -352,14 +469,21 @@ body {
   bottom: 0;
   display: flex;
   flex-wrap: wrap;
+  align-content: center;
   align-items: center;
   justify-content: center;
-  gap: 0.35em 1.2em;
-  padding: 0.4em 0.8em;
-  background: rgb(15 20 30 / 0.8);
+  gap: 0.3em 1.2em;
+  padding: 0 0.8em;
+  background: rgb(15 20 30 / 0.85);
   border-top: 2px dashed #ffd23f;
   color: #f5f5f5;
-  font-size: 0.95cqw;
+  font-size: 0.9cqw;
+}
+
+.dica-de-teclas {
+  margin: 0;
+  font-size: 0.85cqw;
+  opacity: 0.85;
 }
 
 .quebra-de-linha {

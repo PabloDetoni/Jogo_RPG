@@ -82,9 +82,15 @@ function comProgresso(estado, mudancas) {
   return { ...estado, progresso: { ...estado.progresso, ...mudancas } }
 }
 
-function encerrarPartida(estado, resultado) {
+// detalhes (vindos da partida, opcionais): motivo (ex.: "Líder não levantado em 30 s"), houveDesmaio e
+// perdidos ({ classe, x, y }). Ficam no ultimoResultado para o Resumo; a TASK-048 usa os dois últimos
+// para o resultado e a taxa.
+function encerrarPartida(estado, resultado, detalhes = {}) {
   const { partidaAtual, progresso } = estado
-  let novo = { ...estado, segundosRetorno: null, ultimoResultado: { resultado, bioma: partidaAtual?.bioma ?? null } }
+  const extras = Object.fromEntries(
+    ['motivo', 'houveDesmaio', 'perdidos'].filter((chave) => detalhes[chave] !== undefined).map((chave) => [chave, detalhes[chave]]),
+  )
+  let novo = { ...estado, segundosRetorno: null, ultimoResultado: { resultado, bioma: partidaAtual?.bioma ?? null, ...extras } }
 
   // Os ganhos (ouro com taxa, XP, itens) entram aqui na etapa 5.
   // Toda partida conta, até entrar e sair logo em seguida (RF34), e cada contrato temporário
@@ -217,7 +223,7 @@ export function atualizarEstado(estado, acao) {
       return encerrarPartida(estado, 'vitoria')
 
     case 'encerrarPartida':
-      return encerrarPartida(estado, acao.resultado)
+      return encerrarPartida(estado, acao.resultado, acao.detalhes)
 
     // Música e som ligam/desligam; o tema alterna entre claro e escuro.
     case 'alternarPreferencia': {

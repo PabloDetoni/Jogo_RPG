@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  // Scripts rodam no Node (gerar o Balanceamento.md, roteiro de testes no navegador)
+  {
+    files: ['scripts/**/*.{js,mjs}'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
 ])

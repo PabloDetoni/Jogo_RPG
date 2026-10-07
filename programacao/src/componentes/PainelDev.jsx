@@ -9,14 +9,40 @@ function limitar(valor, minimo, maximo) {
   return Math.max(minimo, Math.min(valor, maximo))
 }
 
+// Minimizado ou aberto: lembrado só neste navegador (conveniência de quem programa, fora do save)
+const chaveMinimizado = 'jogo-rpg:painelDevMinimizado'
+
+function lerMinimizado() {
+  try {
+    return window.localStorage.getItem(chaveMinimizado) === 'sim'
+  } catch {
+    return false
+  }
+}
+
+function guardarMinimizado(minimizado) {
+  try {
+    window.localStorage.setItem(chaveMinimizado, minimizado ? 'sim' : 'nao')
+  } catch {
+    // sem localStorage o painel só não lembra da escolha
+  }
+}
+
 // Painel de desenvolvimento: só aparece em "npm run dev" (ver App.jsx).
-// Arraste pela faixa do título para tirar o painel da frente dos botões.
+// Arraste pela faixa do título para tirar o painel da frente dos botões, ou minimize no "–":
+// ele vira um botãozinho "</> DEV" no canto, que abre o painel de novo.
 export default function PainelDev() {
   const { estado, acoes } = useJogo()
   const info = useInfoDoSalvamento()
   const painel = useRef(null)
   const arraste = useRef(null) // distância entre o ponteiro e o canto do painel enquanto arrasta
   const [posicao, setPosicao] = useState(null) // em pixels; null = canto inferior esquerdo
+  const [minimizado, setMinimizado] = useState(lerMinimizado)
+
+  function alternarMinimizado(valor) {
+    setMinimizado(valor)
+    guardarMinimizado(valor)
+  }
 
   function aoPegar(evento) {
     const caixa = painel.current.getBoundingClientRect()
@@ -50,6 +76,14 @@ export default function PainelDev() {
     if (window.confirm('Apagar o progresso do convidado salvo neste navegador?')) acoes.apagarProgressoDoConvidado()
   }
 
+  if (minimizado) {
+    return (
+      <button type="button" className="painel-dev-mini" title="Abrir o painel de desenvolvimento" onClick={() => alternarMinimizado(false)}>
+        {'</>'} DEV
+      </button>
+    )
+  }
+
   return (
     <aside className="painel-dev" ref={painel} style={estilo}>
       <strong
@@ -60,7 +94,17 @@ export default function PainelDev() {
         onPointerUp={aoSoltar}
         onPointerCancel={aoSoltar}
       >
-        Painel de desenvolvimento (arraste aqui)
+        {'</>'} Painel de desenvolvimento (arraste aqui)
+        <button
+          type="button"
+          className="painel-dev-minimizar"
+          title="Minimizar o painel"
+          aria-label="Minimizar o painel"
+          onPointerDown={(evento) => evento.stopPropagation()}
+          onClick={() => alternarMinimizado(true)}
+        >
+          –
+        </button>
       </strong>
       <span>Tela: {telas[estado.tela].nome}</span>
       <label>

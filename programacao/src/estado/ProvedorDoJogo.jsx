@@ -114,7 +114,7 @@ export default function ProvedorDoJogo({ children }) {
       iniciarRetorno: () => despachar({ tipo: 'iniciarRetorno' }),
       cancelarRetorno: () => despachar({ tipo: 'cancelarRetorno' }),
       contarRetorno: () => despachar({ tipo: 'contarRetorno' }),
-      encerrarPartida: (resultado) => despachar({ tipo: 'encerrarPartida', resultado }),
+      encerrarPartida: (resultado, detalhes) => despachar({ tipo: 'encerrarPartida', resultado, detalhes }),
       alternarPreferencia: (chave) => despachar({ tipo: 'alternarPreferencia', chave }),
 
       // Painel de desenvolvimento

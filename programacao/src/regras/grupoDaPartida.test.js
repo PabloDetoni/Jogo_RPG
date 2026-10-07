@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { novoPersonagem, progressoInicial } from '../estado/progresso.js'
 import { classesQueFaltam, membroDeTeste, montarGrupoDaPartida, trocarClasseDoLider } from './grupoDaPartida.js'
+import { manaMaxima, manaPorSegundo } from './habilidades.js'
 
 vi.mock('../dados/balanceamento.js', async (importarOriginal) => {
   const original = await importarOriginal()
@@ -19,7 +20,8 @@ describe('montarGrupoDaPartida (RF34)', () => {
       personagens: [comVitalidade('mago', 8), comVitalidade('tanque', 20)],
       contratosTemporarios: [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 5 }],
     }
-    expect(montarGrupoDaPartida(progresso, 'tanque')).toEqual([
+    const grupo = montarGrupoDaPartida(progresso, 'tanque')
+    expect(grupo.map(({ classe, vidaMaxima, lider, temporario }) => ({ classe, vidaMaxima, lider, temporario }))).toEqual([
       { classe: 'tanque', vidaMaxima: 200, lider: true, temporario: false },
       { classe: 'mago', vidaMaxima: 80, lider: false, temporario: false },
       { classe: 'arqueiro', vidaMaxima: 60, lider: false, temporario: true },
@@ -29,6 +31,16 @@ describe('montarGrupoDaPartida (RF34)', () => {
   it('a vida vem da Vitalidade do personagem, não da classe', () => {
     const progresso = { ...progressoInicial(), personagens: [comVitalidade('mago', 25)] }
     expect(montarGrupoDaPartida(progresso, 'mago')[0].vidaMaxima).toBe(250)
+  })
+
+  it('a mana vem da Inteligência e a volta dela, da Sabedoria (TASK-046)', () => {
+    const mago = novoPersonagem('mago')
+    const sabio = { ...mago, atributos: { ...mago.atributos, inteligencia: 30, sabedoria: 40 } }
+    const [membro] = montarGrupoDaPartida({ ...progressoInicial(), personagens: [sabio] }, 'mago')
+    expect(membro.manaMaxima).toBe(manaMaxima(30))
+    expect(membro.manaPorSegundo).toBeCloseTo(manaPorSegundo(40))
+    const [doMago] = montarGrupoDaPartida({ ...progressoInicial(), personagens: [mago] }, 'mago')
+    expect(membro.manaMaxima).toBeGreaterThan(doMago.manaMaxima)
   })
 
   it('sem nenhum personagem (painel de desenvolvimento), entra um Líder de teste', () => {

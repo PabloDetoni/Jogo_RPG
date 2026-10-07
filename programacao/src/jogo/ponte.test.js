@@ -14,7 +14,7 @@ describe('ponte entre o React e o Phaser', () => {
   })
 
   it('aviso sem ninguém ouvindo não quebra', () => {
-    expect(() => criarPonte().avisar('liderCaiu')).not.toThrow()
+    expect(() => criarPonte().avisar('fimDaPartida')).not.toThrow()
   })
 
   it('a pausa guarda o valor atual e só avisa quando muda', () => {

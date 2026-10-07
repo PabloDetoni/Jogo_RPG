@@ -18,9 +18,10 @@ npm run test:observar  # roda os testes de novo a cada arquivo salvo
 npm run lint           # procura erros comuns no código
 npm run build          # gera a versão final em dist/
 npm run balanceamento  # atualiza ../documentacao/Balanceamento.md
+npm run testar:navegador  # joga a arena num Edge escondido e confere tudo (prints em testes-do-navegador/)
 ```
 
-Durante o `npm run dev` aparece um **painel de desenvolvimento** num canto da tela (dá para arrastar). Ele pula direto para qualquer tela e não existe na versão final.
+Durante o `npm run dev` aparece um **painel de desenvolvimento** num canto da tela (dá para arrastar e minimizar no "–": ele vira o botãozinho "</> DEV"). Ele pula direto para qualquer tela e não existe na versão final.
 
 ## Pastas
 
@@ -28,11 +29,11 @@ Durante o `npm run dev` aparece um **painel de desenvolvimento** num canto da te
 src/
   componentes/  peças de tela reaproveitadas: Tela, Botao, Campo, Area, Abas, Janela, Avisos, PainelDev
   telas/        uma tela por arquivo, separadas em acesso/, reino/ e partida/
-  jogo/         a partida em Phaser: cenas/, entidades/ (Líder, aliados, inimigos), ataques/ e a ponte com o React
+  jogo/         a partida em Phaser: cenas/, entidades/ (Líder, aliados, inimigos), ataques/, habilidades/, a IA dos aliados, o caminho em volta das pedras e a ponte com o React
   janelas/      janelas que abrem por cima da tela: Configurações, Pausa, Como jogar
   estado/       estado global (um reducer) e o formato do progresso do jogador
   salvamento/   salvamento no navegador (modo convidado) e o controle de uma aba só
-  regras/       regras puras do jogo (taxa, XP, atributos, mochila, fim da partida, Guilda, combate), cada uma com teste
+  regras/       regras puras do jogo (taxa, XP, atributos, mochila, fim da partida, Guilda, combate, movimento, IA, desmaio, habilidades), cada uma com teste
   dados/        TODOS os números do jogo e as listas fixas (classes, biomas, resultados, posições na tela)
   testes/       ajudantes dos testes (navegador e relógio falsos)
 scripts/        gerador do Balanceamento.md
@@ -49,8 +50,8 @@ scripts/        gerador do Balanceamento.md
 - **Regras puras e testadas.** Cada arquivo de `src/regras` só recebe dados e devolve o resultado, sem tela e sem salvamento, e tem um `.test.js` ao lado.
 - **O progresso não muda durante a partida (RF12).** Ouro, XP e itens ganhos ficam na partida atual e só entram no progresso ao encerrar. Se a aba fechar no meio, a partida é descartada e nada do que foi ganho conta.
 - **Salvamento do convidado.** O progresso vai para o `localStorage` com o formato `{ formato, versao, salvoEm, progresso, partidaEmAndamento }`. Ele é salvo a cada 3 minutos, ao fechar ou esconder a aba e em cada momento importante (classe escolhida, começo e fim da partida). Um save estragado é guardado como cópia e não trava o jogo. Se o jogo estiver aberto em duas abas, só uma joga (Web Locks).
-- **Partida em canvas com Phaser 4** (etapa 5), na pasta `src/jogo/`. O Phaser desenha e move; o HUD, os menus, as janelas e a barra de teste continuam em React. Os dois só conversam pela ponte (`src/jogo/ponte.js`), poucas vezes por segundo. O Phaser só é baixado quando a Partida abre, e quem decide dano, recarga, perseguição e cura são as regras puras de `src/regras/combate.js`.
-- **Arena de teste (Fase 1, parte 5a).** Hoje a Partida é uma arena com quadrados, para testar o combate: WASD anda, o mouse mira, o clique ataca e o Espaço esquiva. A barra de teste, embaixo, troca a classe do Líder, enche o grupo, cria inimigos e liga o modo invencível. No `npm run dev`, o jogo fica em `window.__jogoDaPartida`, para testes no navegador.
+- **Partida em canvas com Phaser 4** (etapa 5), na pasta `src/jogo/`. O Phaser desenha e move; o HUD, os menus, as janelas e a barra de teste continuam em React. Os dois só conversam pela ponte (`src/jogo/ponte.js`), poucas vezes por segundo. O Phaser só é baixado quando a Partida abre, e quem decide dano, recarga, cura, separação, caminho, alvos da IA, desmaio e mana são as regras puras de `src/regras/` (combate, movimento, iaDosAliados, desmaio e habilidades).
+- **Arena de teste (Fase 1, partes 5a e 5b).** Hoje a Partida é uma arena com quadrados, para testar o combate: WASD anda, o mouse mira, o clique ataca, 1 usa a habilidade de teste e o Espaço esquiva. Os aliados lutam sozinhos, desmaiam e se levantam. O HUD fica numa faixa em cima e a barra de teste numa faixa embaixo, e ninguém anda embaixo delas. A barra troca a classe do Líder, enche o grupo, junta todos num ponto, cria inimigos, recarrega as habilidades, derruba um aliado ou o Líder, liga e desliga a ajuda dos aliados e o modo invencível (só do Líder). No `npm run dev`, o jogo fica em `window.__jogoDaPartida`, para o roteiro de testes no navegador.
 - **Contas com Supabase** (etapa 8). As chaves ficam num `.env`, que nunca vai para o GitHub.
 - **Nomes em português**: telas, componentes, variáveis e funções.
 
@@ -60,7 +61,7 @@ scripts/        gerador do Balanceamento.md
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser) ← em andamento (parte 5a feita)
+5. Partida com quadrados (Phaser) ← em andamento (partes 5a e 5b feitas; falta a 5c)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)

@@ -20,3 +20,9 @@ export const habilidadesAtivasNoMaximo = 3
 
 // Abandonar uma missão custa 10% do ouro da recompensa (RF28).
 export const multaPorAbandonoPercentual = 10
+
+// Desmaio (RF43, Conceito §11.7): quem fica sem vida tem 30 s para ser levantado. A ajuda de um aliado
+// (ou do Líder) leva 5 s com a área limpa e devolve cerca de 10% da vida.
+export const segundosParaLevantar = 30
+export const segundosDaAjuda = 5
+export const vidaAoSerAjudadoPercentual = 10

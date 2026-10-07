@@ -1,13 +1,12 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { combateDeTeste } from '../../dados/balanceamento.js'
-import { circuloTocaRetangulo } from '../../regras/combate.js'
 import Projetil from './projetil.js'
 
 const config = combateDeTeste.atirador
 
-// Bolinha lenta do atirador: para numa pedra, na borda ou no escudo do Tanque ("BLOQUEADO").
-// Só o Líder leva dano; os aliados ainda não levam (TASK-043), então ela passa por eles.
-// Na esquiva, na imunidade ou com o Invencível ligado, ela também passa pelo Líder.
+// Bolinha lenta do atirador: para numa pedra, na borda ou no escudo de um Tanque ("BLOQUEADO").
+// Acerta o primeiro do grupo que estiver de pé no caminho (TASK-043: os aliados também levam dano).
+// Quem está protegido (esquivando, imune ou com o Invencível ligado) deixa a bolinha passar.
 export default class TiroInimigo extends Projetil {
   constructor(cena, atirador, angulo) {
     const saida = atirador.tamanho * 0.7
@@ -19,13 +18,13 @@ export default class TiroInimigo extends Projetil {
     let acabou = false
     this.mover(segundos, () => {
       const circulo = this.circulo()
-      const lider = this.cena.lider
       if (this.percorrido >= config.alcanceDoTiro || this.cena.bateEmObstaculo(circulo)) acabou = true
-      else if (this.cena.escudo?.bloqueiaTiro(circulo)) {
+      else if (this.cena.escudoQueBloqueia(circulo)) {
         this.cena.mostrarBloqueado(this.x, this.y)
         acabou = true
-      } else if (!lider.caido && circuloTocaRetangulo(circulo, lider.retangulo())) {
-        acabou = this.cena.liderLevaGolpe(config.dano, this.origemDoEmpurrao, config.empurrao) !== 'protegido'
+      } else {
+        const membro = this.cena.membroAtingido(circulo)
+        if (membro) acabou = this.cena.membroLevaGolpe(membro, config.dano, this.origemDoEmpurrao, config.empurrao) !== 'protegido'
       }
       return acabou
     })

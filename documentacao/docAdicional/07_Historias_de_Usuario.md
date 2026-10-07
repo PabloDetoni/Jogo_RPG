@@ -324,6 +324,8 @@ Critérios de aceite:
 Como jogador, quero levantar aliados desmaiados para não perdê-los nem pagar taxa.
 
 Critérios de aceite:
+- Basta ficar parado perto do caído por 5 s, sem tecla, com a área limpa (nenhum inimigo vivo perto dele).
+- Se um inimigo chegar perto ou eu sair de perto, a ajuda volta a zero.
 - O aliado volta com pouca vida e fica frágil por um tempo.
 - Requisitos atendidos: RF42, RF43.
 
@@ -393,5 +395,6 @@ Decisões tomadas durante a programação (outubro de 2026). Os critérios acima
 - **HU26 e HU27:** da Preparação dá para voltar ao Mapa e trocar de bioma sem passar pelo Reino.
 - **HU38:** o "Voltar ao Reino" da pausa passa pelo retorno de 15 s.
 - **HU43:** o minijogo volta ao Mapa.
+- **HU37:** "área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha.
 
 O motivo de cada mudança está na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

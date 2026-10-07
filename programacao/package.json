@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:observar": "vitest",
+    "testar:navegador": "node scripts/testarNoNavegador.mjs",
     "balanceamento": "node scripts/gerarBalanceamento.js"
   },
   "dependencies": {

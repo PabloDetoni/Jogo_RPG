@@ -6,7 +6,8 @@ import { estiloPosicao } from './posicao.js'
 
 // Fundo cinza de toda tela, com o nome dela e os botões dos cantos.
 // semTitulo: para a Partida, onde o jogo ocupa a caixa inteira.
-export default function Tela({ className = '', semTitulo = false, children }) {
+// configuracoesEm: outro lugar para o botão Configurações (na Partida, dentro da faixa do HUD).
+export default function Tela({ className = '', semTitulo = false, configuracoesEm = posicoes.cantos.configuracoes, children }) {
   const { estado, acoes } = useJogo()
   const tela = telas[estado.tela]
 
@@ -25,7 +26,7 @@ export default function Tela({ className = '', semTitulo = false, children }) {
           Salão da Glória
         </Botao>
       )}
-      <Botao em={posicoes.cantos.configuracoes} onClick={() => acoes.abrirJanela('configuracoes')}>
+      <Botao em={configuracoesEm} onClick={() => acoes.abrirJanela('configuracoes')}>
         Configurações
       </Botao>
     </div>

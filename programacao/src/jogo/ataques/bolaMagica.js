@@ -9,9 +9,10 @@ const config = combateDeTeste.ataques.mago
 // Mago: bola mais lenta que cresce enquanto voa. Explode ao acertar algo ou no alcance máximo,
 // e a explosão dá dano em área. A tela treme de leve.
 export default class BolaMagica extends Projetil {
-  constructor(cena, lider, angulo) {
-    const saida = lider.tamanho * 0.7
-    super(cena, lider.x + Math.cos(angulo) * saida, lider.y + Math.sin(angulo) * saida, angulo, config.velocidade, config.raioInicial, coresDaArena.bolaMagica)
+  constructor(cena, dono, angulo) {
+    const saida = dono.tamanho * 0.7
+    super(cena, dono.x + Math.cos(angulo) * saida, dono.y + Math.sin(angulo) * saida, angulo, config.velocidade, config.raioInicial, coresDaArena.bolaMagica)
+    this.dono = dono
     this.brilho = cena.add.circle(this.x, this.y, config.raioInicial * 1.7, coresDaArena.bolaMagica, 0.3)
   }
 
@@ -37,7 +38,7 @@ export default class BolaMagica extends Projetil {
     const centro = { x: this.x, y: this.y }
     const area = { ...centro, raio: config.raioDaExplosao }
     for (const alvo of this.cena.alvosDoJogador()) {
-      if (circuloTocaRetangulo(area, alvo.retangulo())) this.cena.acertar(alvo, config.dano, centro, config.empurrao)
+      if (circuloTocaRetangulo(area, alvo.retangulo())) this.cena.acertar(alvo, config.dano, centro, config.empurrao, this.dono)
     }
     const onda = this.cena.add
       .circle(centro.x, centro.y, config.raioDaExplosao, coresDaArena.bolaMagica, 0.5)
