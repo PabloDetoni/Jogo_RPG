@@ -122,6 +122,7 @@ export default function ProvedorDoJogo({ children }) {
       pedirFuga: (custo) => despachar({ tipo: 'pedirFuga', custo }),
       confirmarFuga: () => despachar({ tipo: 'confirmarFuga' }),
       encerrarPartida: (fim) => despachar({ tipo: 'encerrarPartida', fim }),
+      contratar: (contrato, classe) => despachar({ tipo: 'contratar', contrato, classe }),
       alternarPreferencia: (chave) => despachar({ tipo: 'alternarPreferencia', chave }),
 
       // Painel de desenvolvimento (só no npm run dev; mexem no save só fora da partida)

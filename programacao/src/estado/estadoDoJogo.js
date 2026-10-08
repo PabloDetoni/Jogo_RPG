@@ -2,6 +2,7 @@ import { distanciaAteABorda } from '../dados/balanceamento.js'
 import { motivosDoFim, resultados } from '../dados/resultados.js'
 import { montarFimDaPartida } from '../regras/fimDaPartida.js'
 import { aplicarFimNoProgresso } from '../regras/ganhosDaPartida.js'
+import { contratarPermanente, contratarTemporario } from '../regras/guilda.js'
 import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
 import { contratarTodasAsClasses, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
@@ -272,6 +273,15 @@ export function atualizarEstado(estado, acao) {
 
     case 'encerrarPartida':
       return encerrarPartida(estado, acao.fim)
+
+    // Guilda (TASK-079): contrato temporário ou permanente. Sem ouro (ou classe que não pode), nada muda; a tela
+    // mostra o motivo, que vem da mesma regra. Contratar é um momento de salvamento (o ouro muda).
+    case 'contratar': {
+      if (estado.partidaAtual) return estado
+      const regra = acao.contrato === 'temporario' ? contratarTemporario : contratarPermanente
+      const resultado = regra(estado.progresso, acao.classe)
+      return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
+    }
 
     case 'devContratarTodas':
     case 'devMudarNivel':

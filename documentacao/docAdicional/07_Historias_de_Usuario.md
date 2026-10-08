@@ -221,6 +221,7 @@ Como jogador, quero contratar personagens de classes que não tenho para complet
 Critérios de aceite:
 - Temporário: nível e equipamento fixos, N partidas, não pode ser Líder.
 - Permanente: nível 1, evolui, e encerra o temporário da mesma classe.
+- A Guilda mostra o preço, o ouro que tenho e as partidas restantes de cada temporário; sem ouro, diz o motivo.
 - Requisitos atendidos: RF19, RF29.
 
 ### HU26 · Iniciar partida (UC26)

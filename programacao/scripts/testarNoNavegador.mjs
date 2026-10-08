@@ -32,7 +32,18 @@ const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
 
 let falhas = 0
 let total = 0
+// Vigia: se nenhuma conferência acontecer em 4 minutos (o computador dormiu, o navegador travou), o roteiro para
+// sozinho, avisa e fecha o navegador e o Vite, em vez de ficar parado para sempre
+let ultimaAtividade = Date.now()
+const vigia = setInterval(() => {
+  if (Date.now() - ultimaAtividade < 4 * 60 * 1000) return
+  clearInterval(vigia)
+  console.log(`
+  ERRO o roteiro ficou 4 minutos sem andar (depois de ${total} conferências): parado pelo vigia`)
+  desligar(1)
+}, 15000)
 function conferir(nome, condicao, detalhe) {
+  ultimaAtividade = Date.now()
   total++
   console.log(`${condicao ? '  ok   ' : '  FALHOU'} ${nome}${detalhe !== undefined ? ' → ' + JSON.stringify(detalhe) : ''}`)
   if (!condicao) falhas++
@@ -366,6 +377,18 @@ const CABE_NO_HUD = `(() => {
   const p = r(hud.querySelector('.hud-principal')), n = r(hud.querySelector('.hud-numeros')), m = r(hud.querySelector('.hud-minimapa')), c = r(config)
   return { estouradas, emOrdem: p.right <= n.left + 1 && n.right <= m.left + 1 && m.right <= c.left + 1, altura: hud.scrollHeight <= hud.clientHeight + 1 }
 })()`
+// Clica no botão da linha de uma lista (por exemplo, "Contratar" na linha do Arqueiro, na Guilda)
+async function clicarNaLinha(textoDaLinha, textoDoBotao) {
+  const ok = await avaliar(`(() => {
+    const linha = [...document.querySelectorAll('li')].find(l => l.textContent.startsWith(${JSON.stringify(textoDaLinha)}))
+    const botao = linha && [...linha.querySelectorAll('button')].find(b => b.textContent.trim().startsWith(${JSON.stringify(textoDoBotao)}))
+    if (!botao) return false
+    botao.click()
+    return true
+  })()`)
+  if (!ok) throw new Error(`não achei "${textoDoBotao}" na linha "${textoDaLinha}"`)
+  await pausa(150)
+}
 // IA do aliado de uma classe, como a partida decide (pelo nível dele, sem o seletor da barra de teste)
 const iaDoAliado = (classe) => cena(`c.perfilDaIA(${membro(classe)}).id`)
 
@@ -821,18 +844,21 @@ try {
     await cena(`(c.trocarIA('${nivel}'), true)`)
     for (const [nome, lugar] of lugaresParados) {
       await colocarLider(lugar.x, lugar.y)
-      // Aliados jogados em volta do Líder, cada um num lugar livre
+      // Aliados jogados em volta do Líder, cada um num lugar livre, todos com a vida cheia (com alguém ferido, o
+      // Sacerdote anda até ele para curar, e isso não é tremor)
       await cena(`(() => {
+        c.grupo.forEach(m => { if (!m.caido) m.vida = m.vidaMaxima })
         const desvios = [[-70, 0], [0, 70], [70, 0], [0, -70]]
         c.aliados.forEach((a, i) => { const p = c.lugarLivre(a.tamanho, { x: ${lugar.x} + desvios[i % 4][0], y: ${lugar.y} + desvios[i % 4][1] }, a); a.colocarEm(p.x, p.y) })
         return true
       })()`)
       await pausa(2000)
-      const antes = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y }))`)
+      const antes = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y, classe: a.classe }))`)
       await pausa(1000)
-      const depois = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y }))`)
-      const maior = Math.max(...antes.map((p, i) => Math.hypot(depois[i].x - p.x, depois[i].y - p.y)))
-      conferir(`IA ${nivel}, Líder parado ${nome}: ninguém treme (≤ 3 px em 1 s)`, maior <= 3, Math.round(maior * 10) / 10)
+      const depois = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y, plano: a.ia.ultimoPlano }))`)
+      const andaram = antes.map((p, i) => ({ classe: p.classe, px: Math.round(Math.hypot(depois[i].x - p.x, depois[i].y - p.y) * 10) / 10, plano: depois[i].plano }))
+      const maior = Math.max(...andaram.map((a) => a.px))
+      conferir(`IA ${nivel}, Líder parado ${nome}: ninguém treme (≤ 3 px em 1 s)`, maior <= 3, maior <= 3 ? maior : andaram.filter((a) => a.px > 3))
       if (nivel === 'media' && nome === 'encostado na pedra') await print('21-parados-encostados-na-pedra')
     }
   }
@@ -1173,11 +1199,58 @@ try {
   )
   await print('36-resumo-grande-vitoria')
 
+  console.log('24b. Guilda: contratos temporário e permanente (TASK-079)')
+  await clicar('Voltar ao Reino')
+  await clicar('Guilda')
+  await clicar('Contrato temporário')
+  const antesDoContrato = await salvo()
+  await clicarNaLinha('Arqueiro', 'Contratar')
+  const depoisDoTemporario = await salvo()
+  conferir(
+    'contrato temporário: o Arqueiro entra com 3 partidas e nível 5, e o ouro cai 200',
+    JSON.stringify(depoisDoTemporario.contratosTemporarios) === JSON.stringify([{ classe: 'arqueiro', partidasRestantes: 3, nivel: 5 }]) &&
+      depoisDoTemporario.ouro === antesDoContrato.ouro - 200,
+    { contratos: depoisDoTemporario.contratosTemporarios, ouro: [antesDoContrato.ouro, depoisDoTemporario.ouro] },
+  )
+  const abaTemporaria = await textoDe('.contratos')
+  conferir('a aba mostra o contrato ativo com as partidas restantes, e o Arqueiro sai da lista', abaTemporaria.includes('3 partidas restantes') && !/^Arqueiro\s*Contratar/m.test(abaTemporaria), abaTemporaria.split('\n').slice(0, 8))
+  await print('48-guilda-temporario')
+  await clicar('Contrato permanente')
+  await clicarNaLinha('Guerreiro', 'Contratar')
+  const depoisDoPermanente = await salvo()
+  conferir(
+    'contrato permanente: o Guerreiro entra no nível 1 e o ouro cai 1000',
+    depoisDoPermanente.personagens.some((p) => p.classe === 'guerreiro' && p.nivel === 1) && depoisDoPermanente.ouro === depoisDoTemporario.ouro - 1000,
+    { personagens: depoisDoPermanente.personagens.map((p) => p.classe), ouro: depoisDoPermanente.ouro },
+  )
+  if (depoisDoPermanente.ouro < 1000) {
+    await clicarNaLinha('Tanque', 'Contratar')
+    conferir('sem ouro: aparece "Ouro insuficiente" e nada muda', (await textoDe('.contratos')).includes('Ouro insuficiente') && (await salvo()).ouro === depoisDoPermanente.ouro)
+  }
+  await print('49-guilda-permanente')
+  await clicar('Voltar ao Reino')
+  await clicar('Jogar')
+  await clicar('Floresta')
+  await clicar('Início do bioma')
+  await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Preparação'`, 'Preparação')
+  const preparacao = await avaliar(`document.body.innerText`)
+  const botoesDeLider = await avaliar(`[...document.querySelectorAll('.tela button')].map(b => b.textContent.trim())`)
+  conferir('Preparação: o temporário vai junto, mas não aparece como opção de Líder', preparacao.includes('Também vão: Arqueiro (temporário, 3 partidas)') && !botoesDeLider.includes('Arqueiro') && botoesDeLider.includes('Guerreiro'), botoesDeLider)
+  await clicar('Começar partida')
+  await esperar(`!!document.querySelector('.arena canvas') && !!window.__jogoDaPartida?.scene?.getScene('arena')?.lider`, 'arena', 15000)
+  await pausa(600)
+  conferir('na partida, o grupo tem o Mago (Líder), o Guerreiro permanente e o Arqueiro temporário', JSON.stringify(await cena(`c.grupo.map(m => m.classe).sort()`)) === JSON.stringify(['arqueiro', 'guerreiro', 'mago']))
+  await voltarComQ()
+  await clicar('Voltar ao Reino')
+  await clicar('Guilda')
+  await clicar('Contrato temporário')
+  conferir('depois de uma partida, o Arqueiro temporário fica com 2 partidas (critério do card)', (await textoDe('.contratos')).includes('2 partidas restantes'))
+  await clicar('Voltar ao Reino')
+
   console.log('25. Vitória: um aliado perdido paga a taxa pela distância de onde caiu (TEST-004)')
-  await clicar('Jogar novamente')
   await clicar('Contratar todas as classes (permanentes, de graça)')
   conferir('painel DEV (fora da partida): as 5 classes viram permanentes no save', (await salvo()).personagens.length === 5)
-  await irAteAPartida(false)
+  await irAteAPartida(true)
   conferir('a partida começa com os 5 permanentes, aliados na IA básica (nível 1)', (await cena(`c.grupo.length`)) === 5 && (await iaDoAliado('arqueiro')) === 'basica')
   await clicar('Aliados ajudam: sim') // agora "não": ninguém levanta o Arqueiro
   await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
@@ -1268,6 +1341,9 @@ try {
   await clicar('Jogar novamente')
   await irAteAPartida(false)
   await clicar('+300 de ouro')
+  // Ninguém levanta ninguém durante o teste (nem a Ressurreição): todos têm de estar caídos no fim
+  await clicar('Aliados ajudam: sim')
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
   await colocarLider(700, 430)
   await pausa(300)
   await apertar('f')

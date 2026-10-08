@@ -517,8 +517,10 @@ export function pontoLivreMaisProximo(ponto, { area, paredes, ocupados = [], rai
 // nível mais baixo). Olhando até "alcance" px à frente, na reta de "de" até "para": se um corpo parado (círculo
 // { x, y, raio }) corta essa reta, devolve um ponto ao lado dele, a "folga" px das bordas dos dois, do lado em que a reta
 // já passa (bem no meio: à esquerda de quem anda). Corpo em cima do destino não conta (é para lá que se vai).
-// raio: o de quem anda. null = caminho livre.
-export function pontoDeDesvio(de, para, corpos, { raio, alcance, folga }) {
+// raio: o de quem anda. ladoAnterior ({ id, lado }): o lado escolhido no quadro anterior para o mesmo corpo (pelo id)
+// continua valendo, para quem desvia não ficar trocando de lado (e tremendo) quando vem bem de frente.
+// Devolve { x, y, lado, id } (lado: 1 = esquerda, -1 = direita), ou null = caminho livre.
+export function pontoDeDesvio(de, para, corpos, { raio, alcance, folga, ladoAnterior = null }) {
   const dx = para.x - de.x
   const dy = para.y - de.y
   const comprimento = Math.hypot(dx, dy)
@@ -538,7 +540,8 @@ export function pontoDeDesvio(de, para, corpos, { raio, alcance, folga }) {
   }
   if (!primeiro) return null
   const { corpo, lateral } = primeiro
-  const lado = lateral > 0 ? -1 : 1 // o corpo está à esquerda da reta: passa pela direita
+  const mesmoCorpo = ladoAnterior && corpo.id !== undefined && ladoAnterior.id === corpo.id
+  const lado = mesmoCorpo ? ladoAnterior.lado : lateral > 0 ? -1 : 1 // corpo à esquerda da reta: passa pela direita
   const afastar = raio + corpo.raio + folga
-  return { x: corpo.x + esquerda.x * lado * afastar, y: corpo.y + esquerda.y * lado * afastar }
+  return { x: corpo.x + esquerda.x * lado * afastar, y: corpo.y + esquerda.y * lado * afastar, lado, id: corpo.id }
 }

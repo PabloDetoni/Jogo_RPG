@@ -294,6 +294,46 @@ describe('pausa, retorno e fuga na partida (TASK-040, TASK-041)', () => {
   })
 })
 
+describe('Guilda: contratos (TASK-079)', () => {
+  const comOuro = (ouro) => {
+    const base = convidadoComMago()
+    return { ...base, progresso: { ...base.progresso, ouro } }
+  }
+
+  it('temporário: paga o ouro, entra com as partidas e o nível do contrato e salva', () => {
+    const e = fazer(comOuro(500), { tipo: 'contratar', contrato: 'temporario', classe: 'arqueiro' })
+    expect(e.progresso.ouro).toBe(300)
+    expect(e.progresso.contratosTemporarios).toEqual([{ classe: 'arqueiro', partidasRestantes: 3, nivel: 5 }])
+    expect(e.pedidosDeSalvamento).toBe(2)
+  })
+
+  it('sem ouro, nada muda e nada é salvo (a tela mostra o motivo, da mesma regra)', () => {
+    const antes = comOuro(50)
+    const e = fazer(antes, { tipo: 'contratar', contrato: 'temporario', classe: 'arqueiro' })
+    expect(e).toBe(antes)
+  })
+
+  it('permanente: nível 1 e encerra o temporário da mesma classe', () => {
+    let e = fazer(comOuro(1500), { tipo: 'contratar', contrato: 'temporario', classe: 'arqueiro' })
+    e = fazer(e, { tipo: 'contratar', contrato: 'permanente', classe: 'arqueiro' })
+    expect(e.progresso.ouro).toBe(300)
+    expect(e.progresso.contratosTemporarios).toEqual([])
+    expect(e.progresso.personagens.map((p) => [p.classe, p.nivel])).toEqual([['mago', 1], ['arqueiro', 1]])
+  })
+
+  it('um temporário com 2 partidas fica com 1 depois de uma partida (critério do card)', () => {
+    const base = comOuro(0)
+    const comContrato = { ...base, progresso: { ...base.progresso, contratosTemporarios: [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 5 }] } }
+    const e = fazer(comContrato, ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
+    expect(e.progresso.contratosTemporarios).toEqual([{ classe: 'arqueiro', partidasRestantes: 1, nivel: 5 }])
+  })
+
+  it('durante a partida não contrata (o progresso não muda, RF12)', () => {
+    const antes = fazer(comOuro(5000), ...irAtePreparacao, comecar)
+    expect(fazer(antes, { tipo: 'contratar', contrato: 'permanente', classe: 'tanque' }).progresso).toBe(antes.progresso)
+  })
+})
+
 describe('painel DEV: mexe no save só fora da partida (5c)', () => {
   it('contratar todas as classes cria os permanentes que faltam e salva', () => {
     const e = fazer(convidadoComMago(), { tipo: 'devContratarTodas' })

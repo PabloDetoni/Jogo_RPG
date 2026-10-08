@@ -190,6 +190,33 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
 
+## G. Guilda: contratos (parte 7a, TASK-079)
+
+**G-01 · Contrato temporário**
+- Fazer:
+  1. Tenha pelo menos 200 de ouro (jogue uma partida com **+300 de ouro** e volte com Q).
+  2. Reino → **Guilda** → **Contrato temporário** → **Contratar** numa classe.
+- Deve acontecer:
+  - aparece "Classe contratado (temporário).";
+  - o ouro cai 200;
+  - a classe sai da lista e aparece em "Contratos ativos" com "3 partidas restantes".
+
+**G-02 · O temporário vai junto, mas não é Líder**
+- Fazer: Jogar → Floresta → Início do bioma.
+- Deve acontecer: a Preparação mostra "Também vão: Classe (temporário, 3 partidas)", e essa classe não aparece entre os botões de Líder. Na partida, ela está no grupo.
+
+**G-03 · Uma partida a menos**
+- Fazer: termine uma partida (qualquer resultado) e volte à Guilda.
+- Deve acontecer: o contrato mostra "2 partidas restantes". Na última partida, o contrato some.
+
+**G-04 · Contrato permanente**
+- Fazer: com 1000 de ouro, **Contrato permanente** → **Contratar** numa classe.
+- Deve acontecer: o personagem entra no nível 1, aparece como opção de Líder na Preparação e ganha XP. Se havia temporário da mesma classe, a linha avisa "(encerra o contrato temporário)", e o temporário some.
+
+**G-05 · Sem ouro**
+- Fazer: tente contratar sem ouro suficiente.
+- Deve acontecer: aparece "Ouro insuficiente para este contrato." em vermelho, e nada muda.
+
 ## P. Pausa e "em combate" (parte 5c)
 
 **P-01 · Pausar fora de combate**

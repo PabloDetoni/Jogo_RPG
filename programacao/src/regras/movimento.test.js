@@ -375,6 +375,18 @@ describe('pontoDeDesvio: a IA de nível alto contorna quem está parado no camin
     expect(ponto.x).toBeCloseTo(60)
   })
 
+  it('o lado escolhido para o mesmo corpo continua no quadro seguinte (não troca de lado vindo de frente)', () => {
+    const corpo = { x: 100, y: 3, raio: 20, id: 'guerreiro' }
+    const primeiro = pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, [corpo], regra)
+    expect(primeiro).toMatchObject({ lado: -1, id: 'guerreiro' }) // corpo um pouco abaixo: passa por cima
+    // no quadro seguinte o corpo ficou um pouco acima da reta, mas o lado continua o mesmo
+    const depois = pontoDeDesvio({ x: 10, y: 0 }, { x: 300, y: 0 }, [{ ...corpo, y: -3 }], { ...regra, ladoAnterior: primeiro })
+    expect(depois.lado).toBe(-1)
+    // outro corpo: o lado anterior não vale
+    const outro = pontoDeDesvio({ x: 10, y: 0 }, { x: 300, y: 0 }, [{ ...corpo, y: -3, id: 'tanque' }], { ...regra, ladoAnterior: primeiro })
+    expect(outro.lado).toBe(1)
+  })
+
   it('corpo em cima do destino não conta (é para lá que se vai, como o ferido que o Sacerdote vai curar)', () => {
     expect(pontoDeDesvio({ x: 0, y: 0 }, { x: 100, y: 0 }, [{ x: 110, y: 0, raio: 20 }], regra)).toBeNull()
   })

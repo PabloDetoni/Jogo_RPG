@@ -436,8 +436,10 @@ function desvioDeQuemEstaParado(aliado, destino, cena) {
   if (!regra) return null
   const parados = cena.grupo
     .filter((outro) => outro !== aliado && !outro.perdido && (outro.caido || Math.hypot(outro.querida.x, outro.querida.y) < 20))
-    .map((outro) => ({ x: outro.x, y: outro.y, raio: outro.raio }))
-  const ponto = pontoDeDesvio(aliado, destino, parados, { raio: aliado.raio, ...regra })
+    .map((outro) => ({ x: outro.x, y: outro.y, raio: outro.raio, id: outro.classe }))
+  // O lado escolhido para contornar alguém continua o mesmo até passar por ele (não fica trocando de lado)
+  const ponto = pontoDeDesvio(aliado, destino, parados, { raio: aliado.raio, ...regra, ladoAnterior: aliado.ia.desvio })
+  aliado.ia.desvio = ponto && { id: ponto.id, lado: ponto.lado }
   return ponto && cena.lugarLivre(aliado.tamanho, ponto, aliado, 0, false)
 }
 

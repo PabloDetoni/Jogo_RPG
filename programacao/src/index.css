@@ -129,6 +129,56 @@ body {
   font-size: 1.15cqw;
 }
 
+/* Guilda: abas de contrato (TASK-079) */
+.contratos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  min-width: 46cqw;
+  text-align: left;
+}
+
+.contratos h3 {
+  margin: 0.4em 0 0;
+  font-size: 1em;
+}
+
+.contratos p {
+  margin: 0;
+}
+
+.lista-de-contratos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-de-contratos li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.mensagem-da-guilda {
+  font-weight: bold;
+}
+
+.mensagem-da-guilda-erro {
+  color: #8b1a1a;
+}
+
+.moldura[data-tema='escuro'] .mensagem-da-guilda-erro {
+  color: #ff9e9e;
+}
+
+.temporarios-da-preparacao {
+  max-width: 34cqw;
+}
+
 /* Mensagens por cima da tela (componentes/Avisos.jsx) */
 .avisos {
   display: flex;

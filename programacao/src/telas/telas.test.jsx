@@ -10,6 +10,7 @@ import { componentesDasJanelas } from '../janelas/index.js'
 import { componentesDasTelas } from './index.js'
 import HudDaPartida, { AvisosDaPartida } from './partida/HudDaPartida.jsx'
 import Resumo from './partida/Resumo.jsx'
+import { ContratosPermanentes, ContratosTemporarios } from './reino/Contratos.jsx'
 
 // Desenha cada tela com todas as janelas, os avisos e o painel, para cada tipo de jogador.
 // Pega telas que quebram ao aparecer e confere o que cada uma precisa mostrar.
@@ -238,5 +239,44 @@ describe('Resumo cheio de números (RF51, TASK-048)', () => {
     expect(html).toContain('Mago: +120 · subiu para o nível 2!')
     expect(html).toContain('Guerreiro: +40 · nível 3')
     expect(html).toContain('>Jogar novamente</button>')
+  })
+})
+
+describe('Guilda: contratos (TASK-079) e Preparação', () => {
+  const comContrato = {
+    ...progresso,
+    contratosTemporarios: [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 5 }],
+  }
+  const desenharCom = (componente, tela = 'guilda') => {
+    const estado = { ...criarEstadoInicial(preferenciasPadrao), tela, tipoJogador: 'convidado', progresso: comContrato }
+    const salvador = { inscrever: () => () => {}, obterInfo: () => ({}) }
+    return renderToString(<ContextoJogo value={{ estado, acoes, salvador }}>{componente}</ContextoJogo>).replace(/<!-- -->/g, '')
+  }
+
+  it('temporário: só as classes que o jogador não tem e sem contrato ativo, com o preço; e os contratos ativos', () => {
+    const html = desenharCom(<ContratosTemporarios />)
+    // o save tem Mago e Tanque permanentes e o Arqueiro temporário: sobram Guerreiro e Sacerdote
+    expect(html).toContain('<span>Guerreiro</span>')
+    expect(html).toContain('<span>Sacerdote</span>')
+    expect(html).not.toContain('<span>Mago</span>')
+    expect(html).toContain('Contratar (200 de ouro)')
+    expect(html).toContain('Arqueiro (nível 5)')
+    expect(html).toContain('2 partidas restantes')
+    expect(html).toContain('Ouro: <strong>120</strong>')
+  })
+
+  it('permanente: o Arqueiro aparece avisando que encerra o temporário', () => {
+    const html = desenharCom(<ContratosPermanentes />)
+    expect(html).toContain('Contratar (1000 de ouro)')
+    expect(html).toContain('(encerra o contrato temporário)')
+    expect(html).not.toContain('<span>Tanque')
+  })
+
+  it('Preparação: o temporário vai junto, mas não aparece como opção de Líder (critério do card)', () => {
+    const Preparacao = componentesDasTelas.preparacao
+    const html = desenharCom(<Preparacao />, 'preparacao')
+    expect(html).toContain('Também vão: Arqueiro (temporário, 2 partidas)')
+    expect(html).not.toContain('>Arqueiro</button>')
+    expect(html).toContain('>Tanque</button>')
   })
 })

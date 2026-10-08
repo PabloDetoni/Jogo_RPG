@@ -42,6 +42,11 @@ Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data
 
 | Código | Situação | Data | Quem | Resultado | Observação |
 |---|---|---|---|---|---|
+| G-01 | Guilda: contrato temporário | | | | |
+| G-02 | O temporário vai junto, mas não é Líder | | | | |
+| G-03 | Uma partida a menos no contrato | | | | |
+| G-04 | Contrato permanente | | | | |
+| G-05 | Contratar sem ouro | | | | |
 | SA-01 | Sacerdote: cura fora de combate | | | | |
 | SA-02 | Sacerdote: o mais ferido primeiro | | | | |
 | SA-03 | Sacerdote básico vai até quem precisa | | | | |

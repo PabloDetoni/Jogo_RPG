@@ -3,17 +3,18 @@ import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
+import { ContratosPermanentes, ContratosTemporarios } from './Contratos.jsx'
 
 const pos = posicoes.guilda
 
-const abas = [
-  { id: 'missoes', nome: 'Missões' },
-  { id: 'contratoTemporario', nome: 'Contrato temporário' },
-  { id: 'contratoPermanente', nome: 'Contrato permanente' },
-]
-
+// Guilda (UC21 a UC25): missões (TASK-078, Fase 4) e contratos (TASK-079).
 export default function Guilda() {
   const { acoes } = useJogo()
+  const abas = [
+    { id: 'missoes', nome: 'Missões' },
+    { id: 'contratoTemporario', nome: 'Contrato temporário', conteudo: <ContratosTemporarios /> },
+    { id: 'contratoPermanente', nome: 'Contrato permanente', conteudo: <ContratosPermanentes /> },
+  ]
 
   return (
     <Tela>

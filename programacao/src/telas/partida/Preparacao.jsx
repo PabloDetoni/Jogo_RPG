@@ -12,7 +12,7 @@ const pos = posicoes.preparacao
 // (O "Voltar ao Mapa" é decisão de 04/10/2026; o diagrama de Partida só tem "Voltar ao Reino".)
 export default function Preparacao() {
   const { estado, acoes } = useJogo()
-  const { personagens: permanentes, lider } = estado.progresso
+  const { personagens: permanentes, lider, contratosTemporarios } = estado.progresso
   const temLider = permanentes.some((p) => p.classe === lider)
 
   return (
@@ -25,6 +25,15 @@ export default function Preparacao() {
           </Botao>
         ))}
         {permanentes.length === 0 && 'Nenhum personagem permanente.'}
+        {/* O temporário vai junto, mas nunca pode ser Líder (RF29) */}
+        {contratosTemporarios.length > 0 && (
+          <p className="nota temporarios-da-preparacao">
+            Também vão:{' '}
+            {contratosTemporarios
+              .map((contrato) => `${nomeDaClasse(contrato.classe)} (temporário, ${contrato.partidasRestantes} ${contrato.partidasRestantes === 1 ? 'partida' : 'partidas'})`)
+              .join(', ')}
+          </p>
+        )}
       </Area>
       <Area em={pos.mochila}>Mochila da partida</Area>
       <Botao em={pos.comecarPartida} desativado={!temLider} onClick={acoes.comecarPartida}>

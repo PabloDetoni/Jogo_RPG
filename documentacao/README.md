@@ -24,6 +24,8 @@ Esta pasta reúne a documentação conceitual do projeto para Análise e Projeto
 | [Requisitos](docAdicional/08_Requisitos.md) | Requisitos funcionais e não funcionais |
 | [Matriz de Rastreabilidade](docAdicional/09_Matriz_de_Rastreabilidade.md) | Ligação entre casos de uso, requisitos, histórias e diagramas de atividades |
 | [Balanceamento](Balanceamento.md) | Todos os números do jogo (XP, atributos, taxas, ouro, peso, contratos) e seus limites. Gerado pelo código: não edite à mão |
+| [Lista de arte e som](Lista_de_Arte_e_Som.md) | O que precisa de arte e de som no beta, com tamanhos e nomes de arquivo (TASK-110 e TASK-104) |
+| [Supabase: passo a passo](Supabase_passo_a_passo.md) | Como criar o projeto no Supabase, testar o e-mail de confirmação e passar a chave (TASK-090) |
 
 ## Alterações do projeto
 
