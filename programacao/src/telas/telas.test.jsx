@@ -8,6 +8,8 @@ import { preferenciasPadrao } from '../estado/preferencias.js'
 import { novoPersonagem, progressoInicial } from '../estado/progresso.js'
 import { componentesDasJanelas } from '../janelas/index.js'
 import { componentesDasTelas } from './index.js'
+import HudDaPartida, { AvisosDaPartida } from './partida/HudDaPartida.jsx'
+import Resumo from './partida/Resumo.jsx'
 
 // Desenha cada tela com todas as janelas, os avisos e o painel, para cada tipo de jogador.
 // Pega telas que quebram ao aparecer e confere o que cada uma precisa mostrar.
@@ -36,7 +38,6 @@ function desenhar(tela, tipoJogador, problema = null) {
     escolhasDaPartida: { bioma: 'floresta', pontoPartida: 'inicio' },
     partidaAtual: tela === 'partida' ? { bioma: 'floresta', pontoPartida: 'inicio', lider: 'tanque', iniciadaEm: 'x' } : null,
     ultimoResultado: { resultado: 'retornoForcado', bioma: 'floresta' },
-    segundosRetorno: 7,
     janelas: Object.keys(componentesDasJanelas),
     avisos: [{ id: 1, texto: 'Aviso de teste' }],
   }
@@ -127,7 +128,15 @@ describe('o que cada tela mostra', () => {
     for (const botao of botoes) {
       expect(html).toContain(`>${botao}</button>`)
     }
-    expect(html).toContain('Voltando ao Reino em <!-- -->7<!-- --> s')
+    expect(html).toContain('>Testar foco</button>')
+    expect(html).toContain('Q volta ao Reino · F foge · M muta')
+  })
+
+  it('aviso da fuga: custo, F de novo para confirmar e Esc para cancelar (RF46)', () => {
+    const html = desenhar('partida', 'convidado')
+    expect(html).toContain('Fugir com a Pedra de Retorno?')
+    expect(html).toContain('janela-fundo-leve') // não escurece nem pausa
+    expect(html).toContain('>Fugir (F)</button>')
   })
 
   it('Configurações: convidado pode criar conta e sair; conta só sai', () => {
@@ -147,5 +156,87 @@ describe('o que cada tela mostra', () => {
 
   it('problema no salvamento aparece como aviso', () => {
     expect(desenhar('reino', 'convidado', 'conflito')).toContain('salvo por outra aba')
+  })
+})
+
+// Situação como o Phaser manda (CenaArena.avisarSituacao), para o HUD completo (TASK-049)
+const situacao = {
+  classe: 'mago',
+  vida: 40,
+  vidaMaxima: 80,
+  mana: 50,
+  manaMaxima: 110,
+  caido: true,
+  segundosParaLevantar: 21,
+  recargaDoAtaque: 1,
+  recargaDaEsquiva: 0.5,
+  habilidades: [{ nome: 'Meteoro', custo: 35, recarga: 1, semMana: false }, null, null],
+  aliados: [{ classe: 'tanque', vida: 90, vidaMaxima: 180, caido: false, fragil: true, ia: 'media' }],
+  perdidos: ['arqueiro'],
+  emFoco: true,
+  tempo: 135,
+  pontuacao: 340,
+  ouroGanho: 85,
+  custoDaFuga: { taxa: 12, ouro: 10 },
+  emCombate: true,
+  retorno: { segundos: 15, interrompido: true },
+  fuga: { segundos: 3 },
+}
+
+describe('HUD completo da partida (TASK-049)', () => {
+  it('tempo, pontos, ouro, custo da fuga, em combate, foco, mudo e o lugar do minimapa', () => {
+    const html = renderToString(<HudDaPartida situacao={situacao} mudo />).replace(/<!-- -->/g, '')
+    for (const texto of ['Tempo', '02:15', 'Pontos', '340', 'Ouro', '85', 'Fuga (F): ', '12%', '10 de ouro', 'Em combate', 'Foco!', 'Mudo (M)', 'Minimapa', 'Região: —']) {
+      expect(html).toContain(texto)
+    }
+    expect(html).toContain('IA média')
+    expect(html).toContain('Arqueiro: perdido')
+    expect(renderToString(<HudDaPartida situacao={{ ...situacao, emCombate: false }} />)).toContain('Fora de combate')
+  })
+
+  it('abaixo do HUD: contagens do Q e da fuga, Líder caído e as mensagens', () => {
+    const mensagens = [{ id: 1, texto: 'Crítico! 45 de dano', tipo: 'critico' }]
+    const html = renderToString(<AvisosDaPartida situacao={situacao} mensagens={mensagens} />).replace(/<!-- -->/g, '')
+    expect(html).toContain('Fugindo com a Pedra de Retorno em 3 s')
+    expect(html).toContain('Em combate: o retorno espera (15 s)')
+    expect(html).toContain('O Líder desmaiou: 21 s para ser levantado')
+    expect(html).toContain('Crítico! 45 de dano')
+  })
+})
+
+describe('Resumo cheio de números (RF51, TASK-048)', () => {
+  it('ouro, taxa, recebido, pontuação, monstros, tempos, perdidos e o XP de cada um', () => {
+    const ultimoResultado = {
+      resultado: 'vitoria',
+      motivo: 'Retorno normal ao Reino',
+      bioma: 'floresta',
+      ouroGanho: 200,
+      taxa: 4,
+      taxaEmOuro: 8,
+      ouroRecebido: 192,
+      pontuacaoBase: 400,
+      pontuacaoFinal: 384,
+      monstros: 7,
+      itens: [],
+      segundosTotais: 245,
+      segundosAtivos: 61,
+      perdidos: ['tanque'],
+      personagens: [
+        { classe: 'mago', xp: 120, nivelAntes: 1, nivel: 2, niveisGanhos: 1 },
+        { classe: 'guerreiro', xp: 40, nivelAntes: 3, nivel: 3, niveisGanhos: 0 },
+      ],
+    }
+    const estado = { ...criarEstadoInicial(preferenciasPadrao), tela: 'resumo', ultimoResultado }
+    const html = renderToString(
+      <ContextoJogo value={{ estado, acoes, salvador: { inscrever: () => () => {}, obterInfo: () => ({}) } }}>
+        <Resumo />
+      </ContextoJogo>,
+    ).replace(/<!-- -->/g, '')
+    for (const texto of ['Vitória', 'Retorno normal ao Reino', '200', '4% (−8 de ouro)', '192', '384 (base 400)', '7', '04:05', '01:01', 'Tanque']) {
+      expect(html).toContain(texto)
+    }
+    expect(html).toContain('Mago: +120 · subiu para o nível 2!')
+    expect(html).toContain('Guerreiro: +40 · nível 3')
+    expect(html).toContain('>Jogar novamente</button>')
   })
 })

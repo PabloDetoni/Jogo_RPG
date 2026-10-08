@@ -66,6 +66,7 @@ export default class Personagem extends Entidade {
     this.membro = membro
     this.classe = membro.classe
     this.nivel = membro.nivel ?? 1 // decide a IA quando é aliado
+    this.chanceDeCritico = membro.chanceDeCritico ?? 0 // pela Agilidade (regras/combate.js)
     this.vidaMaxima = membro.vidaMaxima
     this.vida = Math.max(1, Math.round(fracaoDaVida * membro.vidaMaxima))
     this.manaMaxima = membro.manaMaxima
@@ -83,15 +84,15 @@ export default class Personagem extends Entidade {
   }
 
   get provocando() {
-    return this.cena.time.now < this.provocandoAte
+    return this.cena.agora < this.provocandoAte
   }
 
   get fragil() {
-    return this.cena.time.now < this.fimDaFragilidade
+    return this.cena.agora < this.fimDaFragilidade
   }
 
   get fortalecido() {
-    return this.cena.time.now < this.fimDoFortalecimento
+    return this.cena.agora < this.fimDoFortalecimento
   }
 
   // Caído, não se mexe na separação: os outros saem de cima dele

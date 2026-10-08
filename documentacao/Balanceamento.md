@@ -47,7 +47,7 @@ XP para passar do nível n para o n + 1 = **100 × n ^ 1** (provisório). A cada
 
 ### Quantos monstros até o nível 100
 
-Ainda não existe XP por monstro (etapa 5). A tabela mostra quantos monstros são precisos para ir do nível 1 ao 100, para cada valor possível de XP por monstro. No grupo, o XP de cada monstro é dividido entre os permanentes ativos (RF50): com 5 personagens, cada um recebe um quinto.
+Na arena de teste (5c), o mob vermelho dá **20 XP** e o atirador **25 XP** (provisório); os monstros de verdade vêm com a Floresta (TASK-012). A tabela mostra quantos monstros são precisos para ir do nível 1 ao 100, para cada valor possível de XP por monstro. No grupo, o XP de cada monstro é dividido entre os permanentes de pé (RF50): com 5 personagens, cada um recebe um quinto.
 
 | XP por monstro | Monstros (personagem sozinho) | Monstros (grupo de 5, todos chegam ao 100 juntos) |
 | --- | --- | --- |
@@ -242,8 +242,8 @@ Mana máxima = **20 + Inteligência × 5**. Ela volta sozinha: **0,5 + Sabedoria
 | --- | --- | --- | --- | --- | --- | --- |
 | Guerreiro | 45 | 1,4 | Giro (provisória) | 20 | 5 s | 35 de dano em volta, raio 100 |
 | Mago | 110 | 2,3 | Meteoro (provisória) | 35 | 8 s | 50 de dano, raio 130, até 600 px; cai 0,7 s depois do aviso |
-| Tanque | 40 | 1,4 | Provocação (provisória) | 15 | 1 s | mobs a até 300 px vão nele por 4 s; leva 50% do dano |
-| Sacerdote | 80 | 3,2 | Ressurreição (da documentação) | 60 | 18 s | levanta os caídos a até 120 px com vida cheia, 2 s imune e +20% de dano por 8 s |
+| Tanque | 40 | 1,4 | Provocação (provisória) | 15 | 10 s | mobs a até 300 px vão nele por 4 s; leva 50% do dano |
+| Sacerdote | 80 | 3,2 | Ressurreição (da documentação) | 60 | 180 s | levanta os caídos a até 120 px com vida cheia, 2 s imune e +20% de dano por 8 s |
 | Arqueiro | 50 | 1,4 | Tiro perfurante (provisória) | 25 | 6 s | 60 de dano, 1.400 px/s, atravessa os inimigos e vai até 1.800 px (para em pedra) |
 
 As teclas 2 e 3 ficam vazias até as habilidades de verdade (TASK-010). Os números da Ressurreição também são provisórios.
@@ -275,14 +275,48 @@ A IA de cada aliado vem do nível do próprio personagem; o jogador não escolhe
 
 - Quem fica sem vida desmaia e tem **30 s** para ser levantado (documentação).
 - Ajuda: alguém de pé, parado a até **60 px**, por **5 s** seguidos (documentação), com a **área limpa: nenhum inimigo vivo a menos de 250 px** (decidido em 06/10). Se a área sujar ou o ajudante sair, volta a zero.
-- Quem é levantado pela ajuda volta com **10% da vida** (documentação) e fica frágil por **1 s**, levando **+50%** de dano.
+- Quem é levantado pela ajuda volta com **10% da vida** (documentação) e fica frágil por **10 s**, levando **+50%** de dano.
 - Sem ajuda em 30 s: vira perdido (Pedra de Retorno). Líder não levantado em 30 s: Retorno forçado. Todos caídos: Derrota na hora.
+
+## Partida: em combate, retorno, fuga e ganhos (5c)
+
+- **Em combate** (documentação, RF37): alguém do grupo causou ou recebeu dano nos últimos **5 s**, ou um mob hostil persegue o grupo. Bater no boneco de treino não conta. Em combate não dá para pausar (Esc mostra "Você não pode pausar agora").
+- **Retorno com Q ou pela pausa** (documentação, RF45): **15 s**, só começa fora de combate; se o grupo entrar em combate, volta a 15 s e só corre fora dele. Q de novo cancela.
+- **Fuga com F** (documentação, RF46): o primeiro F mostra o custo, o segundo confirma; **5 s**, mesmo em combate. Confirmada, não se cancela (decisão de 07/10).
+- **Tempo ativo** (documentação, Conceito §12): só o tempo com dano nos últimos 5 s. Ser perseguido sem levar dano não conta. A pausa não conta em nenhum tempo.
+- **Taxa por distância na arena** (provisório até a etapa 6): o ponto inicial do bioma é onde o Líder nasce, e a borda fica a **1.400 px** dele. Exemplo, a fuga: 7% no início, 18% no meio e 30% na borda.
+- O nível ganho na partida aparece na hora ("subiu de nível"), mas só vale a partir da partida seguinte: o progresso não muda durante a partida (RF12). É também quando a IA do personagem muda.
+
+### Monstros da arena de teste (provisório)
+
+| Monstro | Vida | XP | Ouro |
+| --- | --- | --- | --- |
+| Mob vermelho | 60 | 20 | 12 |
+| Atirador | 40 | 25 | 15 |
+
+### Crítico (provisório, aprovado em 07/10)
+
+Chance = **5% + 0,5% por ponto de Agilidade**; o golpe crítico causa **1,5×** o dano. Vale para o Líder e os aliados. Com Agilidade 100: 55%.
+
+| Classe | Agilidade inicial | Chance de crítico no começo |
+| --- | --- | --- |
+| Guerreiro | 13 | 11,5% |
+| Mago | 8 | 9,0% |
+| Tanque | 7 | 8,5% |
+| Sacerdote | 7 | 8,5% |
+| Arqueiro | 22 | 16,0% |
+
+### HUD e botões de teste
+
+- Mensagens curtas do HUD (crítico, nível, desmaio, perdido, retorno...): ficam **2,5 s**, no máximo **4** juntas.
+- Botão "+300 de ouro" (só no npm run dev): soma ao ouro ganho na partida, para chegar à Grande Vitória (pontuação base acima de 1.000) sem jogar horas.
+- Botão "Testar foco": IA avançada para todos, Líder com **25%** da vida por **20 s** e **3 mobs** a 300 px.
 
 ## Ainda sem valor (a decidir)
 
 Valores do Conceito §19 que ainda não existem no código:
 
-- XP e ouro por monstro; bônus de Boss na pontuação; chance de drop dos Bosses;
+- XP e ouro dos monstros de verdade da Floresta (a arena tem dois de teste); bônus de Boss na pontuação; chance de drop dos Bosses;
 - dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);
 - preços do Mercado e da Forja e do pergaminho;
 - peso de cada item; tempo que um item fica no chão;

@@ -1,4 +1,5 @@
 import { telas } from '../dados/telas.js'
+import { controleInicialDaPartida } from './controleDaPartida.js'
 
 // Troca de tela e fecha as janelas abertas.
 // Numa tela raiz, o caminho é esquecido. Numa tela que já está no caminho, o caminho é cortado até ela.
@@ -19,7 +20,7 @@ export function navegar(estado, destino) {
     tela: destino,
     anteriores,
     janelas: [],
-    segundosRetorno: naPartida ? estado.segundosRetorno : null,
+    controleDaPartida: naPartida ? estado.controleDaPartida : controleInicialDaPartida(),
     partidaAtual: naPartida ? estado.partidaAtual : null,
   }
 }

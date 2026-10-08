@@ -1,29 +1,32 @@
-import { combateDeTeste, contratos } from '../dados/balanceamento.js'
+import { combateDeTeste, contratos, critico } from '../dados/balanceamento.js'
 import { atributosIniciaisDaClasse, classes } from '../dados/classes.js'
 import { nivelInicial } from '../dados/regras.js'
+import { chanceDeCritico } from './combate.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
 
 // Quem vai para a partida, com quanta vida e quanta mana (Fase 1).
-// Cada membro do grupo: { classe, nivel, vidaMaxima, manaMaxima, manaPorSegundo, lider, temporario, deTeste? }
-// O nível decide a IA do personagem quando ele é aliado (regras/nivelDaIA.js).
+// Cada membro do grupo: { classe, nivel, xp, vidaMaxima, manaMaxima, manaPorSegundo, chanceDeCritico, lider, temporario, deTeste? }
+// O nível decide a IA do personagem quando ele é aliado (regras/nivelDaIA.js). nivel e xp são os do save no começo
+// da partida: o XP ganho nela só entra no save no fim (RF12), e é com eles que o HUD avisa "subiu de nível".
 
 // Vida máxima na arena de teste: Vitalidade × vidaPorPontoDeVitalidade (provisório)
 export function vidaMaximaPelaVitalidade(vitalidade) {
   return Math.max(1, Math.round(vitalidade * combateDeTeste.vidaPorPontoDeVitalidade))
 }
 
-// Vida pela Vitalidade, mana pela Inteligência e a volta da mana pela Sabedoria
+// Vida pela Vitalidade, mana pela Inteligência, a volta da mana pela Sabedoria e o crítico pela Agilidade
 function numerosDoMembro(atributos) {
   return {
     vidaMaxima: vidaMaximaPelaVitalidade(atributos.vitalidade),
     manaMaxima: manaMaxima(atributos.inteligencia),
     manaPorSegundo: manaPorSegundo(atributos.sabedoria),
+    chanceDeCritico: chanceDeCritico(atributos.agilidade, critico),
   }
 }
 
 // Membro criado só na memória da partida (barra de teste); nunca vai para o save
 export function membroDeTeste(classe, lider = false) {
-  return { classe, nivel: nivelInicial, ...numerosDoMembro(atributosIniciaisDaClasse(classe)), lider, temporario: true, deTeste: true }
+  return { classe, nivel: nivelInicial, xp: 0, ...numerosDoMembro(atributosIniciaisDaClasse(classe)), lider, temporario: true, deTeste: true }
 }
 
 // Todos os personagens permanentes e os contratados temporários vão juntos (RF34), com o Líder
@@ -34,6 +37,7 @@ export function montarGrupoDaPartida(progresso, lider) {
     classe: personagem.classe,
     atributos: { ...atributosIniciaisDaClasse(personagem.classe), ...personagem.atributos },
     nivel: personagem.nivel ?? nivelInicial,
+    xp: personagem.xp ?? 0,
     temporario: false,
   }))
   const temporarios = progresso.contratosTemporarios
@@ -42,11 +46,13 @@ export function montarGrupoDaPartida(progresso, lider) {
       classe: contrato.classe,
       atributos: atributosIniciaisDaClasse(contrato.classe),
       nivel: contrato.nivel ?? contratos.nivelDoTemporario,
+      xp: 0,
       temporario: true,
     }))
   const grupo = [...permanentes, ...temporarios].map((membro) => ({
     classe: membro.classe,
     nivel: membro.nivel,
+    xp: membro.xp,
     ...numerosDoMembro(membro.atributos),
     lider: membro.classe === lider,
     temporario: membro.temporario,

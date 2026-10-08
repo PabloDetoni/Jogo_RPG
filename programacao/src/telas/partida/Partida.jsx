@@ -1,66 +1,95 @@
-import { useEffect, useMemo, useState } from 'react'
-import Area from '../../componentes/Area.jsx'
-import Botao from '../../componentes/Botao.jsx'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Tela from '../../componentes/Tela.jsx'
+import { combateDeTeste } from '../../dados/balanceamento.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 import ArenaDaPartida from '../../jogo/ArenaDaPartida.jsx'
 import { criarPonte } from '../../jogo/ponte.js'
 import { montarGrupoDaPartida } from '../../regras/grupoDaPartida.js'
 import BarraDeTeste from './BarraDeTeste.jsx'
-import HudDaPartida from './HudDaPartida.jsx'
+import HudDaPartida, { AvisosDaPartida } from './HudDaPartida.jsx'
 
 const pos = posicoes.partida
+const { msDaMensagem, mensagensNoMaximo } = combateDeTeste.hud
 
-// Partida (etapa 5): o Phaser desenha a arena embaixo; HUD, retorno e barra de teste ficam em React, por cima.
-// Os dois lados conversam só pela ponte (src/jogo/ponte.js).
+// Partida (etapa 5): o Phaser desenha a arena embaixo; HUD, avisos e barra de teste ficam em React, por cima.
+// Os dois lados conversam só pela ponte (src/jogo/ponte.js). As contagens do Q e da fuga rodam dentro da partida,
+// no relógio dela (que para na pausa); aqui só chegam as teclas e os pedidos da pausa e do aviso da fuga.
 export default function Partida() {
   const { estado, acoes } = useJogo()
   const [ponte] = useState(criarPonte)
   const [situacao, setSituacao] = useState(null)
-  const retornando = estado.segundosRetorno !== null
-  const pausado = estado.janelas.includes('pausa')
-  const contando = retornando && !pausado
+  const [mensagens, setMensagens] = useState([])
+  const { janelas, controleDaPartida: controle } = estado
+  const pausado = janelas.includes('pausa')
 
   // O progresso não muda durante a partida (RF12), então o grupo é montado uma vez só
   const lider = estado.partidaAtual?.lider ?? null
   const grupo = useMemo(() => montarGrupoDaPartida(estado.progresso, lider), [estado.progresso, lider])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
-  // Fim pelo desmaio (TASK-044): todos caídos → Derrota (com a cutscene); Líder não levantado em 30 s →
-  // Retorno forçado. O motivo aparece no Resumo.
-  useEffect(
-    () => ponte.ouvir('fimDaPartida', ({ resultado, ...detalhes }) => acoes.encerrarPartida(resultado, detalhes)),
-    [ponte, acoes],
-  )
-  // A pausa congela o jogo; as Configurações não pausam (Conceito §11.8)
+  // Fim da partida (retorno, fuga, desmaio ou botão de teste): as contas e o save ficam com o estado do jogo
+  useEffect(() => ponte.ouvir('fimDaPartida', acoes.encerrarPartida), [ponte, acoes])
+  // "Em combate", "retornando" e "fugindo", na hora em que mudam (o Esc e a pausa dependem disso)
+  useEffect(() => ponte.ouvir('andamento', acoes.atualizarAndamento), [ponte, acoes])
+  // A pausa congela o jogo; as Configurações e o aviso da fuga não pausam (Conceito §11.8)
   useEffect(() => ponte.definirPausa(pausado), [ponte, pausado])
 
-  // A contagem do retorno anda de 1 em 1 segundo e para enquanto a pausa está aberta.
-  // O jogo continua rodando durante a contagem.
+  // Mensagens curtas do HUD: cada uma some sozinha; aparecem no máximo algumas juntas
+  const relogios = useRef(new Set())
+  const proximaMensagem = useRef(1)
+  const mostrar = useCallback((mensagem) => {
+    const id = proximaMensagem.current++
+    setMensagens((atuais) => [...atuais, { ...mensagem, id }].slice(-mensagensNoMaximo))
+    const relogio = setTimeout(() => {
+      relogios.current.delete(relogio)
+      setMensagens((atuais) => atuais.filter((outra) => outra.id !== id))
+    }, msDaMensagem)
+    relogios.current.add(relogio)
+  }, [])
   useEffect(() => {
-    if (!contando) return
-    const relogio = setInterval(acoes.contarRetorno, 1000)
-    return () => clearInterval(relogio)
-  }, [contando, acoes])
+    const ativos = relogios.current
+    return () => ativos.forEach(clearTimeout)
+  }, [])
+  useEffect(() => ponte.ouvir('mensagem', mostrar), [ponte, mostrar])
+
+  // Esc em combate não pausa (RF44): o estado conta a recusa e aqui aparece o aviso
+  const { recusasDePausa, pedido } = controle
+  useEffect(() => {
+    if (recusasDePausa > 0) mostrar({ texto: 'Você não pode pausar agora', tipo: 'alerta' })
+  }, [recusasDePausa, mostrar])
+
+  // Pedidos da pausa ("Voltar ao Reino") e do aviso da fuga (confirmar) vão para a partida
+  useEffect(() => {
+    if (pedido) ponte.avisar('comando', { tipo: pedido.tipo })
+  }, [ponte, pedido])
+
+  // Teclas Q (retorno) e F (fuga). Q só sem janela aberta; F abre o aviso da fuga e, com ele aberto, confirma.
+  const atual = useRef({ janelas, situacao, fugindo: false })
+  useEffect(() => {
+    atual.current = { janelas, situacao, fugindo: controle.andamento.fugindo }
+  }, [janelas, situacao, controle.andamento.fugindo])
+  useEffect(() => {
+    function aoApertarTecla(evento) {
+      if (evento.repeat || evento.ctrlKey || evento.altKey || evento.metaKey) return
+      const tecla = evento.key.toLowerCase()
+      const { janelas: abertas, situacao: agora, fugindo } = atual.current
+      if (tecla === 'q' && abertas.length === 0) ponte.avisar('comando', { tipo: 'alternarRetorno' })
+      if (tecla === 'f') {
+        if (abertas.at(-1) === 'confirmarFuga') acoes.confirmarFuga()
+        else if (abertas.length === 0 && !fugindo && agora) acoes.pedirFuga(agora.custoDaFuga)
+      }
+    }
+    window.addEventListener('keydown', aoApertarTecla)
+    return () => window.removeEventListener('keydown', aoApertarTecla)
+  }, [ponte, acoes])
 
   return (
     <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes}>
       <ArenaDaPartida ponte={ponte} grupo={grupo} />
-      <HudDaPartida situacao={situacao} />
-
-      {retornando && (
-        <>
-          <Area em={pos.retorno} className="faixa-da-partida">
-            Voltando ao Reino em {estado.segundosRetorno} s
-          </Area>
-          <Botao em={pos.cancelarRetorno} onClick={acoes.cancelarRetorno}>
-            Cancelar retorno
-          </Botao>
-        </>
-      )}
-
-      <BarraDeTeste ponte={ponte} situacao={situacao} encerrarPartida={acoes.encerrarPartida} />
+      <HudDaPartida situacao={situacao} mudo={estado.preferencias.mudo} />
+      <AvisosDaPartida situacao={situacao} mensagens={mensagens} />
+      <BarraDeTeste ponte={ponte} situacao={situacao} />
     </Tela>
   )
 }

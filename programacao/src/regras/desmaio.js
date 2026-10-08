@@ -40,11 +40,14 @@ export function vidaAoLevantar(vidaMaxima, percentual) {
 // Fim da partida por desmaio. membros: os que ainda estão no mapa ({ lider, caido, caidoDesde }).
 // Ninguém de pé → Derrota na hora (vale também para um personagem só).
 // Líder caído há 30 s → Retorno forçado (os aliados de pé vão embora sem ser perdidos).
+// "como" diz qual taxa vale no fim (regras/fimDaPartida.js).
 export function fimPorDesmaio(membros, agora, prazoMs) {
-  if (!membros.some((membro) => !membro.caido)) return { resultado: 'derrota', motivo: 'Todos os personagens desmaiaram' }
+  if (!membros.some((membro) => !membro.caido)) {
+    return { como: 'todosDesmaiaram', resultado: 'derrota', motivo: 'Todos os personagens desmaiaram' }
+  }
   const lider = membros.find((membro) => membro.lider)
   if (lider?.caido && prazoAcabou(lider.caidoDesde, agora, prazoMs)) {
-    return { resultado: 'retornoForcado', motivo: 'Líder não levantado em 30 s' }
+    return { como: 'liderNaoLevantado', resultado: 'retornoForcado', motivo: 'Líder não levantado em 30 s' }
   }
   return null
 }

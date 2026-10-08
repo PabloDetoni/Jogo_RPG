@@ -3,10 +3,11 @@ import Janela from '../componentes/Janela.jsx'
 import { segundosRetornoNormal } from '../dados/regras.js'
 import { useJogo } from '../estado/contexto.js'
 
-// Menu de pausa (RF44). "Voltar ao Reino" não sai na hora: começa a contagem do retorno (RF45).
+// Menu de pausa (RF44). Só abre fora de combate. "Voltar ao Reino" não sai na hora: fecha a pausa e começa a mesma
+// contagem de 15 s do Q, que roda na partida (RF45).
 export default function Pausa() {
   const { estado, acoes } = useJogo()
-  const retornando = estado.segundosRetorno !== null
+  const retornando = Boolean(estado.controleDaPartida?.andamento.retornando)
 
   return (
     <Janela titulo="Pausa">

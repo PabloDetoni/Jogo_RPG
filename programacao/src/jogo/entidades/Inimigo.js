@@ -82,7 +82,7 @@ export default class Inimigo extends Entidade {
 
   // Velocidade para ir até o alvo contornando as pedras (caminho na grade)
   velocidadeAte(alvo, velocidade) {
-    return this.cena.navegador.velocidadeAte(this, alvo, velocidade, this.cena.time.now)
+    return this.cena.navegador.velocidadeAte(this, alvo, velocidade, this.cena.agora)
   }
 
   passear(agora) {

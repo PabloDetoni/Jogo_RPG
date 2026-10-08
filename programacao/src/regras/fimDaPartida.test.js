@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { calcularFimDaPartida, decidirResultado, pontuacaoBase } from './fimDaPartida.js'
+import { calcularFimDaPartida, decidirResultado, montarFimDaPartida, pontuacaoBase } from './fimDaPartida.js'
 
 vi.mock('../dados/balanceamento.js', async (importarOriginal) => ({
   ...(await importarOriginal()),
@@ -96,5 +96,63 @@ describe('calcularFimDaPartida', () => {
   it('XP nunca é taxado: o fim da partida não mexe em XP', () => {
     const fim = { como: 'fuga', houveDesmaio: false, lider: meio, ouroGanho: 100 }
     expect(Object.keys(calcularFimDaPartida(fim, borda))).not.toContain('xp')
+  })
+})
+
+describe('montarFimDaPartida: das posições na arena às contas (TASK-048)', () => {
+  const lugar = { inicio: { x: 100, y: 100 }, distanciaAteABorda: 1000 }
+  const aDistancia = (d) => ({ x: 100 + d, y: 100 })
+
+  it('retorno normal sem desmaio e acima do mínimo: Grande Vitória, taxa 0', () => {
+    const contas = montarFimDaPartida({ como: 'retornoNormal', houveDesmaio: false, ouroGanho: 1200, monstros: 5 }, lugar)
+    expect(contas).toMatchObject({ como: 'retornoNormal', resultado: 'grandeVitoria', taxa: 0, ouroRecebido: 1320, perdidos: [] })
+  })
+
+  it('retorno normal com um perdido: Vitória, e ele paga pela distância de onde caiu', () => {
+    const contas = montarFimDaPartida({ como: 'retornoNormal', houveDesmaio: true, perdidos: [{ classe: 'tanque', ...aDistancia(1000) }], ouroGanho: 100 }, lugar)
+    expect(contas).toMatchObject({ resultado: 'vitoria', taxa: 6, taxaEmOuro: 6, ouroRecebido: 94, perdidos: ['tanque'] })
+  })
+
+  it('quem está caído no fim conta como perdido, e houve desmaio (RF48)', () => {
+    const contas = montarFimDaPartida({ como: 'retornoNormal', houveDesmaio: false, caidosNoFim: [{ classe: 'mago', ...aDistancia(0) }], ouroGanho: 1500 }, lugar)
+    expect(contas).toMatchObject({ resultado: 'vitoria', taxa: 1, perdidos: ['mago'] })
+  })
+
+  it('fuga: taxa única pela posição do Líder; os perdidos não somam (RF48)', () => {
+    const contas = montarFimDaPartida(
+      { como: 'fuga', perdidos: [{ classe: 'tanque', ...aDistancia(1000) }], lider: aDistancia(500), ouroGanho: 8000 },
+      lugar,
+    )
+    expect(contas).toMatchObject({ resultado: 'retornoForcado', taxa: 18, taxaEmOuro: 1440 })
+  })
+
+  it('Líder não levantado: soma das taxas dos perdidos, contando o Líder caído (Conceito §12)', () => {
+    const contas = montarFimDaPartida(
+      { como: 'liderNaoLevantado', houveDesmaio: true, perdidos: [{ classe: 'tanque', ...aDistancia(500) }], caidosNoFim: [{ classe: 'mago', ...aDistancia(1000) }], ouroGanho: 100 },
+      lugar,
+    )
+    // 3% (meio) + 6% (borda)
+    expect(contas).toMatchObject({ resultado: 'retornoForcado', taxa: 9, perdidos: ['tanque', 'mago'] })
+  })
+
+  it('todos desmaiaram: Derrota com a taxa pela posição do Líder', () => {
+    const contas = montarFimDaPartida({ como: 'todosDesmaiaram', houveDesmaio: true, lider: aDistancia(1000), ouroGanho: 100 }, lugar)
+    expect(contas).toMatchObject({ resultado: 'derrota', taxa: 40, ouroRecebido: 60 })
+  })
+
+  it('no domínio de Boss somam-se os pontos de Boss', () => {
+    const contas = montarFimDaPartida({ como: 'fuga', lider: { ...aDistancia(0), noDominioDeBoss: true }, ouroGanho: 100 }, lugar)
+    expect(contas.taxa).toBe(14)
+  })
+
+  it('botão de teste: o resultado é o pedido, e a taxa segue o jeito dele', () => {
+    expect(montarFimDaPartida({ resultado: 'derrota', lider: aDistancia(1000), ouroGanho: 10 }, lugar)).toMatchObject({ como: 'todosDesmaiaram', resultado: 'derrota', taxa: 40 })
+    expect(montarFimDaPartida({ resultado: 'retornoForcado', lider: aDistancia(0), ouroGanho: 10 }, lugar)).toMatchObject({ como: 'fuga', taxa: 7 })
+    // Grande Vitória forçada com pontuação baixa: sem taxa e com o +10%
+    expect(montarFimDaPartida({ resultado: 'grandeVitoria', ouroGanho: 100 }, lugar)).toMatchObject({ resultado: 'grandeVitoria', taxa: 0, ouroRecebido: 110 })
+  })
+
+  it('sem nada (partida de 0 s): Vitória com tudo zero', () => {
+    expect(montarFimDaPartida({}, lugar)).toMatchObject({ como: 'retornoNormal', resultado: 'vitoria', taxa: 0, ouroRecebido: 0, pontuacaoFinal: 0 })
   })
 })

@@ -41,6 +41,9 @@ export const coresDaArena = {
   danoNoLider: '#ff8f8f', // dano que o Líder leva
   numeroDeCura: '#9dff9d',
   bloqueado: '#fff2a8',
+  critico: '#ffd23f', // dano crítico (5c)
+  ouro: '#ffe680', // ouro que o monstro derrotado deixa
+  nivel: '#ffe14a', // "NÍVEL 2!" em cima de quem subiu
 }
 
 // Manchas de verde mais escuro, sempre no mesmo lugar

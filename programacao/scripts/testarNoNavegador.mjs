@@ -9,7 +9,10 @@ import { createServer as criarServidorDeRede } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
-import { areaJogavel, pedras } from '../src/dados/arenaDeTeste.js'
+import { areaJogavel, inicio as INICIO, pedras } from '../src/dados/arenaDeTeste.js'
+import { combateDeTeste } from '../src/dados/balanceamento.js'
+import { aplicarTaxa, taxaNaDistancia } from '../src/regras/taxa.js'
+import { xpTotalAteONivel } from '../src/regras/xp.js'
 
 const PASTA = resolve('testes-do-navegador')
 // Área jogável e pedras: os mesmos dados do jogo
@@ -20,6 +23,9 @@ const AREA = {
   direita: areaJogavel.x + areaJogavel.largura / 2,
 }
 const PEDRAS = pedras
+// Taxa por distância na arena (5c): ponto inicial e borda, os mesmos do jogo
+const BORDA = combateDeTeste.distanciaAteABorda
+const distanciaAoInicio = (ponto) => Math.hypot(ponto.x - INICIO.x, ponto.y - INICIO.y)
 
 mkdirSync(PASTA, { recursive: true })
 const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
@@ -160,6 +166,9 @@ const teclas = {
   d: { key: 'd', code: 'KeyD', vk: 68 },
   espaco: { key: ' ', code: 'Space', vk: 32 },
   esc: { key: 'Escape', code: 'Escape', vk: 27 },
+  q: { key: 'q', code: 'KeyQ', vk: 81 },
+  f: { key: 'f', code: 'KeyF', vk: 70 },
+  m: { key: 'm', code: 'KeyM', vk: 77 },
   um: { key: '1', code: 'Digit1', vk: 49 },
   dois: { key: '2', code: 'Digit2', vk: 50 },
 }
@@ -294,6 +303,72 @@ const derrubar = (expr) =>
   cena(`(() => { const m = ${expr}; m.vida = 1; m.fimDaImunidade = 0; c.membroLevaGolpe(m, 999, { x: m.x - 10, y: m.y }, 0); return m.caido })()`)
 const tituloDaTela = () => avaliar(`document.querySelector('.tela .titulo')?.textContent ?? ''`)
 
+// Atalhos da 5c
+const salvo = () => avaliar(`JSON.parse(localStorage.getItem('jogo-rpg:convidado')).progresso`)
+const preferenciasSalvas = () => avaliar(`JSON.parse(localStorage.getItem('jogo-rpg:preferencias'))`)
+const temJanela = (titulo) => avaliar(`!!document.querySelector('[role=dialog][aria-label=${JSON.stringify(titulo)}]')`)
+const linhasDoResumo = () =>
+  avaliar(`Object.fromEntries([...document.querySelectorAll('.detalhes dt')].map(dt => [dt.textContent, dt.nextElementSibling.textContent]))`)
+const xpTotal = (personagem) => xpTotalAteONivel(personagem.nivel) + personagem.xp
+const esperarResumo = (ms = 4000) => esperar(`document.querySelector('.tela .titulo')?.textContent === 'Resumo'`, 'o Resumo', ms)
+// Volta com Q sem esperar os 15 s inteiros: o relógio da contagem é adiantado (a contagem de verdade é conferida na seção 23)
+async function voltarComQ() {
+  await esperar(`!${CENA}.emCombate`, 'o grupo sair de combate', 9000)
+  await apertar('q')
+  await cena(`(c.retorno.msRestantes = 400, true)`)
+  await esperarResumo()
+  await pausa(150)
+}
+// Como a arena está antes de acabar: perdidos, caídos e o Líder (posições como a arena manda) e o ouro ganho
+const fotoDoFim = () =>
+  cena(`({
+    perdidos: c.perdidos.map(p => ({ x: p.x, y: p.y })),
+    caidos: c.grupo.filter(m => m.caido).map(m => ({ x: Math.round(m.x), y: Math.round(m.y) })),
+    lider: { x: Math.round(c.lider.x), y: Math.round(c.lider.y) },
+    ouro: c.ganhos.ouro,
+  })`)
+// A taxa esperada sai aqui da mesma regra da etapa 4 (RF48), e o Resumo tem de mostrar a mesma conta
+function conferirTaxa(nome, como, foto, linhas) {
+  const taxa =
+    como === 'fuga'
+      ? taxaNaDistancia('fuga', distanciaAoInicio(foto.lider), BORDA)
+      : como === 'todosDesmaiaram'
+        ? taxaNaDistancia('todosDesmaiam', distanciaAoInicio(foto.lider), BORDA)
+        : [...foto.perdidos, ...foto.caidos].reduce((soma, ponto) => soma + taxaNaDistancia('perdido', distanciaAoInicio(ponto), BORDA), 0)
+  const { taxaEmOuro, ouroRecebido } = aplicarTaxa(foto.ouro, taxa)
+  conferir(
+    `${nome}: taxa ${taxa}% (−${taxaEmOuro} de ${foto.ouro} de ouro)`,
+    linhas['Taxa'] === `${taxa}% (−${taxaEmOuro} de ouro)` && linhas['Ouro recebido'] === String(ouroRecebido) && linhas['Ouro ganho'] === String(foto.ouro),
+    { esperado: { taxa, taxaEmOuro, ouroRecebido }, resumo: linhas },
+  )
+  return { taxa, taxaEmOuro, ouroRecebido }
+}
+// Clica num botão da linha de um personagem no painel DEV (Personagens do save)
+async function botaoDoPersonagem(nome, texto, vezes = 1) {
+  for (let i = 0; i < vezes; i++) {
+    const ok = await avaliar(`(() => {
+      const linha = [...document.querySelectorAll('.painel-dev-personagem')].find(l => l.textContent.startsWith(${JSON.stringify(nome)}))
+      const botao = linha && [...linha.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(texto)})
+      if (!botao || botao.disabled) return false
+      botao.click()
+      return true
+    })()`)
+    if (!ok) throw new Error(`não achei o botão "${texto}" de ${nome} no painel DEV`)
+    await pausa(60)
+  }
+}
+// O HUD cabe? Nenhuma linha estoura, os blocos não se encostam e nada fica embaixo do botão Configurações
+const CABE_NO_HUD = `(() => {
+  const hud = document.querySelector('.hud')
+  const r = (el) => el.getBoundingClientRect()
+  const estouradas = [...hud.querySelectorAll('.hud-linha')].filter(l => l.scrollWidth > l.clientWidth + 1).length
+  const config = [...document.querySelectorAll('.tela-partida > .botao')].find(b => b.textContent === 'Configurações')
+  const p = r(hud.querySelector('.hud-principal')), n = r(hud.querySelector('.hud-numeros')), m = r(hud.querySelector('.hud-minimapa')), c = r(config)
+  return { estouradas, emOrdem: p.right <= n.left + 1 && n.right <= m.left + 1 && m.right <= c.left + 1, altura: hud.scrollHeight <= hud.clientHeight + 1 }
+})()`
+// IA do aliado de uma classe, como a partida decide (pelo nível dele, sem o seletor da barra de teste)
+const iaDoAliado = (classe) => cena(`c.perfilDaIA(${membro(classe)}).id`)
+
 // Do Reino (ou, com doReino = false, do Mapa) até a arena
 async function irAteAPartida(doReino = true) {
   if (doReino) await clicar('Jogar')
@@ -323,6 +398,11 @@ try {
 
   console.log('1. Caminho até a Partida (convidado novo, Mago)')
   await clicar('Iniciar jogo')
+  // Tecla M (mudo) não vale enquanto se digita num campo de texto (o "m" de um e-mail)
+  await avaliar(`document.querySelector('input')?.focus()`)
+  await apertar('m')
+  conferir('digitando "m" num campo de texto, o mudo não liga', (await preferenciasSalvas())?.mudo !== true, await preferenciasSalvas())
+  await avaliar(`document.activeElement?.blur()`)
   await clicar('Jogar como convidado')
   await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Narrativa inicial'`, 'Narrativa')
   await clicar('Continuar')
@@ -807,11 +887,11 @@ try {
   await cena(`(() => {
     c.__levantados = []
     const levantar = c.levantar.bind(c)
-    c.levantar = (m, opcoes) => { c.__levantados.push({ classe: m.classe, vida: opcoes.vida, maxima: m.vidaMaxima, caidoDesde: m.caidoDesde, quando: c.time.now }); levantar(m, opcoes) }
+    c.levantar = (m, opcoes) => { c.__levantados.push({ classe: m.classe, vida: opcoes.vida, maxima: m.vidaMaxima, caidoDesde: m.caidoDesde, quando: c.agora }); levantar(m, opcoes) }
     return true
   })()`)
   // Ressurreição em recarga: assim dá para ver a ajuda de 5 s
-  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.time.now, true)`)
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
   const derrubouGuerreiro = await derrubar(membro('guerreiro'))
   await pausa(200)
   conferir('o Guerreiro desmaia: tomba e mostra a contagem dos 30 s', derrubouGuerreiro && (await cena(`${membro('guerreiro')}.textoDoDesmaio.visible`)))
@@ -827,7 +907,7 @@ try {
   await print('22-aliado-levantado')
 
   // Área suja: com um mob a menos de 250 px de quem caiu, a ajuda não anda
-  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.time.now, true)`)
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
   await derrubar(membro('arqueiro'))
   await clicar('Criar mob vermelho')
   await cena(`(() => { const a = ${membro('arqueiro')}; c.inimigos.at(-1).colocarEm(a.x + 150, a.y); return true })()`)
@@ -858,9 +938,9 @@ try {
   await print('23-ressurreicao')
 
   // Perdido: sem ajuda em 30 s, a Pedra de Retorno leva o aliado (aqui o relógio é adiantado)
-  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.time.now, true)`)
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
   await derrubar(membro('arqueiro'))
-  await cena(`(${membro('arqueiro')}.caidoDesde = c.time.now - 29600, true)`)
+  await cena(`(${membro('arqueiro')}.caidoDesde = c.agora - 29600, true)`)
   await pausa(900)
   conferir('sem ajuda em 30 s, vira perdido: some do mapa e o lugar onde caiu fica guardado', await cena(`!c.grupo.some(m => m.classe === 'arqueiro') && c.perdidos.some(p => p.classe === 'arqueiro' && Number.isFinite(p.x) && Number.isFinite(p.y))`))
   conferir('o HUD mostra o perdido', (await textoDe('.hud')).includes('Arqueiro: perdido'))
@@ -868,6 +948,8 @@ try {
 
   console.log('14. Pausa congela o jogo; Configurações não pausam')
   await colocarLider(300, 430)
+  // Fora de combate (5 s sem dano e nenhum mob atrás do grupo), a pausa abre
+  await esperar(`!${CENA}.emCombate`, 'o grupo sair de combate', 9000)
   await apertar('esc')
   conferir('Esc abre a pausa', (await avaliar(`document.body.innerText`)).includes('Continuar'))
   conferir('a cena está pausada', await cena(`c.sys.isPaused()`))
@@ -875,6 +957,9 @@ try {
   await segurar(['d'], 400)
   depois = await cena(`({ x: c.lider.x })`)
   conferir('pausado, o Líder não anda', depois.x === antes.x, { antes: antes.x, depois: depois.x })
+  const relogioNaPausa = await cena(`c.agora`)
+  await pausa(700)
+  conferir('pausado, o relógio da partida não anda (os 30 s do desmaio, as recargas e as contagens param)', (await cena(`c.agora`)) === relogioNaPausa)
   await print('25-pausa')
   await apertar('esc')
   conferir('Esc de novo fecha a pausa e o jogo volta', !(await cena(`c.sys.isPaused()`)))
@@ -895,14 +980,16 @@ try {
   const texto = await avaliar(`document.body.innerText`)
   conferir('a contagem anda (13 s)', texto.includes('Voltando ao Reino em 13 s') || texto.includes('Voltando ao Reino em 12 s'), texto.match(/Voltando ao Reino em \d+ s/)?.[0])
   await print('26-retorno')
-  await clicar('Cancelar retorno')
+  await apertar('q') // Q de novo cancela (o botão "Cancelar retorno" saiu na 5c)
+  conferir('Q cancela o retorno', (await cena(`c.retorno`)) === null)
 
   console.log('16. Tamanho da janela: o jogo se ajusta e a mira continua certa')
   await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1000, height: 640, deviceScaleFactor: 1, mobile: false })
   await pausa(1200)
   const caixa = await avaliar(`(() => { const m = document.querySelector('.moldura').getBoundingClientRect(); const c = document.querySelector('.arena canvas').getBoundingClientRect(); return { m: [Math.round(m.width), Math.round(m.height)], c: [Math.round(c.width), Math.round(c.height)] } })()`)
   conferir('o canvas acompanha a caixa 16:9', Math.abs(caixa.m[0] - caixa.c[0]) <= 2 && Math.abs(caixa.m[1] - caixa.c[1]) <= 2, caixa)
-  conferir('na janela menor, o conteúdo do HUD ainda cabe na faixa', await avaliar(`(() => { const h = document.querySelector('.hud'); return h.scrollHeight <= h.clientHeight + 1 })()`))
+  const cabeNaMenor = await avaliar(CABE_NO_HUD)
+  conferir('na janela menor, o HUD ainda cabe (altura, linhas e o botão Configurações)', cabeNaMenor.estouradas === 0 && cabeNaMenor.emOrdem && cabeNaMenor.altura, cabeNaMenor)
   await colocarLider(800, 450)
   await mirarEm(800, 750)
   conferir('mouse abaixo → mira 90° no tamanho novo', Math.abs((await cena(`c.anguloDaMira`)) - Math.PI / 2) < 0.05)
@@ -939,12 +1026,12 @@ try {
 
   console.log('19. Líder desmaiado: os aliados levantam; sem ajuda em 30 s, Retorno forçado')
   await cena(`(c.invencivel = false, true)`)
-  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.time.now, true)`)
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
   await colocarLider(500, 450)
   await pausa(1200)
   await derrubar('c.lider')
   await pausa(300)
-  conferir('o Líder desmaia e o HUD avisa os 30 s', /O Líder desmaiou: (30|29) s/.test(await textoDe('.hud')), await textoDe('.hud'))
+  conferir('o Líder desmaia e o aviso abaixo do HUD mostra os 30 s', /O Líder desmaiou: (30|29) s/.test(await textoDe('.avisos-da-partida')), await textoDe('.avisos-da-partida'))
   await print('29-lider-caido')
   await pausa(1000)
   conferir('com aliados de pé, o Líder caído não é Derrota (o jogo continua)', !!(await avaliar(`document.querySelector('.arena canvas')`)))
@@ -957,11 +1044,13 @@ try {
   await pausa(6500)
   conferir('com "Aliados ajudam: não", ninguém levanta o Líder (6,5 s depois ainda caído)', await cena(`c.lider.caido`))
   await print('30-lider-sem-ajuda')
-  await cena(`(c.lider.caidoDesde = c.time.now - 29600, true)`)
+  await cena(`(c.lider.caidoDesde = c.agora - 29600, true)`)
+  const fotoDoLiderNaoLevantado = await fotoDoFim()
   await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Resumo'`, 'o Resumo', 4000)
   const resumoDoRetorno = await avaliar(`document.body.innerText`)
   conferir('Líder não levantado em 30 s: Retorno forçado', resumoDoRetorno.includes('Retorno forçado'))
   conferir('o Resumo mostra o motivo "Líder não levantado em 30 s"', resumoDoRetorno.includes('Líder não levantado em 30 s'))
+  conferirTaxa('Líder não levantado: ele e os perdidos pagam pela distância', 'liderNaoLevantado', fotoDoLiderNaoLevantado, await linhasDoResumo())
   conferir('o jogo some ao sair da Partida', (await avaliar(`document.querySelectorAll('canvas').length`)) === 0 && (await avaliar(`!window.__jogoDaPartida`)))
   await print('31-resumo-retorno-forcado')
 
@@ -969,6 +1058,8 @@ try {
   await clicar('Jogar novamente')
   await irAteAPartida(false)
   conferir('partida nova só com o Líder', (await cena(`c.grupo.length`)) === 1)
+  await colocarLider(640, 430)
+  const fotoDoSozinho = await fotoDoFim()
   await derrubar('c.lider')
   await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Cutscene de derrota'`, 'Cutscene de derrota', 2000)
   conferir('o único personagem caiu: Cutscene de derrota na hora', true)
@@ -976,6 +1067,7 @@ try {
   await pausa(200)
   const resumoSozinho = await avaliar(`document.body.innerText`)
   conferir('o Resumo mostra Derrota com o motivo', resumoSozinho.includes('Derrota') && resumoSozinho.includes('Todos os personagens desmaiaram'))
+  conferirTaxa('Derrota só com o Líder: taxa de todos desmaiam pela posição dele', 'todosDesmaiaram', fotoDoSozinho, await linhasDoResumo())
 
   console.log('21. Todos caindo: Derrota')
   await clicar('Jogar novamente')
@@ -987,13 +1079,307 @@ try {
   conferir('o botão "Derrubar aliado" derruba um aliado de pé por vez', await cena(`c.aliados.every(a => a.caido)`))
   conferir('com os aliados caídos e o Líder de pé, o jogo continua', (await tituloDaTela()) !== 'Cutscene de derrota' && !!(await avaliar(`document.querySelector('.arena canvas')`)))
   await print('32-todos-menos-o-lider')
+  const fotoDoGrupoInteiro = await fotoDoFim()
   await clicar('Derrubar Líder', true, 0)
   await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Cutscene de derrota'`, 'Cutscene de derrota', 2000)
   conferir('o último de pé caiu: Derrota na hora', true)
   await clicar('Continuar')
   await pausa(200)
   conferir('o Resumo mostra Derrota', (await avaliar(`document.body.innerText`)).includes('Derrota'))
+  conferirTaxa('Derrota com o grupo inteiro: taxa única pela posição do Líder (os caídos não somam)', 'todosDesmaiaram', fotoDoGrupoInteiro, await linhasDoResumo())
   await print('33-resumo-derrota')
+
+  console.log('22. Em combate a pausa não abre (TASK-040) e o HUD completo cabe em 1366×768 (TASK-049)')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  const hudCompleto = await textoDe('.hud')
+  conferir(
+    'HUD: tempo, pontos, ouro, custo da fuga, "Fora de combate", som e o lugar do minimapa e da região',
+    ['Tempo', 'Pontos', 'Ouro', 'Fuga (F)', 'Fora de combate', 'Som (M)', 'Minimapa', 'Região'].every((t) => hudCompleto.includes(t)),
+    hudCompleto.replace(/\n/g, ' · '),
+  )
+  const cabeSozinho = await avaliar(CABE_NO_HUD)
+  conferir('em 1366×768 nenhuma linha do HUD estoura, e nada fica embaixo do botão Configurações', cabeSozinho.estouradas === 0 && cabeSozinho.emOrdem && cabeSozinho.altura, cabeSozinho)
+  await clicar('Invencível: não') // o Líder não leva dano nestes testes (o mob perseguindo já é combate)
+  await cena(`(c.criarInimigo('mobVermelho', { x: c.lider.x + 200, y: c.lider.y }), true)`)
+  await esperar(`${CENA}.emCombate`, 'o grupo entrar em combate', 4000)
+  await pausa(250)
+  conferir('com um mob perseguindo, o HUD mostra "Em combate"', (await textoDe('.hud')).includes('Em combate'))
+  await apertar('esc')
+  await pausa(150)
+  conferir('Esc em combate: a pausa não abre e o jogo continua', !(await cena(`c.sys.isPaused()`)) && !(await temJanela('Pausa')))
+  conferir('aparece "Você não pode pausar agora"', (await textoDe('.avisos-da-partida')).includes('Você não pode pausar agora'))
+  await print('34-esc-em-combate')
+  await clicar('Configurações')
+  conferir('em combate, as Configurações abrem (sem pausar)', (await temJanela('Configurações')) && !(await cena(`c.sys.isPaused()`)))
+  await apertar('esc')
+  conferir('em combate, Esc fecha a janela aberta antes de tudo', !(await temJanela('Configurações')) && !(await temJanela('Pausa')))
+
+  console.log('23. Retorno com Q: não começa em combate, volta a 15 s com o combate (a 1 s do fim) e Q cancela')
+  await apertar('q')
+  conferir('Q em combate não começa o retorno e avisa', (await cena(`c.retorno`)) === null && (await textoDe('.avisos-da-partida')).includes('não dá para voltar'))
+  await tirarInimigos()
+  await esperar(`!${CENA}.emCombate`, 'o grupo sair de combate', 9000)
+  await apertar('q')
+  await pausa(200)
+  conferir('Q fora de combate começa os 15 s', (await textoDe('.avisos-da-partida')).includes('Voltando ao Reino em 15 s'))
+  // A 1 s do fim, um mob aparece perto e vem atrás do grupo
+  await cena(`(c.retorno.msRestantes = 1000, c.criarInimigo('mobVermelho', { x: c.lider.x + 180, y: c.lider.y }), true)`)
+  await esperar(`${CENA}.retorno?.interrompido`, 'o combate interromper o retorno', 3000)
+  await pausa(200)
+  const retornoInterrompido = await cena(`({ ms: c.retorno.msRestantes, terminou: c.terminou })`)
+  conferir('o combate a 1 s do fim faz o retorno voltar a 15 s e esperar (a partida não acaba)', retornoInterrompido.ms === 15000 && !retornoInterrompido.terminou, retornoInterrompido)
+  const avisoDoRetorno = await textoDe('.avisos-da-partida')
+  conferir('o aviso mostra que o retorno espera o combate', avisoDoRetorno.includes('Em combate: o retorno espera') && avisoDoRetorno.includes('voltou a 15 s'), avisoDoRetorno)
+  await print('35-retorno-interrompido')
+  await tirarInimigos()
+  await esperar(`${CENA}.retorno && !${CENA}.retorno.interrompido && ${CENA}.retorno.msRestantes < 14700`, 'o retorno voltar a correr', 9000)
+  conferir('fora de combate, a contagem volta a correr', true)
+  await apertar('q')
+  conferir('Q de novo cancela', (await cena(`c.retorno`)) === null && (await textoDe('.avisos-da-partida')).includes('cancelado'))
+
+  console.log('24. Grande Vitória pelo Q: sem desmaio e acima do mínimo, taxa 0 e +10% (TEST-004)')
+  const antesDaGrande = await salvo()
+  for (let i = 0; i < 4; i++) await clicar('+300 de ouro')
+  // Um mob derrotado de verdade: +12 de ouro, +20 de XP para o Mago (o único permanente) e 1 monstro
+  await cena(`(() => { const m = c.criarInimigo('mobVermelho', { x: c.lider.x + 300, y: c.lider.y }); c.acertar(m, 999, c.lider, 0, c.lider); return true })()`)
+  const ganhosDaGrande = await cena(`({ ouro: c.ganhos.ouro, monstros: c.ganhos.monstros, xp: c.ganhos.xpPorClasse })`)
+  conferir('o mob derrotado dá 12 de ouro, 20 de XP e conta um monstro', ganhosDaGrande.ouro === 1212 && ganhosDaGrande.monstros === 1 && ganhosDaGrande.xp.mago === 20, ganhosDaGrande)
+  await pausa(200)
+  conferir('o HUD mostra o ouro ganho e a pontuação', /Ouro\s*1212/.test(await textoDe('.hud')) && /Pontos\s*\d{4}/.test(await textoDe('.hud')), (await textoDe('.hud')).replace(/\n/g, ' · '))
+  await voltarComQ()
+  const resumoDaGrande = await linhasDoResumo()
+  conferir('Grande Vitória pelo Q (sem desmaio e pontuação acima de 1000)', (await textoDe('.resultado')) === 'Grande Vitória', await textoDe('.resultado'))
+  conferir('taxa 0% e ouro recebido com +10% (1212 → 1333)', resumoDaGrande['Taxa'] === '0% (−0 de ouro)' && resumoDaGrande['Ouro recebido'] === '1333 (com +10%)', resumoDaGrande)
+  conferir(
+    'o Resumo vem cheio: motivo, ouro ganho, pontuação, monstros, tempos e o XP',
+    resumoDaGrande['Motivo'] === 'Retorno normal ao Reino' &&
+      resumoDaGrande['Ouro ganho'] === '1212' &&
+      /^\d+ \(base \d+\)$/.test(resumoDaGrande['Pontuação']) &&
+      resumoDaGrande['Monstros derrotados'] === '1' &&
+      /^\d\d:\d\d$/.test(resumoDaGrande['Tempo total']) &&
+      /^\d\d:\d\d$/.test(resumoDaGrande['Tempo ativo']) &&
+      (await textoDe('.xp-do-resumo')).includes('Mago: +20'),
+    { resumo: resumoDaGrande, xp: await textoDe('.xp-do-resumo') },
+  )
+  const depoisDaGrande = await salvo()
+  conferir(
+    'o save recebeu o ouro, o XP, o monstro e mais uma partida',
+    depoisDaGrande.ouro === antesDaGrande.ouro + 1333 &&
+      xpTotal(depoisDaGrande.personagens[0]) === xpTotal(antesDaGrande.personagens[0]) + 20 &&
+      depoisDaGrande.estatisticas.monstrosDerrotados === antesDaGrande.estatisticas.monstrosDerrotados + 1 &&
+      depoisDaGrande.estatisticas.partidasJogadas === antesDaGrande.estatisticas.partidasJogadas + 1,
+    { antes: { ouro: antesDaGrande.ouro, estatisticas: antesDaGrande.estatisticas }, depois: { ouro: depoisDaGrande.ouro, estatisticas: depoisDaGrande.estatisticas } },
+  )
+  await print('36-resumo-grande-vitoria')
+
+  console.log('25. Vitória: um aliado perdido paga a taxa pela distância de onde caiu (TEST-004)')
+  await clicar('Jogar novamente')
+  await clicar('Contratar todas as classes (permanentes, de graça)')
+  conferir('painel DEV (fora da partida): as 5 classes viram permanentes no save', (await salvo()).personagens.length === 5)
+  await irAteAPartida(false)
+  conferir('a partida começa com os 5 permanentes, aliados na IA básica (nível 1)', (await cena(`c.grupo.length`)) === 5 && (await iaDoAliado('arqueiro')) === 'basica')
+  await clicar('Aliados ajudam: sim') // agora "não": ninguém levanta o Arqueiro
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
+  await colocarLider(500, 430)
+  await pausa(1500)
+  const cabeComOGrupo = await avaliar(CABE_NO_HUD)
+  conferir('com os 4 aliados no HUD, ainda nada estoura em 1366×768', cabeComOGrupo.estouradas === 0 && cabeComOGrupo.emOrdem && cabeComOGrupo.altura, cabeComOGrupo)
+  await derrubar(membro('arqueiro'))
+  await cena(`(${membro('arqueiro')}.caidoDesde = c.agora - 29600, true)`)
+  await esperar(`${CENA}.perdidos.some(p => p.classe === 'arqueiro')`, 'o Arqueiro virar perdido', 3000)
+  conferir('as mensagens do HUD avisam o desmaio e o perdido', (await textoDe('.avisos-da-partida')).includes('perdido'), await textoDe('.avisos-da-partida'))
+  await print('37-hud-grupo-e-perdido')
+  await clicar('+300 de ouro')
+  const fotoDaVitoria = await fotoDoFim()
+  await voltarComQ()
+  conferir('Vitória pelo Q com um perdido', (await textoDe('.resultado')) === 'Vitória')
+  const resumoDaVitoria = await linhasDoResumo()
+  conferirTaxa('Vitória: o Arqueiro perdido paga pela distância', 'retornoNormal', fotoDaVitoria, resumoDaVitoria)
+  conferir('o Resumo lista o perdido', resumoDaVitoria['Perdidos'] === 'Arqueiro', resumoDaVitoria['Perdidos'])
+  await print('38-resumo-vitoria')
+
+  console.log('26. Fuga com F: aviso com o custo, Esc cancela, F F confirma, funciona em combate; o Líder cai e a fuga continua (TASK-041)')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  await clicar('+300 de ouro')
+  await clicar('Invencível: não')
+  await colocarLider(1100, 450)
+  await pausa(300)
+  const liderAntesDaFuga = await cena(`({ x: Math.round(c.lider.x), y: Math.round(c.lider.y) })`)
+  const taxaAgora = taxaNaDistancia('fuga', distanciaAoInicio(liderAntesDaFuga), BORDA)
+  conferir(`o HUD mostra o custo atual da fuga (${taxaAgora}%)`, (await textoDe('.hud')).includes(`Fuga (F): ${taxaAgora}%`), (await textoDe('.hud')).match(/Fuga \(F\):[^\n]*/)?.[0])
+  await cena(`(c.criarInimigo('mobVermelho', { x: c.lider.x + 200, y: c.lider.y }), true)`)
+  await esperar(`${CENA}.emCombate`, 'o grupo entrar em combate', 4000)
+  await apertar('f')
+  const avisoDaFuga = await textoDe('[role=dialog]')
+  conferir(
+    'F mostra o aviso com o custo atual (taxa e ouro)',
+    avisoDaFuga.includes(`Custo agora: ${taxaAgora}%`) && avisoDaFuga.includes(`(${aplicarTaxa(300, taxaAgora).taxaEmOuro} de ouro)`),
+    avisoDaFuga.split('\n').slice(0, 3),
+  )
+  conferir('o aviso da fuga não pausa o jogo', !(await cena(`c.sys.isPaused()`)))
+  await print('39-aviso-da-fuga')
+  await apertar('esc')
+  conferir('Esc fecha o aviso e a fuga não começa', !(await temJanela('Fugir com a Pedra de Retorno?')) && (await cena(`c.fuga`)) === null)
+  await apertar('f')
+  await apertar('f')
+  await pausa(150)
+  conferir('F e F de novo: a fuga começa, mesmo em combate', (await cena(`!!c.fuga && c.emCombate`)) && (await textoDe('.avisos-da-partida')).includes('Fugindo com a Pedra de Retorno em'))
+  await apertar('q')
+  conferir('com a fuga correndo, o Q não faz nada', (await cena(`c.retorno`)) === null)
+  // Daqui ao fim, nada muda o ouro nem tira o Líder do chão: sem mobs, sem ajuda e sem a Ressurreição
+  await tirarInimigos()
+  await clicar('Aliados ajudam: sim')
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
+  await clicar('Derrubar Líder')
+  const fotoDaFuga = await fotoDoFim()
+  conferir('o Líder cai durante a fuga e ela continua', await cena(`c.lider.caido && !!c.fuga && !c.terminou`))
+  await print('40-fuga-com-o-lider-caido')
+  await esperarResumo(7000)
+  await pausa(150)
+  const resumoDaFuga = await linhasDoResumo()
+  conferir('no fim dos 5 s: Retorno forçado (amarelo) com o motivo "Fuga com a Pedra de Retorno"', (await textoDe('.resultado')) === 'Retorno forçado' && resumoDaFuga['Motivo'] === 'Fuga com a Pedra de Retorno', resumoDaFuga['Motivo'])
+  conferirTaxa('Retorno forçado por fuga: taxa única pela posição do Líder', 'fuga', fotoDaFuga, resumoDaFuga)
+  await print('41-resumo-fuga')
+
+  console.log('27. Retorno forçado pelo Líder não levantado, com os perdidos (TEST-004)')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  await clicar('+300 de ouro')
+  await clicar('Aliados ajudam: sim')
+  await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
+  await colocarLider(900, 300)
+  await pausa(1200)
+  await derrubar(membro('tanque'))
+  await cena(`(${membro('tanque')}.caidoDesde = c.agora - 29600, true)`)
+  await esperar(`${CENA}.perdidos.some(p => p.classe === 'tanque')`, 'o Tanque virar perdido', 3000)
+  await clicar('Derrubar Líder')
+  await cena(`(c.lider.caidoDesde = c.agora - 29600, true)`)
+  const fotoDoLider = await fotoDoFim()
+  await esperarResumo()
+  await pausa(150)
+  const resumoDoLider = await linhasDoResumo()
+  conferir('Retorno forçado com o motivo "Líder não levantado em 30 s"', (await textoDe('.resultado')) === 'Retorno forçado' && resumoDoLider['Motivo'] === 'Líder não levantado em 30 s')
+  conferirTaxa('o Tanque perdido e o Líder caído pagam pela distância de cada um', 'liderNaoLevantado', fotoDoLider, resumoDoLider)
+  conferir('o Resumo lista o Tanque e o Mago como perdidos', resumoDoLider['Perdidos'] === 'Tanque, Mago', resumoDoLider['Perdidos'])
+
+  console.log('28. Todos caem durante a fuga: Derrota (TEST-004)')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  await clicar('+300 de ouro')
+  await colocarLider(700, 430)
+  await pausa(300)
+  await apertar('f')
+  await apertar('f')
+  for (let i = 0; i < 4; i++) await clicar('Derrubar aliado')
+  const fotoDaDerrotaNaFuga = await fotoDoFim()
+  conferir('a fuga continua com os aliados caídos', await cena(`!!c.fuga && !c.terminou`))
+  await clicar('Derrubar Líder', true, 0)
+  await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Cutscene de derrota'`, 'Cutscene de derrota', 3000)
+  conferir('todos caíram antes do fim da fuga: Derrota, com a cutscene', true)
+  await clicar('Continuar')
+  await pausa(200)
+  conferir('o Resumo mostra Derrota', (await textoDe('.resultado')) === 'Derrota')
+  conferirTaxa('Derrota na fuga: taxa de todos desmaiam pela posição do Líder', 'todosDesmaiaram', fotoDaDerrotaNaFuga, await linhasDoResumo())
+
+  console.log('29. Recarregar a página no meio da partida não dá ganho nenhum (RF12)')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  const antesDoRecarregar = await salvo()
+  await clicar('+300 de ouro')
+  await cena(`(() => { const m = c.criarInimigo('mobVermelho', { x: c.lider.x + 300, y: c.lider.y }); c.acertar(m, 999, c.lider, 0, c.lider); return true })()`)
+  conferir('a partida ganhou ouro e XP antes de recarregar', (await cena(`c.ganhos.ouro`)) === 312 && (await cena(`Object.keys(c.ganhos.xpPorClasse).length`)) > 0)
+  await cdp.enviar('Page.reload', {})
+  await pausa(500)
+  await esperar(`document.readyState === 'complete' && !!document.querySelector('.moldura')`, 'a página recarregar')
+  await avaliar(`(() => {
+    window.__erros = []
+    window.addEventListener('error', (e) => window.__erros.push(String(e.message)))
+    const erro = console.error.bind(console)
+    console.error = (...a) => { window.__erros.push(a.map(String).join(' ')); erro(...a) }
+  })()`)
+  await clicar('Iniciar jogo')
+  await clicar('Jogar como convidado')
+  await esperar(`document.querySelector('.tela .titulo')?.textContent === 'Reino'`, 'o Reino', 5000)
+  conferir('ao voltar, aviso de que a partida foi descartada', (await avaliar(`document.body.innerText`)).includes('descartada'))
+  const depoisDoRecarregar = await salvo()
+  conferir(
+    'nada foi ganho: ouro, XP, monstros e partidas iguais ao começo da partida',
+    depoisDoRecarregar.ouro === antesDoRecarregar.ouro &&
+      JSON.stringify(depoisDoRecarregar.personagens) === JSON.stringify(antesDoRecarregar.personagens) &&
+      JSON.stringify(depoisDoRecarregar.estatisticas) === JSON.stringify(antesDoRecarregar.estatisticas),
+    { antes: antesDoRecarregar.ouro, depois: depoisDoRecarregar.ouro },
+  )
+  await clicar('OK')
+
+  console.log('30. Subir de nível muda a IA na partida seguinte (29 → 30 → média; 69 → 70 → avançada)')
+  await botaoDoPersonagem('Guerreiro', '+10', 2)
+  await botaoDoPersonagem('Guerreiro', '+1', 8)
+  await botaoDoPersonagem('Guerreiro', 'Quase subir')
+  const guerreiro29 = (await salvo()).personagens.find((p) => p.classe === 'guerreiro')
+  conferir('painel DEV: Guerreiro no nível 29, a 1 XP do 30', guerreiro29.nivel === 29 && guerreiro29.xp === 2899, guerreiro29)
+  await irAteAPartida(true)
+  conferir('nível 29: o Guerreiro aliado usa a IA básica', (await iaDoAliado('guerreiro')) === 'basica')
+  await cena(`(() => { const m = c.criarInimigo('mobVermelho', { x: c.lider.x + 300, y: c.lider.y }); c.acertar(m, 999, c.lider, 0, c.lider); return true })()`)
+  await pausa(200)
+  conferir('o mob derrotado faz o Guerreiro passar do nível: aviso na hora', (await textoDe('.avisos-da-partida')).includes('Guerreiro subiu para o nível 30'), await textoDe('.avisos-da-partida'))
+  conferir('nesta partida a IA dele continua a básica (o nível novo vale na próxima)', (await iaDoAliado('guerreiro')) === 'basica')
+  await print('42-subiu-de-nivel')
+  await voltarComQ()
+  conferir('o Resumo mostra quem subiu de nível', (await textoDe('.xp-do-resumo')).includes('Guerreiro: +4 · subiu para o nível 30!'), await textoDe('.xp-do-resumo'))
+  await print('43-resumo-subiu-de-nivel')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  conferir('na partida seguinte, o Guerreiro (nível 30) usa a IA média', (await iaDoAliado('guerreiro')) === 'media')
+  await pausa(300)
+  conferir('o HUD mostra a IA média', (await textoDe('.hud')).includes('IA média'))
+  await voltarComQ()
+  await clicar('Jogar novamente')
+  await botaoDoPersonagem('Guerreiro', '+10', 3)
+  await botaoDoPersonagem('Guerreiro', '+1', 9)
+  conferir('painel DEV: Guerreiro no nível 69', (await salvo()).personagens.find((p) => p.classe === 'guerreiro').nivel === 69)
+  await irAteAPartida(false)
+  conferir('nível 69: IA média', (await iaDoAliado('guerreiro')) === 'media')
+  await clicar('Subir nível')
+  await pausa(200)
+  conferir('botão "Subir nível" (só no npm run dev): o aviso aparece', (await textoDe('.avisos-da-partida')).includes('Guerreiro subiu para o nível 70'))
+  await voltarComQ()
+  conferir('o save tem o Guerreiro no nível 70', (await salvo()).personagens.find((p) => p.classe === 'guerreiro').nivel === 70)
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  conferir('na partida seguinte, o Guerreiro (nível 70) usa a IA avançada', (await iaDoAliado('guerreiro')) === 'avancada')
+
+  console.log('31. Momento de foco: botão "Testar foco" (pendência da 5b.1)')
+  await clicar('Testar foco')
+  await pausa(6000)
+  const foco = await cena(`({ emFoco: c.focoAte > c.agora, ...c.contagemDoFoco, vida: c.lider.vida / c.lider.vidaMaxima, ia: c.iaForcada })`)
+  conferir('Testar foco: IA avançada forçada, Líder com 25% da vida e o "Foco!" no HUD', foco.emFoco && foco.ia === 'avancada' && foco.vida <= 0.25 && (await textoDe('.hud')).includes('Foco!'), foco)
+  conferir('a barra mostra as decisões do foco, e eles quase não erram (≤ 20%)', foco.decisoes >= 4 && foco.erros / foco.decisoes <= 0.2 && /Foco: \d+ erros? em \d+ decisões/.test(await textoDe('.barra-de-teste')), foco)
+  await print('44-foco')
+
+  console.log('32. Tecla M: mudo a qualquer momento, até em combate (RF18)')
+  conferir('o teste do foco deixou o grupo em combate', await cena(`c.emCombate`))
+  await apertar('m')
+  await pausa(200)
+  conferir('M liga o mudo: o HUD mostra "Mudo (M)" e a preferência fica salva', (await textoDe('.hud')).includes('Mudo (M)') && (await preferenciasSalvas()).mudo === true)
+  await print('45-mudo')
+  await apertar('m')
+  await pausa(200)
+  conferir('M de novo desliga', (await textoDe('.hud')).includes('Som (M)') && (await preferenciasSalvas()).mudo === false)
+
+  console.log('33. Crítico: número amarelo e mensagem no HUD')
+  await cena(`(c.lider.chanceDeCritico = 1, true)`)
+  await colocarLider(300, 290)
+  await pausa(300)
+  await atacarEm(420, 290)
+  await pausa(900)
+  conferir('golpe crítico do Líder: "CRÍTICO" em cima do alvo e "Crítico!" no HUD', (await textosNaTela()).some((t) => t.startsWith('CRÍTICO')) || (await textoDe('.avisos-da-partida')).includes('Crítico!'), await textoDe('.avisos-da-partida'))
+  await cena(`(c.lider.chanceDeCritico = 0.05, true)`)
+  await voltarComQ().catch(async () => {
+    await cena(`(c.terminar({ como: 'retornoNormal' }), true)`)
+    await esperarResumo()
+  })
 
   const erros = await avaliar(`window.__erros`)
   conferir('nenhum erro no console', erros.length === 0, erros.slice(0, 5))

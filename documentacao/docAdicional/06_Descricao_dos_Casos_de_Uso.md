@@ -31,7 +31,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC11 | Visualizar Ranking | Associação | Estendido por UC12 | — | Abre o Salão da Glória e consulta as abas do ranking, mesmo sem login. |
 | UC12 | Visualizar histórico de partidas | «extend» de UC11 | — | Condição: jogador logado com conta | Lista todas as partidas do próprio jogador, 20 por página, numa aba do Salão da Glória. |
 | UC13 | Visualizar conquistas | Associação | — | — | Mostra as conquistas, o progresso e as recompensas, numa aba do Salão da Glória. |
-| UC14 | Configurar preferências | Associação | — | — | Liga ou desliga Música e Som, troca o tema e, fora da partida, acessa as opções de conta. |
+| UC14 | Configurar preferências | Associação | — | — | Liga ou desliga Música, Som e o mudo (também pela tecla M), troca o tema e, fora da partida, acessa as opções de conta. |
 
 ## Reino
 
@@ -67,8 +67,8 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC37 | Levantar aliado desmaiado | «extend» de UC31 | — | Condição: aliado desmaiado dentro dos 30 s e área limpa (nenhum inimigo vivo perto dele) | Levanta um aliado com a ajuda de 5 segundos: basta ficar parado perto, sem tecla. |
 | UC38 | Pausar partida | «extend» de UC31 | — | Condição: o grupo está fora de combate | Pausa o jogo com Esc e abre o menu de pausa. |
 | UC39 | Retornar ao Reino | «extend» de UC31 | — | Condição: o grupo está fora de combate | Volta ao Reino sem custo depois de 15 segundos (tecla Q ou menu de pausa). |
-| UC40 | Fugir com a Pedra de Retorno | «extend» de UC31 | — | Condição: o jogador confirma a fuga | Foge com o grupo inteiro em 5 segundos, mesmo em combate, pagando a taxa de fuga. |
-| UC41 | Encerrar partida | Incluído por UC31 | «include» UC42 e UC09 | — | Define o resultado e calcula taxa, ouro, XP e pontuação. |
+| UC40 | Fugir com a Pedra de Retorno | «extend» de UC31 | — | Condição: o jogador confirma a fuga | Foge com o grupo inteiro em 5 segundos, mesmo em combate, pagando a taxa de fuga. Confirmada, não se cancela. |
+| UC41 | Encerrar partida | Incluído por UC31 | «include» UC42 e UC09 | — | Define o resultado e calcula taxa, ouro, XP e pontuação. O nível ganho vale a partir da partida seguinte. |
 | UC42 | Visualizar resumo da partida | Incluído por UC41 | — | — | Mostra o resumo e permite jogar de novo sem recarregar a página. |
 | UC43 | Jogar minijogo do Planalto | Associação | — | — | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. |
 
@@ -85,5 +85,8 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 | UC43 | O minijogo é acessado pelo Mapa e volta ao Mapa. |
 | UC31 | Os aliados agem com uma IA que melhora com o nível de cada personagem; só o Líder esquiva. |
 | UC37 | "Área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha quando alguém fica parado perto. |
+| UC14 | O mudo (tecla M) silencia Música e Som sem mudar a escolha de cada um. |
+| UC40 | Confirmada, a fuga não se cancela. |
+| UC41 | O nível ganho na partida vale a partir da partida seguinte. |
 
 Os requisitos ligados a cada mudança estão na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { manaMaxima, manaPorSegundo } from '../regras/habilidades.js'
 import { capacidadeDaMochila } from '../regras/mochila.js'
 import { efeitoDoAtributo } from '../regras/atributos.js'
+import { chanceDeCritico } from '../regras/combate.js'
 import { taxaNaDistancia } from '../regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../regras/xp.js'
 import {
@@ -9,10 +10,12 @@ import {
   capacidadePorPontoDeForca,
   combateDeTeste,
   contratos,
+  critico,
   distanciaAteABorda,
   minimoDaGrandeVitoria,
   pesosDaPontuacao,
 } from './balanceamento.js'
+import { boneco as lugarDoBoneco, inicio, inimigosIniciais, tamanhoDaArena } from './arenaDeTeste.js'
 import { biomas } from './biomas.js'
 import { atributos, classes } from './classes.js'
 import { nivelInicial, nivelMaximo } from './regras.js'
@@ -310,6 +313,51 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
 
   it('o boneco aguenta vários golpes', () => {
     expect(boneco.vida).toBeGreaterThan(ataques.mago.dano * 3)
+  })
+})
+
+describe('limites da parte 5c (crítico, recompensas, borda da arena, mensagens e teste do foco)', () => {
+  it('crítico: chance entre 1% e 60% com qualquer Agilidade, e o golpe crítico entre 1,2× e 2,5×', () => {
+    expect(chanceDeCritico(0, critico)).toBeGreaterThanOrEqual(0.01)
+    expect(chanceDeCritico(atributoMaximo, critico)).toBeLessThanOrEqual(0.6)
+    expect(critico.multiplicador).toBeGreaterThanOrEqual(1.2)
+    expect(critico.multiplicador).toBeLessThanOrEqual(2.5)
+  })
+
+  it('o Arqueiro tem o crítico mais alto do começo (Conceito §5: "dano e crítico altos")', () => {
+    const chance = (classe) => chanceDeCritico(atributoInicial(classe, 'agilidade'), critico)
+    for (const outra of ['guerreiro', 'mago', 'tanque', 'sacerdote']) expect(chance('arqueiro')).toBeGreaterThan(chance(outra))
+  })
+
+  it('XP limitado por monstro: nenhum dá um nível inteiro de uma vez, nem no nível 1', () => {
+    for (const mob of [combateDeTeste.mobVermelho, combateDeTeste.atirador]) {
+      expect(mob.xp).toBeGreaterThan(0)
+      expect(mob.xp).toBeLessThan(xpParaSubir(nivelInicial))
+      expect(mob.ouro).toBeGreaterThan(0)
+      expect(mob.ouro).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('borda da arena: mais longe que os mobs do começo e não maior que a diagonal da arena', () => {
+    const { distanciaAteABorda: borda } = combateDeTeste
+    const ate = (ponto) => Math.hypot(ponto.x - inicio.x, ponto.y - inicio.y)
+    for (const mob of inimigosIniciais) expect(ate(mob)).toBeLessThan(borda)
+    expect(ate(lugarDoBoneco)).toBeLessThan(borda)
+    expect(borda).toBeLessThanOrEqual(Math.hypot(tamanhoDaArena.largura, tamanhoDaArena.altura))
+  })
+
+  it('mensagens do HUD: ficam entre 1 e 6 s, no máximo 6 juntas', () => {
+    const { hud } = combateDeTeste
+    expect(hud.msDaMensagem).toBeGreaterThanOrEqual(1000)
+    expect(hud.msDaMensagem).toBeLessThanOrEqual(6000)
+    expect(hud.mensagensNoMaximo).toBeLessThanOrEqual(6)
+  })
+
+  it('teste do foco: a vida do Líder fica abaixo do limite do foco, por mais tempo que um foco', () => {
+    const { foco } = combateDeTeste.testes
+    expect(foco.vidaDoLider).toBeLessThan(combateDeTeste.ia.foco.vidaDoLider)
+    expect(foco.msPreso).toBeGreaterThanOrEqual(combateDeTeste.ia.foco.msDeDuracao)
+    expect(foco.distancia).toBeLessThan(combateDeTeste.mobVermelho.raioDeDeteccao) // os mobs já vêm atrás do grupo
   })
 })
 

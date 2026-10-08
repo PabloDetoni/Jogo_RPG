@@ -3,32 +3,38 @@ import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { biomas } from '../../dados/biomas.js'
+import { nomeDaClasse } from '../../dados/classes.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { resultados } from '../../dados/resultados.js'
 import { useJogo } from '../../estado/contexto.js'
+import { relogio } from './formato.js'
 
 const pos = posicoes.resumo
 
-// Resumo da partida (RF51). Por enquanto os números são todos zero.
+// Resumo da partida (RF51): resultado, motivo, ouro (ganho, taxa e recebido), XP de cada personagem e quem subiu de
+// nível, pontuação, monstros, itens e os tempos. As contas vêm do fim da partida (estado/estadoDoJogo.js).
+// "Jogar novamente" volta ao Mapa sem recarregar a página.
 export default function Resumo() {
   const { estado, acoes } = useJogo()
-  const { ultimoResultado } = estado
-  const resultado = ultimoResultado ? resultados[ultimoResultado.resultado] : undefined
-  const bioma = biomas.find((b) => b.id === ultimoResultado?.bioma)
+  const fim = estado.ultimoResultado
+  const resultado = fim ? resultados[fim.resultado] : undefined
+  const bioma = biomas.find((b) => b.id === fim?.bioma)
+  const grandeVitoria = fim?.resultado === 'grandeVitoria'
 
   const linhas = [
-    ['Motivo', ultimoResultado?.motivo ?? resultado?.motivo ?? '—'],
+    ['Motivo', fim?.motivo ?? resultado?.motivo ?? '—'],
     ['Bioma', bioma?.nome ?? '—'],
-    ['Ouro ganho', 0],
-    ['Taxa', '0%'],
-    ['Ouro recebido', 0],
-    ['XP', 0],
-    ['Pontuação', 0],
-    ['Monstros derrotados', 0],
-    ['Itens coletados', 'nenhum'],
-    ['Tempo total', '00:00'],
-    ['Tempo ativo', '00:00'],
+    ['Ouro ganho', fim?.ouroGanho ?? 0],
+    ['Taxa', `${fim?.taxa ?? 0}% (−${fim?.taxaEmOuro ?? 0} de ouro)`],
+    ['Ouro recebido', `${fim?.ouroRecebido ?? 0}${grandeVitoria ? ' (com +10%)' : ''}`],
+    ['Pontuação', `${fim?.pontuacaoFinal ?? 0} (base ${fim?.pontuacaoBase ?? 0})`],
+    ['Monstros derrotados', fim?.monstros ?? 0],
+    ['Itens coletados', fim?.itens?.length ? fim.itens.length : 'nenhum'],
+    ['Tempo total', relogio(fim?.segundosTotais ?? 0)],
+    ['Tempo ativo', relogio(fim?.segundosAtivos ?? 0)],
+    ['Perdidos', fim?.perdidos?.length ? fim.perdidos.map(nomeDaClasse).join(', ') : 'nenhum'],
   ]
+  const personagens = fim?.personagens ?? []
 
   return (
     <Tela>
@@ -44,6 +50,17 @@ export default function Resumo() {
             </Fragment>
           ))}
         </dl>
+        {personagens.length > 0 && (
+          <div className="xp-do-resumo">
+            <strong>XP</strong>
+            {personagens.map((personagem) => (
+              <span key={personagem.classe} className={personagem.niveisGanhos > 0 ? 'xp-subiu' : undefined}>
+                {nomeDaClasse(personagem.classe)}: +{personagem.xp}
+                {personagem.niveisGanhos > 0 ? ` · subiu para o nível ${personagem.nivel}!` : ` · nível ${personagem.nivel}`}
+              </span>
+            ))}
+          </div>
+        )}
       </Area>
       <Botao em={pos.jogarNovamente} onClick={() => acoes.irPara('mapa')}>
         Jogar novamente

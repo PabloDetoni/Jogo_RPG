@@ -10,7 +10,7 @@ export function caidosNoRaio(cena, sacerdote) {
 }
 
 export function ressuscitar(cena, sacerdote) {
-  const agora = cena.time.now
+  const agora = cena.agora
   const anel = cena.add
     .circle(sacerdote.x, sacerdote.y, config.raio, 0xffe680, 0.25)
     .setStrokeStyle(5, 0xffd700)

@@ -1,6 +1,9 @@
-import { resultados } from '../dados/resultados.js'
-import { segundosRetornoNormal } from '../dados/regras.js'
-import { gastarPartidaDosContratos } from '../regras/guilda.js'
+import { distanciaAteABorda } from '../dados/balanceamento.js'
+import { motivosDoFim, resultados } from '../dados/resultados.js'
+import { montarFimDaPartida } from '../regras/fimDaPartida.js'
+import { aplicarFimNoProgresso } from '../regras/ganhosDaPartida.js'
+import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
+import { contratarTodasAsClasses, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
@@ -25,8 +28,8 @@ export function criarEstadoInicial(preferencias) {
     // Partida
     escolhasDaPartida: { bioma: null, pontoPartida: null },
     partidaAtual: null, // { bioma, pontoPartida, lider, iniciadaEm }, de "Começar partida" até o resultado
-    segundosRetorno: null, // contagem do retorno ao Reino; null = parada
-    ultimoResultado: null, // { resultado, bioma }, mostrado no Resumo
+    controleDaPartida: controleInicialDaPartida(),
+    ultimoResultado: null, // contas do fim da partida, mostradas no Resumo (ver encerrarPartida)
 
     preferencias,
 
@@ -82,29 +85,61 @@ function comProgresso(estado, mudancas) {
   return { ...estado, progresso: { ...estado.progresso, ...mudancas } }
 }
 
-// detalhes (vindos da partida, opcionais): motivo (ex.: "Líder não levantado em 30 s"), houveDesmaio e
-// perdidos ({ classe, x, y }). Ficam no ultimoResultado para o Resumo; a TASK-048 usa os dois últimos
-// para o resultado e a taxa.
-function encerrarPartida(estado, resultado, detalhes = {}) {
+// Fim da partida (TASK-048). "fim" vem da partida (CenaArena.terminar): como acabou, o resultado (só nos botões de
+// teste), o motivo, os perdidos e os caídos com o lugar onde caíram, o Líder, o ponto inicial e a borda, o ouro ganho,
+// o XP de cada personagem, os monstros e os tempos. As contas são as da etapa 4 (regras/fimDaPartida.js).
+// Toda partida conta, até entrar e sair logo em seguida (RF34): ouro recebido, XP, níveis e monstros vão para o
+// progresso em qualquer resultado, e cada contrato temporário perde uma partida (regras/ganhosDaPartida.js).
+// Partida interrompida (página fechada no meio) não passa por aqui e não ganha nada (RF12).
+function encerrarPartida(estado, fim = {}) {
   const { partidaAtual, progresso } = estado
-  const extras = Object.fromEntries(
-    ['motivo', 'houveDesmaio', 'perdidos'].filter((chave) => detalhes[chave] !== undefined).map((chave) => [chave, detalhes[chave]]),
-  )
-  let novo = { ...estado, segundosRetorno: null, ultimoResultado: { resultado, bioma: partidaAtual?.bioma ?? null, ...extras } }
+  const bioma = partidaAtual?.bioma ?? null
+  const contas = montarFimDaPartida(fim, {
+    inicio: fim.inicio ?? { x: 0, y: 0 },
+    distanciaAteABorda: fim.distanciaAteABorda ?? distanciaAteABorda[bioma ?? 'floresta'],
+  })
 
-  // Os ganhos (ouro com taxa, XP, itens) entram aqui na etapa 5.
-  // Toda partida conta, até entrar e sair logo em seguida (RF34), e cada contrato temporário
-  // perde uma partida (RF52). Partida interrompida não passa por aqui (RF12).
+  let novo = { ...estado, controleDaPartida: controleInicialDaPartida() }
+  let personagens = []
   if (partidaAtual) {
-    const { estatisticas } = progresso
-    novo = comProgresso(novo, {
-      estatisticas: { ...estatisticas, partidasJogadas: estatisticas.partidasJogadas + 1 },
-      contratosTemporarios: gastarPartidaDosContratos(progresso.contratosTemporarios),
-    })
+    const aplicado = aplicarFimNoProgresso(progresso, { ouroRecebido: contas.ouroRecebido, xpPorClasse: fim.xpPorClasse, monstros: fim.monstros })
+    novo = { ...novo, progresso: aplicado.progresso }
+    personagens = aplicado.personagens
   }
 
-  const destino = resultados[resultado].cutscene ? 'cutsceneDerrota' : 'resumo'
+  novo.ultimoResultado = {
+    resultado: contas.resultado,
+    motivo: fim.motivo ?? motivosDoFim[contas.como],
+    bioma,
+    como: contas.como,
+    ouroGanho: Math.max(0, Math.floor(fim.ouroGanho ?? 0)),
+    taxa: contas.taxa,
+    taxaEmOuro: contas.taxaEmOuro,
+    ouroRecebido: contas.ouroRecebido,
+    pontuacaoBase: contas.pontuacaoBase,
+    pontuacaoFinal: contas.pontuacaoFinal,
+    monstros: fim.monstros ?? 0,
+    itens: [], // a mochila da partida entra com o catálogo (TASK-047)
+    segundosTotais: fim.segundosTotais ?? 0,
+    segundosAtivos: fim.segundosAtivos ?? 0,
+    perdidos: contas.perdidos,
+    personagens, // XP de cada permanente: { classe, xp, nivelAntes, nivel, niveisGanhos }
+  }
+
+  const destino = resultados[contas.resultado].cutscene ? 'cutsceneDerrota' : 'resumo'
   return navegar(pedirSalvamento({ ...novo, partidaAtual: null }), destino)
+}
+
+// Painel "</> DEV": só no npm run dev e só fora da partida (o progresso não muda durante a partida, RF12).
+// No build do jogo, import.meta.env.DEV é falso e esta função sempre devolve o estado como estava.
+function ferramentaDeDev(estado, acao) {
+  if (!import.meta.env.DEV || estado.partidaAtual) return estado
+  const ferramentas = {
+    devContratarTodas: (progresso) => contratarTodasAsClasses(progresso),
+    devMudarNivel: (progresso) => mudarNivel(progresso, acao.classe, acao.quantos),
+    devQuaseSubir: (progresso) => quaseSubir(progresso, acao.classe),
+  }
+  return pedirSalvamento({ ...estado, progresso: ferramentas[acao.tipo](estado.progresso) })
 }
 
 export function atualizarEstado(estado, acao) {
@@ -123,11 +158,17 @@ export function atualizarEstado(estado, acao) {
     case 'fecharJanela':
       return { ...estado, janelas: estado.janelas.slice(0, -1) }
 
-    // Esc fecha a janela de cima; na Partida, sem janela aberta, pausa (RF35).
-    case 'esc':
+    // Esc fecha a janela de cima (inclusive o aviso da fuga, que assim é cancelada); na Partida, sem janela
+    // aberta, pausa (RF35). Em combate não pausa: a Partida mostra "Você não pode pausar agora" (RF44).
+    case 'esc': {
       if (estado.janelas.length > 0) return { ...estado, janelas: estado.janelas.slice(0, -1) }
-      if (estado.tela === 'partida') return { ...estado, janelas: ['pausa'] }
-      return estado
+      if (estado.tela !== 'partida') return estado
+      const controle = estado.controleDaPartida
+      if (controle.andamento.emCombate) {
+        return { ...estado, controleDaPartida: { ...controle, recusasDePausa: controle.recusasDePausa + 1 } }
+      }
+      return { ...estado, janelas: ['pausa'] }
+    }
 
     case 'mostrarAviso':
       return comAviso(estado, acao.texto)
@@ -205,27 +246,39 @@ export function atualizarEstado(estado, acao) {
       const { lider, personagens } = estado.progresso
       if (!personagens.some((p) => p.classe === lider)) return estado
       const partidaAtual = { ...estado.escolhasDaPartida, lider, iniciadaEm: acao.agora }
-      return navegar(pedirSalvamento({ ...estado, partidaAtual, segundosRetorno: null }), 'partida')
+      return navegar(pedirSalvamento({ ...estado, partidaAtual, controleDaPartida: controleInicialDaPartida() }), 'partida')
     }
 
-    // "Voltar ao Reino" da pausa: não tem atalho, passa pela contagem (RF45).
+    // "Voltar ao Reino" da pausa: não tem atalho, passa pela contagem de 15 s do Q, que roda na partida (RF44, RF45).
     case 'iniciarRetorno':
-      return { ...estado, janelas: [], segundosRetorno: segundosRetornoNormal }
+      return comPedido({ ...estado, janelas: [] }, 'comecarRetorno')
 
-    case 'cancelarRetorno':
-      return { ...estado, segundosRetorno: null }
+    // A partida avisou que "em combate", "retornando" ou "fugindo" mudou
+    case 'atualizarAndamento':
+      return { ...estado, controleDaPartida: { ...estado.controleDaPartida, andamento: { ...acao.andamento } } }
 
-    // Chamado a cada segundo pela tela da Partida.
-    // No fim: retorno normal sem desmaio, mas pontuação 0 fica abaixo do mínimo, então é Vitória (RF47).
-    case 'contarRetorno':
-      if (estado.segundosRetorno === null) return estado
-      if (estado.segundosRetorno > 1) return { ...estado, segundosRetorno: estado.segundosRetorno - 1 }
-      return encerrarPartida(estado, 'vitoria')
+    // Primeiro F: abre o aviso com o custo atual da fuga, sem pausar (RF46). Só sem outra janela aberta e se a
+    // fuga ainda não começou (uma por partida).
+    case 'pedirFuga': {
+      const controle = estado.controleDaPartida
+      if (estado.tela !== 'partida' || estado.janelas.length > 0 || controle.andamento.fugindo) return estado
+      return { ...estado, janelas: ['confirmarFuga'], controleDaPartida: { ...controle, custoDaFuga: acao.custo ?? null } }
+    }
+
+    // Segundo F (ou o botão do aviso): confirma a fuga. Esc ou Cancelar fecham o aviso e nada acontece.
+    case 'confirmarFuga':
+      if (estado.janelas.at(-1) !== 'confirmarFuga') return estado
+      return comPedido({ ...estado, janelas: estado.janelas.slice(0, -1) }, 'fugir')
 
     case 'encerrarPartida':
-      return encerrarPartida(estado, acao.resultado, acao.detalhes)
+      return encerrarPartida(estado, acao.fim)
 
-    // Música e som ligam/desligam; o tema alterna entre claro e escuro.
+    case 'devContratarTodas':
+    case 'devMudarNivel':
+    case 'devQuaseSubir':
+      return ferramentaDeDev(estado, acao)
+
+    // Música, som e mudo ligam/desligam (o mudo também pela tecla M); o tema alterna entre claro e escuro.
     case 'alternarPreferencia': {
       const { preferencias } = estado
       const valor =

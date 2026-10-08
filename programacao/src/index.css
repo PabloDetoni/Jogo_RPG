@@ -186,6 +186,25 @@ body {
   font-weight: bold;
 }
 
+/* Resumo: XP de cada personagem, embaixo da tabela */
+.xp-do-resumo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3em 1.2em;
+  margin-top: 0.8em;
+  max-width: 70cqw;
+}
+
+.xp-subiu {
+  font-weight: bold;
+  color: #1d6b1d;
+}
+
+.moldura[data-tema='escuro'] .xp-subiu {
+  color: #9dff9d;
+}
+
 /* Janelas por cima da tela */
 .janela-fundo {
   position: absolute;
@@ -194,6 +213,23 @@ body {
   place-items: center;
   background: rgb(0 0 0 / 0.45);
   font-size: 1.5cqw;
+}
+
+/* Janela leve (aviso da fuga): perto do topo, sem escurecer a tela e sem bloquear o clique em volta */
+.janela-fundo-leve {
+  place-items: start center;
+  padding-top: 13cqh;
+  background: none;
+  pointer-events: none;
+}
+
+.janela-fundo-leve .janela {
+  max-width: 40cqw;
+  min-width: 30cqw;
+  padding: 0.7em 1.4em;
+  font-size: 0.8em;
+  pointer-events: auto;
+  box-shadow: 0 0.3em 1em rgb(0 0 0 / 0.4);
 }
 
 .janela {
@@ -303,29 +339,107 @@ body {
 }
 
 /* HUD: faixa no topo, fora da área jogável (a altura vem de dados/arenaDeTeste.js).
-   A direita fica livre para o botão Configurações. */
+   Três blocos lado a lado: o Líder e o grupo (esquerda), os números da partida e o lugar do minimapa.
+   A direita fica livre para o botão Configurações (menor na Partida). Cabe em 1366×768 (roteiro do navegador). */
 .hud {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.45em;
-  padding: 0 15cqw 0 1.2cqw;
+  align-items: center;
+  gap: 1.1em;
+  padding: 0 10.6cqw 0 1cqw;
   background: rgb(15 20 30 / 0.85);
   color: #f5f5f5;
   border-bottom: 2px solid #1c2230;
-  font-size: 0.9cqw;
+  font-size: 0.86cqw;
   pointer-events: none;
+}
+
+.tela-partida > .botao.posicionado {
+  font-size: 1.05cqw;
+}
+
+.hud-principal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
 }
 
 .hud-linha {
   display: flex;
   align-items: center;
-  gap: 1.3em;
+  gap: 0.9em;
   white-space: nowrap;
+}
+
+/* Números da partida (tempo, pontos, ouro, fuga) e os selos (em combate, foco, mudo) */
+.hud-numeros {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  padding-left: 0.9em;
+  border-left: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.hud-numeros .hud-linha {
+  gap: 0.7em;
+}
+
+.hud-numero strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-fuga strong {
+  color: #ffd23f;
+}
+
+.hud-selo {
+  padding: 0 0.45em;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.hud-combate {
+  background: #b3261e;
+  color: #fff;
+}
+
+.hud-calmo {
+  background: rgb(255 255 255 / 0.12);
+  color: #cfe8cf;
+}
+
+.hud-mudo {
+  background: #5a5a5a;
+  color: #fff;
+}
+
+.hud-som {
+  background: rgb(255 255 255 / 0.12);
+}
+
+/* Lugar reservado do minimapa e da região (etapa 6) */
+.hud-minimapa {
+  flex: none;
+  width: 6.2cqw;
+  height: 78%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  border: 1px dashed rgb(255 255 255 / 0.35);
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.hud-regiao {
+  font-size: 0.9em;
 }
 
 .hud-rotulo {
@@ -337,7 +451,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.2em;
-  min-width: 6.5em;
+  min-width: 5em;
 }
 
 .hud-espaco .medidor-barra {
@@ -380,9 +494,22 @@ body {
   gap: 0.4em;
 }
 
+/* Aliado em duas linhas: nome (e estado) em cima; IA e vida embaixo */
+.hud-aliado-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+
+.hud-aliado-baixo {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
 .hud-aliado .medidor-barra {
-  width: 4em;
-  height: 0.55em;
+  width: 3.6em;
+  height: 0.5em;
 }
 
 .hud-aliado .medidor-cheio {
@@ -405,7 +532,8 @@ body {
 }
 
 .hud-foco {
-  color: #ffd700;
+  background: #ffd700;
+  color: #111;
   font-weight: bold;
 }
 
@@ -429,9 +557,9 @@ body {
 
 .medidor {
   display: grid;
-  grid-template-columns: 2.8em 7em 4.6em;
+  grid-template-columns: 2.6em 4.6em 4.6em;
   align-items: center;
-  gap: 0.4em;
+  gap: 0.35em;
 }
 
 .medidor-mana .medidor-cheio {
@@ -464,12 +592,65 @@ body {
   font-weight: bold;
 }
 
+/* Abaixo do HUD, no meio: contagens do Q e da fuga, o Líder caído e as mensagens curtas. Não pegam o clique. */
+.avisos-da-partida {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 1.05cqw;
+  pointer-events: none;
+}
+
 .faixa-da-partida {
   padding: 0.3em 0.9em;
   background: rgb(15 20 30 / 0.8);
   color: #fff;
   font-weight: bold;
+  white-space: nowrap;
   pointer-events: none;
+}
+
+.faixa-alerta {
+  background: rgb(120 20 20 / 0.85);
+}
+
+.faixa-fuga {
+  background: rgb(30 70 120 / 0.9);
+}
+
+.mensagem-da-partida {
+  padding: 0.15em 0.7em;
+  background: rgb(15 20 30 / 0.7);
+  color: #fff;
+  font-size: 0.85em;
+  white-space: nowrap;
+  animation: mensagem-entra 0.15s ease-out;
+}
+
+.mensagem-alerta,
+.mensagem-perdido {
+  color: #ffb3b3;
+}
+
+.mensagem-critico,
+.mensagem-nivel {
+  color: #ffd23f;
+  font-weight: bold;
+}
+
+.mensagem-bom {
+  color: #9dff9d;
+}
+
+@keyframes mensagem-entra {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4em);
+  }
 }
 
 /* Barra de teste: faixa embaixo, fora da área jogável (a altura vem de dados/arenaDeTeste.js) */
@@ -524,4 +705,25 @@ body {
 .fps {
   min-width: 4.5em;
   font-variant-numeric: tabular-nums;
+}
+
+.contagem-do-foco {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+/* Painel de desenvolvimento: personagens do save (nível, XP, IA) */
+.painel-dev-personagens {
+  max-width: 340px;
+}
+
+.painel-dev-personagens summary {
+  cursor: pointer;
+}
+
+.painel-dev-personagem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
 }

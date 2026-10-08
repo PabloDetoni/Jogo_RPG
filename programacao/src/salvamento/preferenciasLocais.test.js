@@ -12,8 +12,14 @@ describe('preferências no navegador (RF18)', () => {
 
   it('ida e volta', () => {
     const armazenamento = criarArmazenamento(storageFalso())
-    salvarPreferencias(armazenamento, { musica: false, som: false, tema: 'escuro' })
-    expect(carregarPreferencias(armazenamento)).toEqual({ musica: false, som: false, tema: 'escuro' })
+    salvarPreferencias(armazenamento, { musica: false, som: false, mudo: true, tema: 'escuro' })
+    expect(carregarPreferencias(armazenamento)).toEqual({ musica: false, som: false, mudo: true, tema: 'escuro' })
+  })
+
+  it('preferências salvas antes do mudo (5c) carregam com o mudo desligado', () => {
+    const armazenamento = criarArmazenamento(storageFalso())
+    armazenamento.gravar(chaves.preferencias, JSON.stringify({ formato: 1, musica: false, som: true, tema: 'escuro' }))
+    expect(carregarPreferencias(armazenamento)).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro' })
   })
 
   it('estragado ou sem armazenamento: o padrão, sem erro', () => {

@@ -84,12 +84,12 @@ describe('fim da partida por desmaio (RF47)', () => {
   it('Líder caído há menos de 30 s: continua; há 30 s: Retorno forçado', () => {
     const grupo = [lider({ caido: true, caidoDesde: 1000 }), aliado()]
     expect(fimPorDesmaio(grupo, 30999, prazo)).toBeNull()
-    expect(fimPorDesmaio(grupo, 31000, prazo)).toEqual({ resultado: 'retornoForcado', motivo: 'Líder não levantado em 30 s' })
+    expect(fimPorDesmaio(grupo, 31000, prazo)).toEqual({ como: 'liderNaoLevantado', resultado: 'retornoForcado', motivo: 'Líder não levantado em 30 s' })
   })
 
   it('todos caídos: Derrota na hora, mesmo antes dos 30 s', () => {
     const grupo = [lider({ caido: true, caidoDesde: 1000 }), aliado({ caido: true, caidoDesde: 2000 })]
-    expect(fimPorDesmaio(grupo, 2001, prazo)).toEqual({ resultado: 'derrota', motivo: 'Todos os personagens desmaiaram' })
+    expect(fimPorDesmaio(grupo, 2001, prazo)).toEqual({ como: 'todosDesmaiaram', resultado: 'derrota', motivo: 'Todos os personagens desmaiaram' })
   })
 
   it('com um personagem só, cair já é Derrota', () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   aplicarDano,
+  chanceDeCritico,
   circuloTocaRetangulo,
   circuloTocaRetanguloGirado,
   curaDaAura,
@@ -10,6 +11,7 @@ import {
   podeUsar,
   raioDaBolaMagica,
   retangulosSeTocam,
+  rolarCritico,
   segmentoCortaRetangulo,
   vagaNaFormacao,
   velocidadeDoMovimento,
@@ -202,5 +204,26 @@ describe('grupo seguindo o Líder', () => {
     const chegando = velocidadeParaSeguir({ x: 0, y: 0 }, { x: 30, y: 0 }, 240, 60)
     expect(chegando).toEqual({ x: 120, y: 0 })
     expect(velocidadeParaSeguir({ x: 0, y: 0 }, { x: 1, y: 0 }, 240, 60)).toEqual({ x: 0, y: 0 })
+  })
+})
+
+describe('crítico pela Agilidade (Conceito §6; aprovado em 07/10)', () => {
+  const critico = { chanceBase: 0.05, chancePorPontoDeAgilidade: 0.005 }
+
+  it('5% + 0,5% por ponto de Agilidade', () => {
+    perto(chanceDeCritico(0, critico), 0.05)
+    perto(chanceDeCritico(22, critico), 0.16) // Arqueiro inicial
+    perto(chanceDeCritico(100, critico), 0.55)
+  })
+
+  it('nunca passa de 100% nem fica abaixo da base', () => {
+    expect(chanceDeCritico(10000, critico)).toBe(1)
+    perto(chanceDeCritico(-50, critico), 0.05)
+  })
+
+  it('o sorteio abaixo da chance é crítico: dano vezes o multiplicador', () => {
+    expect(rolarCritico(20, 0.16, 1.5, () => 0.1)).toEqual({ dano: 30, critico: true })
+    expect(rolarCritico(20, 0.16, 1.5, () => 0.16)).toEqual({ dano: 20, critico: false })
+    expect(rolarCritico(20, 0, 1.5, () => 0)).toEqual({ dano: 20, critico: false }) // chance 0: nunca
   })
 })

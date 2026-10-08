@@ -26,6 +26,11 @@ export const curvaDosAtributos = { expoente: 1.5 }
 // Mochila da partida: capacidade = soma da Força do grupo × este valor (RF33)
 export const capacidadePorPontoDeForca = 2
 
+// Crítico (Conceito §6: a Agilidade dá a chance de crítico). Aprovado pelo Pablo em 07/10:
+// chance = chanceBase + Agilidade × chancePorPontoDeAgilidade (Arqueiro inicial, Agilidade 22: 16%; Agilidade 100: 55%).
+// O golpe crítico causa o dano × multiplicador.
+export const critico = { chanceBase: 0.05, chancePorPontoDeAgilidade: 0.005, multiplicador: 1.5 }
+
 // Pontuação base (RF49) = soma de cada parte × o seu peso, mais o bônus de Boss
 export const pesosDaPontuacao = { porMonstro: 10, porOuro: 1, porRecurso: 5, porSegundoAtivo: 1 }
 
@@ -46,6 +51,14 @@ export const contratos = {
 export const combateDeTeste = {
   // Vida máxima = Vitalidade do personagem × este valor (Guerreiro 120, Tanque 180, Arqueiro 60...)
   vidaPorPontoDeVitalidade: 10,
+  // Taxa por distância na arena (5c): o ponto inicial do bioma é onde o Líder nasce, e a "borda" fica a esta
+  // distância dele (px da arena; o canto mais longe da arena fica a ~1400 px). Muda na etapa 6, com o mapa de verdade.
+  distanciaAteABorda: 1400,
+  // HUD (5c): quanto tempo cada mensagem curta fica na tela e quantas aparecem juntas
+  hud: { msDaMensagem: 2500, mensagensNoMaximo: 4 },
+  // Botões de teste (5c). "+ouro" soma ao ouro ganho na partida (para chegar à Grande Vitória sem jogar horas).
+  // Teste do foco: o Líder fica com esta fração da vida (abaixo do limite do foco) por msPreso, com mobs perto.
+  testes: { ouroDoBotao: 300, foco: { vidaDoLider: 0.25, msPreso: 20000, mobs: 3, distancia: 300 } },
   // Líder e aliados. Imunidade: tempo sem levar dano depois de apanhar (RF36)
   personagem: { tamanho: 40, velocidade: 220, msDeImunidade: 500, msDeEmpurrao: 150 },
   // Esquiva (Espaço): avanço curto, sem gastar mana e sem levar dano durante o avanço
@@ -169,8 +182,11 @@ export const combateDeTeste = {
       empurrao: 560,
     },
   },
-  // Mob vermelho: persegue dentro do raio de detecção e desiste longe do raio de desistência
+  // Mob vermelho: persegue dentro do raio de detecção e desiste longe do raio de desistência.
+  // xp e ouro: o que ele dá ao ser derrotado (5c; aprovado pelo Pablo em 07/10)
   mobVermelho: {
+    xp: 20,
+    ouro: 12,
     vida: 60,
     tamanho: 36,
     velocidade: 140,
@@ -187,6 +203,8 @@ export const combateDeTeste = {
   },
   // Atirador: fica entre a distância mínima e a máxima do Líder e atira bolinhas lentas
   atirador: {
+    xp: 25,
+    ouro: 15,
     vida: 40,
     tamanho: 34,
     velocidade: 110,

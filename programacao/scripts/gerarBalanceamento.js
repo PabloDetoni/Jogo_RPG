@@ -7,6 +7,7 @@ import {
   capacidadePorPontoDeForca,
   combateDeTeste,
   contratos,
+  critico,
   curvaDeXp,
   curvaDosAtributos,
   distanciaAteABorda,
@@ -24,12 +25,16 @@ import {
   nivelInicial,
   nivelMaximo,
   segundosDaAjuda,
+  segundosDaFuga,
+  segundosDeCombateDepoisDoDano,
   segundosParaLevantar,
+  segundosRetornoNormal,
   vidaAoSerAjudadoPercentual,
 } from '../src/dados/regras.js'
 import { resultados } from '../src/dados/resultados.js'
 import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
 import { efeitoComExpoente, pontosDeAtributoAteONivel } from '../src/regras/atributos.js'
+import { chanceDeCritico } from '../src/regras/combate.js'
 import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
 import { chanceDeErro } from '../src/regras/nivelDaIA.js'
 import { calcularFimDaPartida } from '../src/regras/fimDaPartida.js'
@@ -110,7 +115,7 @@ escrever(
     niveisDaTabela.map((n) => [numero(n), n >= nivelMaximo ? '—' : numero(xpParaSubir(n)), numero(xpTotalAteONivel(n))]),
   ),
   '### Quantos monstros até o nível 100',
-  `Ainda não existe XP por monstro (etapa 5). A tabela mostra quantos monstros são precisos para ir do nível 1 ao ${nivelMaximo}, para cada valor possível de XP por monstro. No grupo, o XP de cada monstro é dividido entre os permanentes ativos (RF50): com 5 personagens, cada um recebe um quinto.`,
+  `Na arena de teste (5c), o mob vermelho dá **${combateDeTeste.mobVermelho.xp} XP** e o atirador **${combateDeTeste.atirador.xp} XP** (provisório); os monstros de verdade vêm com a Floresta (TASK-012). A tabela mostra quantos monstros são precisos para ir do nível 1 ao ${nivelMaximo}, para cada valor possível de XP por monstro. No grupo, o XP de cada monstro é dividido entre os permanentes de pé (RF50): com 5 personagens, cada um recebe um quinto.`,
   tabela(
     ['XP por monstro', 'Monstros (personagem sozinho)', 'Monstros (grupo de 5, todos chegam ao 100 juntos)'],
     [10, 25, 50, 100, 250, 500].map((xp) => [numero(xp), numero(Math.ceil(xpTotal / xp)), numero(Math.ceil(xpTotal / (xp / 5)))]),
@@ -261,7 +266,8 @@ escrever(
 )
 
 const combate = combateDeTeste
-const segundos = (ms) => `${numero(ms / 1000, ms % 1000 ? 2 : 0).replace(/,?0+$/, '')} s`
+// Milissegundos → "0,15 s", "10 s", "180 s" (zeros só saem depois da vírgula)
+const segundos = (ms) => `${numero(ms / 1000, ms % 1000 ? 2 : 0).replace(/(,\d*?)0+$/, '$1').replace(/,$/, '')} s`
 const ataque = combate.ataques
 const ataquesDeTeste = {
   guerreiro: ['Espada: varre um arco na frente', `${ataque.guerreiro.dano}`, `arco de ${ataque.guerreiro.aberturaGraus}°, alcance ${ataque.guerreiro.alcance}`],
@@ -368,11 +374,45 @@ escrever(
   ),
 )
 
+const { mobVermelho, atirador, testes, hud } = combate
+const taxaDaFugaNaArena = (fracao) => taxaNaDistancia('fuga', combate.distanciaAteABorda * fracao, combate.distanciaAteABorda)
+escrever(
+  '## Partida: em combate, retorno, fuga e ganhos (5c)',
+  lista(
+    `**Em combate** (documentação, RF37): alguém do grupo causou ou recebeu dano nos últimos **${segundosDeCombateDepoisDoDano} s**, ou um mob hostil persegue o grupo. Bater no boneco de treino não conta. Em combate não dá para pausar (Esc mostra "Você não pode pausar agora").`,
+    `**Retorno com Q ou pela pausa** (documentação, RF45): **${segundosRetornoNormal} s**, só começa fora de combate; se o grupo entrar em combate, volta a ${segundosRetornoNormal} s e só corre fora dele. Q de novo cancela.`,
+    `**Fuga com F** (documentação, RF46): o primeiro F mostra o custo, o segundo confirma; **${segundosDaFuga} s**, mesmo em combate. Confirmada, não se cancela (decisão de 07/10).`,
+    `**Tempo ativo** (documentação, Conceito §12): só o tempo com dano nos últimos ${segundosDeCombateDepoisDoDano} s. Ser perseguido sem levar dano não conta. A pausa não conta em nenhum tempo.`,
+    `**Taxa por distância na arena** (provisório até a etapa 6): o ponto inicial do bioma é onde o Líder nasce, e a borda fica a **${numero(combate.distanciaAteABorda)} px** dele. Exemplo, a fuga: ${taxaDaFugaNaArena(0)}% no início, ${taxaDaFugaNaArena(0.5)}% no meio e ${taxaDaFugaNaArena(1)}% na borda.`,
+    'O nível ganho na partida aparece na hora ("subiu de nível"), mas só vale a partir da partida seguinte: o progresso não muda durante a partida (RF12). É também quando a IA do personagem muda.',
+  ),
+  '### Monstros da arena de teste (provisório)',
+  tabela(
+    ['Monstro', 'Vida', 'XP', 'Ouro'],
+    [
+      ['Mob vermelho', numero(mobVermelho.vida), numero(mobVermelho.xp), numero(mobVermelho.ouro)],
+      ['Atirador', numero(atirador.vida), numero(atirador.xp), numero(atirador.ouro)],
+    ],
+  ),
+  '### Crítico (provisório, aprovado em 07/10)',
+  `Chance = **${numero(critico.chanceBase * 100)}% + ${numero(critico.chancePorPontoDeAgilidade * 100, 1)}% por ponto de Agilidade**; o golpe crítico causa **${numero(critico.multiplicador, 1)}×** o dano. Vale para o Líder e os aliados. Com Agilidade ${atributoMaximo}: ${numero(chanceDeCritico(atributoMaximo, critico) * 100)}%.`,
+  tabela(
+    ['Classe', 'Agilidade inicial', 'Chance de crítico no começo'],
+    classes.map((classe) => [classe.nome, numero(classe.atributosIniciais.agilidade), `${numero(chanceDeCritico(classe.atributosIniciais.agilidade, critico) * 100, 1)}%`]),
+  ),
+  '### HUD e botões de teste',
+  lista(
+    `Mensagens curtas do HUD (crítico, nível, desmaio, perdido, retorno...): ficam **${segundos(hud.msDaMensagem)}**, no máximo **${hud.mensagensNoMaximo}** juntas.`,
+    `Botão "+${testes.ouroDoBotao} de ouro" (só no npm run dev): soma ao ouro ganho na partida, para chegar à Grande Vitória (pontuação base acima de ${numero(minimoDaGrandeVitoria)}) sem jogar horas.`,
+    `Botão "Testar foco": IA avançada para todos, Líder com **${numero(testes.foco.vidaDoLider * 100)}%** da vida por **${segundos(testes.foco.msPreso)}** e **${testes.foco.mobs} mobs** a ${testes.foco.distancia} px.`,
+  ),
+)
+
 escrever(
   '## Ainda sem valor (a decidir)',
   'Valores do Conceito §19 que ainda não existem no código:',
   lista(
-    'XP e ouro por monstro; bônus de Boss na pontuação; chance de drop dos Bosses;',
+    'XP e ouro dos monstros de verdade da Floresta (a arena tem dois de teste); bônus de Boss na pontuação; chance de drop dos Bosses;',
     'dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);',
     'preços do Mercado e da Forja e do pergaminho;',
     'peso de cada item; tempo que um item fica no chão;',

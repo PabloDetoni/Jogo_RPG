@@ -24,6 +24,18 @@ export function aplicarDano(vida, dano, protegido = false) {
   return { vida: vida - danoFeito, danoFeito }
 }
 
+// Chance de crítico pela Agilidade (Conceito §6), de 0 a 1. Os números vêm de dados/balanceamento.js (critico).
+export function chanceDeCritico(agilidade, { chanceBase, chancePorPontoDeAgilidade }) {
+  return limitar(chanceBase + Math.max(0, agilidade) * chancePorPontoDeAgilidade, 0, 1)
+}
+
+// Sorteia o crítico de um golpe: com ele, o dano vezes o multiplicador.
+// "sorteio" devolve um número de 0 a 1 (Math.random no jogo; um número fixo nos testes).
+export function rolarCritico(dano, chance, multiplicador, sorteio = Math.random) {
+  const critico = sorteio() < chance
+  return { dano: critico ? dano * multiplicador : dano, critico }
+}
+
 // Recarga: ultimoUso = null quer dizer que nunca foi usado
 export function podeUsar(agora, ultimoUso, recargaMs) {
   return ultimoUso === null || agora - ultimoUso >= recargaMs

@@ -1,21 +1,25 @@
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
+import { combateDeTeste } from '../../dados/balanceamento.js'
 import { classes } from '../../dados/classes.js'
 import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
 
 // Barra de TESTE da arena (Fase 1). Some quando a partida de verdade estiver pronta.
 // Fica numa faixa embaixo, fora da área jogável (ninguém anda embaixo dela).
 // Os botões não pegam o foco do teclado: assim o Espaço continua sendo a esquiva, e não um clique.
-export default function BarraDeTeste({ ponte, situacao, encerrarPartida }) {
+// Os 4 resultados acabam a partida com os números reais dela. "Subir nível" e "+ouro" só existem no npm run dev:
+// mexem no que a partida ganhou, que só entra no save no fim, pelo caminho normal.
+export default function BarraDeTeste({ ponte, situacao }) {
   const mandar = (comando) => ponte.avisar('comando', comando)
+  const foco = situacao?.contagemDoFoco
 
   return (
     <div className="barra-de-teste" role="toolbar" aria-label="Barra de teste" style={{ height: emCqw(faixas.barraDeTeste) }}>
       <span className="selo-teste">TESTE</span>
       <div className="grupo-de-teste">
-        <BotaoDeTeste onClick={() => encerrarPartida('grandeVitoria')}>Grande Vitória</BotaoDeTeste>
-        <BotaoDeTeste onClick={() => encerrarPartida('vitoria')}>Vitória</BotaoDeTeste>
-        <BotaoDeTeste onClick={() => encerrarPartida('retornoForcado')}>Retorno forçado</BotaoDeTeste>
-        <BotaoDeTeste onClick={() => encerrarPartida('derrota')}>Derrota</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'forcarFim', resultado: 'grandeVitoria' })}>Grande Vitória</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'forcarFim', resultado: 'vitoria' })}>Vitória</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'forcarFim', resultado: 'retornoForcado' })}>Retorno forçado</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'forcarFim', resultado: 'derrota' })}>Derrota</BotaoDeTeste>
       </div>
       <div className="grupo-de-teste">
         <BotaoDeTeste onClick={() => mandar({ tipo: 'alternarInvencivel' })} selecionado={Boolean(situacao?.invencivel)}>
@@ -54,8 +58,23 @@ export default function BarraDeTeste({ ponte, situacao, encerrarPartida }) {
         <BotaoDeTeste onClick={() => mandar({ tipo: 'recarregarHabilidades' })}>Recarregar habilidades</BotaoDeTeste>
       </div>
       <div className="quebra-de-linha" />
+      <div className="grupo-de-teste">
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'testarFoco' })}>Testar foco</BotaoDeTeste>
+        {foco?.decisoes > 0 && (
+          <span className="contagem-do-foco">
+            Foco: {foco.erros} {foco.erros === 1 ? 'erro' : 'erros'} em {foco.decisoes} decisões
+          </span>
+        )}
+        {import.meta.env.DEV && (
+          <>
+            <BotaoDeTeste onClick={() => mandar({ tipo: 'subirNivel' })}>Subir nível</BotaoDeTeste>
+            <BotaoDeTeste onClick={() => mandar({ tipo: 'ganharOuro' })}>+{combateDeTeste.testes.ouroDoBotao} de ouro</BotaoDeTeste>
+          </>
+        )}
+      </div>
       <p className="dica-de-teclas">
-        WASD anda · mouse mira · clique ataca · 1 2 3 habilidades · Espaço esquiva · Esc pausa · Invencível vale só para o Líder
+        WASD anda · mouse mira · clique ataca · 1 2 3 habilidades · Espaço esquiva · Q volta ao Reino · F foge · M muta ·
+        Esc pausa · Invencível vale só para o Líder
       </p>
     </div>
   )

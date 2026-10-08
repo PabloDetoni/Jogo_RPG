@@ -11,18 +11,42 @@ import {
   pontosDeSurgimento,
   tamanhoDaArena,
 } from '../../dados/arenaDeTeste.js'
-import { combateDeTeste } from '../../dados/balanceamento.js'
-import { segundosDaAjuda, segundosParaLevantar, vidaAoSerAjudadoPercentual } from '../../dados/regras.js'
+import { combateDeTeste, critico } from '../../dados/balanceamento.js'
+import { nomeDaClasse } from '../../dados/classes.js'
+import {
+  segundosDaAjuda,
+  segundosDaFuga,
+  segundosDeCombateDepoisDoDano,
+  segundosParaLevantar,
+  segundosRetornoNormal,
+  vidaAoSerAjudadoPercentual,
+} from '../../dados/regras.js'
+import { motivosDoFim } from '../../dados/resultados.js'
+import {
+  alternarRetorno,
+  avancarFuga,
+  avancarRetorno,
+  comecarFuga,
+  custoDaFuga,
+  estaEmCombate,
+  nivelComOXpDaPartida,
+  segundosDaContagem,
+  somarTempoAtivo,
+  somarXpDoAbate,
+  xpParaOProximoNivel,
+} from '../../regras/andamentoDaPartida.js'
 import {
   aplicarDano,
   circuloTocaRetangulo,
   fracaoDaRecarga,
   podeUsar,
   retangulosSeTocam,
+  rolarCritico,
   vagaNaFormacao,
   velocidadeDoMovimento,
   vetorDeEmpurrao,
 } from '../../regras/combate.js'
+import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
@@ -52,10 +76,15 @@ import { efeitosDasHabilidades, temAlvoParaAHabilidade } from '../habilidades/in
 import { pensarAliados } from '../iaDosAliados.js'
 import Navegador from '../navegador.js'
 
-const { personagem, esquiva, ataques, raioDaFormacao, travamento, desmaio } = combateDeTeste
+const { personagem, esquiva, ataques, raioDaFormacao, travamento, desmaio, testes } = combateDeTeste
 const { largura, altura } = tamanhoDaArena
 const prazoParaLevantar = segundosParaLevantar * 1000
 const msDaAjuda = segundosDaAjuda * 1000
+const msDoRetorno = segundosRetornoNormal * 1000
+const msDaFuga = segundosDaFuga * 1000
+const msDeCombate = segundosDeCombateDepoisDoDano * 1000
+// Taxa por distância na arena: o ponto inicial do bioma é onde o Líder nasce (provisório até a etapa 6)
+const lugarDaTaxa = { inicio, distanciaAteABorda: combateDeTeste.distanciaAteABorda }
 const somar = (a, b) => ({ x: a.x + b.x, y: a.y + b.y })
 // Limites da área jogável (entre a faixa do HUD e a da barra de teste)
 const limites = {
@@ -68,9 +97,10 @@ const tiposDeInimigo = { mobVermelho: MobVermelho, atirador: Atirador }
 // Área sem borda (para o Líder não escorregar sozinho ao longo da borda quando o jogador anda contra ela)
 const semBorda = { x: areaJogavel.x, y: areaJogavel.y, largura: 1e6, altura: 1e6 }
 
-// A arena de teste da Fase 1 (partes 5a e 5b).
+// A arena de teste da Fase 1 (partes 5a, 5b e 5c).
 // Recebe da tela de Partida a ponte (src/jogo/ponte.js) e o grupo (regras/grupoDaPartida.js).
-// Avisa pela ponte a situação (8 vezes por segundo) e o fim da partida por desmaio ("fimDaPartida").
+// Avisa pela ponte a situação (8 vezes por segundo), o andamento (em combate, retornando, fugindo: quando muda),
+// as mensagens curtas do HUD e o fim da partida ("fimDaPartida", com os números para o Resumo).
 export default class CenaArena extends Phaser.Scene {
   constructor() {
     super('arena')
@@ -81,7 +111,15 @@ export default class CenaArena extends Phaser.Scene {
     this.grupoInicial = grupo
   }
 
+  // Relógio da partida, em ms: só anda quando a cena roda. Na pausa (e com a aba escondida) ele para, e com ele
+  // os 30 s do desmaio, as recargas, a contagem do Q e da fuga e os tempos do Resumo. Todo mundo usa este, nunca
+  // o relógio do Phaser (que continua correndo na pausa).
+  get agora() {
+    return this.relogio
+  }
+
   create() {
+    this.relogio = 0
     criarTexturas(this)
     // A borda é a beira da área jogável: ninguém anda embaixo do HUD nem da barra de teste
     this.physics.world.setBounds(limites.esquerda, limites.topo, areaJogavel.largura, areaJogavel.altura)
@@ -110,6 +148,19 @@ export default class CenaArena extends Phaser.Scene {
     this.focoAte = 0 // momento de foco da IA avançada (regras/nivelDaIA.js)
     // Contagem para o roteiro de testes: tiros de cada classe e quantos acabaram numa pedra
     this.contagemDeTiros = { disparados: {}, naPedra: {} }
+    // Barra de teste "Testar foco": decisões e erros dos aliados durante o foco, e até quando a vida do Líder fica presa
+    this.contagemDoFoco = { decisoes: 0, erros: 0 }
+    this.vidaPresaAte = 0
+
+    // Andamento (5c): em combate, retorno com Q, fuga com F e o que a partida ganhou até agora
+    this.ultimoDano = null // quando alguém do grupo causou ou recebeu dano pela última vez
+    this.emCombate = false
+    this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
+    this.fuga = null // { msRestantes }
+    this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
+    this.ganhos = { ouro: 0, monstros: 0, xpPorClasse: {} }
+    this.niveisAvisados = {} // classe → último nível avisado no HUD ("subiu de nível")
+    this.andamentoAvisado = ''
     this.anguloDaMira = 0
     this.ultimaEsquiva = null
     this.fimDaEsquiva = 0
@@ -248,7 +299,10 @@ export default class CenaArena extends Phaser.Scene {
 
   update(tempo, delta) {
     if (this.terminou) return
-    const agora = this.time.now
+    // O relógio da partida anda o tempo do quadro (no máximo 0,1 s, para um engasgo não pular nada)
+    const ms = Math.min(delta, 100)
+    this.relogio += ms
+    const agora = this.agora
     const segundos = Math.min(delta, 50) / 1000
     const lider = this.lider
     this.corrigirSobreposicoes(agora)
@@ -272,7 +326,10 @@ export default class CenaArena extends Phaser.Scene {
     })
     for (const membro of this.grupo) membro.escudo?.atualizar()
     this.atualizarMana(segundos)
-    this.atualizarDesmaios(agora, Math.min(delta, 50))
+    this.prenderVidaDoTesteDoFoco(agora)
+    this.atualizarDesmaios(agora, ms)
+    if (this.terminou) return
+    this.atualizarAndamento(agora, ms)
     if (this.terminou) return
 
     for (const entidade of [...this.grupo, ...this.inimigos, this.boneco]) entidade.atualizarDesenho(agora, delta)
@@ -430,7 +487,7 @@ export default class CenaArena extends Phaser.Scene {
   // e quem está deslizando para o ponto livre passa por todos.
   podemColidir(a, b) {
     if (a.deslizando || b.deslizando) return false
-    const agora = this.time.now
+    const agora = this.agora
     if (a.separandoAte <= agora && b.separandoAte <= agora) return true
     return Math.hypot(a.x - b.x, a.y - b.y) > ((a.tamanho + b.tamanho) / 2) * 0.6
   }
@@ -471,7 +528,7 @@ export default class CenaArena extends Phaser.Scene {
       .filter((outro) => outro !== entidade)
       .map((outro) => ({ x: outro.x, y: outro.y, largura: outro.tamanho, altura: outro.tamanho }))
     if (!linhaLivre(entidade, ponto, outros, entidade.raio)) {
-      if (entidade.ia) entidade.ia.quietoAte = this.time.now + combateDeTeste.ia.tremor.msQuieto
+      if (entidade.ia) entidade.ia.quietoAte = this.agora + combateDeTeste.ia.tremor.msQuieto
       return
     }
     entidade.deslizando = true
@@ -503,7 +560,7 @@ export default class CenaArena extends Phaser.Scene {
   // Ataque de teste da classe (clique do Líder; a IA usa o mesmo). Devolve true se saiu.
   usarAtaque(membro, angulo) {
     if (membro.caido || this.terminou) return false
-    const agora = this.time.now
+    const agora = this.agora
     if (!podeUsar(agora, membro.ultimoAtaque, ataques[membro.classe].recargaMs)) return false
     membro.ultimoAtaque = agora
     membro.anguloDaMira = angulo
@@ -520,7 +577,7 @@ export default class CenaArena extends Phaser.Scene {
   habilidadeDisponivel(membro, indice) {
     const habilidade = membro.habilidades[indice]
     const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : false
-    const agora = this.time.now
+    const agora = this.agora
     return podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo }).ok
   }
 
@@ -528,7 +585,7 @@ export default class CenaArena extends Phaser.Scene {
   // Sem mana, em recarga, tecla vazia ou sem alvo: não sai, e o Líder vê o aviso em cima dele.
   usarHabilidade(membro, indice, mira) {
     if (membro.caido || this.terminou) return false
-    const agora = this.time.now
+    const agora = this.agora
     const habilidade = membro.habilidades[indice]
     const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : true
     const pode = podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo })
@@ -584,20 +641,63 @@ export default class CenaArena extends Phaser.Scene {
     this.contagemDeTiros.naPedra[dono.classe] = (this.contagemDeTiros.naPedra[dono.classe] ?? 0) + 1
   }
 
-  // Golpe do grupo num alvo: dano (mais forte com o fortalecimento da Ressurreição), pisca branco,
-  // número, partículas e empurrão
+  // Golpe do grupo num alvo: dano (mais forte com o fortalecimento da Ressurreição e no crítico, pela Agilidade de
+  // quem bate), pisca branco, número, partículas e empurrão. Bater num inimigo deixa o grupo em combate
+  // (no boneco de treino, não: dá para treinar e pausar).
   acertar(alvo, dano, origem, forcaDoEmpurrao, autor = null) {
     if (alvo.morto) return
-    const agora = this.time.now
-    const danoFinal = autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano
-    const { vida, danoFeito } = aplicarDano(alvo.vida, danoFinal)
+    const agora = this.agora
+    const fortalecido = autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano
+    const golpe = rolarCritico(fortalecido, autor?.chanceDeCritico ?? 0, critico.multiplicador)
+    const { vida, danoFeito } = aplicarDano(alvo.vida, golpe.dano)
     alvo.vida = vida
     alvo.piscar()
-    numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, String(alvo.mostraDanoCheio ? Math.round(danoFinal) : danoFeito))
-    particulas(this, alvo.x, alvo.y, alvo.cor, 8, 220)
+    const numero = String(alvo.mostraDanoCheio ? Math.round(golpe.dano) : danoFeito)
+    if (golpe.critico) {
+      numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, `CRÍTICO ${numero}`, coresDaArena.critico, 26)
+      if (autor?.lider) this.mensagem(`Crítico! ${numero} de dano`, 'critico')
+    } else {
+      numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, numero)
+    }
+    particulas(this, alvo.x, alvo.y, alvo.cor, golpe.critico ? 14 : 8, golpe.critico ? 280 : 220)
     if (forcaDoEmpurrao > 0) alvo.empurrar(vetorDeEmpurrao(origem, alvo, forcaDoEmpurrao), 160)
     alvo.aoApanhar?.(agora)
-    if (vida <= 0 && alvo instanceof Inimigo) this.matarInimigo(alvo)
+    if (alvo instanceof Inimigo) {
+      this.ultimoDano = agora
+      if (vida <= 0) this.derrotarInimigo(alvo)
+    }
+  }
+
+  // Monstro derrotado pelo grupo: o ouro vai para o ouro ganho, e o XP é dividido na hora entre os permanentes de pé
+  // (RF50). Quem passar de nível vê o aviso; o nível novo vale a partir da próxima partida (RF12).
+  derrotarInimigo(inimigo) {
+    const { xp = 0, ouro = 0 } = inimigo.config
+    this.ganhos.ouro += ouro
+    this.ganhos.monstros += 1
+    const membros = this.grupo.map((membro) => ({
+      classe: membro.classe,
+      temporario: membro.membro.temporario,
+      caido: membro.caido,
+      perdido: membro.perdido,
+    }))
+    this.ganhos.xpPorClasse = somarXpDoAbate(this.ganhos.xpPorClasse, xp, membros, this.lider.classe).xpDaPartida
+    if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+    this.matarInimigo(inimigo)
+    this.avisarNiveis()
+  }
+
+  // "Subiu de nível" na hora em que o XP da partida passa de um nível (só dos permanentes, que ganham XP)
+  avisarNiveis() {
+    for (const membro of this.grupo) {
+      if (membro.membro.temporario) continue
+      const { classe } = membro
+      const nivel = nivelComOXpDaPartida({ nivel: membro.membro.nivel, xp: membro.membro.xp ?? 0 }, this.ganhos.xpPorClasse[classe] ?? 0)
+      if (nivel <= (this.niveisAvisados[classe] ?? membro.membro.nivel)) continue
+      this.niveisAvisados[classe] = nivel
+      this.mensagem(`${nomeDaClasse(classe)} subiu para o nível ${nivel}! (vale na próxima partida)`, 'nivel')
+      numeroFlutuante(this, membro.x, membro.y - 56, `NÍVEL ${nivel}!`, coresDaArena.nivel, 24)
+      particulas(this, membro.x, membro.y, 0xffe14a, 14, 240)
+    }
   }
 
   matarInimigo(inimigo) {
@@ -636,7 +736,7 @@ export default class CenaArena extends Phaser.Scene {
   // Quem é do grupo leva o golpe (Líder ou aliado). Não leva quem está caído ou imune depois de apanhar;
   // o Líder também não leva esquivando ou com o Invencível ligado. Frágil leva mais; provocando, menos.
   membroLevaGolpe(membro, dano, origem, forcaDoEmpurrao) {
-    const agora = this.time.now
+    const agora = this.agora
     const protegido =
       membro.caido || agora < membro.fimDaImunidade || (membro.lider && (this.invencivel || agora < this.fimDaEsquiva))
     if (protegido) return 'protegido'
@@ -650,6 +750,7 @@ export default class CenaArena extends Phaser.Scene {
     particulas(this, membro.x, membro.y, membro.cor, 8, 200)
     membro.empurrar(vetorDeEmpurrao(origem, membro, forcaDoEmpurrao), personagem.msDeEmpurrao)
     membro.fimDaImunidade = agora + personagem.msDeImunidade
+    this.ultimoDano = agora
     if (membro.lider) tremerTela(this, 90, 0.004)
     if (vida <= 0) this.desmaiar(membro)
     return 'acertou'
@@ -670,10 +771,11 @@ export default class CenaArena extends Phaser.Scene {
   // Sem vida: desmaia e abre os 30 s. Se era o último de pé, é Derrota na hora.
   desmaiar(membro) {
     membro.cair()
-    membro.caidoDesde = this.time.now
+    membro.caidoDesde = this.agora
     this.houveDesmaio = true
     this.navegador.esquecer(membro)
     numeroFlutuante(this, membro.x, membro.y - 50, 'DESMAIOU', coresDaArena.danoNoLider, 24)
+    this.mensagem(membro.lider ? 'O Líder desmaiou!' : `${nomeDaClasse(membro.classe)} desmaiou`, 'alerta')
     this.verificarFim()
     this.avisarSituacao()
   }
@@ -716,17 +818,19 @@ export default class CenaArena extends Phaser.Scene {
     membro.fimDoFortalecimento = fimDoFortalecimento
     numeroFlutuante(this, membro.x, membro.y - 50, 'DE PÉ!', coresDaArena.numeroDeCura, 24)
     particulas(this, membro.x, membro.y, 0x9dff9d, 12, 220)
+    this.mensagem(`${membro.lider ? 'O Líder' : nomeDaClasse(membro.classe)} está de pé`, 'bom')
     this.avisarSituacao()
   }
 
   // Sem ajuda em 30 s: a Pedra de Retorno leva o personagem ao Reino. Ele vira perdido e sai do mapa,
-  // e o lugar onde caiu fica guardado (a taxa de cada perdido sai da distância, na TASK-048).
+  // e o lugar onde caiu fica guardado (a taxa de cada perdido sai da distância até o ponto inicial, RF48).
   perder(membro) {
     this.perdidos.push({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y) })
     const brilho = this.add.circle(membro.x, membro.y, membro.tamanho, 0x9fd8ff, 0.7).setDepth(camadas.textos - 4)
     this.tweens.add({ targets: brilho, scale: 2.5, alpha: 0, duration: 500, onComplete: () => brilho.destroy() })
     particulas(this, membro.x, membro.y, 0x9fd8ff, 20, 260)
     numeroFlutuante(this, membro.x, membro.y - 50, 'PERDIDO', '#9fd8ff', 24)
+    this.mensagem(`${nomeDaClasse(membro.classe)} foi levado pela Pedra de Retorno: perdido`, 'perdido')
     membro.perdido = true
     membro.escudo?.destruir()
     membro.escudo = null
@@ -737,18 +841,98 @@ export default class CenaArena extends Phaser.Scene {
     this.avisarSituacao()
   }
 
-  // Todos caídos → Derrota; Líder caído há 30 s → Retorno forçado (regras/desmaio.js)
+  // Todos caídos → Derrota; Líder caído há 30 s → Retorno forçado (regras/desmaio.js).
+  // Vale também durante a fuga: se todos caem antes dos 5 s, é Derrota (RF46).
   verificarFim() {
-    const fim = fimPorDesmaio(this.grupo, this.time.now, prazoParaLevantar)
-    if (fim) this.terminar(fim)
+    const fim = fimPorDesmaio(this.grupo, this.agora, prazoParaLevantar)
+    if (fim) this.terminar({ como: fim.como, motivo: fim.motivo })
   }
 
-  terminar({ resultado, motivo }) {
+  // Fim da partida: manda para o React tudo o que as regras da etapa 4 precisam (o React faz as contas e salva).
+  // como: 'retornoNormal' (Q), 'fuga' (F), 'liderNaoLevantado' ou 'todosDesmaiaram'. resultado e motivo: só os
+  // botões de teste forçam. Posições em px da arena; quem está caído agora conta como perdido (RF48).
+  terminar({ como, resultado, motivo }) {
     if (this.terminou) return
     this.terminou = true
     for (const membro of this.grupo) membro.corpo.body?.setVelocity(0, 0)
     for (const inimigo of this.inimigos) inimigo.corpo.body?.setVelocity(0, 0)
-    this.ponte.avisar('fimDaPartida', { resultado, motivo, houveDesmaio: this.houveDesmaio, perdidos: [...this.perdidos] })
+    const lugar = (membro) => ({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y) })
+    this.ponte.avisar('fimDaPartida', {
+      como,
+      resultado,
+      motivo,
+      houveDesmaio: this.houveDesmaio,
+      perdidos: [...this.perdidos],
+      caidosNoFim: this.grupo.filter((membro) => membro.caido).map(lugar),
+      lider: lugar(this.lider),
+      ...lugarDaTaxa,
+      ouroGanho: this.ganhos.ouro,
+      monstros: this.ganhos.monstros,
+      recursos: 0, // a coleta entra na etapa 6
+      xpPorClasse: { ...this.ganhos.xpPorClasse },
+      segundosAtivos: Math.floor(this.msAtivos / 1000),
+      segundosTotais: Math.floor(this.agora / 1000),
+    })
+  }
+
+  // ---------- Em combate, retorno com Q e fuga com F (TASK-040, TASK-041) ----------
+
+  // A cada quadro: em combate (dano nos últimos 5 s ou mob perseguindo), tempo ativo e as contagens do Q e da fuga
+  atualizarAndamento(agora, ms) {
+    const perseguidores = this.inimigos.filter((inimigo) => !inimigo.morto && inimigo.perseguindo).length
+    this.emCombate = estaEmCombate({ agora, ultimoDano: this.ultimoDano, perseguidores }, msDeCombate)
+    this.msAtivos = somarTempoAtivo(this.msAtivos, { agora, ultimoDano: this.ultimoDano, ms }, msDeCombate)
+
+    // Retorno normal: em combate volta a 15 s e espera; fora dele, corre
+    const antes = this.retorno
+    const retorno = avancarRetorno(this.retorno, { emCombate: this.emCombate, ms }, msDoRetorno)
+    this.retorno = retorno.retorno
+    if (antes && !antes.interrompido && this.retorno?.interrompido) this.mensagem('Em combate: o retorno voltou a 15 s', 'alerta')
+    this.avisarAndamento()
+    if (retorno.terminou) {
+      this.terminar({ como: 'retornoNormal' })
+      return
+    }
+
+    // Fuga: corre até em combate; se o Líder cair, continua (o fim por desmaio vem antes, em atualizarDesmaios)
+    const fuga = avancarFuga(this.fuga, ms)
+    this.fuga = fuga.fuga
+    if (fuga.terminou) this.terminar({ como: 'fuga' })
+  }
+
+  // O React precisa saber na hora (não 8 vezes por segundo) quando o grupo entra ou sai de combate: o Esc depende disso
+  avisarAndamento() {
+    const andamento = { emCombate: this.emCombate, retornando: Boolean(this.retorno), fugindo: Boolean(this.fuga) }
+    const chave = JSON.stringify(andamento)
+    if (chave === this.andamentoAvisado) return
+    this.andamentoAvisado = chave
+    this.ponte.avisar('andamento', andamento)
+  }
+
+  // Tecla Q: começa a contagem de 15 s fora de combate; Q de novo cancela (RF45).
+  // "soComecar" (Voltar ao Reino da pausa): nunca cancela uma contagem que já está correndo.
+  alternarRetorno(soComecar = false) {
+    if (soComecar && this.retorno) return
+    const { retorno, aviso } = alternarRetorno(this.retorno, { emCombate: this.emCombate, fugindo: Boolean(this.fuga) }, msDoRetorno)
+    this.retorno = retorno
+    if (aviso === 'cancelado') this.mensagem('Retorno ao Reino cancelado', 'aviso')
+    if (aviso === 'emCombate') this.mensagem('Em combate: não dá para voltar ao Reino agora', 'alerta')
+    this.avisarAndamento()
+  }
+
+  // Fuga confirmada (o segundo F): 5 s, mesmo em combate. Uma por partida; o retorno com Q para (RF46).
+  fugir() {
+    if (this.fuga) return
+    this.fuga = comecarFuga(this.fuga, msDaFuga)
+    this.retorno = null
+    this.mensagem('A Pedra de Retorno vai levar o grupo ao Reino', 'alerta')
+    particulas(this, this.lider.x, this.lider.y, 0x9fd8ff, 16, 240)
+    this.avisarAndamento()
+  }
+
+  // Mensagem curta no HUD (crítico, nível, desmaio, perdido, retorno...). O React mostra e tira depois de 2,5 s.
+  mensagem(texto, tipo = 'aviso') {
+    this.ponte.avisar('mensagem', { texto, tipo })
   }
 
   // Quem vai ajudar quem (o Sacerdote primeiro; o Líder caído primeiro), para a IA dos aliados.
@@ -767,6 +951,16 @@ export default class CenaArena extends Phaser.Scene {
 
   executarComando(comando) {
     if (this.terminou) return
+    // Teclas e pedidos do jogo (não são de teste): Q, Voltar ao Reino da pausa e a fuga confirmada
+    if (comando.tipo === 'alternarRetorno') this.alternarRetorno()
+    if (comando.tipo === 'comecarRetorno') this.alternarRetorno(true)
+    if (comando.tipo === 'fugir') this.fugir()
+    // Barra de teste
+    if (comando.tipo === 'forcarFim') this.forcarFim(comando.resultado)
+    if (comando.tipo === 'testarFoco') this.testarFoco()
+    // Só no npm run dev: mexem no que a partida ganhou (que só vai para o save no fim, pelo caminho normal)
+    if (import.meta.env.DEV && comando.tipo === 'subirNivel') this.subirNivelDeTeste()
+    if (import.meta.env.DEV && comando.tipo === 'ganharOuro') this.ganhos.ouro += testes.ouroDoBotao
     if (comando.tipo === 'trocarClasse') this.trocarClasse(comando.classe)
     if (comando.tipo === 'encherGrupo') this.encherGrupo()
     if (comando.tipo === 'criarInimigo') this.criarInimigoLonge(comando.inimigo)
@@ -779,6 +973,53 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'trocarIA') this.trocarIA(comando.nivel)
     if (this.terminou) return
     this.avisarSituacao()
+  }
+
+  // Os 4 botões de resultado: acabam a partida já, com os números reais dela e o resultado pedido
+  // (a taxa segue o jeito de cada um: Grande Vitória e Vitória pelos perdidos, Retorno forçado como fuga,
+  // Derrota como todos desmaiam)
+  forcarFim(resultado) {
+    const como = comoPeloResultado[resultado]
+    this.terminar({ como, resultado, motivo: `${motivosDoFim[como]} (botão de teste)` })
+  }
+
+  // Botão "Subir nível" (só no npm run dev): cada permanente de pé ganha, na partida, o XP que falta para o próximo
+  // nível. O aviso aparece na hora, e o nível novo vai para o save no fim, como o XP de um monstro.
+  subirNivelDeTeste() {
+    for (const membro of this.grupo) {
+      if (membro.membro.temporario || membro.caido) continue
+      const ganho = this.ganhos.xpPorClasse[membro.classe] ?? 0
+      const falta = xpParaOProximoNivel({ nivel: membro.membro.nivel, xp: membro.membro.xp ?? 0 }, ganho)
+      this.ganhos.xpPorClasse = { ...this.ganhos.xpPorClasse, [membro.classe]: ganho + falta }
+    }
+    this.avisarNiveis()
+  }
+
+  // Situação de teste do momento de foco (pendência da 5b.1): IA avançada para todos, grupo cheio, Líder com 25% da
+  // vida (presa assim por 20 s, para a cura do Sacerdote não acabar com o foco) e Invencível, e 3 mobs perto.
+  // A barra de teste mostra quantas decisões os aliados tomaram em foco e quantas foram erradas.
+  testarFoco() {
+    const { foco } = testes
+    if (this.lider.caido) return
+    this.trocarIA('avancada')
+    this.encherGrupo()
+    this.invencivel = true
+    this.vidaPresaAte = this.agora + foco.msPreso
+    this.lider.vida = Math.max(1, Math.floor(this.lider.vidaMaxima * foco.vidaDoLider))
+    this.contagemDoFoco = { decisoes: 0, erros: 0 }
+    for (let i = 0; i < foco.mobs; i++) {
+      const angulo = ((i - (foco.mobs - 1) / 2) * Math.PI) / 5
+      const ponto = { x: this.lider.x + Math.cos(angulo) * foco.distancia, y: this.lider.y + Math.sin(angulo) * foco.distancia }
+      const inimigo = this.criarInimigo('mobVermelho', ponto)
+      particulas(this, inimigo.x, inimigo.y, inimigo.cor, 12, 200)
+    }
+    this.mensagem('Teste do foco: IA avançada, Líder com 25% da vida por 20 s', 'aviso')
+  }
+
+  // Durante o teste do foco, a vida do Líder não passa de 25%
+  prenderVidaDoTesteDoFoco(agora) {
+    if (agora >= this.vidaPresaAte || this.lider.caido) return
+    this.lider.vida = Math.min(this.lider.vida, Math.max(1, Math.floor(this.lider.vidaMaxima * testes.foco.vidaDoLider)))
   }
 
   // Seletor da barra de teste: pelo nível de cada um → básica → média → avançada → pelo nível...
@@ -838,7 +1079,7 @@ export default class CenaArena extends Phaser.Scene {
   // A zona em volta de cada um afasta todos aos poucos.
   juntarTodos() {
     const ponto = { x: this.lider.x, y: this.lider.y }
-    const separandoAte = this.time.now + 2000
+    const separandoAte = this.agora + 2000
     this.lider.separandoAte = separandoAte
     for (const entidade of [...this.aliados, ...this.inimigos]) {
       entidade.colocarEm(ponto.x, ponto.y)
@@ -872,7 +1113,7 @@ export default class CenaArena extends Phaser.Scene {
 
   avisarSituacao() {
     if (this.terminou) return
-    const agora = this.time.now
+    const agora = this.agora
     const lider = this.lider
     const recargaDe = (membro, indice) => {
       const habilidade = membro.habilidades[indice]
@@ -909,7 +1150,18 @@ export default class CenaArena extends Phaser.Scene {
       invencivel: this.invencivel,
       aliadosAjudam: this.aliadosAjudam,
       iaForcada: this.iaForcada,
-      emFoco: this.focoAte > agora,
+      // O foco só existe na IA avançada: o HUD mostra "Foco!" quando algum aliado de pé está nela
+      emFoco: this.focoAte > agora && this.aliados.some((aliado) => !aliado.caido && this.perfilDaIA(aliado).id === 'avancada'),
+      contagemDoFoco: { ...this.contagemDoFoco },
+      // Andamento e números da partida (5c)
+      tempo: Math.floor(agora / 1000),
+      pontuacao: pontuacaoBase({ monstros: this.ganhos.monstros, ouroGanho: this.ganhos.ouro, segundosAtivos: Math.floor(this.msAtivos / 1000) }),
+      ouroGanho: this.ganhos.ouro,
+      monstros: this.ganhos.monstros,
+      custoDaFuga: custoDaFuga({ lider, inicio, ouroGanho: this.ganhos.ouro }, combateDeTeste.distanciaAteABorda),
+      emCombate: this.emCombate,
+      retorno: this.retorno && { segundos: segundosDaContagem(this.retorno.msRestantes), interrompido: this.retorno.interrompido },
+      fuga: this.fuga && { segundos: segundosDaContagem(this.fuga.msRestantes) },
       fps: Math.round(this.game.loop.actualFps),
       tamanhoDoGrupo: this.grupo.length,
       inimigos: this.inimigos.length,

@@ -125,7 +125,8 @@ Como jogador, quero controlar som e tema a qualquer momento, inclusive no meio d
 Critérios de aceite:
 - Funciona antes do login.
 - Música e Som têm liga/desliga separados.
-- Na partida, as Configurações abrem sem pausar, sem as opções de conta, e M muta o jogo.
+- Na partida, as Configurações abrem sem pausar, sem as opções de conta, e M muta o jogo (até em combate).
+- O mudo não apaga a minha escolha de Música e Som, e o HUD mostra se está mudo.
 - Requisitos atendidos: RF14, RF18.
 
 ### HU15 · Gerenciar Mochila (UC15)
@@ -354,7 +355,8 @@ Critérios de aceite:
 Como jogador, quero fugir mesmo em combate, sabendo antes quanto vai custar.
 
 Critérios de aceite:
-- F mostra o custo e um segundo F confirma.
+- F mostra o custo e um segundo F confirma; Esc cancela o aviso.
+- Confirmada, a fuga não se cancela; se só o Líder cair, ela continua.
 - O resultado aparece como Retorno forçado.
 - Requisitos atendidos: RF46.
 
@@ -365,7 +367,8 @@ Como jogador, quero que a partida termine com um resultado claro e justo.
 Critérios de aceite:
 - Resultados: Grande Vitória, Vitória, Retorno forçado ou Derrota.
 - XP e itens coletados são sempre mantidos.
-- Requisitos atendidos: RF12, RF47, RF48, RF49, RF50, RF52.
+- Quando um personagem sobe de nível, eu vejo na hora; o nível novo vale a partir da próxima partida.
+- Requisitos atendidos: RF12, RF47, RF48, RF49, RF50, RF52, RF55.
 
 ### HU42 · Visualizar resumo da partida (UC42)
 
@@ -399,5 +402,8 @@ Decisões tomadas durante a programação (outubro de 2026). Os critérios acima
 - **HU43:** o minijogo volta ao Mapa.
 - **HU31:** a IA dos aliados melhora com o nível de cada um; só o Líder esquiva; parados, os aliados não tremem.
 - **HU37:** "área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha.
+- **HU14:** o mudo (tecla M) não apaga a escolha de Música e Som.
+- **HU40:** confirmada, a fuga não se cancela.
+- **HU41:** o nível ganho na partida vale a partir da partida seguinte.
 
 O motivo de cada mudança está na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

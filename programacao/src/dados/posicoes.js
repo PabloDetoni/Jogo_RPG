@@ -133,11 +133,10 @@ export const posicoes = {
     voltarAoMapa: { x: 27, y: 90 },
   },
   // HUD (faixa de cima) e barra de teste (faixa de baixo) têm a altura de dados/arenaDeTeste.js.
-  // Configurações fica dentro da faixa do HUD, à direita, para não cobrir a área jogável.
+  // Configurações fica dentro da faixa do HUD, no canto direito (menor que nas outras telas), para não cobrir a área
+  // jogável. As contagens do Q e da fuga e as mensagens ficam logo abaixo do HUD (HudDaPartida.jsx).
   partida: {
-    configuracoes: { x: 92.5, y: 5.3 },
-    retorno: { x: 50, y: 14 },
-    cancelarRetorno: { x: 50, y: 20 },
+    configuracoes: { x: 94.8, y: 5.3 },
   },
   cutsceneDerrota: {
     mensagem: { x: 50, y: 45 },

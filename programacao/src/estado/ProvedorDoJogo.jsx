@@ -52,10 +52,16 @@ export default function ProvedorDoJogo({ children }) {
     salvarPreferencias(armazenamento, estado.preferencias)
   }, [armazenamento, estado.preferencias])
 
-  // Esc funciona em qualquer tela.
+  // Esc funciona em qualquer tela. M liga e desliga o mudo a qualquer momento, até em combate (RF18),
+  // menos enquanto se digita num campo de texto (o "m" de um e-mail não pode mutar o jogo).
   useEffect(() => {
     function aoApertarTecla(evento) {
       if (evento.key === 'Escape') despachar({ tipo: 'esc' })
+      const digitando = evento.target instanceof HTMLElement && evento.target.matches('input, textarea, select, [contenteditable="true"]')
+      const comAtalho = evento.ctrlKey || evento.altKey || evento.metaKey
+      if (evento.key.toLowerCase() === 'm' && !digitando && !comAtalho && !evento.repeat) {
+        despachar({ tipo: 'alternarPreferencia', chave: 'mudo' })
+      }
     }
     window.addEventListener('keydown', aoApertarTecla)
     return () => window.removeEventListener('keydown', aoApertarTecla)
@@ -112,13 +118,17 @@ export default function ProvedorDoJogo({ children }) {
       escolherLider: (classe) => despachar({ tipo: 'escolherLider', classe }),
       comecarPartida: () => despachar({ tipo: 'comecarPartida', agora: new Date().toISOString() }),
       iniciarRetorno: () => despachar({ tipo: 'iniciarRetorno' }),
-      cancelarRetorno: () => despachar({ tipo: 'cancelarRetorno' }),
-      contarRetorno: () => despachar({ tipo: 'contarRetorno' }),
-      encerrarPartida: (resultado, detalhes) => despachar({ tipo: 'encerrarPartida', resultado, detalhes }),
+      atualizarAndamento: (andamento) => despachar({ tipo: 'atualizarAndamento', andamento }),
+      pedirFuga: (custo) => despachar({ tipo: 'pedirFuga', custo }),
+      confirmarFuga: () => despachar({ tipo: 'confirmarFuga' }),
+      encerrarPartida: (fim) => despachar({ tipo: 'encerrarPartida', fim }),
       alternarPreferencia: (chave) => despachar({ tipo: 'alternarPreferencia', chave }),
 
-      // Painel de desenvolvimento
+      // Painel de desenvolvimento (só no npm run dev; mexem no save só fora da partida)
       salvarAgora,
+      devContratarTodas: () => despachar({ tipo: 'devContratarTodas' }),
+      devMudarNivel: (classe, quantos) => despachar({ tipo: 'devMudarNivel', classe, quantos }),
+      devQuaseSubir: (classe) => despachar({ tipo: 'devQuaseSubir', classe }),
       apagarProgressoDoConvidado: () => {
         salvador.apagar()
         window.location.reload()

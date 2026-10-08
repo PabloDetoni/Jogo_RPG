@@ -108,11 +108,16 @@ export function pensarAliados(cena, agora) {
   }
 }
 
-// A cada poucos segundos (um pouco diferente para cada um), sorteia os erros do momento
-function decidir(aliado, perfil, { agora, emFoco }) {
+// A cada poucos segundos (um pouco diferente para cada um), sorteia os erros do momento.
+// Em foco (só a avançada tem), conta as decisões e os erros (a barra de teste mostra, no "Testar foco").
+function decidir(aliado, perfil, { cena, agora, emFoco }) {
   if (agora < (aliado.ia.proximaDecisao ?? 0)) return
   aliado.ia.proximaDecisao = agora + ia.msEntreDecisoes * (0.8 + Math.random() * 0.4)
   aliado.ia.errou = sortear(chanceDeErro(perfil.nivel, { emFoco }))
+  if (emFoco && perfil.id === 'avancada') {
+    cena.contagemDoFoco.decisoes++
+    if (aliado.ia.errou) cena.contagemDoFoco.erros++
+  }
   // O Tanque da IA média ainda erra como na básica
   aliado.ia.tanqueErra = perfil.id === 'media' ? sortear(chanceDeErro(perfil.nivel, { comoBasica: true })) : aliado.ia.errou
   aliado.ia.sacerdoteAtras = perfil.id === 'media' && sortear(ia.chanceDoSacerdoteAtras)

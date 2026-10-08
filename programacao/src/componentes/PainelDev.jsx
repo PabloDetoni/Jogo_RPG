@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react'
+import { nomeDaClasse } from '../dados/classes.js'
 import { telas } from '../dados/telas.js'
 import { useInfoDoSalvamento, useJogo } from '../estado/contexto.js'
 import { proximoTipoJogador } from '../estado/estadoDoJogo.js'
+import { nivelDaIA, nomeDoNivelDaIA } from '../regras/nivelDaIA.js'
+import { xpParaSubir } from '../regras/xp.js'
 
 const grupos = [...new Set(Object.values(telas).map((tela) => tela.grupo))]
 
@@ -135,7 +138,50 @@ export default function PainelDev() {
       <button type="button" onClick={apagarProgresso}>
         Apagar progresso do convidado
       </button>
+      <Personagens />
     </aside>
+  )
+}
+
+// Para testar a IA mudando com o nível (5c): personagens do save com nível, XP e IA, e botões que mexem no save.
+// Só fora da partida: durante ela o progresso não muda (RF12); o XP ganho na partida entra no fim.
+function Personagens() {
+  const { estado, acoes } = useJogo()
+  const { personagens } = estado.progresso
+  const naPartida = Boolean(estado.partidaAtual)
+  if (estado.tipoJogador === 'nenhum') return null
+
+  return (
+    <details className="painel-dev-personagens">
+      <summary>Personagens do save ({personagens.length})</summary>
+      {naPartida && <span>Só fora da partida (o save não muda durante ela).</span>}
+      <button type="button" onClick={acoes.devContratarTodas} disabled={naPartida || personagens.length >= 5}>
+        Contratar todas as classes (permanentes, de graça)
+      </button>
+      {personagens.map((personagem) => (
+        <div key={personagem.classe} className="painel-dev-personagem">
+          <span>
+            {nomeDaClasse(personagem.classe)}: nível {personagem.nivel} (
+            {Number.isFinite(xpParaSubir(personagem.nivel)) ? `${personagem.xp}/${xpParaSubir(personagem.nivel)} XP` : 'máximo'}) · IA{' '}
+            {nomeDoNivelDaIA(nivelDaIA(personagem.nivel))}
+          </span>
+          <span>
+            <button type="button" disabled={naPartida} onClick={() => acoes.devMudarNivel(personagem.classe, -1)}>
+              −1
+            </button>
+            <button type="button" disabled={naPartida} onClick={() => acoes.devMudarNivel(personagem.classe, 1)}>
+              +1
+            </button>
+            <button type="button" disabled={naPartida} onClick={() => acoes.devMudarNivel(personagem.classe, 10)}>
+              +10
+            </button>
+            <button type="button" disabled={naPartida} onClick={() => acoes.devQuaseSubir(personagem.classe)} title="Fica a 1 XP do próximo nível">
+              Quase subir
+            </button>
+          </span>
+        </div>
+      ))}
+    </details>
   )
 }
 

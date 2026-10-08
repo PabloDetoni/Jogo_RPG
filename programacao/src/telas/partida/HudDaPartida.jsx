@@ -1,12 +1,14 @@
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
 import { corDaClasseCss, nomeDaClasse } from '../../dados/classes.js'
 import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
+import { relogio } from './formato.js'
 
-// HUD da partida (React, por cima do Phaser): uma faixa no topo, fora da área jogável (ninguém anda embaixo dela).
-// Linha de cima: o Líder (vida, mana), o ataque, a esquiva e as habilidades das teclas 1 a 3, com a recarga.
-// Linha de baixo: os aliados (vida, caído com a contagem dos 30 s, frágil), os perdidos e o aviso do Líder caído.
+// HUD da partida (RF53, TASK-049; React, por cima do Phaser): uma faixa no topo, fora da área jogável.
+// À esquerda, duas linhas: o Líder (vida, mana, ataque, esquiva e as teclas 1 a 3 com a recarga) e o grupo (vida, IA,
+// caído com a contagem dos 30 s, frágil, perdidos). No meio, os números da partida: tempo, pontuação, ouro ganho,
+// custo da fuga, "em combate", foco e o mudo. Depois, o lugar reservado do minimapa e da região (etapa 6).
 // Recebe a "situação" que o Phaser manda 8 vezes por segundo pela ponte.
-export default function HudDaPartida({ situacao }) {
+export default function HudDaPartida({ situacao, mudo = false }) {
   const estilo = { height: emCqw(faixas.hud) }
   if (!situacao) {
     return (
@@ -18,44 +20,104 @@ export default function HudDaPartida({ situacao }) {
 
   return (
     <div className="hud" style={estilo}>
-      <div className="hud-linha">
-        <div className="hud-classe">
-          <span className="hud-cor" style={{ background: corDaClasseCss(situacao.classe) }} />
-          Líder: {nomeDaClasse(situacao.classe)}
+      <div className="hud-principal">
+        <div className="hud-linha">
+          <div className="hud-classe">
+            <span className="hud-cor" style={{ background: corDaClasseCss(situacao.classe) }} />
+            Líder: {nomeDaClasse(situacao.classe)}
+          </div>
+          <Medidor nome="Vida" fracao={situacao.vida / situacao.vidaMaxima} texto={`${situacao.vida} / ${situacao.vidaMaxima}`} tipo="vida" />
+          <Medidor nome="Mana" fracao={situacao.mana / situacao.manaMaxima} texto={`${situacao.mana} / ${situacao.manaMaxima}`} tipo="mana" />
+          <Espaco tecla="Clique" nome="Ataque" recarga={situacao.recargaDoAtaque} />
+          <Espaco tecla="Espaço" nome="Esquiva" recarga={situacao.recargaDaEsquiva} />
+          {situacao.habilidades.map((habilidade, indice) => (
+            <Espaco
+              key={indice}
+              tecla={String(indice + 1)}
+              nome={habilidade?.nome ?? 'vazio'}
+              custo={habilidade?.custo}
+              recarga={habilidade ? habilidade.recarga : null}
+              semMana={habilidade?.semMana}
+            />
+          ))}
         </div>
-        <Medidor nome="Vida" fracao={situacao.vida / situacao.vidaMaxima} texto={`${situacao.vida} / ${situacao.vidaMaxima}`} tipo="vida" />
-        <Medidor nome="Mana" fracao={situacao.mana / situacao.manaMaxima} texto={`${situacao.mana} / ${situacao.manaMaxima}`} tipo="mana" />
-        <Espaco tecla="Clique" nome="Ataque" recarga={situacao.recargaDoAtaque} />
-        <Espaco tecla="Espaço" nome="Esquiva" recarga={situacao.recargaDaEsquiva} />
-        {situacao.habilidades.map((habilidade, indice) => (
-          <Espaco
-            key={indice}
-            tecla={String(indice + 1)}
-            nome={habilidade?.nome ?? 'vazio'}
-            custo={habilidade?.custo}
-            recarga={habilidade ? habilidade.recarga : null}
-            semMana={habilidade?.semMana}
-          />
-        ))}
+        <div className="hud-linha">
+          <span className="hud-rotulo">Grupo:</span>
+          {situacao.aliados.length === 0 && <span className="hud-rotulo">só o Líder</span>}
+          {situacao.aliados.map((aliado, indice) => (
+            <Aliado key={indice} aliado={aliado} />
+          ))}
+          {situacao.perdidos.map((classe, indice) => (
+            <span key={`perdido-${indice}`} className="hud-aliado hud-perdido">
+              <span className="hud-cor" style={{ background: corDaClasseCss(classe) }} />
+              {nomeDaClasse(classe)}: perdido
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="hud-linha">
-        <span className="hud-rotulo">Grupo:</span>
-        {situacao.aliados.length === 0 && <span className="hud-rotulo">só o Líder</span>}
-        {situacao.aliados.map((aliado, indice) => (
-          <Aliado key={indice} aliado={aliado} />
-        ))}
-        {situacao.perdidos.map((classe, indice) => (
-          <span key={`perdido-${indice}`} className="hud-aliado hud-perdido">
-            <span className="hud-cor" style={{ background: corDaClasseCss(classe) }} />
-            {nomeDaClasse(classe)}: perdido
+
+      <div className="hud-numeros">
+        <div className="hud-linha">
+          <Numero nome="Tempo" valor={relogio(situacao.tempo)} />
+          <Numero nome="Pontos" valor={situacao.pontuacao} />
+          <Numero nome="Ouro" valor={situacao.ouroGanho} />
+        </div>
+        <div className="hud-linha" title="Taxa da fuga pela posição do Líder agora, e quanto ela tira do ouro ganho">
+          <span className="hud-fuga">
+            Fuga (F): <strong>{situacao.custoDaFuga.taxa}%</strong> · {situacao.custoDaFuga.ouro} de ouro
           </span>
-        ))}
-        {situacao.caido && (
-          <span className="hud-alerta">O Líder desmaiou: {situacao.segundosParaLevantar} s para ser levantado</span>
-        )}
-        {situacao.emFoco && <span className="hud-foco">Foco!</span>}
+        </div>
+        <div className="hud-linha">
+          <span className={`hud-selo ${situacao.emCombate ? 'hud-combate' : 'hud-calmo'}`}>
+            {situacao.emCombate ? 'Em combate' : 'Fora de combate'}
+          </span>
+          {situacao.emFoco && <span className="hud-selo hud-foco">Foco!</span>}
+          <span className={`hud-selo ${mudo ? 'hud-mudo' : 'hud-som'}`} title="M liga e desliga o mudo">
+            {mudo ? 'Mudo (M)' : 'Som (M)'}
+          </span>
+        </div>
+      </div>
+
+      {/* Reservado para a etapa 6: o minimapa e o nome da região */}
+      <div className="hud-minimapa" aria-label="Minimapa (etapa 6)">
+        <span>Minimapa</span>
+        <span className="hud-regiao">Região: —</span>
       </div>
     </div>
+  )
+}
+
+// Contagens e avisos logo abaixo do HUD, no meio: retorno (Q), fuga (F), Líder caído e as mensagens curtas
+// (crítico, nível, desmaio, perdido, "não pode pausar"...). Não pegam o clique: o jogo continua embaixo.
+export function AvisosDaPartida({ situacao, mensagens }) {
+  return (
+    <div className="avisos-da-partida" style={{ top: emCqw(faixas.hud + 10) }} aria-live="polite">
+      {situacao?.fuga && <div className="faixa-da-partida faixa-fuga">Fugindo com a Pedra de Retorno em {situacao.fuga.segundos} s</div>}
+      {situacao?.retorno && (
+        <div className={`faixa-da-partida${situacao.retorno.interrompido ? ' faixa-alerta' : ''}`}>
+          {situacao.retorno.interrompido
+            ? `Em combate: o retorno espera (${situacao.retorno.segundos} s)`
+            : `Voltando ao Reino em ${situacao.retorno.segundos} s`}{' '}
+          · Q cancela
+        </div>
+      )}
+      {situacao?.caido && (
+        <div className="faixa-da-partida faixa-alerta">O Líder desmaiou: {situacao.segundosParaLevantar} s para ser levantado</div>
+      )}
+      {mensagens.map((mensagem) => (
+        <div key={mensagem.id} className={`mensagem-da-partida mensagem-${mensagem.tipo}`}>
+          {mensagem.texto}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Numero({ nome, valor }) {
+  return (
+    <span className="hud-numero">
+      <span className="hud-rotulo">{nome}</span> <strong>{valor}</strong>
+    </span>
   )
 }
 
@@ -92,15 +154,22 @@ function Espaco({ tecla, nome, custo, recarga, semMana }) {
   )
 }
 
+// Aliado em duas linhas: cor, nome e estado em cima; a IA e a vida embaixo
 function Aliado({ aliado }) {
   const estado = aliado.caido ? `caído: ${aliado.segundosParaLevantar} s` : aliado.fragil ? 'frágil' : null
   return (
     <span className={`hud-aliado${aliado.caido ? ' hud-aliado-caido' : ''}`}>
       <span className="hud-cor" style={{ background: corDaClasseCss(aliado.classe) }} />
-      {nomeDaClasse(aliado.classe)}
-      {aliado.ia && <span className="hud-ia">IA {nomeDoNivelDaIA(aliado.ia)}</span>}
-      {!aliado.caido && <Barra fracao={aliado.vida / aliado.vidaMaxima} />}
-      {estado && <span className="hud-estado">{estado}</span>}
+      <span className="hud-aliado-texto">
+        <span>
+          {nomeDaClasse(aliado.classe)}
+          {estado && <span className="hud-estado"> {estado}</span>}
+        </span>
+        <span className="hud-aliado-baixo">
+          {aliado.ia && <span className="hud-ia">IA {nomeDoNivelDaIA(aliado.ia)}</span>}
+          {!aliado.caido && <Barra fracao={aliado.vida / aliado.vidaMaxima} />}
+        </span>
+      </span>
     </span>
   )
 }

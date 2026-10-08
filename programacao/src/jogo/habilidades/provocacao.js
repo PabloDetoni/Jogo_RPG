@@ -6,7 +6,7 @@ const config = combateDeTeste.habilidades.tanque
 // Provocação (Tanque, provisória): por alguns segundos, os mobs no raio vão no Tanque (a escolha do alvo
 // está em regras/iaDosAliados.js) e ele leva só parte do dano.
 export function provocar(cena, tanque) {
-  tanque.provocandoAte = cena.time.now + config.msDeDuracao
+  tanque.provocandoAte = cena.agora + config.msDeDuracao
   const anel = cena.add
     .circle(tanque.x, tanque.y, config.raio, 0xff4d4d, 0.12)
     .setStrokeStyle(4, 0xff4d4d, 0.9)

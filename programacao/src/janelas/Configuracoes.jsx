@@ -3,8 +3,8 @@ import Janela from '../componentes/Janela.jsx'
 import { telas } from '../dados/telas.js'
 import { useJogo } from '../estado/contexto.js'
 
-// Configurações (RF18). Música e som só mudam o botão por enquanto; o tema já troca o cinza
-// das telas e janelas. As três ficam salvas no navegador e valem antes do login.
+// Configurações (RF18). Música, som e mudo só mudam o botão por enquanto (ainda não há som); o tema já troca o cinza
+// das telas e janelas. Todos ficam salvos no navegador e valem antes do login. O mudo também liga e desliga com M.
 export default function Configuracoes() {
   const { estado, acoes } = useJogo()
   const { tipoJogador, preferencias } = estado
@@ -41,6 +41,9 @@ export default function Configuracoes() {
           Som: {preferencias.som ? 'ligado' : 'desligado'}
         </Botao>
       </div>
+      <Botao selecionado={preferencias.mudo} onClick={() => acoes.alternarPreferencia('mudo')}>
+        Mudo (tecla M): {preferencias.mudo ? 'sim' : 'não'}
+      </Botao>
 
       <h3>Tema</h3>
       <Botao onClick={() => acoes.alternarPreferencia('tema')}>Tema: {preferencias.tema}</Botao>

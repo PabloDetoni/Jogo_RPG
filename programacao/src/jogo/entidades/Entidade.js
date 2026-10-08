@@ -83,7 +83,7 @@ export default class Entidade {
   // Pisca branco por um instante ao levar um golpe
   piscar() {
     this.quadrado.setFillStyle(0xffffff)
-    this.fimDoPiscar = this.cena.time.now + 80
+    this.fimDoPiscar = this.cena.agora + 80
   }
 
   // Empurrão: a velocidade vira o vetor dado por alguns milissegundos, e o controle volta depois
@@ -91,7 +91,7 @@ export default class Entidade {
     if (!this.podeSerEmpurrado || !this.corpo.body) return
     this.vetorDoEmpurrao = { x: vetor.x, y: vetor.y }
     this.corpo.body.setVelocity(vetor.x, vetor.y)
-    this.fimDoEmpurrao = this.cena.time.now + ms
+    this.fimDoEmpurrao = this.cena.agora + ms
   }
 
   estaSendoEmpurrado(agora) {

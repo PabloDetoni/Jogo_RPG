@@ -1,4 +1,5 @@
 import ComoJogar from './ComoJogar.jsx'
+import ConfirmarFuga from './ConfirmarFuga.jsx'
 import Configuracoes from './Configuracoes.jsx'
 import Pausa from './Pausa.jsx'
 
@@ -7,4 +8,5 @@ export const componentesDasJanelas = {
   configuracoes: Configuracoes,
   pausa: Pausa,
   comoJogar: ComoJogar,
+  confirmarFuga: ConfirmarFuga,
 }

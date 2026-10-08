@@ -1,6 +1,6 @@
 # Plano até a entrega (03/12/2026)
 
-Atualizado em 07/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`) e ajustes da 5a + parte 5b (`e0c8d93`) no GitHub. Parte 5b.1 (IA dos aliados em três níveis, sem tremor e com linha de tiro) feita, esperando o teste visual do Pablo e o commit. Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
+Atualizado em 07/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5a + parte 5b (`e0c8d93`) e parte 5b.1 (`55a6025`) no GitHub. Parte 5c (pausa, Q, F, fim com números reais e HUD completo) feita, esperando o teste visual do Pablo e o commit. Os roteiros de teste manual e o registro dos testes ficam na pasta [`testes/`](testes/). Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
 
 **Regra deste plano:** cumprir todos os requisitos da pasta `documentacao`. A auditoria sugere cortes (seção 12 dela), mas cortar uma funcionalidade é deixar de cumprir um requisito. Por isso, aqui os cortes só entram se o grupo decidir, e o que for cortado vai para o Conceito como "fora do beta".
 
@@ -94,7 +94,16 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - Pedras coladas em L na arena e botão "Juntar todos".
   - Painel de desenvolvimento minimizável ("</> DEV").
   - Roteiro do navegador no repositório: `npm run testar:navegador` (116 conferências; cada rodada usa uma porta livre e fecha o próprio Edge).
-- **Parte 5b.1, ajustes da IA dos aliados (07/10):** FEITO, esperando o teste visual do Pablo.
+- **Parte 5c, a última da partida (07/10):** FEITO, esperando o teste visual do Pablo.
+  - **TASK-040 (em combate, pausa e Q):** em combate = dano nos últimos 5 s ou um mob perseguindo o grupo. Esc em combate mostra "Você não pode pausar agora". Q fora de combate começa os 15 s, Q de novo cancela, e o combate faz a contagem voltar a 15 s. O "Voltar ao Reino" da pausa usa a mesma contagem.
+  - **TASK-041 (fuga com F):** o primeiro F mostra o custo atual (taxa e ouro), o segundo confirma e Esc cancela. São 5 s, mesmo em combate; se o Líder cair, continua; se todos caírem, é Derrota. Confirmada, não se cancela.
+  - **TASK-048 (fim com números reais):** os mobs dão XP e ouro; o fim chama as regras da etapa 4 (resultado, taxa com perdidos e caídos, pontuação, XP). O save recebe ouro, XP, níveis, pontos, monstros e a partida. O Resumo mostra tudo.
+  - **TASK-049 (HUD completo):** tempo, pontuação, ouro ganho, custo da fuga, "em combate", foco e mudo, com o lugar do minimapa reservado. As mensagens curtas (crítico, nível, desmaio, perdido, "não pode pausar", retorno) ficam abaixo do HUD. Cabe em 1366×768. Tecla M: mudo.
+  - **Relógio da partida:** para na pausa e com a aba escondida (antes, os 30 s do desmaio e as recargas continuavam correndo na pausa).
+  - **Crítico:** 5% + 0,5% por ponto de Agilidade, dano ×1,5.
+  - **Pendência da 5b.1:** botão "Testar foco" na barra de teste.
+  - **TEST-004:** regras novas com testes (`regras/andamentoDaPartida.js`, `regras/ganhosDaPartida.js`, `montarFimDaPartida`) e o roteiro do navegador com os 4 resultados de verdade e os casos de limite.
+- **Parte 5b.1, ajustes da IA dos aliados (07/10):** FEITO, teste visual do Pablo e commit `55a6025`.
   - **Sem tremor:** parados, os aliados param em qualquer ponto de uma zona confortável em volta do Líder e só voltam a andar quando ele se afasta além de uma folga. Também têm um detector de tremor e dão passagem ao Líder.
   - **Separação:** só age quando dois corpos se encostam.
   - **Linha de tiro:** Arqueiro e Mago não atiram na pedra de propósito; trocam de alvo ou vão para um lugar livre.
@@ -112,12 +121,11 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 - **Provisório na partida (anotado para não esquecer):**
   - **Habilidades de teste na tecla 1, até a TASK-010 (19/10):** Giro (Guerreiro), Tiro perfurante (Arqueiro; atravessa os inimigos e para em pedra), Meteoro (Mago) e Provocação (Tanque). A Ressurreição do Sacerdote vem da documentação, mas os números dela são provisórios. As teclas 2 e 3 ficam vazias. Trocar em `src/dados/habilidades.js` e `src/jogo/habilidades/`.
   - **Todos os números novos** (mana, IA, desmaio, separação, travamento) estão no `balanceamento.js` e no `Balanceamento.md`. A área limpa de 250 px foi aprovada pelo Pablo, mas o valor é provisório.
-  - **Fim da partida sem números reais até a TASK-048:** Retorno forçado e Derrota já saem do desmaio, mas a taxa dos perdidos ainda não é cobrada. Os perdidos (com o lugar onde caíram) e o "houve desmaio" já chegam ao Resumo para a TASK-048 usar.
-  - **HUD:** parte da TASK-049 foi adiantada (mana, habilidades e grupo). Tempo, pontuação, ouro, custo da fuga e minimapa vêm na 5c.
-  - **Pausa a qualquer hora** (ainda sem "em combate") até a TASK-040.
-  - **IA dos aliados (5b.1):** as faixas de nível, as chances de erro, a zona confortável, o tremor, o foco e o recuo são números provisórios do `balanceamento.js`. O momento de foco ainda precisa de uma situação de teste própria (combinado com o Pablo). Os personagens do save estão todos no nível 1, então, sem o seletor, a IA é sempre a básica até existir XP na partida (TASK-048).
-  - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "IA: pelo nível/básica/média/avançada", "Invencível" só para o Líder e os 4 resultados) até a TASK-048 e a TASK-049. Quando ela sair, a faixa de baixo volta a ser área jogável.
-- **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** A FAZER na parte 5c.
+  - **5c (aprovados pelo Pablo em 07/10, mas provisórios):** XP e ouro dos mobs de teste (mob vermelho 20 XP e 12 de ouro; atirador 25 e 15), a borda da arena a 1400 px do ponto inicial (até a etapa 6), o crítico (5% + 0,5% por Agilidade, ×1,5) e o tempo das mensagens do HUD (2,5 s). Os 5 s de "em combate", os 15 s do Q e os 5 s da fuga vêm da documentação (`dados/regras.js`).
+  - **IA dos aliados (5b.1):** as faixas de nível, as chances de erro, a zona confortável, o tremor, o foco e o recuo são números provisórios do `balanceamento.js`. Com o XP da 5c, a IA de cada aliado segue o nível dele; o nível ganho vale a partir da partida seguinte.
+  - **Minimapa e região:** o lugar no HUD está reservado, sem conteúdo, até a etapa 6. Recursos coletados e itens da partida ficam em zero até a etapa 6 e a TASK-047.
+  - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "IA: pelo nível/básica/média/avançada", "Invencível" só para o Líder, "Testar foco" e os 4 resultados, que agora usam os números reais da partida). Só no `npm run dev`: "Subir nível" e "+300 de ouro", que mexem no que a partida ganhou, e, no painel `</> DEV`, os personagens do save (contratar todas as classes, nível −1/+1/+10 e "Quase subir"), que só funcionam fora da partida. No build do jogo, nada disso existe. Quando a barra sair, a faixa de baixo volta a ser área jogável.
+- **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** FEITO na parte 5c (07/10), esperando o teste visual do Pablo.
 TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
@@ -182,11 +190,11 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 ## 4. Próximos passos, em ordem
 
 **Comigo:**
-1. Esperar o teste visual da 5b.1 (IA dos aliados) e ajustar o que o Pablo pedir.
-2. Fase 1, parte 5c: "em combate", pausa e retorno com Q (TASK-040), fuga com F (TASK-041), fim da partida com números reais (TASK-048), HUD completo e tecla M (TASK-049) e o roteiro dos 4 resultados (TEST-004). Antes de programar, mostro o plano curto.
+1. Esperar o teste visual da 5c e ajustar o que o Pablo pedir.
+2. Fechar a Fase 1: contratos na Guilda (TASK-079), pentágono dos atributos (TASK-071) e DOC-003 (ataques de clique, esquiva e cores). Antes de programar, mostro o plano curto.
 
 **Com vocês**, já:
-- fazer o teste visual da 5b.1 (roteiro no relatório) e autorizar o commit;
+- fazer o teste visual da 5c (roteiro no relatório e em `testes/Roteiros.md`) e autorizar o commit;
 - criar o quadro no Trello (TASK-003);
 - perguntar ao professor o formato dos protótipos e se haverá apresentação (TASK-120);
 - criar o projeto de teste no Supabase para a prova do e-mail (TASK-090);
@@ -208,6 +216,9 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 | 10 | HUD | **DECIDIDO (06/10):** faixa no topo, fora da área jogável (ninguém anda embaixo dele) |
 | 11 | Nível da IA dos aliados | **DECIDIDO (07/10):** pelo nível de cada personagem (básica 1–29, média 30–69, avançada 70–100), decidido pelo jogo. **Sem opção nas Configurações**: o jogador nunca escolhe (só a barra de teste força, para testar). Momentos de foco na avançada: sim |
 | 12 | Esquiva | **DECIDIDO (07/10):** só o Líder esquiva; os aliados, no máximo, recuam andando do golpe avisado (avançada) |
+| 13 | Números da 5c | **DECIDIDO (07/10):** crítico de 5% + 0,5% por ponto de Agilidade (×1,5); XP e ouro dos mobs de teste; borda da arena a 1400 px; os 5 s de "em combate" ficam em `dados/regras.js`, porque vêm do RF37 |
+| 14 | Fuga e tempo ativo | **DECIDIDO (07/10):** confirmada, a fuga não se cancela, e o aviso dela não pausa. O tempo ativo segue o Conceito §12: só o tempo com dano nos últimos 5 s (ser perseguido sem dano não conta) |
+| 15 | Ferramentas de teste | **DECIDIDO (07/10):** o que mexe no save fica no painel `</> DEV` (só no `npm run dev` e só fora da partida); na barra de teste, "Subir nível" e "+ouro" só aparecem no `npm run dev` e mexem só no que a partida ganhou |
 
 ## 6. Decisões levadas para a documentação (DOC-001, feito em 06/10)
 
@@ -229,6 +240,11 @@ Todas as decisões abaixo já estão nos Requisitos, nos Casos de Uso, nas Hist�
   - "Acima do mínimo" quer dizer maior que o mínimo.
   - O XP guardado é o XP dentro do nível atual.
   - O atributo máximo é 100, com a curva de efeito.
+- **Etapa 5, parte 5c (07/10):**
+  - O mudo (tecla M) é separado da Música e do Som e não vale digitando num campo (RF18, UC14, HU14).
+  - Confirmada, a fuga não se cancela (RF46, UC40, HU40).
+  - O nível ganho na partida vale a partir da partida seguinte (RF12, RF55, UC41, HU41).
+  - No Conceito, a seção 21.5 ganhou: pausa, retorno e fuga; mudo; nível ganho; crítico.
 - **Etapa 5, parte 5b.1 (07/10):**
   - A IA dos aliados tem três níveis pelo nível de cada personagem; os aliados não esquivam; parados, não tremem (RF36, RF42, UC31, HU31, Conceito 21.5).
 - **Etapa 5, parte 5b (06/10):**

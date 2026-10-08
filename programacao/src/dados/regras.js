@@ -4,6 +4,13 @@
 // Retorno normal ao Reino (tecla Q ou pausa): contagem fora de combate (RF45).
 export const segundosRetornoNormal = 15
 
+// Fuga com a Pedra de Retorno (tecla F): contagem que corre até em combate (RF46).
+export const segundosDaFuga = 5
+
+// Em combate (RF37): alguém do grupo causou ou recebeu dano nos últimos 5 s, ou um mob hostil persegue o grupo.
+// Vale para a pausa e para o retorno normal. O tempo ativo (RF49, Conceito §12) conta só a parte do dano.
+export const segundosDeCombateDepoisDoDano = 5
+
 // Salvamento automático no navegador (RF09).
 export const segundosEntreSalvamentosAutomaticos = 3 * 60
 

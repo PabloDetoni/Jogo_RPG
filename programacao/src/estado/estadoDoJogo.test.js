@@ -71,12 +71,12 @@ describe('partida', () => {
   })
 
   it('encerrar: conta a partida, limpa a partida em andamento, salva e vai ao Resumo', () => {
-    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', resultado: 'vitoria' })
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
     expect(e.tela).toBe('resumo')
     expect(e.progresso.estatisticas.partidasJogadas).toBe(1)
     expect(e.partidaAtual).toBeNull()
     expect(e.pedidosDeSalvamento).toBe(3)
-    expect(e.ultimoResultado).toEqual({ resultado: 'vitoria', bioma: 'floresta' })
+    expect(e.ultimoResultado).toMatchObject({ resultado: 'vitoria', bioma: 'floresta', ouroGanho: 0, taxa: 0, ouroRecebido: 0 })
     expect(dadosParaSalvar(e).partidaEmAndamento).toBeNull()
   })
 
@@ -86,7 +86,7 @@ describe('partida', () => {
       { classe: 'sacerdote', partidasRestantes: 1, nivel: 5 },
     ]
     const comContratos = { ...convidadoComMago(), progresso: { ...convidadoComMago().progresso, contratosTemporarios: contratos } }
-    const e = fazer(comContratos, ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', resultado: 'vitoria' })
+    const e = fazer(comContratos, ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
     expect(e.progresso.contratosTemporarios).toEqual([{ classe: 'arqueiro', partidasRestantes: 1, nivel: 5 }])
   })
 
@@ -99,36 +99,63 @@ describe('partida', () => {
     expect(fazer(comArqueiro, { tipo: 'escolherLider', classe: 'arqueiro' }).progresso.lider).toBe('mago')
   })
 
-  it('Derrota passa pela cutscene', () => {
-    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', resultado: 'derrota' })
+  it('Derrota (todos desmaiaram) passa pela cutscene', () => {
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim: { como: 'todosDesmaiaram' } })
     expect(e.tela).toBe('cutsceneDerrota')
+    expect(e.ultimoResultado).toMatchObject({ resultado: 'derrota', motivo: 'Todos os personagens desmaiaram' })
   })
 
-  it('fim pelo desmaio: o motivo, se houve desmaio e os perdidos vão para o Resumo (TASK-044)', () => {
-    const detalhes = { motivo: 'Líder não levantado em 30 s', houveDesmaio: true, perdidos: [{ classe: 'tanque', x: 300, y: 400 }] }
-    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', resultado: 'retornoForcado', detalhes })
+  // Números da partida como a arena manda (CenaArena.terminar): ponto inicial em (0, 0) e borda a 1000 px
+  const lugar = { inicio: { x: 0, y: 0 }, distanciaAteABorda: 1000 }
+
+  it('retorno normal com números reais: Grande Vitória, ouro com +10%, XP, nível e monstros no save (TASK-048)', () => {
+    const fim = { como: 'retornoNormal', ...lugar, lider: { x: 400, y: 0 }, ouroGanho: 1500, monstros: 30, segundosAtivos: 100, segundosTotais: 250, xpPorClasse: { mago: 150 } }
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim })
+    // base = 30 × 10 + 1500 + 100 = 1900 > 1000 e nenhum desmaio
+    expect(e.ultimoResultado).toMatchObject({ resultado: 'grandeVitoria', taxa: 0, ouroRecebido: 1650, pontuacaoBase: 1900, pontuacaoFinal: 2090 })
+    expect(e.ultimoResultado).toMatchObject({ monstros: 30, segundosTotais: 250, segundosAtivos: 100, motivo: 'Retorno normal ao Reino' })
+    expect(e.ultimoResultado.personagens).toEqual([{ classe: 'mago', xp: 150, nivelAntes: 1, nivel: 2, niveisGanhos: 1 }])
+    const mago = e.progresso.personagens[0]
+    expect(mago).toMatchObject({ nivel: 2, xp: 50, pontosDeAtributo: 3, pontosDeHabilidade: 1 })
+    expect(e.progresso.ouro).toBe(1650)
+    expect(e.progresso.estatisticas).toEqual({ partidasJogadas: 1, monstrosDerrotados: 30 })
+  })
+
+  it('Líder não levantado: Retorno forçado, e ele e os perdidos pagam pela distância de onde caíram (RF48)', () => {
+    const fim = {
+      como: 'liderNaoLevantado',
+      motivo: 'Líder não levantado em 30 s',
+      ...lugar,
+      houveDesmaio: true,
+      perdidos: [{ classe: 'tanque', x: 500, y: 0 }], // 1 + 5 × 0,5 = 3,5 → 3%
+      caidosNoFim: [{ classe: 'mago', x: 0, y: 0 }], // o Líder caído no fim conta como perdido: 1%
+      lider: { x: 0, y: 0 },
+      ouroGanho: 200,
+    }
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim })
     expect(e.tela).toBe('resumo')
-    expect(e.ultimoResultado).toEqual({ resultado: 'retornoForcado', bioma: 'floresta', ...detalhes })
+    expect(e.ultimoResultado).toMatchObject({ resultado: 'retornoForcado', motivo: 'Líder não levantado em 30 s', taxa: 4, taxaEmOuro: 8, ouroRecebido: 192 })
+    expect(e.ultimoResultado.perdidos).toEqual(['tanque', 'mago'])
+    expect(e.progresso.ouro).toBe(192)
     expect(dadosParaSalvar(e).progresso).not.toHaveProperty('perdidos') // o save não muda de formato
   })
 
-  it('Voltar ao Reino pela pausa: 15 s de contagem e depois Vitória (RF45)', () => {
-    let e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'esc' }, { tipo: 'iniciarRetorno' })
-    expect(e.segundosRetorno).toBe(15)
-    for (let i = 0; i < 14; i++) e = fazer(e, { tipo: 'contarRetorno' })
-    expect(e).toMatchObject({ tela: 'partida', segundosRetorno: 1 })
-    e = fazer(e, { tipo: 'contarRetorno' })
-    expect(e.tela).toBe('resumo')
-    expect(e.ultimoResultado.resultado).toBe('vitoria')
+  it('XP é mantido em todos os resultados, até na Derrota (RF50)', () => {
+    const fim = { como: 'todosDesmaiaram', ...lugar, lider: { x: 1000, y: 0 }, ouroGanho: 100, xpPorClasse: { mago: 40 } }
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim })
+    expect(e.ultimoResultado).toMatchObject({ resultado: 'derrota', taxa: 40, ouroRecebido: 60 })
+    expect(e.progresso.personagens[0].xp).toBe(40)
   })
 
-  it('cancelar o retorno para a contagem', () => {
-    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'iniciarRetorno' }, { tipo: 'cancelarRetorno' })
-    expect(e.segundosRetorno).toBeNull()
+  it('Voltar ao Reino pela pausa: fecha a pausa e pede à partida a contagem de 15 s (RF44, RF45)', () => {
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'esc' }, { tipo: 'iniciarRetorno' })
+    expect(e.janelas).toEqual([])
+    expect(e.controleDaPartida.pedido).toEqual({ id: 1, tipo: 'comecarRetorno' })
+    expect(e.tela).toBe('partida')
   })
 
   it('partida sem "Começar" (painel de dev) não conta', () => {
-    const e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'partida' }, { tipo: 'encerrarPartida', resultado: 'vitoria' })
+    const e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'partida' }, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
     expect(e.progresso.estatisticas.partidasJogadas).toBe(0)
   })
 
@@ -209,7 +236,85 @@ describe('navegação, janelas e preferências', () => {
 
   it('música, som e tema alternam', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'tema' }, { tipo: 'alternarPreferencia', chave: 'musica' })
-    expect(e.preferencias).toEqual({ musica: false, som: true, tema: 'escuro' })
+    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro' })
+  })
+
+  it('o mudo (tecla M) alterna sem mexer na música nem no som (RF18)', () => {
+    const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'mudo' })
+    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro' })
+    expect(fazer(e, { tipo: 'alternarPreferencia', chave: 'mudo' }).preferencias.mudo).toBe(false)
+  })
+})
+
+describe('pausa, retorno e fuga na partida (TASK-040, TASK-041)', () => {
+  const naPartida = () => fazer(convidadoComMago(), ...irAtePreparacao, comecar)
+  const emCombate = { tipo: 'atualizarAndamento', andamento: { emCombate: true, retornando: false, fugindo: false } }
+
+  it('Esc em combate não pausa: a recusa é contada para a Partida mostrar o aviso (RF44)', () => {
+    let e = fazer(naPartida(), emCombate, { tipo: 'esc' })
+    expect(e.janelas).toEqual([])
+    expect(e.controleDaPartida.recusasDePausa).toBe(1)
+    e = fazer(e, { tipo: 'atualizarAndamento', andamento: { emCombate: false, retornando: false, fugindo: false } }, { tipo: 'esc' })
+    expect(e.janelas).toEqual(['pausa'])
+  })
+
+  it('em combate, Esc ainda fecha a janela aberta antes de tudo', () => {
+    const e = fazer(naPartida(), emCombate, { tipo: 'abrirJanela', janela: 'configuracoes' }, { tipo: 'esc' })
+    expect(e.janelas).toEqual([])
+    expect(e.controleDaPartida.recusasDePausa).toBe(0)
+  })
+
+  it('F abre o aviso com o custo; F de novo confirma e pede a fuga à partida (RF46)', () => {
+    let e = fazer(naPartida(), { tipo: 'pedirFuga', custo: { taxa: 12, ouro: 10 } })
+    expect(e.janelas).toEqual(['confirmarFuga'])
+    expect(e.controleDaPartida.custoDaFuga).toEqual({ taxa: 12, ouro: 10 })
+    e = fazer(e, { tipo: 'confirmarFuga' })
+    expect(e.janelas).toEqual([])
+    expect(e.controleDaPartida.pedido).toEqual({ id: 1, tipo: 'fugir' })
+  })
+
+  it('Esc (ou Cancelar) fecha o aviso da fuga e nada é pedido', () => {
+    const e = fazer(naPartida(), { tipo: 'pedirFuga', custo: { taxa: 7, ouro: 0 } }, { tipo: 'esc' })
+    expect(e.janelas).toEqual([])
+    expect(e.controleDaPartida.pedido).toBeNull()
+    expect(fazer(e, { tipo: 'confirmarFuga' }).controleDaPartida.pedido).toBeNull() // sem aviso aberto, não confirma
+  })
+
+  it('o aviso da fuga não abre com outra janela aberta nem depois de a fuga começar', () => {
+    const comPausa = fazer(naPartida(), { tipo: 'esc' }, { tipo: 'pedirFuga', custo: null })
+    expect(comPausa.janelas).toEqual(['pausa'])
+    const fugindo = fazer(naPartida(), { tipo: 'atualizarAndamento', andamento: { emCombate: true, retornando: false, fugindo: true } }, { tipo: 'pedirFuga', custo: null })
+    expect(fugindo.janelas).toEqual([])
+  })
+
+  it('o controle da partida volta ao começo quando ela acaba', () => {
+    const e = fazer(naPartida(), emCombate, { tipo: 'esc' }, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
+    expect(e.controleDaPartida.recusasDePausa).toBe(0)
+    expect(e.controleDaPartida.andamento.emCombate).toBe(false)
+  })
+})
+
+describe('painel DEV: mexe no save só fora da partida (5c)', () => {
+  it('contratar todas as classes cria os permanentes que faltam e salva', () => {
+    const e = fazer(convidadoComMago(), { tipo: 'devContratarTodas' })
+    expect(e.progresso.personagens.map((p) => p.classe)).toEqual(['mago', 'guerreiro', 'tanque', 'sacerdote', 'arqueiro'])
+    expect(e.progresso.lider).toBe('mago')
+    expect(e.pedidosDeSalvamento).toBe(2)
+  })
+
+  it('nível +/- e "quase subir"', () => {
+    let e = fazer(convidadoComMago(), { tipo: 'devMudarNivel', classe: 'mago', quantos: 28 })
+    expect(e.progresso.personagens[0]).toMatchObject({ nivel: 29, xp: 0 })
+    e = fazer(e, { tipo: 'devQuaseSubir', classe: 'mago' })
+    expect(e.progresso.personagens[0]).toMatchObject({ nivel: 29, xp: 2899 })
+    e = fazer(e, { tipo: 'devMudarNivel', classe: 'mago', quantos: -100 })
+    expect(e.progresso.personagens[0].nivel).toBe(1)
+  })
+
+  it('durante a partida não mexe em nada (RF12)', () => {
+    const antes = fazer(convidadoComMago(), ...irAtePreparacao, comecar)
+    const depois = fazer(antes, { tipo: 'devContratarTodas' }, { tipo: 'devMudarNivel', classe: 'mago', quantos: 5 })
+    expect(depois.progresso).toBe(antes.progresso)
   })
 
   it('avisos têm ids diferentes', () => {

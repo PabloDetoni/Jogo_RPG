@@ -43,6 +43,17 @@ describe('montarGrupoDaPartida (RF34)', () => {
     expect(membro.manaMaxima).toBeGreaterThan(doMago.manaMaxima)
   })
 
+  it('cada membro leva o nível e o XP do save (para o aviso de "subiu de nível") e o crítico pela Agilidade', () => {
+    const guerreiro = { ...novoPersonagem('guerreiro'), nivel: 29, xp: 2899 }
+    const arqueiro = novoPersonagem('arqueiro')
+    const progresso = { ...progressoInicial(), personagens: [guerreiro, arqueiro], contratosTemporarios: [] }
+    const [lider, aliado] = montarGrupoDaPartida(progresso, 'guerreiro')
+    expect(lider).toMatchObject({ classe: 'guerreiro', nivel: 29, xp: 2899 })
+    expect(lider.chanceDeCritico).toBeCloseTo(0.05 + 13 * 0.005)
+    expect(aliado.chanceDeCritico).toBeCloseTo(0.05 + 22 * 0.005) // Arqueiro: o crítico mais alto
+    expect(membroDeTeste('mago')).toMatchObject({ nivel: 1, xp: 0 })
+  })
+
   it('sem nenhum personagem (painel de desenvolvimento), entra um Líder de teste', () => {
     expect(montarGrupoDaPartida(progressoInicial(), null)).toEqual([membroDeTeste('guerreiro', true)])
   })

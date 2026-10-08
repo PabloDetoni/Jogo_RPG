@@ -10,7 +10,7 @@ import TiroPerfurante from './tiroPerfurante.js'
 export const efeitosDasHabilidades = {
   giro: (cena, dono) => giro(cena, dono),
   tiroPerfurante: (cena, dono, mira) => cena.adicionarProjetil(new TiroPerfurante(cena, dono, mira.angulo)),
-  meteoro: (cena, dono, mira) => cena.adicionarProjetil(new Meteoro(cena, dono, mira.ponto, cena.time.now)),
+  meteoro: (cena, dono, mira) => cena.adicionarProjetil(new Meteoro(cena, dono, mira.ponto, cena.agora)),
   provocacao: (cena, dono) => provocar(cena, dono),
   ressurreicao: (cena, dono) => ressuscitar(cena, dono),
 }
