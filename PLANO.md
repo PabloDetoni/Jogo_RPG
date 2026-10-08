@@ -4,16 +4,47 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 ## Onde parei
 
-- **Fase 1 terminada em 08/10** (partes 5d, 5e, 7a e 7b, em commits locais). **Esperando o teste visual do Pablo** antes do push e da Fase 2 (regra do modo contínuo).
-- **Perguntas da fase, mandadas no relatório:**
-  - o ajuste da cura do Sacerdote (a aura fica ligada 53% do tempo com alguém ferido);
-  - as decisões do grupo do DOC-003 (ataques definitivos, a aura do Sacerdote, a cor do Guerreiro);
-  - o tamanho da arte (48 px por personagem, 32 px por tile).
-- **O que o Pablo precisa fazer para a Fase 2:** o passo a passo do Supabase está em `documentacao/Supabase_passo_a_passo.md` (TASK-090).
-- **Próximo passo, depois do teste:**
-  - push dos commits da Fase 1;
-  - Fase 2 (contas e Salão da Glória), se o Supabase estiver pronto;
-  - se não estiver, adiantar a Fase 3 (mundo da Floresta, com mobs e mapa provisórios) e voltar à Fase 2 depois.
+- **Fase 1 aprovada pelo Pablo em 08/10** e no GitHub (`a3567b7`). A cura do Sacerdote ficou sem pausa (parte 5f, `dda3741`, local).
+- **Fase atual: Fase 2, contas e Salão da Glória.** O Pablo já criou o projeto no Supabase e testou o e-mail (TASK-090 concluída). A hospedagem é a Vercel.
+- **Feito (08/10, commit local):** o código das partes 8a a 9a inteiro: cadastro, confirmação, login, "Continuar como", senha nova, apelido, sessão única, save na nuvem com versão, passagem do convidado, sem internet sem travar, partidas registradas, ranking com as 6 abas e "Minhas partidas". Também: o SQL (`programacao/supabase/001_contas.sql`), a barra de teste só no `npm run dev`, os passo a passo do Supabase (parte 2) e da Vercel, o roteiro automático `npm run testar:contas` (TEST-007) e a documentação (RF02 a RF10, RF15, UC04, UC06, "Alterações do projeto", `testes/`). 608 testes, lint e build ok; roteiro do navegador 225 de 226 (a falha é a intermitente conhecida).
+- **Parado esperando o Pablo** (algo que só ele faz): rodar o SQL, configurar as URLs do Auth e a senha mínima, criar as duas contas de teste no `.env.local` e, se o e-mail não chegar para outras pessoas, o SMTP (`documentacao/Supabase_passo_a_passo.md`, parte 2); criar o projeto na Vercel (`documentacao/Vercel_passo_a_passo.md`) e autorizar o push do ramo `fase-2` para a prévia.
+- **Próximo passo, quando ele avisar:** rodar o `npm run testar:contas` com o Supabase de verdade, corrigir o que aparecer, publicar a prévia na Vercel, fazer os dois relatórios do fim da Fase 2 e esperar o teste visual (roteiros CT-01 a CT-17 em `testes/Roteiros.md`). Depois do ok, a Fase 3.
+
+### Plano da Fase 2 (modo contínuo)
+
+- **8a · Base (TASK-091, TASK-092):**
+  - `@supabase/supabase-js` (o cliente oficial, previsto no passo a passo que o Pablo delegou em 08/10);
+  - URL e chave publicável no `.env.local` (fora do git) e os nomes no `.env.example`;
+  - um único módulo cria o cliente (`src/conta/cliente.js`);
+  - o SQL inteiro em `programacao/supabase/` (perfis com apelido único, saves com versão, sessão única, partidas e ranking, todos com RLS), que o Pablo roda no SQL Editor;
+  - barra de teste só no `npm run dev`;
+  - o projeto pronto para a Vercel e `documentacao/Vercel_passo_a_passo.md`.
+- **8b · Cadastro, confirmação, login e senha (TASK-093, TASK-094):**
+  - apelido único (conferido antes, e o banco recusa repetido);
+  - tela Confirme seu e-mail com Reenviar;
+  - login com mensagens claras e reenvio para conta não confirmada;
+  - Esqueci minha senha e a tela da senha nova;
+  - os links de e-mail funcionam no localhost e na Vercel.
+- **8c · Sessão única (TASK-095):**
+  - uma aba por navegador (trava do navegador);
+  - uma sessão por conta no banco, com sinal a cada 1 minuto e expiração em 3;
+  - "conta em uso", e a sessão fecha ao sair ou fechar a aba.
+- **8d · Save no banco (TASK-096 a TASK-098):**
+  - cópia local da conta com `versaoNoBanco`;
+  - envio nos momentos de salvamento (começar partida, fim, primeiro personagem, Sair da conta), com a versão conferida no banco;
+  - recuperação no login (RF11);
+  - passagem do convidado para a conta nova;
+  - sem internet ou com o Supabase fora do ar, nada trava: o save local continua, e a conta mostra uma mensagem clara.
+- **9a · Salão da Glória (TASK-100 a TASK-102):** partidas registradas no fim, ranking com as 6 abas (aberto sem login, destacando quem está logado) e histórico "Minhas partidas" com 20 por página.
+- **TEST-007 e publicação de teste:**
+  - testes de unidade com um Supabase falso;
+  - roteiro do navegador com o Supabase de verdade: dois navegadores na mesma conta, save antigo recusado, conta A tentando a B, ranking sem login e queda de internet;
+  - publicação de teste na Vercel, feita pelo Pablo.
+- **O que depende do Pablo, numa parada só:**
+  - rodar o SQL;
+  - configurar as URLs do Auth (e o SMTP, se o e-mail não chegar para outras pessoas);
+  - criar duas contas de teste;
+  - publicar na Vercel.
 
 ### Plano das partes que fecham a Fase 1 (modo contínuo)
 

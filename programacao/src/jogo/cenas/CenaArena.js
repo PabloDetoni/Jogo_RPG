@@ -955,12 +955,18 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'alternarRetorno') this.alternarRetorno()
     if (comando.tipo === 'comecarRetorno') this.alternarRetorno(true)
     if (comando.tipo === 'fugir') this.fugir()
-    // Barra de teste
+    // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)
+    if (import.meta.env.DEV) this.comandoDeTeste(comando)
+    if (this.terminou) return
+    this.avisarSituacao()
+  }
+
+  comandoDeTeste(comando) {
     if (comando.tipo === 'forcarFim') this.forcarFim(comando.resultado)
     if (comando.tipo === 'testarFoco') this.testarFoco()
-    // Só no npm run dev: mexem no que a partida ganhou (que só vai para o save no fim, pelo caminho normal)
-    if (import.meta.env.DEV && comando.tipo === 'subirNivel') this.subirNivelDeTeste()
-    if (import.meta.env.DEV && comando.tipo === 'ganharOuro') this.ganhos.ouro += testes.ouroDoBotao
+    // Mexem no que a partida ganhou (que só vai para o save no fim, pelo caminho normal)
+    if (comando.tipo === 'subirNivel') this.subirNivelDeTeste()
+    if (comando.tipo === 'ganharOuro') this.ganhos.ouro += testes.ouroDoBotao
     if (comando.tipo === 'trocarClasse') this.trocarClasse(comando.classe)
     if (comando.tipo === 'encherGrupo') this.encherGrupo()
     if (comando.tipo === 'criarInimigo') this.criarInimigoLonge(comando.inimigo)
@@ -971,8 +977,6 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'derrubarLider') this.derrubar(this.lider)
     if (comando.tipo === 'alternarAjuda') this.aliadosAjudam = !this.aliadosAjudam
     if (comando.tipo === 'trocarIA') this.trocarIA(comando.nivel)
-    if (this.terminou) return
-    this.avisarSituacao()
   }
 
   // Os 4 botões de resultado: acabam a partida já, com os números reais dela e o resultado pedido

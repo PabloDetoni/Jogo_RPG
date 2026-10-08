@@ -17,6 +17,7 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | 7a (TASK-079: contratos na Guilda) | 08/10 | 539 passando (9 novos) | ok | 222 de 222 | esperando o fim da Fase 1 | local |
 | 7b (TASK-071: pentágono, Seleção, Árvores e HUD do Reino) | 08/10 | 544 passando (5 novos) | ok | 226 de 226 | Pablo aprovou a Fase 1 (08/10) | `a3567b7` |
 | 5f (cura do Sacerdote sem pausa) | 08/10 | 544 passando | ok | 225 de 226 (a falha foi do teste, corrigida); aura ligada 100% do tempo | na Fase 2 | local |
+| Fase 2, 8a a 9a (contas, sessão única, save na nuvem, ranking e histórico) | 08/10 | 608 passando (64 novos) | ok | 225 de 226 (a falha: dois mobs nascendo encostados, 0 px; intermitente, já registrada na 2e) | esperando o SQL e as contas de teste do Pablo; depois, o `npm run testar:contas` e o teste da Fase 2 | local |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -61,12 +62,40 @@ Depois das correções: 513 testes automáticos passando, lint e build ok, rotei
 | Numa rodada, 4 conferências antigas falharam sem nada ter mudado no jogo: dois mobs "encostados" por 0,04 px, um corpo 2 px dentro da pedra no aperto (risco já conhecido, de até cerca de 6 px), um pulo de 127 px contra o limite de 120 e o tremor no canto (IA média). Na rodada seguinte, todas passaram. | O tremor ganhou um relatório completo (plano, parado, voltando, desvio, distância e velocidade de cada aliado) para a próxima vez dizer a causa. As outras ficam de olho: se voltarem, o limite ou o jogo é revisto. |
 | A seção 27 esperava 300 de ouro e veio 312: os aliados derrotaram um mob entre a "foto" e o fim. A taxa bateu (4%). | O teste tira os mobs antes. |
 
+## 2f. Fase 2 (contas): o que foi achado e o que falta
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| Com o banco ainda sem o SQL, o Login e o ranking mostravam "Algo deu errado (PGRST202)". | Olhada nas telas novas com o Supabase de verdade | O erro de "tabela ou função que não existe" virou "As contas estão indisponíveis agora. Dá para jogar como convidado." (com teste). |
+| Abrir o link de senha nova numa aba que já estava no jogo só mudava o `#` do endereço e não recarregava a página. Com o e-mail isso não acontece (o link abre do zero), mas o roteiro precisava abrir do zero. | Olhada nas telas novas | O roteiro das contas abre uma página em branco antes de cada endereço. |
+| Revendo o SQL: alguém poderia gravar um número gigante no próprio save (ouro = 10^30, por exemplo) e derrubar o ranking de todos. | Revisão antes de mandar o SQL ao Pablo | A função que salva recusa números fora de limites folgados (ouro e monstros até 10^12, nível até 1000, até 10 personagens). |
+| O lint barrou o estado do jogo sendo lido de dentro do caminho das contas na hora de desenhar. | `npm run lint` | O caminho das contas recebe a fila de partidas como parâmetro; ele não lê o estado sozinho. |
+
+**Ainda não rodado (depende do Pablo):** o `npm run testar:contas` (TEST-007), com o Supabase de verdade: ranking sem login, dois navegadores na mesma conta, duas abas, save no banco e histórico, save antigo recusado, conta A tentando ler ou alterar a B, queda de internet, Sair liberando a conta, convidado virando conta, link expirado e Supabase fora do ar. Ele precisa do SQL rodado e das duas contas de teste no `.env.local` (`documentacao/Supabase_passo_a_passo.md`, parte 2).
+
 ## 3. Testes à mão
 
 Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data, quem testou, **passou** ou **falhou**, e o que viu. As partes 5a, 5b e 5b.1 já foram aprovadas pelo Pablo no teste visual de cada uma; vale testar de novo de vez em quando, porque partes novas podem quebrar coisas antigas.
 
 | Código | Situação | Data | Quem | Resultado | Observação |
 |---|---|---|---|---|---|
+| CT-01 | Criar conta e confirmar o e-mail | | | | |
+| CT-02 | Cadastro com problema (apelido, senha, e-mail) | | | | |
+| CT-03 | E-mail não confirmado e Reenviar | | | | |
+| CT-04 | Senha errada | | | | |
+| CT-05 | Continuar como ... | | | | |
+| CT-06 | Esqueci minha senha e Senha nova | | | | |
+| CT-07 | Dois navegadores na mesma conta | | | | |
+| CT-08 | Duas abas do mesmo navegador | | | | |
+| CT-09 | Convidado virando conta | | | | |
+| CT-10 | Conta antiga não mistura o convidado | | | | |
+| CT-11 | O progresso segue a conta em outro computador | | | | |
+| CT-12 | Sem internet | | | | |
+| CT-13 | Ranking sem login | | | | |
+| CT-14 | Ranking e histórico com conta | | | | |
+| CT-15 | Histórico com mais de 20 partidas | | | | |
+| CT-16 | Vercel em outra máquina | | | | |
+| CT-17 | Jogo publicado sem as ferramentas de teste | | | | |
 | T-01 | Seleção de classe com pentágono | | | | |
 | T-02 | HUD do Reino | | | | |
 | T-03 | Árvores de Habilidades | | | | |

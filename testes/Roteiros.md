@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 08/10/2026, depois da parte 5d. A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 08/10/2026, na Fase 2 (contas). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -189,6 +189,107 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 **NV-02 · O Guerreiro avançado não espera o Tanque**
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
+
+## CT. Contas e Salão da Glória (Fase 2)
+
+Antes: o SQL rodado e as URLs configuradas no Supabase (`documentacao/Supabase_passo_a_passo.md`, parte 2). Use um e-mail de verdade que você abra (no Gmail, `seunome+algo@gmail.com` chega na sua caixa e conta como outro e-mail). Para ser "outro navegador", use outro programa (Edge e Chrome) ou uma janela anônima (Ctrl+Shift+N): cada um guarda as coisas separado.
+
+**CT-01 · Criar conta e confirmar o e-mail**
+- Fazer:
+  1. Tela inicial → **Iniciar jogo** → **Criar conta**.
+  2. Preencha e-mail, senha (8 ou mais) e um apelido, e clique em **Criar conta**.
+  3. Abra o e-mail (veja o spam) e clique no link.
+- Deve acontecer:
+  - a tela **Confirme seu e-mail** mostra o e-mail usado e tem **Reenviar e-mail**;
+  - o link abre o jogo numa aba nova, no Login, com "E-mail confirmado! Agora é só entrar na conta." em verde e o botão **Continuar como seu@email**;
+  - **Continuar** (ou e-mail e senha + **Entrar**) leva à narrativa e à escolha da classe; depois, o Reino mostra o seu apelido no HUD.
+
+**CT-02 · Cadastro com problema**
+- Fazer: tente criar conta com (a) um apelido que já existe, em maiúsculas diferentes; (b) senha de 5 letras; (c) e-mail sem @; (d) um e-mail que já tem conta.
+- Deve acontecer: nada é criado, a mensagem em vermelho diz o que corrigir e o campo com problema fica marcado. Em (d): "Já existe uma conta com este e-mail".
+
+**CT-03 · E-mail não confirmado**
+- Fazer: crie uma conta e, sem abrir o link, tente **Entrar** com ela.
+- Deve acontecer: "Este e-mail ainda não foi confirmado..." e aparece o botão **Reenviar e-mail de confirmação**, que manda outro e-mail.
+
+**CT-04 · Senha errada**
+- Fazer: **Entrar** com a senha errada.
+- Deve acontecer: "E-mail ou senha errados..." e nada mais muda.
+
+**CT-05 · Continuar como ...**
+- Fazer: entre na conta, aperte **F5** (recarregar) e vá ao Login.
+- Deve acontecer: o jogo volta à Tela inicial; no Login aparece **Continuar como seu@email**, que entra sem digitar a senha, com o progresso de antes.
+
+**CT-06 · Esqueci minha senha**
+- Fazer:
+  1. Login → **Esqueci minha senha** → o e-mail da conta → **Enviar link**.
+  2. Abra o e-mail e clique no link.
+  3. Escreva a senha nova duas vezes e clique em **Salvar senha nova**.
+  4. Entre com a senha nova; depois tente a antiga.
+- Deve acontecer: o link abre a tela **Senha nova**; depois de salvar, o jogo volta ao Login com "Senha trocada!"; a nova funciona e a antiga não. Escrever duas senhas diferentes avisa sem trocar nada.
+
+**CT-07 · Dois navegadores na mesma conta**
+- Fazer:
+  1. Entre na conta no navegador 1.
+  2. No navegador 2, tente entrar na mesma conta.
+  3. No navegador 1, Configurações → **Sair da conta**; tente de novo no 2.
+  4. Repita, mas no passo 3 feche a aba do navegador 1 (sem sair).
+- Deve acontecer:
+  - no passo 2: "Conta em uso: ela está aberta em outro lugar...";
+  - no passo 3: o navegador 1 volta à Tela inicial e o 2 entra na hora;
+  - no passo 4: fechar a aba também libera a conta (no máximo uns segundos). Se o navegador fechar de um jeito brusco (travou, acabou a bateria), a conta libera sozinha em cerca de 3 minutos.
+
+**CT-08 · Duas abas do mesmo navegador**
+- Fazer: com a conta aberta numa aba, abra o jogo em outra aba do mesmo navegador e tente entrar (ou **Continuar como ...**).
+- Deve acontecer: "O jogo já está aberto com uma conta em outra aba deste navegador...". A primeira aba continua normal.
+
+**CT-09 · Convidado virando conta**
+- Fazer:
+  1. Jogue como convidado, escolha uma classe e ganhe algum ouro numa partida.
+  2. Configurações → **Criar conta** (a tela avisa que o progresso vai junto) e confirme o e-mail.
+  3. Entre na conta neste mesmo navegador.
+- Deve acontecer: o Reino mostra a mesma classe e o mesmo ouro do convidado, com o aviso "O progresso do convidado deste navegador agora é da sua conta..."; em **Jogar como convidado** de novo, o convidado começa do zero.
+
+**CT-10 · Conta antiga não mistura o convidado**
+- Fazer: jogue como convidado com outra classe e depois entre numa conta que já tinha progresso.
+- Deve acontecer: a conta continua com o progresso dela; o do convidado não entra.
+
+**CT-11 · O progresso segue a conta**
+- Fazer: entre na conta no navegador 1, jogue uma partida e saia. Entre no navegador 2 (ou em outro computador).
+- Deve acontecer: o navegador 2 tem o mesmo ouro, os mesmos personagens e o mesmo XP.
+
+**CT-12 · Sem internet**
+- Fazer:
+  1. Entre na conta.
+  2. Desligue o Wi-Fi (ou tire o cabo).
+  3. Jogue uma partida até o Resumo e volte ao Reino.
+  4. Abra Configurações.
+  5. Ligue a internet de novo e espere uns segundos.
+  6. Saia e entre de novo; olhe **Minhas partidas**.
+- Deve acontecer:
+  - nada trava: a partida começa, termina e mostra o Resumo;
+  - Configurações: "Sem conexão com a nuvem agora: seu progresso está guardado neste navegador...";
+  - depois da volta, o progresso e a partida sobem sozinhos: em **Minhas partidas** aparece a partida jogada sem internet.
+
+**CT-13 · Ranking sem login**
+- Fazer: Tela inicial → **Salão da Glória**, sem entrar em nada. Clique em cada aba; em **Por classe**, troque a classe.
+- Deve acontecer: as 6 abas carregam (a tabela, ou "Ninguém no ranking ainda"); só aparecem contas; não há **Minhas partidas** nem Conquistas; o aviso "Só jogadores com conta aparecem no ranking".
+
+**CT-14 · Ranking e histórico com conta**
+- Fazer: com conta, jogue uma partida até o Resumo e abra o **Salão da Glória**.
+- Deve acontecer: em **Melhores pontuações**, a sua linha fica em destaque (fundo escuro); em **Minhas partidas**, a partida aparece com data, bioma, resultado, tempo ativo, pontuação e ouro.
+
+**CT-15 · Histórico com mais de 20 partidas**
+- Fazer: com conta, termine mais de 20 partidas (no `npm run dev`, os botões de resultado da barra de teste deixam rápido) e abra **Minhas partidas**.
+- Deve acontecer: 20 por página, as mais novas primeiro; **Próxima** e **Anterior** trocam de página, e "Página 1 de 2" muda.
+
+**CT-16 · Vercel em outra máquina**
+- Fazer: no endereço da Vercel (`documentacao/Vercel_passo_a_passo.md`), noutro computador: crie uma conta, confirme o e-mail e jogue uma partida.
+- Deve acontecer: o link do e-mail volta para o endereço da Vercel (não para o localhost); tudo do CT-01 ao CT-14 funciona igual.
+
+**CT-17 · Jogo publicado sem as ferramentas de teste**
+- Fazer: no endereço da Vercel, entre numa partida.
+- Deve acontecer: não há painel **</> DEV**; a faixa de baixo da partida mostra só as teclas (sem o selo TESTE e sem botões).
 
 ## T. Seleção de classe, Reino e Árvores (parte 7b, TASK-071)
 

@@ -1,8 +1,10 @@
 import ConfirmeEmail from './acesso/ConfirmeEmail.jsx'
 import CriarConta from './acesso/CriarConta.jsx'
+import EscolherApelido from './acesso/EscolherApelido.jsx'
 import EsqueciSenha from './acesso/EsqueciSenha.jsx'
 import Login from './acesso/Login.jsx'
 import NarrativaInicial from './acesso/NarrativaInicial.jsx'
+import NovaSenha from './acesso/NovaSenha.jsx'
 import SelecaoClasse from './acesso/SelecaoClasse.jsx'
 import TelaInicial from './acesso/TelaInicial.jsx'
 import CutsceneDerrota from './partida/CutsceneDerrota.jsx'
@@ -27,6 +29,8 @@ export const componentesDasTelas = {
   criarConta: CriarConta,
   confirmeEmail: ConfirmeEmail,
   esqueciSenha: EsqueciSenha,
+  novaSenha: NovaSenha,
+  escolherApelido: EscolherApelido,
   narrativaInicial: NarrativaInicial,
   selecaoClasse: SelecaoClasse,
 

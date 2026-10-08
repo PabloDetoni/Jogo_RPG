@@ -113,6 +113,39 @@ body {
   padding: 0.25em 0.4em;
 }
 
+.campo-com-erro input {
+  outline: 3px solid #b22;
+}
+
+/* Mensagens das telas de acesso (Fase 2): e-mail confirmado, senha errada, conta em uso... */
+.mensagem-do-acesso {
+  max-width: 64cqw;
+  font-size: 1.3cqw;
+}
+
+.mensagem-do-acesso p {
+  margin: 0;
+  padding: 0.4em 0.8em;
+  border: 2px solid var(--borda);
+  background: var(--janela);
+}
+
+.mensagem-do-acesso-erro p {
+  color: #8b1a1a;
+}
+
+.mensagem-do-acesso-bom p {
+  color: #1d5e1d;
+}
+
+.moldura[data-tema='escuro'] .mensagem-do-acesso-erro p {
+  color: #ff9e9e;
+}
+
+.moldura[data-tema='escuro'] .mensagem-do-acesso-bom p {
+  color: #a6e3a6;
+}
+
 .area {
   width: max-content;
   max-width: 80cqw;
@@ -837,4 +870,38 @@ body {
   flex-direction: column;
   gap: 2px;
   margin-top: 4px;
+}
+
+/* Salão da Glória (Fase 2): ranking e histórico em tabela, com rolagem */
+.tabela-rolavel {
+  max-height: 27cqw;
+  overflow-y: auto;
+  border: 2px solid var(--borda);
+}
+
+.tabela {
+  border-collapse: collapse;
+  min-width: 40cqw;
+  font-size: 1.2cqw;
+  background: var(--janela);
+}
+
+.tabela th,
+.tabela td {
+  padding: 0.2em 0.8em;
+  text-align: left;
+  border-bottom: 1px solid var(--borda);
+}
+
+.tabela th {
+  position: sticky;
+  top: 0;
+  background: var(--botao);
+}
+
+/* O próprio jogador no ranking */
+.tabela .linha-minha td {
+  background: var(--texto);
+  color: var(--tela);
+  font-weight: bold;
 }

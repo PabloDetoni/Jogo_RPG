@@ -3,7 +3,7 @@ import { novoPersonagem, progressoInicial } from '../estado/progresso.js'
 import { relogioFalso, storageFalso } from '../testes/ajudantes.js'
 import { criarArmazenamento } from './armazenamento.js'
 import { chaves } from './chaves.js'
-import { criarSalvadorDoConvidado } from './salvadorDoConvidado.js'
+import { criarSalvadorDaConta, criarSalvadorDoConvidado } from './salvadorDoConvidado.js'
 
 const progressoComMago = { ...progressoInicial(), personagens: [novoPersonagem('mago')], lider: 'mago' }
 const partida = { bioma: 'floresta', pontoPartida: 'inicio', lider: 'mago', iniciadaEm: '2026-10-05T12:00:00Z' }
@@ -26,7 +26,7 @@ function navegador() {
 describe('salvar e carregar (RF09)', () => {
   it('sem save, começa do zero', () => {
     const aba = navegador().abrirAba()
-    expect(aba.carregar()).toEqual({ situacao: 'novo', progresso: progressoInicial(), partidaDescartada: false })
+    expect(aba.carregar()).toMatchObject({ situacao: 'novo', progresso: progressoInicial(), partidaDescartada: false })
   })
 
   it('só grava quando o perfil é de convidado', () => {
@@ -107,7 +107,7 @@ describe('problemas', () => {
     nav.storage.dados.set(chaves.convidado, estragado)
     const aba = nav.abrirAba()
     const carregado = aba.carregar()
-    expect(carregado).toEqual({ situacao: 'corrompido', progresso: progressoInicial(), partidaDescartada: false })
+    expect(carregado).toMatchObject({ situacao: 'corrompido', progresso: progressoInicial(), partidaDescartada: false })
     expect(nav.storage.dados.get(chaves.convidadoCorrompido)).toBe(estragado)
     salvarComo(aba, progressoComMago)
     expect(nav.save().versao).toBe(versaoAntiga + 1)
@@ -174,5 +174,42 @@ describe('painel e acompanhamento', () => {
     expect(nav.temSave()).toBe(false)
     salvarComo(aba, { ...progressoComMago, ouro: 1 })
     expect(nav.temSave()).toBe(false)
+  })
+})
+
+describe('cópia local da conta (Fase 2; RF09, RF11)', () => {
+  function navegadorDaConta() {
+    const storage = storageFalso()
+    const armazenamento = criarArmazenamento(storage)
+    const relogio = relogioFalso()
+    return {
+      abrirAba: () => criarSalvadorDaConta(armazenamento, 'conta-1', relogio),
+      save: () => JSON.parse(storage.dados.get(chaves.conta('conta-1'))),
+      storage,
+    }
+  }
+
+  it('fica na chave da conta e só grava o perfil "conta"', () => {
+    const nav = navegadorDaConta()
+    const aba = nav.abrirAba()
+    aba.carregar()
+    expect(aba.salvar({ perfil: 'convidado', progresso: progressoComMago, partidaEmAndamento: null })).toBeNull()
+    expect(aba.salvar({ perfil: 'conta', progresso: progressoComMago, partidaEmAndamento: null })).toBe(1)
+    expect(nav.save().progresso).toEqual(progressoComMago)
+    expect(nav.storage.dados.has(chaves.convidado)).toBe(false)
+  })
+
+  it('no login começa com o progresso escolhido, na versão do banco; o banco aceitar marca a versão de onde partiu', () => {
+    const nav = navegadorDaConta()
+    const aba = nav.abrirAba()
+    aba.comecarCom({ progresso: progressoComMago, versao: 7, versaoNoBanco: 7 })
+    expect(nav.save()).toMatchObject({ versao: 7, versaoNoBanco: 7 })
+    const comOuro = { ...progressoComMago, ouro: 50 }
+    expect(aba.salvar({ perfil: 'conta', progresso: comOuro, partidaEmAndamento: null })).toBe(8)
+    expect(nav.save()).toMatchObject({ versao: 8, versaoNoBanco: 7 })
+    aba.marcarNoBanco(8)
+    expect(nav.save()).toMatchObject({ versao: 8, versaoNoBanco: 8, progresso: comOuro })
+    // recarregar a página: a cópia lembra as duas versões
+    expect(nav.abrirAba().carregar()).toMatchObject({ situacao: 'carregado', versao: 8, versaoNoBanco: 8 })
   })
 })

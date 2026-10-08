@@ -5,7 +5,7 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Pastas
 Código em `programacao/` (rodar npm lá); documentação em `documentacao/` (fonte de verdade). O caminho até a entrega e a situação de cada item da auditoria (TASK/DOC/TEST) ficam no `PLANO.md` da raiz. Os roteiros de teste manual (passo a passo para o Pablo) e o registro de todos os testes rodados (o que passou e o que falhou) ficam em `testes/` na raiz.
-Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) e `npm run testar:navegador` (roteiro da partida num Edge escondido).
+Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) e `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`).
 
 ## Stack e arquitetura
 - React na interface (obrigatório) + Supabase (contas e dados). A partida é desenhada com Phaser 4 (canvas) em `src/jogo/` (cenas, entidades, ataques); HUD, menus, janelas e a barra de teste continuam em React.
@@ -25,9 +25,15 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Na partida, todo tempo usa o relógio da cena (`cena.agora`), que para na pausa e com a aba escondida; nunca o `time.now` do Phaser, que continua correndo na pausa.
 - Valores da documentação ficam em `src/dados/regras.js` e `taxas.js`; os provisórios, só em `src/dados/balanceamento.js`. Os testes de limite em `balanceamento.test.js` barram números absurdos.
 - Habilidades de teste (uma por classe, tecla 1, até a TASK-010) ficam em `dados/habilidades.js` e o efeito de cada uma em `jogo/habilidades/`.
+- Contas (Fase 2) em `src/conta/`:
+  - `cliente.js` é o ÚNICO lugar que cria o cliente do Supabase, com a URL e a chave **publicável** do `.env.local` (fora do git; os nomes ficam no `.env.example`) ou das variáveis da Vercel. A chave secreta nunca entra no jogo: a segurança vem das políticas RLS e das funções do banco. No `npm run dev`, o cliente fica em `window.__supabase` (para o `testar:contas`);
+  - `servico.js` faz cada pedido ao Supabase e nunca lança erro (devolve `{ ok, codigo, mensagem }`, com as mensagens de `regras/contas.js`);
+  - `fluxo.js` cuida da entrada (trava de uma aba de conta por navegador, sessão única, apelido), do save no banco com versão (envios em fila, versão recusada carrega a do banco, sem rede fica "pendente"), da passagem do convidado e da saída. O `ProvedorDoJogo` liga o fluxo ao estado: envia depois de cada save local pedido por `pedidosAoBanco`, registra `partidasParaRegistrar`, manda o sinal da sessão a cada minuto e tenta de novo quando a internet volta;
+  - a conta também tem uma cópia local do save (`salvamento/salvadorLocal.js`, chave `jogo-rpg:conta:<id>`, com `versaoNoBanco`); a escolha do progresso no login fica em `regras/contas.js` (`escolherProgressoNoLogin`).
+- SQL do banco em `programacao/supabase/`, em arquivos numerados (`001_contas.sql`), rodados pelo Pablo no SQL Editor. Arquivo já rodado não se edita: mudança vira um arquivo novo. Toda tabela com RLS; escrever no save e na sessão só pelas funções.
 
 ## Regras que moldam as telas
-- Conta: e-mail e senha, apelido único, confirmação de e-mail obrigatória e "esqueci minha senha". Dá para jogar como convidado (salvo só no navegador); ao criar conta, o progresso do convidado vai para a conta. Uma conta = uma sessão ativa.
+- Conta: e-mail e senha (8 caracteres ou mais), apelido único (3 a 16 letras, números ou _), confirmação de e-mail obrigatória, "esqueci minha senha" com a tela Senha nova e "Continuar como ..." quando o navegador lembra a conta. Dá para jogar como convidado (salvo só no navegador); a conta criada pelas Configurações do convidado recebe o progresso dele no primeiro login naquele navegador. Uma conta = uma sessão ativa (uma aba por navegador e uma sessão no banco). Sem internet ou com o Supabase fora do ar, nada trava: o convidado joga e a conta guarda tudo no navegador, com mensagem clara.
 - Ranking (Salão da Glória): visível para todos, até sem login, mas só quem tem conta aparece nele. Dentro do Salão da Glória ficam também o histórico de partidas (só para o próprio jogador logado) e as Conquistas (para quem já está jogando, convidado ou conta).
 - Na partida, só o Líder esquiva. A IA dos aliados vem do nível de cada personagem (básica, média e avançada) e o jogador nunca escolhe; o seletor "IA:" da barra de teste é só para testar. O nível ganho na partida aparece na hora, mas vale a partir da partida seguinte (RF12). Um nível não atrapalha o outro: a média e a avançada desviam de quem está parado, e a avançada não espera quem errou.
 - O Sacerdote cura SEMPRE que alguém do grupo (ele mesmo também) não está com a vida cheia, em combate ou fora dele: caídos primeiro, depois o mais ferido, em empate o Líder. O nível da IA muda só a posição dele e a escolha do alvo.
@@ -44,8 +50,8 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Números do jogo (taxas, XP, atributos, peso) ficam em arquivos de dados, nunca espalhados no código.
 - Hitboxes separadas das imagens, para trocar a arte sem quebrar nada. Na partida, a hitbox é uma zona de física invisível e o desenho segue ela (`jogo/entidades/Entidade.js`). Cores das classes em `dados/classes.js`; mapa, cores e posições da arena em `dados/arenaDeTeste.js`.
 - Na partida, cada entidade diz para onde quer andar (`andar`/`parar`) e a cena decide a velocidade final (`CenaArena.moverTodos`: separação, escorregar e destravar; `corrigirSobreposicoes` desfaz o que a física deixou um dentro do outro); para andar, ninguém chama `setVelocity` direto. Nascer ou reaparecer sempre passa por `lugarLivre` (nunca em pedra, fora da borda ou em cima de outro).
-- Não instalar bibliotecas sem perguntar (já aprovadas: Vitest e Phaser). Plano antes de qualquer mudança grande.
-- Ferramentas de teste que mexem no save ficam no painel `</> DEV` (só existe no `npm run dev`) e só funcionam fora da partida; a ação no estado também confere `import.meta.env.DEV`. Botões de teste da barra que só servem no desenvolvimento ficam atrás de `import.meta.env.DEV` (no build, somem).
+- Não instalar bibliotecas sem perguntar (já aprovadas: Vitest, Phaser e `@supabase/supabase-js`, o cliente oficial do Supabase, instalado na Fase 2 dentro do passo a passo que o Pablo delegou em 08/10). Plano antes de qualquer mudança grande.
+- Ferramentas de teste que mexem no save ficam no painel `</> DEV` (só existe no `npm run dev`) e só funcionam fora da partida; a ação no estado também confere `import.meta.env.DEV`. A barra de teste inteira existe só no `npm run dev` (no build, a faixa de baixo da partida mostra só as teclas, e a cena ignora os comandos de teste).
 - Commits: no modo contínuo (seção abaixo), commit LOCAL no fim de cada parte, com todos os testes passando; o push só depois do teste visual do Pablo na fase. Fora do modo contínuo, não commitar sem ele pedir.
 - Decisão que muda a documentação: atualizar o texto do documento e registrar na seção "Alterações do projeto" dele (no Conceito, a seção 21, sem reescrever o original). O PNG do diagrama sai do `.puml` pelo PlantUML.
 
@@ -116,9 +122,9 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, terminada em 08/10, esperando o teste do Pablo): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
+5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, aprovada pelo Pablo em 08/10): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino)
-8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)
-9. Ranking, conquistas e som
+8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ← em andamento (Fase 2): código, SQL e testes de unidade prontos; falta o Pablo rodar o SQL, configurar o Auth e as contas de teste, e os testes ao vivo (TEST-007)
+9. Ranking, conquistas e som (o ranking com as 6 abas e o histórico já estão na Fase 2)
 10. Arte

@@ -26,3 +26,29 @@ export function travarAbaDoConvidado() {
       .catch(() => responder('semSuporte'))
   })
 }
+
+// Conta (RF05): uma aba da conta por navegador. Mesma trava do navegador, mas que dá para soltar (ao sair da conta,
+// ou quando a entrada falha: conta em uso em outro lugar, sem internet). Devolve { situacao, soltar }, com
+// situacao 'ok', 'ocupada' (outra aba deste navegador já está com uma conta) ou 'semSuporte'.
+export function pegarTravaDaAba(nome) {
+  const travas = globalThis.navigator?.locks
+  const semTrava = (situacao) => ({ situacao, soltar: () => {} })
+  if (!travas) return Promise.resolve(semTrava('semSuporte'))
+
+  return new Promise((responder) => {
+    let soltar = () => {}
+    const segurando = new Promise((terminar) => {
+      soltar = terminar
+    })
+    travas
+      .request(nome, { ifAvailable: true }, (trava) => {
+        if (!trava) {
+          responder(semTrava('ocupada'))
+          return undefined
+        }
+        responder({ situacao: 'ok', soltar })
+        return segurando
+      })
+      .catch(() => responder(semTrava('semSuporte')))
+  })
+}

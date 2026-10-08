@@ -33,3 +33,11 @@ export const multaPorAbandonoPercentual = 10
 export const segundosParaLevantar = 30
 export const segundosDaAjuda = 5
 export const vidaAoSerAjudadoPercentual = 10
+
+// Sessão única (RF05): o jogo manda um sinal a cada 1 minuto; sem sinal por 3 minutos, a sessão expira
+// (o banco usa o mesmo tempo, em supabase/001_contas.sql).
+export const segundosEntreSinaisDaSessao = 60
+export const minutosParaASessaoExpirar = 3
+
+// Histórico "Minhas partidas" (RF16): 20 por página
+export const partidasPorPaginaNoHistorico = 20

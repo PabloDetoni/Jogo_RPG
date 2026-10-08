@@ -18,32 +18,56 @@ export const posicoes = {
     iniciarJogo: { x: 50, y: 55 },
     comoJogar: { x: 50, y: 67 },
   },
+  // Fase 2: as mensagens (e-mail confirmado, senha errada, conta em uso...) ficam logo abaixo do título
   login: {
-    email: { x: 50, y: 30 },
-    senha: { x: 50, y: 44 },
+    mensagem: { x: 50, y: 19 },
+    continuar: { x: 50, y: 27 }, // "Continuar como ...": a conta que o Supabase lembra neste navegador
+    email: { x: 50, y: 36 },
+    senha: { x: 50, y: 47 },
     entrar: { x: 50, y: 57 },
-    criarConta: { x: 38, y: 69 },
-    esqueciSenha: { x: 62, y: 69 },
-    jogarComoConvidado: { x: 50, y: 81 },
-    avisoConvidado: { x: 50, y: 89 },
+    reenviar: { x: 72, y: 57 }, // só com o e-mail ainda não confirmado (RF04)
+    criarConta: { x: 38, y: 67 },
+    esqueciSenha: { x: 62, y: 67 },
+    jogarComoConvidado: { x: 50, y: 78 },
+    avisoConvidado: { x: 50, y: 86 },
     voltar: { x: 10, y: 90 },
   },
   criarConta: {
-    email: { x: 50, y: 28 },
-    senha: { x: 50, y: 40 },
-    apelido: { x: 50, y: 52 },
-    criarConta: { x: 50, y: 66 },
+    mensagem: { x: 50, y: 19 },
+    email: { x: 50, y: 29 },
+    senha: { x: 50, y: 41 },
+    apelido: { x: 50, y: 53 },
+    regras: { x: 50, y: 63 },
+    criarConta: { x: 50, y: 73 },
     voltarAoLogin: { x: 10, y: 90 },
   },
   confirmeEmail: {
-    mensagem: { x: 50, y: 40 },
-    jaConfirmei: { x: 50, y: 58 },
+    mensagem: { x: 50, y: 38 },
+    resposta: { x: 50, y: 52 },
+    reenviar: { x: 50, y: 62 },
     voltarAoLogin: { x: 10, y: 90 },
   },
   esqueciSenha: {
     email: { x: 50, y: 36 },
     enviar: { x: 50, y: 50 },
     mensagem: { x: 50, y: 62 },
+    voltarAoLogin: { x: 10, y: 90 },
+  },
+  // Aberta pelo link de senha nova do e-mail (RF06)
+  novaSenha: {
+    explicacao: { x: 50, y: 22 },
+    senha: { x: 50, y: 34 },
+    repetir: { x: 50, y: 46 },
+    salvar: { x: 50, y: 58 },
+    mensagem: { x: 50, y: 69 },
+    voltarAoLogin: { x: 10, y: 90 },
+  },
+  // Conta sem apelido (criada fora do jogo, ou o apelido foi tomado entre o cadastro e a confirmação)
+  escolherApelido: {
+    explicacao: { x: 50, y: 24 },
+    apelido: { x: 50, y: 38 },
+    confirmar: { x: 50, y: 50 },
+    mensagem: { x: 50, y: 61 },
     voltarAoLogin: { x: 10, y: 90 },
   },
   narrativaInicial: {

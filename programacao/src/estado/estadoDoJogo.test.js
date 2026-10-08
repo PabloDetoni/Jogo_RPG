@@ -169,22 +169,56 @@ describe('partida', () => {
   })
 })
 
-describe('contas (RF03)', () => {
-  it('conta criada a partir do convidado leva o progresso dele', () => {
-    const convidado = convidadoComMago()
-    const e = fazer(convidado, { tipo: 'irPara', destino: 'criarConta' }, { tipo: 'confirmarConta' })
-    expect(e).toMatchObject({ tipoJogador: 'conta', perfilLocal: null, tela: 'reino' })
-    expect(e.progresso).toBe(convidado.progresso)
+describe('contas (Fase 2: RF03, RF10, RF11)', () => {
+  const conta = { id: 'u1', email: 'a@b.com', apelido: 'Pablo' }
+  const doBanco = { ...progressoInicial(), personagens: [novoPersonagem('tanque')], lider: 'tanque', ouro: 300 }
+
+  it('entrar com o progresso escolhido (do banco): vai ao Reino, com o save local da conta', () => {
+    const e = fazer(inicio(), { tipo: 'irPara', destino: 'login' }, { tipo: 'entrarNaConta', conta, escolha: { de: 'banco', progresso: doBanco } })
+    expect(e).toMatchObject({ tipoJogador: 'conta', perfilLocal: 'conta', conta, tela: 'reino' })
+    expect(e.progresso).toBe(doBanco)
   })
 
-  it('entrar numa conta que já existia não mistura o progresso do convidado', () => {
-    const e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'login' }, { tipo: 'entrarNaConta' })
-    expect(e).toMatchObject({ tipoJogador: 'conta', perfilLocal: null, tela: 'narrativaInicial' })
-    expect(e.progresso).toEqual(progressoInicial())
+  it('primeiro acesso da conta: narrativa e escolha da classe (RF07); escolher envia ao banco', () => {
+    let e = fazer(inicio(), { tipo: 'entrarNaConta', conta, escolha: { de: 'novo', progresso: null } })
+    expect(e.tela).toBe('narrativaInicial')
+    e = fazer(e, { tipo: 'escolherClasseInicial', classe: 'mago' })
+    expect(e.pedidosAoBanco).toBe(1)
   })
 
-  it('conta nova sem convidado começa vazia', () => {
-    expect(fazer(inicio(), { tipo: 'confirmarConta' }).progresso).toEqual(progressoInicial())
+  it('progresso do convidado passado para a conta e partida não terminada descartada: os dois avisos', () => {
+    const e = fazer(inicio(), { tipo: 'entrarNaConta', conta, escolha: { de: 'convidado', progresso: doBanco, partidaDescartada: true } })
+    expect(e.avisos.map((aviso) => aviso.texto)).toEqual([expect.stringContaining('descartada'), expect.stringContaining('convidado')])
+  })
+
+  it('conta: começar e terminar a partida enviam ao banco e registram a partida (TASK-100)', () => {
+    let e = fazer(inicio(), { tipo: 'entrarNaConta', conta, escolha: { de: 'banco', progresso: doBanco } }, ...irAtePreparacao, comecar)
+    expect(e.pedidosAoBanco).toBe(1)
+    e = fazer(e, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria', ouroGanho: 50, monstros: 3, segundosAtivos: 12, segundosTotais: 40 } })
+    expect(e.pedidosAoBanco).toBe(2)
+    expect(e.partidasParaRegistrar).toEqual([
+      { bioma: 'floresta', resultado: 'vitoria', pontuacao: e.ultimoResultado.pontuacaoFinal, ouro: 50, monstros: 3, tempo_ativo: 12, tempo_total: 40 },
+    ])
+    expect(fazer(e, { tipo: 'partidasRegistradas', quantas: 1 }).partidasParaRegistrar).toEqual([])
+  })
+
+  it('convidado: nada vai para o banco (RF01)', () => {
+    const e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
+    expect(e.pedidosAoBanco).toBe(0)
+    expect(e.partidasParaRegistrar).toEqual([])
+  })
+
+  it('o banco tinha um save mais novo: ele passa a valer, com aviso, e o jogo volta ao Reino', () => {
+    const base = fazer(inicio(), { tipo: 'entrarNaConta', conta, escolha: { de: 'banco', progresso: progressoComMago } })
+    const e = fazer(base, { tipo: 'usarProgressoDoBanco', progresso: doBanco, aviso: 'Carregado da nuvem.' })
+    expect(e.progresso).toBe(doBanco)
+    expect(e.tela).toBe('reino')
+    expect(e.avisos.at(-1).texto).toBe('Carregado da nuvem.')
+  })
+
+  it('mensagem no Login (e-mail confirmado, senha trocada...)', () => {
+    const e = fazer(inicio(), { tipo: 'mostrarNoLogin', mensagem: { texto: 'E-mail confirmado!', tipo: 'bom' } })
+    expect(e).toMatchObject({ tela: 'login', mensagemDoAcesso: { texto: 'E-mail confirmado!', tipo: 'bom' } })
   })
 
   it('trocar o tipo pelo painel de dev não liga o salvamento', () => {

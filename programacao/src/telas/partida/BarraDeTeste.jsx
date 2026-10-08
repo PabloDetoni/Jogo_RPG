@@ -3,12 +3,25 @@ import { combateDeTeste } from '../../dados/balanceamento.js'
 import { classes } from '../../dados/classes.js'
 import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
 
-// Barra de TESTE da arena (Fase 1). Some quando a partida de verdade estiver pronta.
-// Fica numa faixa embaixo, fora da área jogável (ninguém anda embaixo dela).
+const teclas = 'WASD anda · mouse mira · clique ataca · 1 2 3 habilidades · Espaço esquiva · Q volta ao Reino · F foge · M muta · Esc pausa'
+
+// Barra de TESTE da arena (Fase 1). Fica numa faixa embaixo, fora da área jogável (ninguém anda embaixo dela).
+// Os botões de teste existem só no npm run dev; no jogo publicado (npm run build, Vercel) a faixa mostra só as teclas.
 // Os botões não pegam o foco do teclado: assim o Espaço continua sendo a esquiva, e não um clique.
-// Os 4 resultados acabam a partida com os números reais dela. "Subir nível" e "+ouro" só existem no npm run dev:
-// mexem no que a partida ganhou, que só entra no save no fim, pelo caminho normal.
+// Os 4 resultados acabam a partida com os números reais dela. "Subir nível" e "+ouro" mexem no que a partida ganhou,
+// que só entra no save no fim, pelo caminho normal.
 export default function BarraDeTeste({ ponte, situacao }) {
+  if (!import.meta.env.DEV) {
+    return (
+      <div className="barra-de-teste" aria-label="Teclas" style={{ height: emCqw(faixas.barraDeTeste) }}>
+        <p className="dica-de-teclas">{teclas}</p>
+      </div>
+    )
+  }
+  return <BotoesDeTeste ponte={ponte} situacao={situacao} />
+}
+
+function BotoesDeTeste({ ponte, situacao }) {
   const mandar = (comando) => ponte.avisar('comando', comando)
   const foco = situacao?.contagemDoFoco
 
@@ -65,17 +78,10 @@ export default function BarraDeTeste({ ponte, situacao }) {
             Foco: {foco.erros} {foco.erros === 1 ? 'erro' : 'erros'} em {foco.decisoes} decisões
           </span>
         )}
-        {import.meta.env.DEV && (
-          <>
-            <BotaoDeTeste onClick={() => mandar({ tipo: 'subirNivel' })}>Subir nível</BotaoDeTeste>
-            <BotaoDeTeste onClick={() => mandar({ tipo: 'ganharOuro' })}>+{combateDeTeste.testes.ouroDoBotao} de ouro</BotaoDeTeste>
-          </>
-        )}
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'subirNivel' })}>Subir nível</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'ganharOuro' })}>+{combateDeTeste.testes.ouroDoBotao} de ouro</BotaoDeTeste>
       </div>
-      <p className="dica-de-teclas">
-        WASD anda · mouse mira · clique ataca · 1 2 3 habilidades · Espaço esquiva · Q volta ao Reino · F foge · M muta ·
-        Esc pausa · Invencível vale só para o Líder
-      </p>
+      <p className="dica-de-teclas">{teclas} · Invencível vale só para o Líder</p>
     </div>
   )
 }

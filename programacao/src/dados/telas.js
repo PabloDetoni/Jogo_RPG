@@ -11,6 +11,8 @@ export const telas = {
   criarConta: { nome: 'Criar conta', grupo: 'Acesso' },
   confirmeEmail: { nome: 'Confirme seu e-mail', grupo: 'Acesso' },
   esqueciSenha: { nome: 'Esqueci minha senha', grupo: 'Acesso' },
+  novaSenha: { nome: 'Senha nova', grupo: 'Acesso' },
+  escolherApelido: { nome: 'Escolha seu apelido', grupo: 'Acesso' },
   narrativaInicial: { nome: 'Narrativa inicial', grupo: 'Acesso' },
   selecaoClasse: { nome: 'Seleção de classe', grupo: 'Acesso' },
 

@@ -21,7 +21,13 @@ describe('lerArquivoDeSave', () => {
       partidaDescartada: false,
       versao: 4,
       salvoEm: '2026-10-05T12:00:00Z',
+      versaoNoBanco: 0,
     })
+  })
+
+  it('cópia da conta: a versão do banco de onde partiu vai junto (RF11)', () => {
+    const textoDaConta = escreverArquivoDeSave({ versao: 9, salvoEm: 'x', progresso, partidaEmAndamento: null, versaoNoBanco: 7 })
+    expect(lerArquivoDeSave(textoDaConta).versaoNoBanco).toBe(7)
   })
 
   it('partida não terminada é descartada; o progresso é o do começo dela (RF11, RF12)', () => {

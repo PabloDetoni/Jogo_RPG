@@ -8,7 +8,7 @@ import { contratarTodasAsClasses, mudarNivel, quaseSubir } from './ferramentasDe
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
-// Estado global do jogo. Só "progresso" vai para o salvamento do convidado;
+// Estado global do jogo. Só "progresso" vai para o salvamento (do convidado ou da conta);
 // as preferências são salvas à parte (salvamento/preferenciasLocais.js); o resto vive só na memória.
 export function criarEstadoInicial(preferencias) {
   return {
@@ -21,7 +21,10 @@ export function criarEstadoInicial(preferencias) {
 
     // Quem está jogando. Toda visita começa na Tela inicial (diagrama de Acesso).
     tipoJogador: 'nenhum', // 'nenhum', 'convidado' ou 'conta'
-    perfilLocal: null, // 'convidado' quando o progresso é salvo neste navegador; null = nada é salvo
+    // De quem é o save deste navegador: 'convidado', 'conta' (a cópia local da conta, Fase 2) ou null (nada é salvo)
+    perfilLocal: null,
+    conta: null, // a conta que entrou: { id, email, apelido } (Fase 2)
+    mensagemDoAcesso: null, // { texto, tipo: 'bom' | 'erro' } para a tela de Login (e-mail confirmado, conta em uso...)
 
     // O que fica salvo
     progresso: progressoInicial(),
@@ -36,6 +39,11 @@ export function criarEstadoInicial(preferencias) {
 
     // Sobe a cada momento de salvamento (RF09); o ProvedorDoJogo grava quando muda
     pedidosDeSalvamento: 0,
+    // Conta (Fase 2): sobe nos momentos em que o save também vai para o Supabase (RF10): começar partida, fim da
+    // partida e o primeiro personagem; Sair da conta envia por conta própria
+    pedidosAoBanco: 0,
+    partidasParaRegistrar: [], // partidas de conta terminadas e ainda não gravadas no banco (TASK-100)
+    nuvem: null, // conta: { situacao: 'ok' | 'pendente', mensagem } (o último envio ao Supabase)
   }
 }
 
@@ -76,6 +84,13 @@ function comAviso(estado, texto) {
 function pedirSalvamento(estado) {
   return { ...estado, pedidosDeSalvamento: estado.pedidosDeSalvamento + 1 }
 }
+
+// Momento em que a conta envia o save ao Supabase (RF10). Convidado: nada vai para o banco (RF01).
+function pedirEnvioAoBanco(estado) {
+  return estado.perfilLocal === 'conta' ? { ...estado, pedidosAoBanco: estado.pedidosAoBanco + 1 } : estado
+}
+
+const avisoConvidadoParaConta = 'O progresso do convidado deste navegador agora é da sua conta e está salvo na nuvem.'
 
 // Sem personagem é o primeiro acesso: narrativa e escolha da classe (RF07).
 function destinoAoEntrar(estado) {
@@ -127,8 +142,22 @@ function encerrarPartida(estado, fim = {}) {
     personagens, // XP de cada permanente: { classe, xp, nivelAntes, nivel, niveisGanhos }
   }
 
+  // Conta: a partida vai para o histórico e o ranking (TASK-100); o convidado nunca grava no banco
+  if (partidaAtual && estado.perfilLocal === 'conta') {
+    const registro = {
+      bioma,
+      resultado: contas.resultado,
+      pontuacao: contas.pontuacaoFinal,
+      ouro: contas.ouroRecebido,
+      monstros: novo.ultimoResultado.monstros,
+      tempo_ativo: novo.ultimoResultado.segundosAtivos,
+      tempo_total: novo.ultimoResultado.segundosTotais,
+    }
+    novo = { ...novo, partidasParaRegistrar: [...estado.partidasParaRegistrar, registro] }
+  }
+
   const destino = resultados[contas.resultado].cutscene ? 'cutsceneDerrota' : 'resumo'
-  return navegar(pedirSalvamento({ ...novo, partidaAtual: null }), destino)
+  return navegar(pedirEnvioAoBanco(pedirSalvamento({ ...novo, partidaAtual: null })), destino)
 }
 
 // Painel "</> DEV": só no npm run dev e só fora da partida (o progresso não muda durante a partida, RF12).
@@ -193,25 +222,41 @@ export function atualizarEstado(estado, acao) {
       return navegar(novo, destinoAoEntrar(novo))
     }
 
-    // Login → Entrar: conta que já existia. Não mistura o progresso do convidado (RF03).
-    // Até a etapa 8 a conta é de teste: começa vazia e nada dela é salvo.
+    // A conta entrou (src/conta/fluxo.js já conferiu a senha, a sessão única e escolheu o progresso, RF03 e RF11).
+    // escolha: { de: 'local' | 'banco' | 'convidado' | 'novo', progresso, partidaDescartada }
     case 'entrarNaConta': {
-      const novo = { ...estado, tipoJogador: 'conta', perfilLocal: null, progresso: progressoInicial() }
+      const { conta, escolha } = acao
+      let novo = {
+        ...estado,
+        tipoJogador: 'conta',
+        perfilLocal: 'conta',
+        conta,
+        progresso: escolha.progresso ?? progressoInicial(),
+        partidaAtual: null,
+        mensagemDoAcesso: null,
+        partidasParaRegistrar: [],
+        nuvem: { situacao: 'ok', mensagem: null },
+      }
+      if (escolha.partidaDescartada) novo = comAviso(novo, avisoPartidaDescartada)
+      if (escolha.de === 'convidado') novo = comAviso(novo, avisoConvidadoParaConta)
       return navegar(novo, destinoAoEntrar(novo))
     }
 
-    // "Já confirmei": primeiro login da conta criada. Se ela foi criada a partir do
-    // convidado, o progresso dele vai junto (RF03); senão, a conta começa vazia.
-    case 'confirmarConta': {
-      const veioDoConvidado = estado.perfilLocal === 'convidado'
-      const novo = {
-        ...estado,
-        tipoJogador: 'conta',
-        perfilLocal: null,
-        progresso: veioDoConvidado ? estado.progresso : progressoInicial(),
-      }
-      return navegar(novo, destinoAoEntrar(novo))
-    }
+    // Mensagem na tela de Login (e-mail confirmado, senha trocada, conta em uso, link expirado...)
+    case 'mostrarNoLogin':
+      return navegar({ ...estado, mensagemDoAcesso: acao.mensagem }, 'login')
+
+    // Conta: como foi o último envio ao Supabase ({ situacao: 'ok' | 'pendente', mensagem })
+    case 'atualizarNuvem':
+      return { ...estado, nuvem: acao.nuvem }
+
+    // O banco tinha um save mais novo que este navegador: ele passa a valer (RF10, TASK-096)
+    case 'usarProgressoDoBanco':
+      return navegar(comAviso(pedirSalvamento({ ...estado, progresso: acao.progresso, partidaAtual: null }), acao.aviso), 'reino')
+
+    // Partidas já gravadas no banco saem da fila
+    case 'partidasRegistradas':
+      return { ...estado, partidasParaRegistrar: estado.partidasParaRegistrar.slice(acao.quantas) }
 
     // Só para o painel de desenvolvimento: muda o que as telas mostram, não o que é salvo
     case 'trocarTipoJogador':
@@ -221,7 +266,7 @@ export function atualizarEstado(estado, acao) {
     case 'escolherClasseInicial':
       if (estado.progresso.personagens.length > 0) return navegar(estado, 'reino')
       return navegar(
-        pedirSalvamento(comProgresso(estado, { personagens: [novoPersonagem(acao.classe)], lider: acao.classe })),
+        pedirEnvioAoBanco(pedirSalvamento(comProgresso(estado, { personagens: [novoPersonagem(acao.classe)], lider: acao.classe }))),
         'reino',
       )
 
@@ -247,7 +292,7 @@ export function atualizarEstado(estado, acao) {
       const { lider, personagens } = estado.progresso
       if (!personagens.some((p) => p.classe === lider)) return estado
       const partidaAtual = { ...estado.escolhasDaPartida, lider, iniciadaEm: acao.agora }
-      return navegar(pedirSalvamento({ ...estado, partidaAtual, controleDaPartida: controleInicialDaPartida() }), 'partida')
+      return navegar(pedirEnvioAoBanco(pedirSalvamento({ ...estado, partidaAtual, controleDaPartida: controleInicialDaPartida() })), 'partida')
     }
 
     // "Voltar ao Reino" da pausa: não tem atalho, passa pela contagem de 15 s do Q, que roda na partida (RF44, RF45).

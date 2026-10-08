@@ -11,9 +11,9 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC01 | Jogar como convidado | Associação | Estendido por UC07 | — | Começa a jogar sem cadastro; o progresso fica só no navegador. |
 | UC02 | Cadastrar conta | Associação | Estendido por UC03 | — | Cria a conta com e-mail real, senha e apelido único e recebe o e-mail de confirmação. |
 | UC03 | Transferir progresso do convidado | «extend» de UC02 | «include» UC09 | Condição: o cadastro foi feito a partir do modo convidado | No primeiro login da conta nova, todo o progresso do convidado daquele navegador vai para a conta. |
-| UC04 | Autenticar-se | Associação | Estendido por UC05, UC06 e UC07 | — | Entra com e-mail e senha; cria a sessão única e carrega o progresso. |
+| UC04 | Autenticar-se | Associação | Estendido por UC05, UC06 e UC07 | — | Entra com e-mail e senha (ou "Continuar como ...", se o navegador lembra a conta); cria a sessão única e carrega o progresso. |
 | UC05 | Notificar conta em uso | «extend» de UC04 | — | Condição: a conta já tem uma sessão ativa | Bloqueia o acesso e avisa que a conta está aberta em outra máquina ou aba. |
-| UC06 | Recuperar senha | «extend» de UC04 | — | Condição: o jogador esqueceu a senha | Envia um link de recuperação ao e-mail da conta para redefinir a senha. |
+| UC06 | Recuperar senha | «extend» de UC04 | — | Condição: o jogador esqueceu a senha | Envia um link de recuperação ao e-mail da conta; o link abre a tela Senha nova, e depois o jogo volta ao Login. |
 | UC07 | Escolher classe inicial | «extend» de UC01 e de UC04 | — | Condição: primeiro acesso (convidado novo ou conta nova sem progresso de convidado) | Mostra a narrativa inicial e as 5 classes; cria o primeiro personagem, que é o primeiro Líder. |
 | UC08 | Encerrar sessão | Associação | «include» UC09 | — | Sai da conta (ou, no modo convidado, sai do jogo) salvando o progresso; a página recarrega e volta à Tela Inicial. |
 
@@ -89,6 +89,8 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 | UC32 | Cada classe tem um ataque de clique (espada, flecha, bola mágica, escudo que empurra, aura de cura), e a esquiva não deixa levar dano durante o avanço (definitivos só depois da decisão do grupo). |
 | UC31 | O Sacerdote cura sempre que alguém do grupo não está com a vida cheia (caídos primeiro, depois o mais ferido, em empate o Líder); a IA de nível mais alto desvia de quem está parado e não espera quem errou. |
 | UC40 | Confirmada, a fuga não se cancela. |
+| UC04 | Pode entrar por "Continuar como ..." quando o navegador lembra a conta (Fase 2). |
+| UC06 | O link de recuperação abre a tela Senha nova (Fase 2). |
 | UC41 | O nível ganho na partida vale a partir da partida seguinte. |
 
 Os requisitos ligados a cada mudança estão na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

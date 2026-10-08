@@ -3,6 +3,7 @@ import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
+import { HistoricoDePartidas, RankingDaAba } from './Ranking.jsx'
 
 const pos = posicoes.salaoGloria
 
@@ -21,10 +22,10 @@ export default function SalaoGloria() {
   const { estado, acoes } = useJogo()
   const { tipoJogador } = estado
 
-  const abas = [...abasRanking]
+  const abas = abasRanking.map((aba) => ({ ...aba, conteudo: <RankingDaAba key={aba.id} aba={aba.id} /> }))
   // Histórico: só o próprio jogador com conta (RF16)
-  if (tipoJogador === 'conta') abas.push({ id: 'historico', nome: 'Histórico' })
-  // Conquistas: de quem já está jogando, convidado ou conta
+  if (tipoJogador === 'conta') abas.push({ id: 'historico', nome: 'Minhas partidas', conteudo: <HistoricoDePartidas /> })
+  // Conquistas: de quem já está jogando, convidado ou conta (o conteúdo chega na Fase 4)
   if (tipoJogador !== 'nenhum') abas.push({ id: 'conquistas', nome: 'Conquistas' })
 
   return (

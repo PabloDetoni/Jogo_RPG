@@ -7,7 +7,7 @@ import { useJogo } from '../estado/contexto.js'
 // das telas e janelas. Todos ficam salvos no navegador e valem antes do login. O mudo também liga e desliga com M.
 export default function Configuracoes() {
   const { estado, acoes } = useJogo()
-  const { tipoJogador, preferencias } = estado
+  const { tipoJogador, preferencias, conta, nuvem } = estado
   const naPartida = telas[estado.tela].naPartida
 
   return (
@@ -27,7 +27,12 @@ export default function Configuracoes() {
       )}
       {!naPartida && tipoJogador === 'conta' && (
         <>
-          <p>Jogando com conta de teste. Por enquanto, nada da conta é salvo.</p>
+          <p>
+            Conta: <strong>{conta?.apelido ?? 'de teste'}</strong>
+            {conta?.email ? ` (${conta.email})` : ''}. O progresso fica salvo na nuvem.
+          </p>
+          {/* Sem internet, o jogo segue e o progresso espera neste navegador (RNF09) */}
+          {nuvem?.situacao === 'pendente' && <p className="mensagem-da-guilda-erro">{nuvem.mensagem}</p>}
           <Botao onClick={acoes.sair}>Sair da conta</Botao>
         </>
       )}

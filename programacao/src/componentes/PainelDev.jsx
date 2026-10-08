@@ -132,7 +132,7 @@ export default function PainelDev() {
       </button>
       <span>Salvamento: {descreverSalvamento(estado.perfilLocal, info)}</span>
       <span>Partidas jogadas: {estado.progresso.estatisticas.partidasJogadas}</span>
-      <button type="button" onClick={acoes.salvarAgora} disabled={estado.perfilLocal !== 'convidado'}>
+      <button type="button" onClick={acoes.salvarAgora} disabled={!estado.perfilLocal}>
         Salvar agora
       </button>
       <button type="button" onClick={apagarProgresso}>
@@ -186,8 +186,9 @@ function Personagens() {
 }
 
 function descreverSalvamento(perfilLocal, info) {
-  if (perfilLocal !== 'convidado') return 'nada é salvo (sem convidado)'
+  if (!perfilLocal) return 'nada é salvo (sem convidado nem conta)'
   const quando = info.salvoEm ? `salvo às ${new Date(info.salvoEm).toLocaleTimeString('pt-BR')}` : 'ainda não salvo'
   const problema = info.problema ? ` · problema: ${info.problema}` : ''
-  return `versão ${info.versao ?? 0}, ${quando}${problema}`
+  const deQuem = perfilLocal === 'conta' ? 'cópia da conta, ' : ''
+  return `${deQuem}versão ${info.versao ?? 0}, ${quando}${problema}`
 }

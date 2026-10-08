@@ -1,56 +1,130 @@
-# Supabase: passo a passo para o Pablo (TASK-090)
+# Supabase: passo a passo para o Pablo
 
-As contas (login, cadastro, ranking, histórico) da Fase 2 usam o Supabase. Criar o projeto e testar o e-mail é algo que só uma pessoa da equipe consegue fazer, com a própria conta. Escrito em 08/10/2026; os nomes dos menus do site podem mudar um pouco.
+As contas (cadastro, login, sessão única, save na nuvem, ranking e histórico) da Fase 2 usam o Supabase. Algumas coisas só dá para fazer no painel do Supabase, com a conta do Pablo; este arquivo diz exatamente onde clicar. Os nomes dos menus do site podem mudar um pouco.
 
-## 1. Criar o projeto (uns 10 minutos)
+- **Parte 1 (TASK-090): FEITA em 08/10/2026.** Projeto criado, confirmação de e-mail ligada e e-mails chegando. A URL e a chave publicável estão no `programacao/.env.local` (fora do GitHub).
+- **Parte 2 (Fase 2): é a vez do Pablo.** Rodar o SQL, configurar os endereços dos links de e-mail, criar duas contas de teste e, se for preciso, o e-mail próprio (SMTP).
 
-1. Entre em https://supabase.com e clique em **Start your project**. Dá para entrar com a conta do GitHub.
-2. Clique em **New project**:
-   - **Name:** `jogo-rpg` (ou o nome do jogo, quando o grupo decidir);
-   - **Database Password:** clique em **Generate a password** e **guarde essa senha** num lugar seguro (ela não vai para o código);
-   - **Region:** South America (São Paulo);
-   - **Plano:** Free.
-3. Espere uns 2 minutos até o projeto ficar pronto.
+---
 
-## 2. Ligar a confirmação de e-mail
+## Parte 1 (feita): criar o projeto e testar o e-mail
 
-1. No menu da esquerda, abra **Authentication → Sign In / Providers** (ou **Providers**) e confira que **Email** está ligado.
-2. Confira que **Confirm email** está ligado (a confirmação de e-mail é obrigatória, RF02).
-3. Em **Authentication → URL Configuration**:
-   - **Site URL:** `http://localhost:5173`;
-   - em **Redirect URLs**, acrescente `http://localhost:5173/**`.
-
-## 3. Testar se o e-mail chega (o teste da TASK-090)
-
-1. Em **Authentication → Users**, clique em **Add user → Send invitation** e mande para o seu e-mail.
-2. Anote:
-   - se o e-mail chegou;
-   - quanto tempo levou;
-   - se caiu no spam.
-3. Clique nos três pontinhos do usuário e use **Send password recovery** (recuperação de senha). Anote o mesmo.
-4. Repita com um segundo e-mail (de outra pessoa do grupo ou de outro provedor, Gmail e Outlook, por exemplo).
-
-O envio padrão do Supabase tem um limite baixo de e-mails por hora no plano grátis. Se os e-mails não chegarem, demorarem muito ou o limite atrapalhar os testes, o próximo passo é configurar um serviço de e-mail próprio (SMTP), e eu passo outro passo a passo para isso.
-
-## 4. Me passar o endereço e a chave (sem colocar no GitHub)
-
-1. Abra **Project Settings → API** (ou **Data API**) e copie:
-   - **Project URL** (algo como `https://abcdefgh.supabase.co`);
-   - a chave **anon** / **public** (uma linha comprida).
-2. Dentro da pasta `programacao`, crie um arquivo chamado `.env.local` com estas duas linhas, trocando pelos seus valores:
+1. Em https://supabase.com, **New project**: nome `jogo-rpg`, região South America (São Paulo), plano Free, com a senha do banco guardada fora do projeto.
+2. **Authentication → Sign In / Providers**: **Email** ligado e **Confirm email** ligado (RF02).
+3. Teste do e-mail: convite e recuperação de senha pelo painel. Os dois chegaram.
+4. No `programacao/.env.local` (o `.gitignore` não deixa ele ir para o GitHub):
 
    ```
-   VITE_SUPABASE_URL=https://abcdefgh.supabase.co
-   VITE_SUPABASE_ANON_KEY=cole-aqui-a-chave-anon
+   VITE_SUPABASE_URL=https://<id-do-projeto>.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
    ```
 
-3. Esse arquivo **não vai para o GitHub**: o `.gitignore` já o ignora. **Nunca** coloque a chave **service_role** nem a senha do banco no projeto.
-4. Me avise com uma frase como "Supabase pronto, o e-mail chegou em X minutos" ou "Supabase pronto, o e-mail não chegou".
+   O jogo usa só a chave **publicável**. A chave secreta (secret / service_role) e a senha do banco **nunca** entram no projeto: quem protege os dados são as regras de segurança (RLS) do SQL.
 
-## 5. O que eu faço depois
+---
 
-1. Pergunto antes de instalar a biblioteca do Supabase (`@supabase/supabase-js`), como manda o protocolo.
-2. Crio as tabelas (perfis com apelido único, progresso com versão, partidas para o ranking e o histórico), com as regras de segurança: cada um só mexe nos próprios dados.
-3. Ligo o cadastro, o login, a confirmação de e-mail, o "esqueci minha senha", a sessão única e a passagem do progresso do convidado para a conta.
+## Parte 2 (Fase 2): o que o Pablo faz agora
 
-Enquanto isso não estiver pronto, eu adianto a Fase 3 (mundo da Floresta) e volto às contas depois.
+São uns 20 minutos. No fim, me mande uma frase como "SQL rodado, URLs configuradas e contas de teste no .env.local".
+
+### Passo A · Rodar o SQL (cria as tabelas e as regras de segurança)
+
+1. Abra o painel do Supabase e entre no projeto **jogo-rpg**.
+2. No menu da esquerda, clique em **SQL Editor** (ícone `>_`).
+3. Clique em **New query** (ou no **+** no alto da lista).
+4. No VS Code, abra o arquivo `programacao/supabase/001_contas.sql`, aperte **Ctrl+A** e depois **Ctrl+C**.
+5. Volte ao SQL Editor, clique dentro da área de texto, aperte **Ctrl+V** e depois clique em **Run** (ou **Ctrl+Enter**).
+6. Se aparecer um aviso de "operação destrutiva" (por causa das linhas `drop policy if exists` e `drop trigger if exists`), clique em **Run this query**: essas linhas só apagam uma regra antiga com o mesmo nome antes de criar de novo. Nenhum dado é apagado.
+7. Deve aparecer **Success. No rows returned**.
+8. Para conferir: no menu da esquerda, abra **Table Editor**. Devem aparecer as tabelas `perfis`, `sessoes`, `saves` e `partidas`, cada uma **sem** o aviso vermelho "RLS disabled".
+
+Se aparecer um erro vermelho, copie a mensagem e me mande; não tente consertar no painel.
+
+### Passo B · Endereços dos links de e-mail (confirmação e senha nova)
+
+Os links dos e-mails voltam para o endereço de onde o jogo foi aberto (o localhost no seu computador; a Vercel na internet). O Supabase só aceita voltar para os endereços desta lista.
+
+1. No menu da esquerda, abra **Authentication → URL Configuration**.
+2. **Site URL:** deixe `http://localhost:5173` por enquanto (depois da Vercel, troque pelo endereço dela; veja o `Vercel_passo_a_passo.md`). Clique em **Save**.
+3. Em **Redirect URLs**, clique em **Add URL** e confira que estes estão na lista:
+   - `http://localhost:5173/**`
+   - depois de publicar na Vercel: `https://jogo-rpg.vercel.app/**` (troque pelo endereço que a Vercel der) e `https://jogo-rpg-*.vercel.app/**` (as prévias de teste).
+4. Clique em **Save URLs**.
+
+### Passo C · Tamanho mínimo da senha (para bater com o jogo)
+
+1. **Authentication → Sign In / Providers → Email**.
+2. Em **Minimum password length**, coloque **8** (o jogo já pede 8). Clique em **Save**.
+
+### Passo D · Duas contas de teste (para o roteiro automático das contas)
+
+O roteiro `npm run testar:contas` entra com duas contas de verdade para conferir a sessão única, o save antigo recusado, a conta A tentando mexer na B, a queda de internet e o ranking (TEST-007).
+
+1. **Authentication → Users → Add user → Create new user**.
+2. **Email:** um e-mail seu com um apelido no endereço. No Gmail, colocar `+testea` antes do `@` cria um endereço novo que chega na mesma caixa (por exemplo, `seunome+testea@gmail.com`).
+3. **Password:** uma senha com pelo menos 8 caracteres, só para teste.
+4. Marque **Auto Confirm User** e clique em **Create user**.
+5. Repita com `+testeb` para a conta B.
+6. Abra `programacao/.env.local` no VS Code e acrescente, com os seus valores:
+
+   ```
+   TESTE_CONTA_A_EMAIL=seunome+testea@gmail.com
+   TESTE_CONTA_A_SENHA=senha-da-conta-a
+   TESTE_CONTA_B_EMAIL=seunome+testeb@gmail.com
+   TESTE_CONTA_B_SENHA=senha-da-conta-b
+   ```
+
+7. Salve. Esse arquivo não vai para o GitHub.
+
+No primeiro login, o jogo pede um apelido para essas contas (elas foram criadas pelo painel, sem apelido); o roteiro escolhe `TesteA` e `TesteB` sozinho. Elas aparecem no ranking. Antes da entrega, dá para apagá-las em **Authentication → Users** (os dados delas somem junto).
+
+### Passo E · E-mail próprio (SMTP): só se o e-mail não chegar para outras pessoas
+
+O envio padrão do Supabase serve para testar, mas tem um limite baixo de e-mails por hora e pode só entregar para quem é membro do projeto. **Teste:** peça para o Uener ou o Lucas criar uma conta no jogo. Se o e-mail de confirmação não chegar em uns 5 minutos (veja o spam), configure um e-mail próprio. O mais simples é um Gmail com "senha de app":
+
+1. Na conta Google que vai enviar os e-mails (pode ser uma conta nova só para o jogo), ligue a **Verificação em duas etapas** (https://myaccount.google.com/security).
+2. Abra https://myaccount.google.com/apppasswords, dê o nome `Supabase` e clique em **Criar**. Copie a senha de 16 letras que aparece.
+3. No Supabase: **Authentication → Emails → SMTP Settings** (ou **Project Settings → Authentication → SMTP**), ligue **Enable Custom SMTP** e preencha:
+   - **Sender email:** o Gmail que vai enviar;
+   - **Sender name:** o nome do jogo (por enquanto, `Jogo RPG`);
+   - **Host:** `smtp.gmail.com`;
+   - **Port:** `465`;
+   - **Username:** o mesmo Gmail;
+   - **Password:** a senha de app de 16 letras.
+4. Clique em **Save**. Depois, em **Authentication → Rate Limits**, confira o limite de e-mails por hora (30 já basta para os testes).
+5. Peça para a pessoa tentar de novo (no Login, o botão **Reenviar e-mail de confirmação** aparece quando a conta ainda não foi confirmada).
+
+### Passo F (opcional) · E-mails em português
+
+Os e-mails padrão vêm em inglês. Para traduzir: **Authentication → Emails → Templates**.
+
+- **Confirm signup**, assunto `Confirme seu e-mail`, corpo:
+
+  ```html
+  <h2>Bem-vindo ao jogo!</h2>
+  <p>Clique no link abaixo para confirmar o seu e-mail e começar a jogar com a sua conta:</p>
+  <p><a href="{{ .ConfirmationURL }}">Confirmar meu e-mail</a></p>
+  <p>Se você não criou uma conta, ignore este e-mail.</p>
+  ```
+
+- **Reset password**, assunto `Crie uma senha nova`, corpo:
+
+  ```html
+  <h2>Senha nova</h2>
+  <p>Clique no link abaixo para criar uma senha nova para a sua conta:</p>
+  <p><a href="{{ .ConfirmationURL }}">Criar senha nova</a></p>
+  <p>Se você não pediu, ignore este e-mail: a senha continua a mesma.</p>
+  ```
+
+Não mude o `{{ .ConfirmationURL }}`: é ele que leva de volta ao jogo.
+
+---
+
+## Como fica a segurança (resumo)
+
+- Cada conta só lê o próprio perfil, o próprio save e as próprias partidas (RLS).
+- Ninguém escreve direto no save nem na sessão: só as funções do SQL, que conferem quem está logado, a sessão ativa e a versão do save (uma versão antiga nunca passa por cima de uma mais nova).
+- O ranking é público (até sem login), mas mostra só apelido e números.
+- O jogo publicado só tem a chave publicável. A chave secreta não está em lugar nenhum do projeto.
+
+Detalhes de cada tabela e função: `programacao/supabase/README.md`.

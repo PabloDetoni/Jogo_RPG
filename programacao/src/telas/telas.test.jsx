@@ -1,5 +1,5 @@
 import { renderToString } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import Avisos from '../componentes/Avisos.jsx'
 import PainelDev from '../componentes/PainelDev.jsx'
 import { ContextoJogo } from '../estado/contexto.js'
@@ -28,7 +28,7 @@ const progresso = {
   estatisticas: { partidasJogadas: 4, monstrosDerrotados: 0 },
 }
 
-function desenhar(tela, tipoJogador, problema = null) {
+function desenhar(tela, tipoJogador, problema = null, { contas = { disponivel: true, guardada: null }, mudancas = {} } = {}) {
   const salvador = {
     inscrever: () => () => {},
     obterInfo: () => ({ versao: 7, salvoEm: '2026-10-05T12:00:00.000Z', problema }),
@@ -44,10 +44,12 @@ function desenhar(tela, tipoJogador, problema = null) {
     ultimoResultado: { resultado: 'retornoForcado', bioma: 'floresta' },
     janelas: Object.keys(componentesDasJanelas),
     avisos: [{ id: 1, texto: 'Aviso de teste' }],
+    conta: tipoJogador === 'conta' ? { id: 'u1', email: 'a@b.com', apelido: 'Pablo' } : null,
+    ...mudancas,
   }
   const TelaAtual = componentesDasTelas[tela]
   return renderToString(
-    <ContextoJogo value={{ estado, acoes, salvador }}>
+    <ContextoJogo value={{ estado, acoes, salvador, contas }}>
       <TelaAtual />
       {estado.janelas.map((id) => {
         const Janela = componentesDasJanelas[id]
@@ -143,13 +145,20 @@ describe('o que cada tela mostra', () => {
     expect(html).toContain('>Fugir (F)</button>')
   })
 
-  it('Configurações: convidado pode criar conta e sair; conta só sai', () => {
+  it('Configurações: convidado pode criar conta e sair; conta mostra o apelido e só sai', () => {
     const convidado = desenhar('reino', 'convidado')
     expect(convidado).toContain('>Criar conta</button>')
     expect(convidado).toContain('>Sair do jogo</button>')
-    const conta = desenhar('reino', 'conta')
+    const conta = desenhar('reino', 'conta').replace(/<!-- -->/g, '')
     expect(conta).toContain('>Sair da conta</button>')
     expect(conta).not.toContain('>Criar conta</button>')
+    expect(conta).toContain('Conta: <strong>Pablo</strong> (a@b.com)')
+    expect(conta).toContain('Pablo · Líder: Tanque') // HUD do Reino com o apelido
+  })
+
+  it('Configurações da conta sem internet: avisa que o progresso espera neste navegador (RNF09)', () => {
+    const nuvem = { situacao: 'pendente', mensagem: 'Sem conexão com a nuvem agora: seu progresso está guardado neste navegador.' }
+    expect(desenhar('reino', 'conta', null, { mudancas: { nuvem } })).toContain('Sem conexão com a nuvem agora')
   })
 
   it('Painel de desenvolvimento: tem o símbolo de dev e o botão de minimizar', () => {
@@ -186,6 +195,57 @@ const situacao = {
   retorno: { segundos: 15, interrompido: true },
   fuga: { segundos: 3 },
 }
+
+describe('telas de acesso com contas (Fase 2)', () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('Login: "Continuar como" aparece quando o navegador lembra a conta; a mensagem do acesso aparece em cima', () => {
+    const html = desenhar('login', 'nenhum', null, {
+      contas: { disponivel: true, guardada: { id: 'u1', email: 'a@b.com' } },
+      mudancas: { mensagemDoAcesso: { texto: 'E-mail confirmado! Agora é só entrar na conta.', tipo: 'bom' } },
+    }).replace(/<!-- -->/g, '')
+    expect(html).toContain('>Continuar como a@b.com</button>')
+    expect(html).toContain('E-mail confirmado!')
+    expect(html).toContain('mensagem-do-acesso-bom')
+  })
+
+  it('Login sem o Supabase (sem .env.local ou fora do ar): avisa e o convidado continua disponível', () => {
+    const html = desenhar('login', 'nenhum', null, { contas: { disponivel: false, guardada: null } })
+    expect(html).toContain('As contas estão indisponíveis agora')
+    expect(html).toContain('>Jogar como convidado</button>')
+  })
+
+  it('Criar conta pelo convidado avisa que o progresso vai junto (RF03); Senha nova e Apelido têm os campos', () => {
+    expect(desenhar('criarConta', 'convidado')).toContain('o progresso de convidado deste navegador passa para a conta')
+    expect(desenhar('criarConta', 'nenhum')).not.toContain('passa para a conta')
+    expect(desenhar('novaSenha', 'nenhum')).toContain('Repita a senha nova')
+    expect(desenhar('escolherApelido', 'nenhum')).toContain('>Confirmar apelido</button>')
+  })
+
+  it('Salão da Glória: as 6 abas do ranking para todos (até sem login); Minhas partidas só com conta (RF15, RF16)', () => {
+    const semLogin = desenhar('salaoGloria', 'nenhum')
+    for (const aba of ['Melhores pontuações', 'Nível total', 'Por classe', 'Ouro', 'Monstros', 'Maior duração']) {
+      expect(semLogin).toContain(`>${aba}</button>`)
+    }
+    expect(semLogin).toContain('Carregando o ranking...')
+    expect(semLogin).toContain('Só jogadores com conta aparecem no ranking.')
+    expect(semLogin).not.toContain('>Minhas partidas</button>')
+    expect(semLogin).not.toContain('>Conquistas</button>')
+    const conta = desenhar('salaoGloria', 'conta')
+    expect(conta).toContain('>Minhas partidas</button>')
+    expect(conta).toContain('>Conquistas</button>')
+    expect(conta).not.toContain('Só jogadores com conta aparecem')
+  })
+
+  it('jogo publicado (fora do npm run dev): a faixa de baixo da partida mostra só as teclas, sem botões de teste', () => {
+    vi.stubEnv('DEV', false)
+    const html = desenhar('partida', 'convidado')
+    expect(html).toContain('Q volta ao Reino · F foge · M muta')
+    expect(html).not.toContain('TESTE')
+    expect(html).not.toContain('>Grande Vitória</button>')
+    expect(html).not.toContain('Invencível')
+  })
+})
 
 describe('HUD completo da partida (TASK-049)', () => {
   it('tempo, pontos, ouro, custo da fuga, em combate, foco, mudo e o lugar do minimapa', () => {

@@ -209,16 +209,22 @@ begin
     select versao into v_guardada from public.saves where conta = v_conta;
     return jsonb_build_object('aceito', false, 'versao', v_guardada, 'motivo', 'sessao');
   end if;
-  -- O mínimo que o ranking lê precisa ser número (um save estragado não derruba o ranking dos outros)
+  -- O que o ranking lê precisa ser número de tamanho normal (um save estragado ou com número absurdo não derruba o
+  -- ranking dos outros). Os limites são folgados: bem acima do que o jogo consegue dar.
   if jsonb_typeof(p_progresso) <> 'object'
     or jsonb_typeof(p_progresso -> 'ouro') is distinct from 'number'
+    or (p_progresso ->> 'ouro')::numeric not between 0 and 1000000000000
     or jsonb_typeof(p_progresso -> 'personagens') is distinct from 'array'
+    or jsonb_array_length(p_progresso -> 'personagens') > 10
     or jsonb_typeof(p_progresso -> 'estatisticas' -> 'monstrosDerrotados') is distinct from 'number'
+    or (p_progresso -> 'estatisticas' ->> 'monstrosDerrotados')::numeric not between 0 and 1000000000000
     or exists (
       select 1 from jsonb_array_elements(p_progresso -> 'personagens') pe
       where jsonb_typeof(pe -> 'classe') is distinct from 'string'
         or jsonb_typeof(pe -> 'nivel') is distinct from 'number'
         or jsonb_typeof(pe -> 'xp') is distinct from 'number'
+        or (pe ->> 'nivel')::numeric not between 0 and 1000
+        or (pe ->> 'xp')::numeric not between 0 and 1000000000000
     )
   then
     raise exception 'progresso com formato errado' using errcode = '22023';
