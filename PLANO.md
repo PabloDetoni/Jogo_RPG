@@ -4,13 +4,12 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 ## Onde parei
 
-- **Parte atual:** 5e, DOC-003 (documentar ataques de clique, esquiva e cores). A 5d está feita (commit local).
+- **Parte atual:** 7a, TASK-079 (contratos na Guilda). A 5d e a 5e estão feitas (commits locais).
 - **O que falta para fechar a Fase 1:**
-  - 5e (DOC-003: documentar ataques de clique, esquiva e cores);
   - 7a (TASK-079: contratos na Guilda);
   - 7b (TASK-071: pentágono na seleção e HUD do Reino);
   - os dois relatórios da fase, com o passo a passo do Supabase (TASK-090), a lista de arte (TASK-110) e de som (TASK-104), e as perguntas ao grupo.
-- **Próximo passo:** a 5e.
+- **Próximo passo:** a 7a.
 - **Perguntas guardadas para o fim da Fase 1:**
   - **Cura do Sacerdote:** com alguém ferido o tempo todo, a aura fica ligada só 50% do tempo (aura de 3 s, recarga de 6 s, sem custo de mana). Propor um ajuste e perguntar antes de mudar (pedido do Pablo).
   - **DOC-003, para o grupo decidir:** se os 5 ataques de clique são os definitivos, se a aura do Sacerdote é ataque básico ou habilidade, e a cor do Guerreiro.
@@ -38,7 +37,7 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 - **Regra pura:** `pontoDeDesvio` em `regras/movimento.js`, com testes e uma conferência no roteiro.
 - **Documentação:** RF42, UC31, UC37, HU31, HU37, "Alterações do projeto" e o Conceito 21.5.
 
-**5e · DOC-003:**
+**5e · DOC-003: FEITO** (RF36, UC32, HU32, Conceito 21.5 e "Alterações do projeto"; as decisões do grupo ficaram marcadas como pendentes).
 - Documentar no RF35, no RF36 e no Conceito o ataque de clique de cada classe, a esquiva (sem dano durante o avanço e com recarga) e as cores, como estão hoje.
 - O que o grupo precisa decidir fica marcado como pendente e vai na pergunta do fim da fase:
   - se os 5 ataques são os definitivos;
@@ -107,7 +106,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 |---|---|
 | DOC-001 Aplicar as decisões na documentação | FEITO (06/10): Requisitos, Casos de Uso e Histórias com o texto novo e uma seção "Alterações do projeto" no fim de cada um; diagrama 04 atualizado e PNG gerado pelo PlantUML; Conceito com a seção 21 "Alterações do projeto" e o PDF exportado pelo Word; README da documentação |
 | DOC-002 Pasta docs antiga | FEITO: ela não existe no GitHub |
-| DOC-003 Ataques de clique, esquiva e cores | A FAZER depois da parte 5a |
+| DOC-003 Ataques de clique, esquiva e cores | FEITO (08/10): o RF36, o UC32, a HU32 e o Conceito (21.5) dizem o ataque de clique de cada classe, que a esquiva não deixa levar dano e as cores. FALTA O GRUPO decidir se os 5 ataques são os definitivos, se a aura do Sacerdote é ataque básico ou habilidade, e a cor do Guerreiro |
 | DOC-004 Narrativa e Como jogar | COM VOCÊS (texto); posso rascunhar o Como jogar a partir do RF35 |
 | DOC-005 README do código | FEITO (06/10): como rodar, pastas, decisões e equipe |
 | DOC-006 Revisão final | A FAZER na semana de 23/11 |

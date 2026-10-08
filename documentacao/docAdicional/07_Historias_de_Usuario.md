@@ -284,6 +284,8 @@ Critérios de aceite:
 Como jogador, quero combater em tempo real para derrotar monstros e ganhar XP, ouro e itens.
 
 Critérios de aceite:
+- O clique faz o ataque básico da classe do meu Líder, sem gastar mana.
+- Durante a esquiva eu não levo dano.
 - Posso fugir de mobs; eles desistem quando saio do território deles.
 - O XP de cada monstro é dividido entre os permanentes ativos.
 - Requisitos atendidos: RF36, RF37, RF50, RF55.
@@ -404,6 +406,7 @@ Decisões tomadas durante a programação (outubro de 2026). Os critérios acima
 - **HU31:** a IA dos aliados melhora com o nível de cada um; só o Líder esquiva; parados, os aliados não tremem.
 - **HU37:** "área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha.
 - **HU14:** o mudo (tecla M) não apaga a escolha de Música e Som.
+- **HU32:** o clique faz o ataque básico da classe, e a esquiva não deixa levar dano (pendente: o grupo confirmar os ataques).
 - **HU31:** o Sacerdote cura sempre que alguém não está com a vida cheia; a IA de nível alto não é atrapalhada pela de nível baixo.
 - **HU40:** confirmada, a fuga não se cancela.
 - **HU41:** o nível ganho na partida vale a partir da partida seguinte.
