@@ -50,13 +50,16 @@ export const posicoes = {
     texto: { x: 50, y: 45 },
     continuar: { x: 50, y: 75 },
   },
+  // Clicar numa classe mostra a descrição e o pentágono dela; "Escolher" confirma (TASK-071)
   selecaoClasse: {
-    instrucao: { x: 50, y: 30 },
-    guerreiro: { x: 18, y: 55 },
-    mago: { x: 34, y: 55 },
-    tanque: { x: 50, y: 55 },
-    sacerdote: { x: 66, y: 55 },
-    arqueiro: { x: 82, y: 55 },
+    instrucao: { x: 50, y: 21 },
+    guerreiro: { x: 18, y: 31 },
+    mago: { x: 34, y: 31 },
+    tanque: { x: 50, y: 31 },
+    sacerdote: { x: 66, y: 31 },
+    arqueiro: { x: 82, y: 31 },
+    detalhe: { x: 50, y: 61 },
+    escolher: { x: 50, y: 89, grande: true },
   },
 
   // ---------- Reino ----------

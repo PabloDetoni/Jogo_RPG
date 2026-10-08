@@ -116,9 +116,9 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser) ← em andamento (Fase 1 do `PLANO.md`): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro) e 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M) feitas; falta fechar a Fase 1 (contratos TASK-079, pentágono TASK-071, DOC-003)
+5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, terminada em 08/10, esperando o teste do Pablo): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
 6. Mundo (zona segura, regiões, minimapa)
-7. Telas do Reino com dados de exemplo
+7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino)
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)
 9. Ranking, conquistas e som
 10. Arte

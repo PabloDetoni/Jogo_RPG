@@ -129,6 +129,67 @@ body {
   font-size: 1.15cqw;
 }
 
+/* Pentágono dos atributos (TASK-071): Seleção de classe e Árvores */
+.detalhe-da-classe {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  text-align: left;
+}
+
+.pentagono {
+  width: 22cqw;
+  height: 22cqw;
+  flex: none;
+}
+
+.pentagono-grade {
+  fill: none;
+  stroke: var(--texto);
+  stroke-opacity: 0.25;
+  stroke-width: 1;
+}
+
+.pentagono-eixo {
+  stroke: var(--texto);
+  stroke-opacity: 0.2;
+  stroke-width: 1;
+}
+
+.pentagono-forma {
+  fill-opacity: 0.45;
+  stroke-width: 2.5;
+  transition: all 0.25s ease-out;
+}
+
+.pentagono-rotulo {
+  fill: var(--texto);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.pentagono-valor {
+  font-weight: normal;
+}
+
+.texto-da-classe {
+  max-width: 36cqw;
+}
+
+.texto-da-classe h2 {
+  margin: 0;
+  font-size: 2.2cqw;
+}
+
+.texto-da-classe p {
+  margin: 0.3em 0 0;
+}
+
+.papel-da-classe {
+  font-weight: bold;
+  opacity: 0.8;
+}
+
 /* Guilda: abas de contrato (TASK-079) */
 .contratos {
   display: flex;

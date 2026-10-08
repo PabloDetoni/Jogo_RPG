@@ -61,7 +61,7 @@ scripts/        gerador do Balanceamento.md
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser) ← em andamento (partes 5a, 5b, 5b.1 e 5c feitas; falta fechar a Fase 1)
+5. Partida com quadrados (Phaser) ✔ (partes 5a a 5e; a Fase 1 também trouxe os contratos na Guilda e o pentágono)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)

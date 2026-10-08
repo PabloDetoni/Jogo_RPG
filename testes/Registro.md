@@ -13,6 +13,9 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | 5b.1 (IA em três níveis, tremor, linha de tiro) | 07/10 | 449 passando (38 novos) | ok | 133 de 133 | Pablo aprovou (07/10) | `55a6025` |
 | 5c (pausa, Q, F, fim com números reais, HUD, M) | 07/10 | 513 passando (64 novos) | ok | 202 de 202 | Pablo aprovou (08/10) | `5dcd43f` |
 | 5d (Sacerdote sempre curando; um nível da IA não atrapalha o outro) | 08/10 | 530 passando (17 novos) | ok | 215 de 215 | esperando o fim da Fase 1 | local |
+| 5e (DOC-003: ataques, esquiva e cores na documentação) | 08/10 | 530 passando | ok | — (só documentação) | esperando o fim da Fase 1 | local |
+| 7a (TASK-079: contratos na Guilda) | 08/10 | 539 passando (9 novos) | ok | 222 de 222 | esperando o fim da Fase 1 | local |
+| 7b (TASK-071: pentágono, Seleção, Árvores e HUD do Reino) | 08/10 | 544 passando (5 novos) | ok | 226 de 226 | esperando o fim da Fase 1 | local |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -36,12 +39,29 @@ Depois das correções: 513 testes automáticos passando, lint e build ok, rotei
 | Com alguém ferido o tempo todo, a aura ficou ligada só 50% do tempo (3 s ligada, 3 s esperando a recarga de 6 s). | Medição no roteiro do navegador | Proposta de ajuste mandada ao Pablo no fim da Fase 1 (ele pediu para perguntar antes de mudar). |
 | O teste do Guerreiro avançado falhou: os outros aliados derrotavam o mob em meio segundo e todo mundo voltava a "seguir" antes da conferência. O jogo estava certo. | Roteiro do navegador (213 de 215) | O mob do teste ganhou muita vida, e a conferência lê o plano assim que ele muda. |
 
+## 2c. Problemas achados na parte 7a e o que foi feito
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| Uma rodada do roteiro ficou parada por 6 horas na seção 2 (o computador dormiu no meio). | Roteiro do navegador | Vigia novo: se ficar 4 minutos sem nenhuma conferência, o roteiro para sozinho, avisa e fecha o navegador e o Vite. |
+| "IA avançada no canto: ninguém treme" falhou (alguém andou 32 px). A seção anterior deixava gente ferida, e o Sacerdote agora vai curar fora de combate: andar para curar não é tremor. | Roteiro do navegador | O teste enche as vidas antes de medir e diz quem se mexeu. O desvio também ficou mais firme: o lado escolhido para contornar alguém não troca de um quadro para o outro. |
+| "Todos caem durante a fuga" não virava Derrota: com o computador lento, o Sacerdote usava a Ressurreição num caído entre um clique e outro. | Roteiro do navegador | O teste desliga a ajuda e põe a Ressurreição em recarga antes de derrubar todo mundo. |
+
+## 2d. Problema achado na parte 7b e o que foi feito
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| No canto, com a IA média e a avançada, o Guerreiro e o Arqueiro ficavam rodando (uns 30 px por segundo) sem parar: o desvio da 5d os fazia contornar quem estava parado para chegar à vaga exata, e no canto não havia espaço. | Roteiro do navegador (224 de 226) | Perto do Líder ("seguir"), não há desvio: qualquer ponto da zona confortável serve. O desvio continua para ir lutar, curar ou voltar quando está longe. |
+
 ## 3. Testes à mão
 
 Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data, quem testou, **passou** ou **falhou**, e o que viu. As partes 5a, 5b e 5b.1 já foram aprovadas pelo Pablo no teste visual de cada uma; vale testar de novo de vez em quando, porque partes novas podem quebrar coisas antigas.
 
 | Código | Situação | Data | Quem | Resultado | Observação |
 |---|---|---|---|---|---|
+| T-01 | Seleção de classe com pentágono | | | | |
+| T-02 | HUD do Reino | | | | |
+| T-03 | Árvores de Habilidades | | | | |
 | G-01 | Guilda: contrato temporário | | | | |
 | G-02 | O temporário vai junto, mas não é Líder | | | | |
 | G-03 | Uma partida a menos no contrato | | | | |

@@ -4,15 +4,16 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 ## Onde parei
 
-- **Parte atual:** 7a, TASK-079 (contratos na Guilda). A 5d e a 5e estão feitas (commits locais).
-- **O que falta para fechar a Fase 1:**
-  - 7a (TASK-079: contratos na Guilda);
-  - 7b (TASK-071: pentágono na seleção e HUD do Reino);
-  - os dois relatórios da fase, com o passo a passo do Supabase (TASK-090), a lista de arte (TASK-110) e de som (TASK-104), e as perguntas ao grupo.
-- **Próximo passo:** a 7a.
-- **Perguntas guardadas para o fim da Fase 1:**
-  - **Cura do Sacerdote:** com alguém ferido o tempo todo, a aura fica ligada só 50% do tempo (aura de 3 s, recarga de 6 s, sem custo de mana). Propor um ajuste e perguntar antes de mudar (pedido do Pablo).
-  - **DOC-003, para o grupo decidir:** se os 5 ataques de clique são os definitivos, se a aura do Sacerdote é ataque básico ou habilidade, e a cor do Guerreiro.
+- **Fase 1 terminada em 08/10** (partes 5d, 5e, 7a e 7b, em commits locais). **Esperando o teste visual do Pablo** antes do push e da Fase 2 (regra do modo contínuo).
+- **Perguntas da fase, mandadas no relatório:**
+  - o ajuste da cura do Sacerdote (a aura fica ligada 53% do tempo com alguém ferido);
+  - as decisões do grupo do DOC-003 (ataques definitivos, a aura do Sacerdote, a cor do Guerreiro);
+  - o tamanho da arte (48 px por personagem, 32 px por tile).
+- **O que o Pablo precisa fazer para a Fase 2:** o passo a passo do Supabase está em `documentacao/Supabase_passo_a_passo.md` (TASK-090).
+- **Próximo passo, depois do teste:**
+  - push dos commits da Fase 1;
+  - Fase 2 (contas e Salão da Glória), se o Supabase estiver pronto;
+  - se não estiver, adiantar a Fase 3 (mundo da Floresta, com mobs e mapa provisórios) e voltar à Fase 2 depois.
 
 ### Plano das partes que fecham a Fase 1 (modo contínuo)
 
@@ -44,7 +45,7 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
   - se a aura do Sacerdote é ataque básico ou habilidade;
   - a cor do Guerreiro (azul provisório).
 
-**7a · TASK-079, contratos na Guilda:**
+**7a · TASK-079, contratos na Guilda: FEITO** (539 testes, 222 conferências no navegador). Também: a lista de arte e som (`documentacao/Lista_de_Arte_e_Som.md`) e o passo a passo do Supabase (`documentacao/Supabase_passo_a_passo.md`) já estão escritos para o fim da fase; o roteiro do navegador ganhou um vigia que para tudo se ficar 4 minutos sem andar (o computador dormiu no meio de uma rodada).
 - Abas "Contrato temporário" e "Contrato permanente" usando as regras da `regras/guilda.js`:
   - só aparecem as classes que o jogador não tem;
   - mostram preço, partidas e nível;
@@ -55,7 +56,7 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 - O equipamento fixo do temporário espera o catálogo (TASK-070, Fase 4).
 - Testes das telas e roteiro: contratar com o ouro ganho na partida e ver o novo aliado na partida seguinte.
 
-**7b · TASK-071, pentágono e HUD do Reino:**
+**7b · TASK-071, pentágono e HUD do Reino: FEITO** (544 testes, 226 conferências no navegador). A Seleção de classe tem dois passos (ver e escolher), com o pentágono e a descrição; as Árvores mostram o pentágono, o nível e o XP de cada permanente; o HUD do Reino mostra a missão ativa com o progresso.
 - **Componente de pentágono** (SVG) com os 5 atributos:
   - na Seleção de classe, com a descrição da classe e o pentágono mudando de forma de uma classe para outra;
   - reaproveitado nas Árvores.
@@ -192,8 +193,8 @@ TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
 TASK-060 a TASK-065 e TEST-005: **A FAZER** na Fase 3. Dependem da TASK-012 e da TASK-013.
 
 ### EPIC-08 · Reino com dados (etapa 7)
-- **TASK-079 (contratos):** sobe para o fim da Fase 1, porque é o único jeito de ter um grupo.
-- **TASK-071 (pentágono):** também sobe para a Fase 1, porque é pequena.
+- **TASK-079 (contratos):** FEITO (08/10) na parte 7a: abas de contrato temporário e permanente na Guilda, com o ouro, os preços, as partidas restantes e o motivo quando falta ouro; a Preparação mostra quem vai como temporário. O equipamento fixo do temporário (RF29) espera o catálogo (TASK-070, Fase 4).
+- **TASK-071 (pentágono):** FEITO (08/10) na parte 7b: componente `Pentagono` na Seleção de classe (com papel e descrição do Conceito §5) e nas Árvores; o HUD do Reino mostra apelido, Líder, ouro e a missão ativa com o progresso.
 - **Os outros itens (TASK-070 a TASK-081 e TEST-006):** A FAZER na Fase 4.
 
 ### EPIC-09 · Contas e Supabase (etapa 8)
@@ -249,12 +250,14 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 
 ## 4. Próximos passos, em ordem
 
-**Comigo:**
-1. Esperar o teste visual da 5c e ajustar o que o Pablo pedir.
-2. Fechar a Fase 1: contratos na Guilda (TASK-079), pentágono dos atributos (TASK-071) e DOC-003 (ataques de clique, esquiva e cores). Antes de programar, mostro o plano curto.
+**Comigo (modo contínuo):**
+1. Esperar o teste visual da Fase 1 e ajustar o que o Pablo pedir.
+2. Fase 2 (contas e Salão da Glória), quando o Supabase estiver pronto; senão, a Fase 3 (Floresta) antes.
 
 **Com vocês**, já:
-- fazer o teste visual da 5c (roteiro no relatório e em `testes/Roteiros.md`) e autorizar o commit;
+- fazer o teste visual da Fase 1 (roteiro no relatório e em `testes/Roteiros.md`) e autorizar o push;
+- criar o projeto no Supabase e testar o e-mail (passo a passo em `documentacao/Supabase_passo_a_passo.md`);
+- gerar a arte da lista em `documentacao/Lista_de_Arte_e_Som.md` e escolher os sons;
 - criar o quadro no Trello (TASK-003);
 - perguntar ao professor o formato dos protótipos e se haverá apresentação (TASK-120);
 - criar o projeto de teste no Supabase para a prova do e-mail (TASK-090);

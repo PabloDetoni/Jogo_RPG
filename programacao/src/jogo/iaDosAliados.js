@@ -402,7 +402,10 @@ function ficarEmVoltaDoLider(aliado, plano, contexto) {
     mirarNaDirecao(aliado)
     return
   }
-  irPara(aliado, pontoDaVaga, contexto, 60, plano.rapido ? 1.3 : 1)
+  // Perto do Líder não desvia de ninguém: qualquer ponto da zona serve, e contornar os outros para chegar à vaga
+  // exata (num canto, por exemplo) deixaria o aliado rodando sem parar. Longe dele (voltando), desvia.
+  const longeDoLider = distancia(aliado, lider) > zonaConfortavel.maxima + zonaConfortavel.folga
+  irPara(aliado, pontoDaVaga, contexto, 60, plano.rapido ? 1.3 : 1, plano.rapido || longeDoLider)
   if (passo) aliado.andar({ x: aliado.querida.x + passo.x * velocidade * 0.8, y: aliado.querida.y + passo.y * velocidade * 0.8 })
   mirarNaDirecao(aliado)
 }
@@ -413,14 +416,16 @@ function usarGiroSeValer(aliado, inimigos, alvo, cena) {
 }
 
 // Anda até o ponto pelo caminho em volta das pedras; freia ao chegar (raioDeChegada).
-// Quieto (depois de tremer), não anda. Na média e na avançada, desvia de quem está parado no caminho.
-function irPara(aliado, ponto, { cena, agora }, raioDeChegada, fator = 1) {
+// Quieto (depois de tremer), não anda. Na média e na avançada, desvia de quem está parado no caminho (desviar = false:
+// segue reto e escorrega, como na básica).
+function irPara(aliado, ponto, { cena, agora }, raioDeChegada, fator = 1, desviar = true) {
   if (agora < (aliado.ia.quietoAte ?? 0)) {
     aliado.parar()
     return
   }
   const destino = cena.navegador.proximoPonto(aliado, ponto, agora)
-  const desvio = desvioDeQuemEstaParado(aliado, destino, cena)
+  const desvio = desviar ? desvioDeQuemEstaParado(aliado, destino, cena) : null
+  if (!desviar) aliado.ia.desvio = null
   if (desvio) {
     aliado.andar(velocidadeParaSeguir(aliado, desvio, velocidade * fator, 1))
     return

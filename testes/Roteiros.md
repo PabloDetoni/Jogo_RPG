@@ -190,6 +190,20 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
 
+## T. Seleção de classe, Reino e Árvores (parte 7b, TASK-071)
+
+**T-01 · Seleção de classe**
+- Fazer: com um convidado novo (painel DEV → **Apagar progresso do convidado**), chegue à Seleção de classe e clique em cada classe.
+- Deve acontecer: a classe clicada fica marcada e aparecem o pentágono na cor dela, o papel e a descrição. O pentágono muda de forma de uma classe para outra (do Tanque para o Arqueiro, por exemplo). Clicar ainda não escolhe: só **Escolher Classe** confirma e leva ao Reino.
+
+**T-02 · HUD do Reino**
+- Fazer: olhe a faixa de cima do Reino antes e depois de uma partida em que ganhou ouro.
+- Deve acontecer: "Convidado · Líder: Classe · Ouro: N · Missão: nenhuma", com o ouro do save. Missões chegam na Fase 4.
+
+**T-03 · Árvores de Habilidades**
+- Fazer: Reino → **Árvores de Habilidades** e clique em cada aba disponível.
+- Deve acontecer: só as classes que você tem como permanente ficam ativas. Cada uma mostra o pentágono dos atributos, o nível, o XP até o próximo nível e os pontos livres.
+
 ## G. Guilda: contratos (parte 7a, TASK-079)
 
 **G-01 · Contrato temporário**

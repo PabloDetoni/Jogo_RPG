@@ -10,6 +10,9 @@ import { componentesDasJanelas } from '../janelas/index.js'
 import { componentesDasTelas } from './index.js'
 import HudDaPartida, { AvisosDaPartida } from './partida/HudDaPartida.jsx'
 import Resumo from './partida/Resumo.jsx'
+import Pentagono from '../componentes/Pentagono.jsx'
+import { atributosIniciaisDaClasse } from '../dados/classes.js'
+import { descreverMissao } from '../dados/missoes.js'
 import { ContratosPermanentes, ContratosTemporarios } from './reino/Contratos.jsx'
 
 // Desenha cada tela com todas as janelas, os avisos e o painel, para cada tipo de jogador.
@@ -278,5 +281,47 @@ describe('Guilda: contratos (TASK-079) e Preparação', () => {
     expect(html).toContain('Também vão: Arqueiro (temporário, 2 partidas)')
     expect(html).not.toContain('>Arqueiro</button>')
     expect(html).toContain('>Tanque</button>')
+  })
+})
+
+describe('Pentágono, Seleção de classe e HUD do Reino (TASK-071)', () => {
+  const forma = (html) => html.match(/data-forma="([^"]+)"/)[1]
+
+  it('o pentágono muda de forma do Tanque para o Arqueiro (critério do card)', () => {
+    const tanque = renderToString(<Pentagono valores={atributosIniciaisDaClasse('tanque')} maximo={25} />)
+    const arqueiro = renderToString(<Pentagono valores={atributosIniciaisDaClasse('arqueiro')} maximo={25} />)
+    expect(forma(tanque)).not.toBe(forma(arqueiro))
+    expect(tanque).toContain('Vitalidade 18')
+    expect(arqueiro).toContain('Agilidade 22')
+  })
+
+  it('valor no máximo chega na ponta; zero fica no centro', () => {
+    const cheio = forma(renderToString(<Pentagono valores={{ vitalidade: 10 }} maximo={10} />))
+    const [x, y] = cheio.split(' ')[0].split(',').map(Number)
+    expect(x).toBeCloseTo(120)
+    expect(y).toBeCloseTo(48) // centro 120, raio 72: a ponta de cima
+    expect(cheio.split(' ')[1]).toBe('120.0,120.0') // Força 0: no centro
+  })
+
+  it('Seleção de classe: descrição, papel e pentágono da classe vista, e o botão de escolher', () => {
+    const html = desenhar('selecaoClasse', 'convidado').replace(/<!-- -->/g, '')
+    expect(html).toContain('DPS principal')
+    expect(html).toContain('Equilibrado, rápido e constante')
+    expect(html).toContain('class="pentagono"')
+    expect(html).toContain('>Escolher Guerreiro</button>')
+  })
+
+  it('HUD do Reino: a missão ativa com o progresso', () => {
+    expect(descreverMissao({ tipo: 'matar', alvo: 'lobo', quantidade: 10, progresso: 4 })).toBe('Derrotar 10 lobo (4/10)')
+    expect(descreverMissao({ tipo: 'explorar', alvo: 'lago', quantidade: 1, progresso: 1 })).toBe('Explorar lago (feito)')
+    expect(descreverMissao(null)).toBeNull()
+    expect(desenhar('reino', 'convidado').replace(/<!-- -->/g, '')).toContain('Missão: nenhuma')
+  })
+
+  it('Árvores: a ficha do personagem com o pentágono, o nível e o XP', () => {
+    const html = desenhar('arvores', 'convidado').replace(/<!-- -->/g, '')
+    expect(html).toContain('class="pentagono"')
+    expect(html).toContain('XP 0 / 100')
+    expect(html).toContain('Pontos livres: 0 de atributo e 0 de habilidade')
   })
 })

@@ -2,6 +2,7 @@ import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { nomeDaClasse } from '../../dados/classes.js'
+import { descreverMissao } from '../../dados/missoes.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 
@@ -11,9 +12,10 @@ const pos = posicoes.reino
 export default function Reino() {
   const { estado, acoes } = useJogo()
   const { tipoJogador, progresso } = estado
+  // O apelido da conta vem com o Supabase (etapa 8); o resto vem do save (TASK-071)
   const apelido = tipoJogador === 'conta' ? 'Apelido da conta' : 'Convidado'
   const lider = progresso.lider ? nomeDaClasse(progresso.lider) : 'nenhum'
-  const missao = progresso.missaoAtiva ? 'em andamento' : 'nenhuma'
+  const missao = descreverMissao(progresso.missaoAtiva) ?? 'nenhuma'
 
   return (
     <Tela>
