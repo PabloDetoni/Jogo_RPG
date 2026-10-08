@@ -1,6 +1,67 @@
 # Plano até a entrega (03/12/2026)
 
-Atualizado em 07/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5a + parte 5b (`e0c8d93`) e parte 5b.1 (`55a6025`) no GitHub. Parte 5c (pausa, Q, F, fim com números reais e HUD completo) feita, esperando o teste visual do Pablo e o commit. Os roteiros de teste manual e o registro dos testes ficam na pasta [`testes/`](testes/). Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
+Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5a + parte 5b (`e0c8d93`), parte 5b.1 (`55a6025`) e parte 5c (`5dcd43f`) no GitHub. Desde 08/10 o trabalho segue em **modo contínuo** (regras no CLAUDE.md).
+
+## Onde parei
+
+- **Parte atual:** 5e, DOC-003 (documentar ataques de clique, esquiva e cores). A 5d está feita (commit local).
+- **O que falta para fechar a Fase 1:**
+  - 5e (DOC-003: documentar ataques de clique, esquiva e cores);
+  - 7a (TASK-079: contratos na Guilda);
+  - 7b (TASK-071: pentágono na seleção e HUD do Reino);
+  - os dois relatórios da fase, com o passo a passo do Supabase (TASK-090), a lista de arte (TASK-110) e de som (TASK-104), e as perguntas ao grupo.
+- **Próximo passo:** a 5e.
+- **Perguntas guardadas para o fim da Fase 1:**
+  - **Cura do Sacerdote:** com alguém ferido o tempo todo, a aura fica ligada só 50% do tempo (aura de 3 s, recarga de 6 s, sem custo de mana). Propor um ajuste e perguntar antes de mudar (pedido do Pablo).
+  - **DOC-003, para o grupo decidir:** se os 5 ataques de clique são os definitivos, se a aura do Sacerdote é ataque básico ou habilidade, e a cor do Guerreiro.
+
+### Plano das partes que fecham a Fase 1 (modo contínuo)
+
+**5d · Sacerdote e níveis da IA (pedido do Pablo em 08/10): FEITO.** 530 testes e 215 conferências no navegador. A aura ficou ligada 50% do tempo com alguém ferido; o ajuste vai como pergunta no fim da fase.
+- **Regra nova do Sacerdote, em todos os níveis:** cura sempre que alguém do grupo (Líder, aliados ou ele mesmo) não estiver com a vida cheia, em combate ou fora dele.
+- **Ordem:**
+  1. levantar caídos;
+  2. o mais ferido;
+  3. em empate (diferença pequena, provisório no balanceamento), o Líder.
+- **O que o nível muda: só a posição e a escolha do alvo.**
+  - Básica: vai até quem precisa, mas, errando, escolhe o ferido mais perto em vez do mais ferido.
+  - Média: o mais ferido.
+  - Avançada: conta como mais urgente quem está sendo atacado e cura do lado de trás do ferido, longe do mob.
+- **Regra pura:** `quemCurar` e `posicaoParaCurar` em `regras/iaDosAliados.js`, com testes.
+- **Roteiro:** conferência "aliado ferido e Sacerdote livre: a cura começa em até 3 s".
+- **Medir quanto tempo o Sacerdote fica sem curar com alguém ferido** (a aura dura 3 s e recarrega em 6 s). Se for demais, propor ao Pablo um ajuste e perguntar antes de mudar.
+- **IA de cada nível sem ser atrapalhada pelas outras:**
+  - a avançada desvia de longe de quem está parado no caminho;
+  - a média dá um passo para o lado quando quase encosta;
+  - a básica continua como está (escorrega e destrava);
+  - o Guerreiro avançado não fica esperando um Tanque que errou: se o Tanque não está na frente, ele protege o Líder.
+- **Regra pura:** `pontoDeDesvio` em `regras/movimento.js`, com testes e uma conferência no roteiro.
+- **Documentação:** RF42, UC31, UC37, HU31, HU37, "Alterações do projeto" e o Conceito 21.5.
+
+**5e · DOC-003:**
+- Documentar no RF35, no RF36 e no Conceito o ataque de clique de cada classe, a esquiva (sem dano durante o avanço e com recarga) e as cores, como estão hoje.
+- O que o grupo precisa decidir fica marcado como pendente e vai na pergunta do fim da fase:
+  - se os 5 ataques são os definitivos;
+  - se a aura do Sacerdote é ataque básico ou habilidade;
+  - a cor do Guerreiro (azul provisório).
+
+**7a · TASK-079, contratos na Guilda:**
+- Abas "Contrato temporário" e "Contrato permanente" usando as regras da `regras/guilda.js`:
+  - só aparecem as classes que o jogador não tem;
+  - mostram preço, partidas e nível;
+  - o permanente encerra o temporário da mesma classe;
+  - mostram as partidas restantes de cada temporário;
+  - o temporário nunca aparece como Líder na Preparação;
+  - a mensagem diz o motivo quando falta ouro.
+- O equipamento fixo do temporário espera o catálogo (TASK-070, Fase 4).
+- Testes das telas e roteiro: contratar com o ouro ganho na partida e ver o novo aliado na partida seguinte.
+
+**7b · TASK-071, pentágono e HUD do Reino:**
+- **Componente de pentágono** (SVG) com os 5 atributos:
+  - na Seleção de classe, com a descrição da classe e o pentágono mudando de forma de uma classe para outra;
+  - reaproveitado nas Árvores.
+- **HUD do Reino:** apelido (convidado: "Convidado"), Líder, ouro e missão ativa, todos do save.
+ Os roteiros de teste manual e o registro dos testes ficam na pasta [`testes/`](testes/). Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
 
 **Regra deste plano:** cumprir todos os requisitos da pasta `documentacao`. A auditoria sugere cortes (seção 12 dela), mas cortar uma funcionalidade é deixar de cumprir um requisito. Por isso, aqui os cortes só entram se o grupo decidir, e o que for cortado vai para o Conceito como "fora do beta".
 
@@ -94,7 +155,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - Pedras coladas em L na arena e botão "Juntar todos".
   - Painel de desenvolvimento minimizável ("</> DEV").
   - Roteiro do navegador no repositório: `npm run testar:navegador` (116 conferências; cada rodada usa uma porta livre e fecha o próprio Edge).
-- **Parte 5c, a última da partida (07/10):** FEITO, esperando o teste visual do Pablo.
+- **Parte 5c, a última da partida (07/10):** FEITO, teste visual do Pablo (aprovado em 08/10) e commit `5dcd43f`.
   - **TASK-040 (em combate, pausa e Q):** em combate = dano nos últimos 5 s ou um mob perseguindo o grupo. Esc em combate mostra "Você não pode pausar agora". Q fora de combate começa os 15 s, Q de novo cancela, e o combate faz a contagem voltar a 15 s. O "Voltar ao Reino" da pausa usa a mesma contagem.
   - **TASK-041 (fuga com F):** o primeiro F mostra o custo atual (taxa e ouro), o segundo confirma e Esc cancela. São 5 s, mesmo em combate; se o Líder cair, continua; se todos caírem, é Derrota. Confirmada, não se cancela.
   - **TASK-048 (fim com números reais):** os mobs dão XP e ouro; o fim chama as regras da etapa 4 (resultado, taxa com perdidos e caídos, pontuação, XP). O save recebe ouro, XP, níveis, pontos, monstros e a partida. O Resumo mostra tudo.

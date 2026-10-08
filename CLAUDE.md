@@ -18,7 +18,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Regras puras (taxa, XP, atributos, mochila, fim da partida, Guilda, combate, movimento, grupo da partida, IA, desmaio, habilidades, andamento e ganhos da partida) em `src/regras/`, cada uma com teste ao lado. Na partida, o Phaser só desenha e move:
   - dano, recarga, empurrão, cura e acerto vêm de `regras/combate.js`;
   - separação entre corpos, escorregar (pedras, borda e outros corpos), tirar de dentro das pedras e desfazer sobreposições depois da física (a física do Phaser não tira um corpo parado de dentro da pedra), caminho em volta das pedras (grade), travamento e ponto livre vêm de `regras/movimento.js`;
-  - alvos e posições da IA (aliados e inimigos), zona confortável, tremor, linha de tiro e formação de combate vêm de `regras/iaDosAliados.js`; o nível da IA de cada aliado (pelo nível do personagem), a chance de erro e o momento de foco, de `regras/nivelDaIA.js`;
+  - alvos e posições da IA (aliados e inimigos), zona confortável, tremor, linha de tiro, formação de combate e a cura do Sacerdote (`quemCurar`, `posicaoParaCurar`) vêm de `regras/iaDosAliados.js`; o desvio de quem está parado (`pontoDeDesvio`), de `regras/movimento.js`; o nível da IA de cada aliado (pelo nível do personagem), a chance de erro e o momento de foco, de `regras/nivelDaIA.js`;
   - os 30 s, a ajuda de 5 s, a área limpa e o fim por desmaio vêm de `regras/desmaio.js`;
   - mana e uso das teclas 1 a 3 vêm de `regras/habilidades.js`;
   - em combate, retorno com Q, fuga com F, tempo ativo, XP de cada abate e custo da fuga vêm de `regras/andamentoDaPartida.js`; o fim (resultado, taxa com perdidos e caídos, pontuação) de `regras/fimDaPartida.js` (`montarFimDaPartida`), e o que vai para o save de `regras/ganhosDaPartida.js`; o crítico, de `regras/combate.js`.
@@ -29,7 +29,8 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 ## Regras que moldam as telas
 - Conta: e-mail e senha, apelido único, confirmação de e-mail obrigatória e "esqueci minha senha". Dá para jogar como convidado (salvo só no navegador); ao criar conta, o progresso do convidado vai para a conta. Uma conta = uma sessão ativa.
 - Ranking (Salão da Glória): visível para todos, até sem login, mas só quem tem conta aparece nele. Dentro do Salão da Glória ficam também o histórico de partidas (só para o próprio jogador logado) e as Conquistas (para quem já está jogando, convidado ou conta).
-- Na partida, só o Líder esquiva. A IA dos aliados vem do nível de cada personagem (básica, média e avançada) e o jogador nunca escolhe; o seletor "IA:" da barra de teste é só para testar. O nível ganho na partida aparece na hora, mas vale a partir da partida seguinte (RF12).
+- Na partida, só o Líder esquiva. A IA dos aliados vem do nível de cada personagem (básica, média e avançada) e o jogador nunca escolhe; o seletor "IA:" da barra de teste é só para testar. O nível ganho na partida aparece na hora, mas vale a partir da partida seguinte (RF12). Um nível não atrapalha o outro: a média e a avançada desviam de quem está parado, e a avançada não espera quem errou.
+- O Sacerdote cura SEMPRE que alguém do grupo (ele mesmo também) não está com a vida cheia, em combate ou fora dele: caídos primeiro, depois o mais ferido, em empate o Líder. O nível da IA muda só a posição dele e a escolha do alvo.
 - Em combate (dano nos últimos 5 s ou mob perseguindo) não dá para pausar nem começar o retorno com Q; a fuga com F funciona sempre e, confirmada, não se cancela. M liga e desliga o mudo em qualquer tela (menos digitando num campo).
 - Classes: Guerreiro, Mago, Tanque, Sacerdote e Arqueiro. A classe inicial é gratuita; um personagem por classe; as outras classes vêm de contratos na Guilda (temporário ou permanente).
 - Reino (hub): Guilda (contratos e missões), Mercado, Forja, Mochila, Árvores de Habilidades, Jogar, Ranking e Configurações.
@@ -45,17 +46,17 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Na partida, cada entidade diz para onde quer andar (`andar`/`parar`) e a cena decide a velocidade final (`CenaArena.moverTodos`: separação, escorregar e destravar; `corrigirSobreposicoes` desfaz o que a física deixou um dentro do outro); para andar, ninguém chama `setVelocity` direto. Nascer ou reaparecer sempre passa por `lugarLivre` (nunca em pedra, fora da borda ou em cima de outro).
 - Não instalar bibliotecas sem perguntar (já aprovadas: Vitest e Phaser). Plano antes de qualquer mudança grande.
 - Ferramentas de teste que mexem no save ficam no painel `</> DEV` (só existe no `npm run dev`) e só funcionam fora da partida; a ação no estado também confere `import.meta.env.DEV`. Botões de teste da barra que só servem no desenvolvimento ficam atrás de `import.meta.env.DEV` (no build, somem).
-- Commits ficam com o Pablo: não commitar sem ele pedir.
+- Commits: no modo contínuo (seção abaixo), commit LOCAL no fim de cada parte, com todos os testes passando; o push só depois do teste visual do Pablo na fase. Fora do modo contínuo, não commitar sem ele pedir.
 - Decisão que muda a documentação: atualizar o texto do documento e registrar na seção "Alterações do projeto" dele (no Conceito, a seção 21, sem reescrever o original). O PNG do diagrama sai do `.puml` pelo PlantUML.
 
 ## Protocolo de cada tarefa
 1. Ler CLAUDE.md, PLANO.md e os documentos ligados à tarefa antes de mexer.
-2. Mostrar um plano curto (arquivos, abordagem, valores provisórios) e esperar o ok do Pablo antes de programar.
+2. Mostrar um plano curto (arquivos, abordagem, valores provisórios) e esperar o ok do Pablo antes de programar. No modo contínuo, o plano é escrito no PLANO.md e o trabalho segue sem esperar.
 3. Perguntar antes de: instalar biblioteca, apagar arquivo, mudar o formato do save ou contrariar a documentação. Se a documentação e um pedido do Pablo discordarem, vale o mais recente, mas avisar.
 4. Testar sempre que possível: `npm test`, lint e build no fim de cada parte; teste novo para toda regra pura nova; se der para abrir o jogo no navegador, abrir e conferir. Dizer o que não deu para testar. No fim de cada parte, registrar os testes rodados em `testes/Registro.md` e acrescentar os roteiros manuais novos em `testes/Roteiros.md`.
 5. Se travar ou algo der errado, parar e explicar em vez de improvisar.
 6. Atualizar no mesmo trabalho o PLANO.md, o CLAUDE.md e o documento afetado. Números novos vão em `src/dados/balanceamento.js`, regenerando o `Balanceamento.md`.
-7. Não fazer commit; sugerir a mensagem no fim.
+7. Fora do modo contínuo: não fazer commit e sugerir a mensagem no fim. No modo contínuo: commit local por parte (ver abaixo).
 8. Terminar com o relatório neste formato:
    1. Resumo em 2 ou 3 frases
    2. Onde o projeto está (tabela das etapas)
@@ -68,6 +69,47 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
    9. Próximo passo
    10. Mensagem de commit
 9. Junto com esse relatório, mandar um segundo, para o Pablo repassar ao grupo (Uener e Lucas): o que já aconteceu e o que está acontecendo, bem explicado, em linguagem simples, sem depender de ter lido a conversa nem o código.
+
+## Modo contínuo (pedido do Pablo em 08/10/2026; vale nas próximas sessões)
+O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte. Se a sessão acabar no meio, o Pablo manda só "Continue o modo contínuo de onde parou": ler a seção **"Onde parei"** no topo do `PLANO.md` e seguir.
+
+1. **Ordem (a do PLANO.md):**
+   1. fim da Fase 1 (TASK-079, TASK-071, DOC-003);
+   2. Fase 2 (contas e ranking);
+   3. Fase 3 (mundo da Floresta);
+   4. Fase 4 (Reino com dados);
+   5. arte e som, quando houver material;
+   6. Fase 5 (polimento e testes);
+   7. Fase 6 (entrega).
+2. **Cada parte segue o protocolo:**
+   1. plano curto escrito no PLANO.md;
+   2. programar;
+   3. testes: `npm test`, lint, build e `npm run testar:navegador`, com conferências novas para o que for novo;
+   4. atualizar PLANO.md, CLAUDE.md, a documentação (com "Alterações do projeto"), o Balanceamento e a pasta `testes/`.
+3. **Sem esperar o ok do plano.** Parar e esperar o Pablo só quando:
+   - **uma fase terminar:** mandar os dois relatórios do protocolo, com o "Teste visual para o Pablo", e esperar o teste dele antes da próxima fase;
+   - **precisar de algo que só ele faz** (criar o projeto no Supabase, passar chaves, configurar e-mail, publicar, gerar arte): dizer exatamente o que fazer, passo a passo;
+   - **precisar de uma decisão do grupo que mude regra do jogo;**
+   - **algo quebrar** e não der para resolver.
+4. **Commits:** no fim de cada parte, com todos os testes passando, commit LOCAL com mensagem clara (terminando com a linha Co-Authored-By). O push só depois do teste visual do Pablo na fase.
+5. **"Onde parei":** antes de mudar de parte, atualizar no topo do PLANO.md a parte atual, o que falta e o próximo passo.
+6. **Conteúdo que o grupo ainda não entregou** (TASK-010, 012, 013, 014, 015 e 016):
+   - não esperar: criar conteúdo provisório coerente com o Conceito (classes, Floresta, Reino, Pedra de Retorno);
+   - marcar tudo como **"PROVISÓRIO – substituir pelo do grupo"** nos arquivos de dados e no PLANO.md;
+   - todo conteúdo fica em arquivos de dados, para trocar sem mexer no código;
+   - quando o conteúdo de verdade chegar, trocar e rodar todos os testes.
+7. **O que depende do Pablo, avisado na hora certa:**
+   - **Fase 2:** projeto no Supabase, URL e chave no `.env` e o teste do e-mail de confirmação (TASK-090). Se ainda não estiver pronto, passar o passo a passo, adiantar a Fase 3 e voltar depois.
+   - **Arte:** a lista de assets com tamanhos (TASK-110), cedo, para ele gerar no PixelLab em paralelo. Até chegar, quadrados e cinza.
+   - **Som:** a lista de músicas e efeitos (TASK-104). Até chegar, o sistema de áudio pronto, com o mudo funcionando.
+   - **Decisões do grupo** (hospedagem TASK-130, nome do jogo, cor do Guerreiro, tema padrão): perguntar na hora e usar um valor provisório até lá.
+8. **Regras que não mudam:**
+   - Nada pode travar o jogo a ponto de alguém não conseguir jogar: personagem preso, tela que não abre, save estragado que trava. Testar esses casos em cada fase.
+   - Tudo o que é de teste (barra de teste, painel DEV, Subir nível, +300 de ouro) existe só no `npm run dev`.
+   - Cronograma apertado: não cortar nada sozinho. Propor cortes na ordem da seção 12 da "Auditoria e Backlog" e perguntar.
+   - **Congelamento em 22/11:** depois disso, só correção, testes e documentação.
+   - Na Fase 5: gerar prints de todas as telas em `documentacao/`, como reserva para os protótipos atualizados (TASK-121 a TASK-123), já que o professor ainda não respondeu.
+   - A decisão mais recente vale. Se a documentação contrariar o pedido do Pablo, avisar e atualizar a documentação.
 
 ## Etapas
 1. Base do projeto ✔

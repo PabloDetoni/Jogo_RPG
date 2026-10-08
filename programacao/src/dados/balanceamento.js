@@ -74,7 +74,7 @@ export const combateDeTeste = {
   // IA dos aliados (TASK-043). Corrente: se o Líder passa de raioDaCorrente, todos largam a luta e voltam
   // até ficarem a raioDeVolta dele. Só lutam com inimigos a até raioDeCombate do Líder.
   // Arqueiro e Mago atacam de longe, dentro da faixa de distância. Mobs a até raioDeAtracaoDoTanque do
-  // Tanque vão nele. O Sacerdote cura quem está abaixo de limiteParaCurar da vida (0,7 = 70%).
+  // Tanque vão nele.
   ia: {
     raioDaCorrente: 420,
     raioDeVolta: 160,
@@ -85,7 +85,14 @@ export const combateDeTeste = {
     distanciaCurtaDoArqueiro: { minima: 120, maxima: 180 },
     distanciaCurtaDoMago: { minima: 150, maxima: 230 },
     raioDeAtracaoDoTanque: 260,
-    limiteParaCurar: 0.7,
+    // Sacerdote (regra do Pablo de 08/10): cura sempre que alguém não está com a vida cheia, o mais ferido primeiro.
+    // empate: diferença de vida (em fração) que conta como empate (aí vai o Líder). urgenciaPorAtacante: na avançada,
+    // cada inimigo mirando num ferido conta como essa fração a menos de vida. distanciaParaCurar: na avançada, fica
+    // atrás do ferido, a essa fração do raio da aura (protegido do mob).
+    sacerdote: { empate: 0.05, urgenciaPorAtacante: 0.1, distanciaParaCurar: 0.55 },
+    // Desvio de quem está parado no caminho (08/10): a média vê o corpo parado só quando quase encosta e dá um passo
+    // para o lado; a avançada vê de longe e contorna. A básica não desvia (escorrega e destrava). Em px.
+    desvio: { media: { alcance: 45, folga: 6 }, avancada: { alcance: 140, folga: 10 } },
     // Parados (5b.1): cada aliado para em qualquer ponto entre a distância mínima e a máxima do Líder e só
     // volta a andar quando o Líder passa da máxima + folga. Na IA média e na avançada, para a até
     // toleranciaDaVaga px da vaga do X (posição mais arrumada).
@@ -99,7 +106,9 @@ export const combateDeTeste = {
     folgaDaLinhaDeTiro: { arqueiro: 6, mago: 16 },
     pontosParaLinhaDeTiro: 16,
     // IA avançada: formação de combate (distâncias em px)
-    formacaoDeCombate: { tanqueAteOMob: 60, guerreiroAoLado: 55, distanciaEntreArqueiroEMago: 120, sacerdoteAtras: 70 },
+    // tanqueNoPosto: o Tanque está "na frente" se estiver a até essa distância do lugar dele; senão o Guerreiro avançado
+    // não fica esperando (vai proteger o Líder)
+    formacaoDeCombate: { tanqueAteOMob: 60, guerreiroAoLado: 55, distanciaEntreArqueiroEMago: 120, sacerdoteAtras: 70, tanqueNoPosto: 90 },
     // Média: chance de o Sacerdote ficar mais para trás em cada decisão
     chanceDoSacerdoteAtras: 0.5,
     // Avançada: chance de recuar andando ao ver o aviso de golpe (os aliados não esquivam: a esquiva é só do Líder)

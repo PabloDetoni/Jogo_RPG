@@ -11,7 +11,8 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | 5a (arena, quadrados) | 06/10 | ok | ok | ok | Pablo aprovou (06/10) | `1143420` |
 | Ajustes da 5a + 5b (colisão, IA, desmaio, habilidades) | 06/10 | 411 passando | ok | 116 de 116 | Pablo aprovou (07/10) | `e0c8d93` |
 | 5b.1 (IA em três níveis, tremor, linha de tiro) | 07/10 | 449 passando (38 novos) | ok | 133 de 133 | Pablo aprovou (07/10) | `55a6025` |
-| 5c (pausa, Q, F, fim com números reais, HUD, M) | 07/10 | 513 passando (64 novos) | ok | 202 de 202 | **esperando o Pablo** | — |
+| 5c (pausa, Q, F, fim com números reais, HUD, M) | 07/10 | 513 passando (64 novos) | ok | 202 de 202 | Pablo aprovou (08/10) | `5dcd43f` |
+| 5d (Sacerdote sempre curando; um nível da IA não atrapalha o outro) | 08/10 | 530 passando (17 novos) | ok | 215 de 215 | esperando o fim da Fase 1 | local |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -27,12 +28,27 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 
 Depois das correções: 513 testes automáticos passando, lint e build ok, roteiro do navegador com 202 de 202 (rodado mais de uma vez).
 
+## 2b. Problemas achados na parte 5d e o que foi feito
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| O Sacerdote só curava em combate e quem estivesse abaixo de 70%; na IA básica, ficava parado e não ia até quem precisava. | Pablo, jogando a 5c | Regra nova: cura sempre que alguém não está com a vida cheia (caídos, o mais ferido, empate → Líder). |
+| Com alguém ferido o tempo todo, a aura ficou ligada só 50% do tempo (3 s ligada, 3 s esperando a recarga de 6 s). | Medição no roteiro do navegador | Proposta de ajuste mandada ao Pablo no fim da Fase 1 (ele pediu para perguntar antes de mudar). |
+| O teste do Guerreiro avançado falhou: os outros aliados derrotavam o mob em meio segundo e todo mundo voltava a "seguir" antes da conferência. O jogo estava certo. | Roteiro do navegador (213 de 215) | O mob do teste ganhou muita vida, e a conferência lê o plano assim que ele muda. |
+
 ## 3. Testes à mão
 
 Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data, quem testou, **passou** ou **falhou**, e o que viu. As partes 5a, 5b e 5b.1 já foram aprovadas pelo Pablo no teste visual de cada uma; vale testar de novo de vez em quando, porque partes novas podem quebrar coisas antigas.
 
 | Código | Situação | Data | Quem | Resultado | Observação |
 |---|---|---|---|---|---|
+| SA-01 | Sacerdote: cura fora de combate | | | | |
+| SA-02 | Sacerdote: o mais ferido primeiro | | | | |
+| SA-03 | Sacerdote básico vai até quem precisa | | | | |
+| SA-04 | Sacerdote avançado protegido | | | | |
+| SA-05 | Sacerdote se cura | | | | |
+| NV-01 | Desvio de quem está parado | | | | |
+| NV-02 | Guerreiro avançado não espera o Tanque | | | | |
 | A-01 | Andar e mirar | | | | |
 | A-02 | Ataque de cada classe | | | | |
 | A-03 | Esquiva | | | | |

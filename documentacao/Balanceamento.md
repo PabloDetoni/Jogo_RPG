@@ -253,7 +253,8 @@ As teclas 2 e 3 ficam vazias até as habilidades de verdade (TASK-010). Os núme
 - Lutam com inimigos a até **380 px** do Líder. Se o Líder passar de **420 px**, todos largam a luta e voltam até **160 px** dele.
 - Tanque: fica entre o mob e o grupo; mobs a até **260 px** dele vão nele. Guerreiro: o mob mais próximo.
 - Arqueiro: ataca de **220 a 320 px**. Mago: de **260 a 420 px**, mirando onde há mais mobs juntos.
-- Sacerdote: cura quem está abaixo de **70%** da vida (o Líder primeiro) e levanta os caídos (o Líder primeiro).
+- Sacerdote (regra de 08/10): cura **sempre** que alguém do grupo, ele mesmo também, não está com a vida cheia, em combate ou fora dele. Primeiro levanta os caídos (o Líder primeiro), depois cura o mais ferido; diferença de até **5 pontos** de vida conta como empate, e aí vai o Líder. Na avançada, cada inimigo mirando num ferido conta como **10 pontos** a menos de vida, e o Sacerdote cura de trás do ferido, a **55%** do raio da aura.
+- Um nível não atrapalha o outro (08/10): a média desvia de quem está parado quando está a **45 px** dele; a avançada, a **140 px**, passando com **10 px** de folga. O Guerreiro avançado só fica ao lado do Tanque se o Tanque estiver a até **90 px** do lugar dele; senão, vai proteger o Líder.
 
 ### Níveis da IA dos aliados (5b.1)
 

@@ -16,23 +16,28 @@ import {
   pontoDeMaisInimigos,
   posicaoADistancia,
   posicaoDoTanque,
+  posicaoParaCurar,
   posicoesDeCombate,
   quemCurar,
   temLinhaDeTiro,
   vagaEmVoltaDoAlvo,
 } from '../regras/iaDosAliados.js'
+import { pontoDeDesvio } from '../regras/movimento.js'
 import { atualizarFoco, chanceDeErro, sortear } from '../regras/nivelDaIA.js'
 
 const { ia, personagem, ataques, habilidades, desmaio, raioDaFormacao, mobVermelho } = combateDeTeste
 const velocidade = personagem.velocidade * 1.15
 const distancia = (a, b) => Math.hypot(b.x - a.x, b.y - a.y)
 
-// IA dos aliados (TASK-043, TASK-045 e 5b.1). As escolhas vêm de regras/iaDosAliados.js, regras/nivelDaIA.js e
-// regras/desmaio.js; aqui cada aliado só anda (pelo caminho em volta das pedras), mira e ataca.
+// IA dos aliados (TASK-043, TASK-045, 5b.1 e 5d). As escolhas vêm de regras/iaDosAliados.js, regras/nivelDaIA.js,
+// regras/desmaio.js e regras/movimento.js; aqui cada aliado só anda (pelo caminho em volta das pedras), mira e ataca.
 // O nível da IA vem do nível do personagem (básica, média ou avançada); a cada poucos segundos cada aliado
 // sorteia se vai errar "a decisão do momento". A cada quadro, cada aliado de pé escolhe um plano:
 //   recuar de um golpe avisado (só a avançada; andando, sem esquiva) → voltar (o Líder se afastou demais)
-//   → ajudar um caído → lutar (cada classe do seu jeito, conforme o nível) → ficar em volta do Líder.
+//   → ajudar um caído → o Sacerdote cura quem não está com a vida cheia → lutar (cada classe do seu jeito, conforme
+//   o nível) → ficar em volta do Líder.
+// Cada nível decide sozinho, sem ser atrapalhado pelos outros: a média e a avançada desviam de quem está parado no
+// caminho, e o Guerreiro avançado não espera um Tanque que errou.
 export function pensarAliados(cena, agora) {
   const lider = cena.lider
   const aliados = cena.aliados
@@ -59,14 +64,17 @@ export function pensarAliados(cena, agora) {
   const planos = new Map()
   for (const aliado of dePe) {
     const perfil = cena.perfilDaIA(aliado)
+    aliado.ia.perfilAtual = perfil
     decidir(aliado, perfil, contexto)
     aliado.ia.voltando = !lider.caido && deveVoltar(aliado.ia.voltando, distancia(aliado, lider), ia)
     // Voltar para o Líder vem antes de tudo: recuar de um golpe não pode levar o aliado para longe dele
     const mobAvisando = aliado.ia.voltando ? null : golpeParaRecuar(aliado, perfil, contexto)
+    const cura = aliado.classe === 'sacerdote' ? planoDeCura(aliado, perfil, contexto) : null
     let plano
     if (aliado.ia.voltando) plano = { tipo: 'seguir', rapido: true }
     else if (mobAvisando) plano = { tipo: 'recuar', mob: mobAvisando }
     else if (ajudas.has(aliado)) plano = planoDeAjuda(aliado, ajudas.get(aliado), perfil, contexto)
+    else if (cura) plano = cura
     else if (inimigos.length > 0) plano = planoDeCombate(aliado, perfil, inimigos, contexto)
     else plano = { tipo: 'seguir' }
     plano.perfil = perfil
@@ -155,19 +163,30 @@ function planoDeAjuda(aliado, caido, perfil, contexto) {
   return { tipo: 'ajudar', caido }
 }
 
+// Sacerdote (regra do Pablo de 08/10): está SEMPRE curando quando alguém do grupo (ele mesmo também) não está com
+// a vida cheia, em combate ou fora dele e em qualquer nível. Levantar os caídos vem antes (planoDeAjuda).
+// O nível muda só a escolha do alvo (regras/iaDosAliados.js, quemCurar) e a posição: a avançada cura do lado de
+// trás do ferido, longe do mob; a média e a básica vão direto até ele. null = ninguém precisa de cura.
+function planoDeCura(aliado, perfil, { cena }) {
+  const estilo = perfil.id === 'avancada' && !aliado.ia.errou ? 'avancada' : perfil.id === 'basica' ? 'basica' : 'media'
+  const atacantes = (membro) => cena.inimigos.filter((inimigo) => !inimigo.morto && inimigo.alvo === membro).length
+  const alvo = quemCurar(cena.grupo, { de: aliado, estilo, errou: aliado.ia.errou, atacantes, ...ia.sacerdote })
+  return alvo ? { tipo: 'curar', alvo, protegido: estilo === 'avancada' } : null
+}
+
 // Cada classe luta do seu jeito, conforme o nível da IA e o erro sorteado do momento
 function planoDeCombate(aliado, perfil, inimigos, { cena, lider, formacao }) {
   const { errou } = aliado.ia
   const avancada = perfil.id === 'avancada' && !errou // a avançada, quando erra, luta como a média
 
+  // Sacerdote sem ninguém para curar: o nível decide só onde ele fica
   if (aliado.classe === 'sacerdote') {
-    if (perfil.id === 'basica') return { tipo: 'sacerdoteParado' } // fica onde está e cura quem estiver perto
-    if (avancada && formacao) return { tipo: 'posto', ponto: formacao.sacerdote, curar: true }
+    if (perfil.id === 'basica') return { tipo: 'sacerdoteParado' } // fica onde está
+    if (avancada && formacao) return { tipo: 'posto', ponto: formacao.sacerdote }
     if (aliado.ia.sacerdoteAtras && formacao) {
-      return { tipo: 'posto', ponto: { x: lider.x - formacao.frente.x * 80, y: lider.y - formacao.frente.y * 80 }, curar: true }
+      return { tipo: 'posto', ponto: { x: lider.x - formacao.frente.x * 80, y: lider.y - formacao.frente.y * 80 } }
     }
-    const ferido = quemCurar(cena.grupo, ia.limiteParaCurar)
-    return ferido ? { tipo: 'curar', alvo: ferido } : { tipo: 'seguir' }
+    return { tipo: 'seguir' }
   }
 
   if (aliado.classe === 'tanque') {
@@ -178,7 +197,14 @@ function planoDeCombate(aliado, perfil, inimigos, { cena, lider, formacao }) {
   }
 
   if (aliado.classe === 'guerreiro') {
-    if (avancada && formacao) return { tipo: 'guerreiroComTanque', ponto: formacao.guerreiro, inimigos }
+    if (avancada && formacao) {
+      // Veterano: com o Tanque na frente, fica ao lado dele; se o Tanque não está lá (errou, caiu ou não há), não
+      // espera: vai proteger o Líder, no mob mais perto dele
+      const tanque = cena.grupo.find((membro) => membro.classe === 'tanque' && !membro.caido && membro !== aliado)
+      const tanqueNaFrente = tanque && distancia(tanque, formacao.tanque) <= ia.formacaoDeCombate.tanqueNoPosto
+      if (tanqueNaFrente) return { tipo: 'guerreiroComTanque', ponto: formacao.guerreiro, inimigos }
+      return { tipo: 'corpoACorpo', alvo: maisProximo(lider, inimigos), inimigos }
+    }
     if (errou && perfil.id !== 'avancada') return { tipo: 'seguir' } // hesita
     return { tipo: 'corpoACorpo', alvo: maisProximo(aliado, inimigos), inimigos }
   }
@@ -229,25 +255,25 @@ function executar(aliado, plano, contexto) {
       break
     }
     case 'curar': {
+      // A aura cura todo mundo dentro dela e anda com ele. A avançada fica atrás do ferido (protegida); a média e a
+      // básica vão direto até ele. Com o ferido dentro da aura, solta a aura (quando a recarga deixa).
       const raio = ataques.sacerdote.raio
       const ate = distancia(aliado, plano.alvo)
-      if (ate <= raio * 0.6) aliado.parar()
+      if (plano.protegido) {
+        const ponto = posicaoParaCurar(aliado, plano.alvo, contexto.inimigos, raio * ia.sacerdote.distanciaParaCurar)
+        irComFolga(aliado, cena.lugarLivre(aliado.tamanho, ponto, aliado, 0, false), contexto, 20, 45)
+      } else if (ate <= raio * 0.6) aliado.parar()
       else irPara(aliado, plano.alvo, contexto, 1)
       if (ate <= raio * 0.8) cena.usarAtaque(aliado, anguloEntre(aliado, plano.alvo))
       break
     }
     case 'sacerdoteParado':
       aliado.parar()
-      curarQuemEstiverPerto(aliado, cena)
       break
-    case 'posto': {
-      // Sacerdote no fundo: cura quem estiver perto; se o Líder precisa e está longe, vai até ele
-      const liderPrecisa = lider.vida / lider.vidaMaxima < ia.limiteParaCurar && !lider.caido
-      if (liderPrecisa && distancia(aliado, lider) > ataques.sacerdote.raio * 0.8) irPara(aliado, lider, contexto, 1)
-      else irComFolga(aliado, plano.ponto, contexto)
-      curarQuemEstiverPerto(aliado, cena)
+    case 'posto':
+      // Sacerdote no fundo, sem ninguém para curar (com alguém ferido, o plano é "curar")
+      irComFolga(aliado, plano.ponto, contexto)
       break
-    }
     case 'tanqueNaFrente': {
       const { alvo } = plano
       irComFolga(aliado, plano.ponto, contexto, 20, 45)
@@ -381,26 +407,38 @@ function ficarEmVoltaDoLider(aliado, plano, contexto) {
   mirarNaDirecao(aliado)
 }
 
-function curarQuemEstiverPerto(aliado, cena) {
-  const raio = ataques.sacerdote.raio * 0.85
-  const pertoEFerido = cena.grupo.filter((membro) => !membro.caido && distancia(aliado, membro) <= raio)
-  if (quemCurar(pertoEFerido, ia.limiteParaCurar)) cena.usarAtaque(aliado, 0)
-}
-
 function usarGiroSeValer(aliado, inimigos, alvo, cena) {
   const emVolta = inimigos.filter((inimigo) => distancia(aliado, inimigo) <= habilidades.guerreiro.raio)
   if (emVolta.length >= 2) cena.usarHabilidade(aliado, 0, mirandoEm(aliado, alvo))
 }
 
 // Anda até o ponto pelo caminho em volta das pedras; freia ao chegar (raioDeChegada).
-// Quieto (depois de tremer), não anda.
+// Quieto (depois de tremer), não anda. Na média e na avançada, desvia de quem está parado no caminho.
 function irPara(aliado, ponto, { cena, agora }, raioDeChegada, fator = 1) {
   if (agora < (aliado.ia.quietoAte ?? 0)) {
     aliado.parar()
     return
   }
   const destino = cena.navegador.proximoPonto(aliado, ponto, agora)
+  const desvio = desvioDeQuemEstaParado(aliado, destino, cena)
+  if (desvio) {
+    aliado.andar(velocidadeParaSeguir(aliado, desvio, velocidade * fator, 1))
+    return
+  }
   aliado.andar(velocidadeParaSeguir(aliado, destino, velocidade * fator, destino === ponto ? raioDeChegada : 1))
+}
+
+// Ponto para contornar quem está parado entre o aliado e o destino (outro aliado, o Líder ou um caído).
+// A avançada vê de longe e contorna com folga; a média dá um passo para o lado quando quase encosta; a básica não
+// desvia (escorrega no corpo e, se travar, destrava). null = segue reto.
+function desvioDeQuemEstaParado(aliado, destino, cena) {
+  const regra = ia.desvio[aliado.ia.perfilAtual?.id]
+  if (!regra) return null
+  const parados = cena.grupo
+    .filter((outro) => outro !== aliado && !outro.perdido && (outro.caido || Math.hypot(outro.querida.x, outro.querida.y) < 20))
+    .map((outro) => ({ x: outro.x, y: outro.y, raio: outro.raio }))
+  const ponto = pontoDeDesvio(aliado, destino, parados, { raio: aliado.raio, ...regra })
+  return ponto && cena.lugarLivre(aliado.tamanho, ponto, aliado, 0, false)
 }
 
 // Vai para um posto e, ao chegar (a "chegada" px), fica lá até o posto se afastar mais que "saida" px.

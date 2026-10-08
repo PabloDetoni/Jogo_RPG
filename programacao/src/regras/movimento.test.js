@@ -8,6 +8,7 @@ import {
   linhaLivre,
   lugarLivre,
   manobraParaDestravar,
+  pontoDeDesvio,
   pontoLivreMaisProximo,
   separacao,
   tirarDasParedes,
@@ -341,5 +342,40 @@ describe('ponto livre', () => {
   it('a folga pede mais espaço em volta', () => {
     expect(lugarLivre({ x: 430, y: 300 }, regras)).toBe(true)
     expect(lugarLivre({ x: 430, y: 300 }, { ...regras, folga: 12 })).toBe(false)
+  })
+})
+
+describe('pontoDeDesvio: a IA de nível alto contorna quem está parado no caminho (08/10)', () => {
+  const regra = { raio: 20, alcance: 140, folga: 10 }
+
+  it('caminho livre: nenhum desvio', () => {
+    expect(pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, [{ x: 150, y: 80, raio: 20 }], regra)).toBeNull()
+  })
+
+  it('corpo parado bem na reta: um ponto ao lado dele, com folga das bordas', () => {
+    const ponto = pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, [{ x: 100, y: 0, raio: 20 }], regra)
+    expect(ponto.x).toBeCloseTo(100)
+    expect(Math.abs(ponto.y)).toBeCloseTo(50) // 20 + 20 + 10
+  })
+
+  it('passa pelo lado em que a reta já está: corpo um pouco abaixo → passa por cima', () => {
+    const ponto = pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, [{ x: 100, y: 15, raio: 20 }], regra)
+    expect(ponto.y).toBeLessThan(0)
+  })
+
+  it('longe demais para ver: a avançada (140 px) desvia, a média (45 px) ainda não', () => {
+    const corpos = [{ x: 120, y: 0, raio: 20 }]
+    expect(pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, corpos, regra)).not.toBeNull()
+    expect(pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, corpos, { raio: 20, alcance: 45, folga: 6 })).toBeNull()
+    expect(pontoDeDesvio({ x: 75, y: 0 }, { x: 300, y: 0 }, corpos, { raio: 20, alcance: 45, folga: 6 })).not.toBeNull()
+  })
+
+  it('o corpo mais perto é o que conta; atrás de quem anda não conta', () => {
+    const ponto = pontoDeDesvio({ x: 0, y: 0 }, { x: 300, y: 0 }, [{ x: 130, y: 0, raio: 20 }, { x: 60, y: 0, raio: 20 }, { x: -50, y: 0, raio: 20 }], regra)
+    expect(ponto.x).toBeCloseTo(60)
+  })
+
+  it('corpo em cima do destino não conta (é para lá que se vai, como o ferido que o Sacerdote vai curar)', () => {
+    expect(pontoDeDesvio({ x: 0, y: 0 }, { x: 100, y: 0 }, [{ x: 110, y: 0, raio: 20 }], regra)).toBeNull()
   })
 })

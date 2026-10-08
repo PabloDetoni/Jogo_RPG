@@ -1381,6 +1381,110 @@ try {
     await esperarResumo()
   })
 
+  console.log('34. Sacerdote sempre curando, em todos os níveis (5d)')
+  await clicar('Jogar novamente')
+  await irAteAPartida(false)
+  await clicar('Invencível: não')
+  await tirarInimigos()
+  // Todos com a vida cheia e longe de mobs; a aura do Sacerdote pronta
+  const encherVidas = () => cena(`(c.grupo.forEach(m => { if (!m.caido) m.vida = m.vidaMaxima }), true)`)
+  const auraAtiva = `c.projeteis.some(p => p.constructor.name === 'Aura')`
+  for (const nivel of ['basica', 'media', 'avancada']) {
+    await cena(`(c.trocarIA('${nivel}'), true)`)
+    await colocarLider(700, 560)
+    await encherVidas()
+    await cena(`(() => {
+      const s = ${membro('sacerdote')}, a = ${membro('arqueiro')}
+      s.colocarEm(500, 450); s.ultimoAtaque = null
+      a.colocarEm(850, 450); a.ia.parado = true; a.ia.quietoAte = c.agora + 8000
+      return true
+    })()`)
+    await esperar(`!${CENA}.projeteis.some(p => p.constructor.name === 'Aura') && !${CENA}.emCombate`, 'a aura de antes acabar', 8000)
+    await pausa(300)
+    const inicioDaCura = await cena(`(() => { const a = ${membro('arqueiro')}; a.vida = Math.floor(a.vidaMaxima / 2); return c.agora })()`)
+    await esperar(`${CENA}.projeteis.some(p => p.constructor.name === 'Aura')`, `a cura começar (IA ${nivel})`, 6000)
+    const levou = ((await cena(`c.agora`)) - inicioDaCura) / 1000
+    conferir(`IA ${nivel}: aliado ferido (fora de combate) e Sacerdote livre: a cura começa em até 3 s`, levou <= 3, Math.round(levou * 100) / 100)
+    await esperar(`${CENA}.grupo.find(m => m.classe === 'arqueiro').vida === ${CENA}.grupo.find(m => m.classe === 'arqueiro').vidaMaxima`, `o Arqueiro ser curado até o fim (IA ${nivel})`, 9000)
+    conferir(`IA ${nivel}: o Sacerdote cura até a vida ficar cheia`, true)
+  }
+  await print('46-sacerdote-curando')
+
+  // Quanto tempo a aura fica ligada com alguém ferido o tempo todo (aura de 3 s, recarga de 6 s)
+  await cena(`(c.trocarIA('media'), true)`)
+  await encherVidas()
+  await cena(`(() => { const t = ${membro('tanque')}; t.vida = Math.floor(t.vidaMaxima * 0.1); ${membro('sacerdote')}.ultimoAtaque = null; return true })()`)
+  const amostrasDaAura = []
+  for (let i = 0; i < 60; i++) {
+    amostrasDaAura.push(await cena(`({ aura: ${auraAtiva}, ferido: c.grupo.some(m => !m.caido && m.vida < m.vidaMaxima), agora: c.agora })`))
+    await pausa(200)
+  }
+  const comFerido = amostrasDaAura.filter((a) => a.ferido)
+  const ligada = comFerido.filter((a) => a.aura).length / Math.max(1, comFerido.length)
+  console.log(`  (com alguém ferido, a aura ficou ligada ${Math.round(ligada * 100)}% do tempo; ${comFerido.length} amostras)`)
+  const comecos = amostrasDaAura.filter((a, i) => a.aura && i > 0 && !amostrasDaAura[i - 1].aura).map((a) => a.agora)
+  const intervalos = comecos.slice(1).map((t, i) => t - comecos[i])
+  conferir(
+    'com alguém ferido, o Sacerdote solta a aura de novo assim que a recarga deixa (a cada ~6 s)',
+    intervalos.length > 0 && intervalos.every((ms) => ms <= 6800),
+    { intervalos: intervalos.map((ms) => Math.round(ms)), ligada: Math.round(ligada * 100) },
+  )
+
+  console.log('35. Cada nível sem ser atrapalhado pelos outros (5d)')
+  // O Sacerdote avançado vai curar o Arqueiro; o Guerreiro, na IA básica, está parado no meio do caminho
+  await cena(`(c.trocarIA(null), true)`)
+  await encherVidas()
+  await esperar(`!${CENA}.projeteis.some(p => p.constructor.name === 'Aura')`, 'a aura acabar', 8000)
+  for (const [nivelDoSacerdote, nome] of [[80, 'avançada'], [40, 'média']]) {
+    await cena(`(() => {
+      const s = ${membro('sacerdote')}, g = ${membro('guerreiro')}, a = ${membro('arqueiro')}, t = ${membro('tanque')}
+      s.nivel = ${nivelDoSacerdote}; g.nivel = 1
+      c.lider.colocarEm(700, 560); t.colocarEm(760, 600)
+      s.colocarEm(480, 450); s.ultimoAtaque = null
+      g.colocarEm(650, 450); g.ia.parado = true; g.ia.quietoAte = c.agora + 9000
+      a.colocarEm(860, 450); a.ia.parado = true; a.ia.quietoAte = c.agora + 9000
+      a.vida = Math.floor(a.vidaMaxima / 2)
+      s.travamento = null
+      return true
+    })()`)
+    let menorFolga = Infinity
+    let travou = 0
+    const inicioDoDesvio = Date.now()
+    while (Date.now() - inicioDoDesvio < 3500) {
+      const amostra = await cena(`(() => { const s = ${membro('sacerdote')}, g = ${membro('guerreiro')}; return { folga: Math.max(Math.abs(s.x - g.x), Math.abs(s.y - g.y)) - (s.tamanho + g.tamanho) / 2, travou: s.travamento?.nivel ?? 0, aura: ${auraAtiva} } })()`)
+      menorFolga = Math.min(menorFolga, amostra.folga)
+      travou = Math.max(travou, amostra.travou)
+      if (amostra.aura) break
+      await pausa(50)
+    }
+    const curou = await cena(auraAtiva)
+    conferir(`Sacerdote na IA ${nome} contorna o Guerreiro parado (IA básica) sem encostar`, menorFolga >= -2, Math.round(menorFolga * 10) / 10)
+    conferir(`Sacerdote na IA ${nome}: não trava no Guerreiro e chega para curar em até 3,5 s`, travou === 0 && curou, { travou, curou })
+    if (nome === 'avançada') await print('47-desvio-da-avancada')
+    await encherVidas()
+    await esperar(`!${CENA}.projeteis.some(p => p.constructor.name === 'Aura')`, 'a aura acabar', 8000)
+  }
+
+  // O Guerreiro avançado não fica esperando o Tanque básico que errou: vai proteger o Líder
+  await cena(`(() => {
+    const g = ${membro('guerreiro')}, t = ${membro('tanque')}
+    g.nivel = 80; g.ia.errou = false; g.ia.proximaDecisao = c.agora + 20000
+    t.nivel = 1; t.ia.errou = true; t.ia.tanqueErra = true; t.ia.proximaDecisao = c.agora + 20000
+    c.lider.colocarEm(500, 430)
+    // um mob que aguenta a luta (senão os outros aliados o derrubam em meio segundo e todos voltam a seguir)
+    const m = c.criarInimigo('mobVermelho', { x: 760, y: 430 })
+    m.vida = m.vidaMaxima = 100000
+    return true
+  })()`)
+  await esperar(`${CENA}.grupo.find(m => m.classe === 'guerreiro').ia.ultimoPlano === 'corpoACorpo'`, 'o Guerreiro decidir', 2000).catch(() => {})
+  const planoSemTanque = await cena(`({ guerreiro: ${membro('guerreiro')}.ia.ultimoPlano, tanque: ${membro('tanque')}.ia.ultimoPlano })`)
+  conferir('Tanque básico errando (fica com o grupo): o Guerreiro avançado não espera e vai no mob, protegendo o Líder', planoSemTanque.guerreiro === 'corpoACorpo' && planoSemTanque.tanque === 'seguir', planoSemTanque)
+  await cena(`(() => { const t = ${membro('tanque')}; t.nivel = 80; t.ia.errou = false; t.ia.proximaDecisao = 0; return true })()`)
+  await esperar(`${CENA}.grupo.find(m => m.classe === 'guerreiro').ia.ultimoPlano === 'guerreiroComTanque'`, 'o Guerreiro ficar ao lado do Tanque', 5000).catch(() => {})
+  const planoComTanque = await cena(`({ guerreiro: ${membro('guerreiro')}.ia.ultimoPlano, tanque: ${membro('tanque')}.ia.ultimoPlano })`)
+  conferir('com o Tanque avançado na frente, o Guerreiro avançado fica ao lado dele', planoComTanque.guerreiro === 'guerreiroComTanque', planoComTanque)
+  await tirarInimigos()
+
   const erros = await avaliar(`window.__erros`)
   conferir('nenhum erro no console', erros.length === 0, erros.slice(0, 5))
 } catch (erro) {

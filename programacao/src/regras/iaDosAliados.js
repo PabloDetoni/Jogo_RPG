@@ -218,13 +218,36 @@ export function direcaoDeRecuo(aliado, mob) {
   return { x: (aliado.x - mob.x) / ate, y: (aliado.y - mob.y) / ate }
 }
 
-// Sacerdote: quem curar. O Líder primeiro, se estiver abaixo do limite; senão, quem tem a menor fração de
-// vida abaixo do limite. Caídos não contam (a cura não levanta ninguém). null = ninguém precisa.
-export function quemCurar(membros, limite) {
-  const precisam = membros.filter((membro) => !membro.caido && !membro.perdido && membro.vida / membro.vidaMaxima < limite)
-  const lider = precisam.find((membro) => membro.lider)
-  if (lider) return lider
-  let pior = null
-  for (const membro of precisam) if (!pior || membro.vida / membro.vidaMaxima < pior.vida / pior.vidaMaxima) pior = membro
-  return pior
+// Sacerdote: quem curar (regra do Pablo de 08/10). Ele cura SEMPRE que alguém do grupo (Líder, aliados ou ele
+// mesmo) não está com a vida cheia, em combate ou fora dele, em qualquer nível da IA. Levantar os caídos vem antes
+// (a ajuda e a Ressurreição); aqui caídos e perdidos não contam. Devolve o membro, ou null se ninguém precisa.
+// Ordem: o mais ferido (menor fração da vida); em empate (diferença de até "empate", em fração da vida), o Líder.
+// O nível muda só a escolha:
+//   'basica' errando: pega o ferido mais perto dele ("de"), mesmo que não seja o mais ferido;
+//   'media': o mais ferido;
+//   'avancada': quem está sendo atacado conta como mais ferido (cada inimigo mirando nele vale urgenciaPorAtacante).
+// atacantes(membro): quantos inimigos miram naquele membro (só a avançada olha).
+export function quemCurar(membros, { de = null, estilo = 'media', errou = false, empate = 0.05, urgenciaPorAtacante = 0.1, atacantes = () => 0 } = {}) {
+  const feridos = membros.filter((membro) => !membro.caido && !membro.perdido && membro.vida < membro.vidaMaxima)
+  if (feridos.length === 0) return null
+  if (estilo === 'basica' && errou && de) return maisProximo(de, feridos)
+  const urgencia = (membro) =>
+    membro.vida / membro.vidaMaxima - (estilo === 'avancada' ? atacantes(membro) * urgenciaPorAtacante : 0)
+  const menor = Math.min(...feridos.map(urgencia))
+  const empatados = feridos.filter((membro) => urgencia(membro) <= menor + empate)
+  return empatados.find((membro) => membro.lider) ?? feridos.find((membro) => urgencia(membro) === menor)
+}
+
+// Onde o Sacerdote da IA avançada fica para curar: protegido, do lado do ferido mais longe do inimigo mais perto
+// dele, a "distanciaDoAlvo" px (a aura alcança o ferido e o Sacerdote fica atrás). Sem inimigos, para a essa
+// distância do ferido, do lado de onde vem. Curando a si mesmo, fica onde está.
+export function posicaoParaCurar(sacerdote, alvo, inimigos, distanciaDoAlvo) {
+  if (alvo === sacerdote || distancia(sacerdote, alvo) === 0) return { x: sacerdote.x, y: sacerdote.y }
+  const mob = maisProximo(alvo, vivos(inimigos))
+  const origem = mob && distancia(mob, alvo) > 0 ? mob : null
+  const de = origem ?? alvo
+  const para = origem ? alvo : sacerdote
+  const ate = distancia(de, para)
+  if (!origem && ate <= distanciaDoAlvo) return { x: sacerdote.x, y: sacerdote.y }
+  return { x: alvo.x + ((para.x - de.x) / ate) * distanciaDoAlvo, y: alvo.y + ((para.y - de.y) / ate) * distanciaDoAlvo }
 }

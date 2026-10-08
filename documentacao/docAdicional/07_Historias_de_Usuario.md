@@ -274,7 +274,8 @@ Como jogador, quero controlar o Líder com os aliados me acompanhando para explo
 Critérios de aceite:
 - O HUD mostra vida, mana, tempo, pontuação e ouro ganho.
 - Os aliados ficam sempre em volta do Líder e, parados, não ficam tremendo nem se empurrando.
-- A IA dos aliados melhora com o nível de cada um (básica, média e avançada); nenhuma é perfeita.
+- A IA dos aliados melhora com o nível de cada um (básica, média e avançada); nenhuma é perfeita, e a de nível alto não é atrapalhada pela de nível baixo (desvia de quem está parado).
+- O Sacerdote cura sempre que alguém do grupo, ele mesmo também, não está com a vida cheia: o mais ferido primeiro e, em empate, o Líder.
 - Só o Líder esquiva.
 - Requisitos atendidos: RF34, RF35, RF36, RF42, RF53.
 
@@ -403,6 +404,7 @@ Decisões tomadas durante a programação (outubro de 2026). Os critérios acima
 - **HU31:** a IA dos aliados melhora com o nível de cada um; só o Líder esquiva; parados, os aliados não tremem.
 - **HU37:** "área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha.
 - **HU14:** o mudo (tecla M) não apaga a escolha de Música e Som.
+- **HU31:** o Sacerdote cura sempre que alguém não está com a vida cheia; a IA de nível alto não é atrapalhada pela de nível baixo.
 - **HU40:** confirmada, a fuga não se cancela.
 - **HU41:** o nível ganho na partida vale a partir da partida seguinte.
 

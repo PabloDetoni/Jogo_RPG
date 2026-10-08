@@ -266,7 +266,6 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
     expect(ia.distanciaDoArqueiro.maxima).toBeLessThan(ataques.arqueiro.alcance)
     expect(ia.distanciaDoMago.maxima).toBeLessThan(ataques.mago.alcance)
     expect(ia.raioDeAtracaoDoTanque).toBeLessThan(mobVermelho.raioDeDeteccao)
-    expect(ia.limiteParaCurar).toBeLessThan(1)
   })
 
   it('esquiva com recarga curta (até 2 s) e mais rápida que andar', () => {
@@ -313,6 +312,31 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
 
   it('o boneco aguenta vários golpes', () => {
     expect(boneco.vida).toBeGreaterThan(ataques.mago.dano * 3)
+  })
+})
+
+describe('limites da parte 5d (Sacerdote e desvio entre níveis)', () => {
+  const { ia, ataques, personagem } = combateDeTeste
+
+  it('Sacerdote: o empate é pequeno e a avançada fica dentro da aura, atrás do ferido', () => {
+    expect(ia.sacerdote.empate).toBeGreaterThan(0)
+    expect(ia.sacerdote.empate).toBeLessThanOrEqual(0.1)
+    expect(ia.sacerdote.urgenciaPorAtacante).toBeLessThanOrEqual(0.25)
+    // a aura alcança o ferido de onde a avançada fica, e ela não encosta nele
+    expect(ataques.sacerdote.raio * ia.sacerdote.distanciaParaCurar).toBeLessThan(ataques.sacerdote.raio * 0.8)
+    expect(ataques.sacerdote.raio * ia.sacerdote.distanciaParaCurar).toBeGreaterThan(personagem.tamanho)
+  })
+
+  it('desvio: a avançada vê de mais longe que a média, e as duas passam sem encostar', () => {
+    expect(ia.desvio.avancada.alcance).toBeGreaterThan(ia.desvio.media.alcance)
+    expect(ia.desvio.media.alcance).toBeGreaterThanOrEqual(personagem.tamanho)
+    expect(ia.desvio.avancada.folga).toBeGreaterThan(0)
+    expect(ia.desvio).not.toHaveProperty('basica')
+  })
+
+  it('o Tanque "na frente" é perto do lugar dele, mas não exige estar colado', () => {
+    expect(ia.formacaoDeCombate.tanqueNoPosto).toBeGreaterThan(personagem.tamanho)
+    expect(ia.formacaoDeCombate.tanqueNoPosto).toBeLessThan(ia.raioDeCombate)
   })
 })
 

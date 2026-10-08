@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 07/10/2026, depois da parte 5c. A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 08/10/2026, depois da parte 5d. A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -94,7 +94,7 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
   - o Tanque às vezes fica com o grupo e não avança;
   - o Arqueiro às vezes chega quase encostado no mob;
   - o Mago e o Guerreiro vão para o meio da luta;
-  - o Sacerdote fica onde está e só cura quem está perto.
+  - sem ninguém ferido, o Sacerdote fica onde está; com alguém ferido, vai até ele (e às vezes escolhe o ferido mais perto, não o mais ferido).
 - **IA média:**
   - o Arqueiro e o Mago ficam mais longe e se reposicionam para ter linha de tiro;
   - o Tanque ainda às vezes não avança;
@@ -102,7 +102,7 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 - **IA avançada:**
   - o Tanque vai à frente, com o contorno vermelho da Provocação, e o Guerreiro fica ao lado dele;
   - o Arqueiro e o Mago ficam lado a lado, atrás, e o Arqueiro escolhe o mob mais forte;
-  - o Sacerdote fica no fundo;
+  - o Sacerdote fica no fundo e, para curar, fica atrás do ferido, longe do mob;
   - quando um mob pisca avisando o golpe, às vezes o aliado recua andando (aliados nunca esquivam).
 
 **C-04 · Linha de tiro**
@@ -151,6 +151,44 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 - Deve acontecer: aparecem "EM RECARGA", "TECLA VAZIA" e "SEM MANA" em cima do Líder, e nada sai.
 
 ---
+
+## SA. Sacerdote sempre curando (parte 5d)
+
+**SA-01 · Cura fora de combate**
+- Fazer:
+  1. **Encher grupo** e afaste-se dos mobs.
+  2. Deixe um mob bater num aliado (ou ligue o Invencível e deixe os aliados apanharem) e depois derrote o mob.
+  3. Espere o grupo sair de combate.
+- Deve acontecer: o Sacerdote vai até quem ficou ferido e solta a aura amarela, mesmo fora de combate, até a vida ficar cheia. Antes, ele só curava em combate e quem estivesse abaixo de 70%.
+
+**SA-02 · O mais ferido primeiro**
+- Fazer: com o grupo cheio e dois aliados feridos, um bem mais ferido que o outro e longe um do outro.
+- Deve acontecer: na IA média e na avançada, ele vai primeiro no mais ferido. Na básica, às vezes vai no mais perto.
+
+**SA-03 · Básica também vai até quem precisa**
+- Fazer: "IA: básica" e um aliado ferido longe do Sacerdote.
+- Deve acontecer: o Sacerdote anda até ele e cura (a básica só fica parada quando ninguém precisa de cura).
+
+**SA-04 · Avançada protegida**
+- Fazer: "IA: avançada", um mob batendo num aliado.
+- Deve acontecer: o Sacerdote se coloca atrás do ferido, do lado longe do mob, e cura de lá.
+
+**SA-05 · Ele mesmo se cura**
+- Fazer: deixe um mob bater no Sacerdote e depois afaste o mob.
+- Deve acontecer: com só ele ferido, ele solta a aura em si mesmo.
+
+## NV. Um nível da IA não atrapalha o outro (parte 5d)
+
+**NV-01 · Desvio de quem está parado**
+- Fazer:
+  1. Fora da partida, painel DEV → **Personagens do save** → **Contratar todas as classes**.
+  2. Deixe o Sacerdote no nível 70 (avançada) e o Guerreiro no 1 (básica).
+  3. Na partida, pare num lugar em que o Guerreiro fique parado entre o Sacerdote e um aliado ferido.
+- Deve acontecer: o Sacerdote contorna o Guerreiro de longe, sem encostar e sem travar. Com o Sacerdote na média, ele dá um passo para o lado quando quase encosta.
+
+**NV-02 · O Guerreiro avançado não espera o Tanque**
+- Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
+- Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
 
 ## P. Pausa e "em combate" (parte 5c)
 

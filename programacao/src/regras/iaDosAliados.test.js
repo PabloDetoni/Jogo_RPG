@@ -14,6 +14,7 @@ import {
   pontoDeMaisInimigos,
   posicaoADistancia,
   posicaoDoTanque,
+  posicaoParaCurar,
   posicoesDeCombate,
   quemCurar,
   temLinhaDeTiro,
@@ -260,20 +261,69 @@ describe('IA avançada', () => {
   })
 })
 
-describe('Sacerdote: quem curar (TASK-045)', () => {
-  const membro = (vida, extra = {}) => ({ vida, vidaMaxima: 100, ...extra })
+describe('Sacerdote: quem curar (regra de 08/10: sempre que alguém não está com a vida cheia)', () => {
+  const membro = (vida, extra = {}) => ({ vida, vidaMaxima: 100, x: 0, y: 0, ...extra })
 
-  it('o Líder primeiro, se ele precisar', () => {
-    const lider = membro(60, { lider: true })
-    expect(quemCurar([membro(20), lider], 0.7)).toBe(lider)
+  it('qualquer um abaixo de 100% precisa: até 99% conta', () => {
+    const quase = membro(99)
+    expect(quemCurar([membro(100), quase])).toBe(quase)
   })
 
-  it('senão, quem tem a menor fração de vida abaixo do limite', () => {
+  it('o mais ferido primeiro, mesmo que não seja o Líder', () => {
     const pior = membro(20)
-    expect(quemCurar([membro(90, { lider: true }), membro(50), pior], 0.7)).toBe(pior)
+    expect(quemCurar([membro(60, { lider: true }), membro(50), pior])).toBe(pior)
   })
 
-  it('ninguém abaixo do limite, ou só caídos: ninguém', () => {
-    expect(quemCurar([membro(80), membro(0, { caido: true })], 0.7)).toBeNull()
+  it('em empate (diferença de até 5 pontos), o Líder primeiro', () => {
+    const lider = membro(43, { lider: true })
+    expect(quemCurar([membro(40), lider], { empate: 0.05 })).toBe(lider)
+    expect(quemCurar([membro(30), lider], { empate: 0.05 }).lider).toBeUndefined()
+  })
+
+  it('ele mesmo também conta (o Sacerdote ferido se cura)', () => {
+    const sacerdote = membro(30, { classe: 'sacerdote' })
+    expect(quemCurar([membro(90), sacerdote])).toBe(sacerdote)
+  })
+
+  it('a fração de vida conta, não o número: 50 de 200 é mais ferido que 40 de 60', () => {
+    const tanque = membro(50, { vidaMaxima: 200 })
+    expect(quemCurar([membro(40, { vidaMaxima: 60 }), tanque])).toBe(tanque)
+  })
+
+  it('todos com a vida cheia, ou só caídos e perdidos: ninguém', () => {
+    expect(quemCurar([membro(100), membro(0, { caido: true }), membro(10, { perdido: true })])).toBeNull()
+  })
+
+  it('básica errando: pega o ferido mais perto dela, mesmo que não seja o mais ferido', () => {
+    const perto = membro(80, { x: 30 })
+    const longe = membro(10, { x: 400 })
+    const de = { x: 0, y: 0 }
+    expect(quemCurar([longe, perto], { de, estilo: 'basica', errou: true })).toBe(perto)
+    expect(quemCurar([longe, perto], { de, estilo: 'basica', errou: false })).toBe(longe)
+  })
+
+  it('avançada: quem está sendo atacado conta como mais ferido', () => {
+    const atacado = membro(50)
+    const parado = membro(42)
+    const atacantes = (m) => (m === atacado ? 2 : 0) // 2 mobs nele: 50% - 20% = 30% de urgência
+    expect(quemCurar([parado, atacado], { estilo: 'avancada', atacantes })).toBe(atacado)
+    expect(quemCurar([parado, atacado], { estilo: 'media', atacantes })).toBe(parado) // a média não olha isso
+  })
+})
+
+describe('Sacerdote avançado: onde ficar para curar', () => {
+  it('atrás do ferido, do lado longe do mob, a distância pedida', () => {
+    const ponto = posicaoParaCurar({ x: 0, y: 0 }, { x: 200, y: 0 }, [{ x: 300, y: 0 }], 80)
+    expect(ponto).toEqual({ x: 120, y: 0 })
+  })
+
+  it('sem inimigos: para a essa distância do ferido, do lado de onde vem', () => {
+    expect(posicaoParaCurar({ x: 0, y: 0 }, { x: 200, y: 0 }, [], 80)).toEqual({ x: 120, y: 0 })
+    expect(posicaoParaCurar({ x: 150, y: 0 }, { x: 200, y: 0 }, [], 80)).toEqual({ x: 150, y: 0 }) // já está perto
+  })
+
+  it('curando a si mesmo, fica onde está', () => {
+    const sacerdote = { x: 10, y: 20 }
+    expect(posicaoParaCurar(sacerdote, sacerdote, [{ x: 50, y: 20 }], 80)).toEqual({ x: 10, y: 20 })
   })
 })
