@@ -31,6 +31,7 @@ import { resultados } from '../src/dados/resultados.js'
 import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
 import { efeitoComExpoente, pontosDeAtributoAteONivel } from '../src/regras/atributos.js'
 import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
+import { chanceDeErro } from '../src/regras/nivelDaIA.js'
 import { calcularFimDaPartida } from '../src/regras/fimDaPartida.js'
 import { multaDaMissao } from '../src/regras/guilda.js'
 import { capacidadeDaMochila } from '../src/regras/mochila.js'
@@ -341,6 +342,22 @@ escrever(
     `Tanque: fica entre o mob e o grupo; mobs a até **${iaDeTeste.raioDeAtracaoDoTanque} px** dele vão nele. Guerreiro: o mob mais próximo.`,
     `Arqueiro: ataca de **${iaDeTeste.distanciaDoArqueiro.minima} a ${iaDeTeste.distanciaDoArqueiro.maxima} px**. Mago: de **${iaDeTeste.distanciaDoMago.minima} a ${iaDeTeste.distanciaDoMago.maxima} px**, mirando onde há mais mobs juntos.`,
     `Sacerdote: cura quem está abaixo de **${numero(iaDeTeste.limiteParaCurar * 100)}%** da vida (o Líder primeiro) e levanta os caídos (o Líder primeiro).`,
+  ),
+  '### Níveis da IA dos aliados (5b.1)',
+  'A IA de cada aliado vem do nível do próprio personagem; o jogador não escolhe. A cada poucos segundos, cada aliado sorteia se erra "a decisão do momento". Ninguém chega a 0% de erro.',
+  tabela(
+    ['Nível do personagem', 'IA', 'Chance de errar (começo → fim da faixa)'],
+    combate.niveisDaIA.map((faixa, i) => {
+      const primeiro = i === 0 ? nivelInicial : combate.niveisDaIA[i - 1].ateONivel + 1
+      return [`${primeiro} a ${faixa.ateONivel}`, faixa.nome, `${numero(chanceDeErro(primeiro) * 100)}% → ${numero(chanceDeErro(faixa.ateONivel) * 100)}%`]
+    }),
+  ),
+  lista(
+    `Parados: cada aliado para em qualquer ponto entre **${iaDeTeste.zonaConfortavel.minima} e ${iaDeTeste.zonaConfortavel.maxima} px** do Líder e só volta a andar quando o Líder passa de **${iaDeTeste.zonaConfortavel.maxima + iaDeTeste.zonaConfortavel.folga} px**. Na média e na avançada, para a até **${iaDeTeste.zonaConfortavel.toleranciaDaVaga} px** da vaga do X.`,
+    `Tremor: quem vai e volta sem sair do lugar em **${segundos(iaDeTeste.tremor.msDaJanela)}** fica quieto por **${segundos(iaDeTeste.tremor.msQuieto)}**.`,
+    `Básica: Arqueiro a **${iaDeTeste.distanciaCurtaDoArqueiro.minima}–${iaDeTeste.distanciaCurtaDoArqueiro.maxima} px** e Mago a **${iaDeTeste.distanciaCurtaDoMago.minima}–${iaDeTeste.distanciaCurtaDoMago.maxima} px** (mais perto da luta). O Tanque da média ainda erra como o da básica; o Sacerdote da média fica atrás em **${numero(iaDeTeste.chanceDoSacerdoteAtras * 100)}%** das decisões.`,
+    `Avançada: formação de combate (Tanque a **${iaDeTeste.formacaoDeCombate.tanqueAteOMob} px** do mob, Guerreiro ao lado, Arqueiro e Mago lado a lado a **${iaDeTeste.formacaoDeCombate.distanciaEntreArqueiroEMago} px** um do outro, Sacerdote **${iaDeTeste.formacaoDeCombate.sacerdoteAtras} px** atrás deles). Os aliados não esquivam: recuam andando do golpe avisado em **${numero(iaDeTeste.chanceDeRecuarDoAviso * 100)}%** das vezes.`,
+    `Momento de foco (avançada): com o Líder abaixo de **${numero(iaDeTeste.foco.vidaDoLider * 100)}%** da vida ou alguém caído, por **${segundos(iaDeTeste.foco.msDeDuracao)}** o erro cai para **${numero(iaDeTeste.foco.erro * 100)}%** e o recuo sobe para **${numero(iaDeTeste.foco.chanceDeRecuar * 100)}%**.`,
   ),
   '### Desmaio e resgate',
   lista(

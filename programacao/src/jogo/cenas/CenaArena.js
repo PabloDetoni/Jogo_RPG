@@ -26,13 +26,16 @@ import {
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
+import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import {
   acompanharTravamento,
   desfazerSobreposicoes,
   escorregar,
+  linhaLivre,
   manobraParaDestravar,
   pontoLivreMaisProximo,
   separacao,
+  tirarDasParedes,
 } from '../../regras/movimento.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
@@ -103,6 +106,10 @@ export default class CenaArena extends Phaser.Scene {
     this.terminou = false
     this.invencivel = false
     this.aliadosAjudam = true // barra de teste: desligado, os aliados não levantam ninguém
+    this.iaForcada = null // barra de teste: força um nível da IA para todos os aliados (null = pelo nível de cada um)
+    this.focoAte = 0 // momento de foco da IA avançada (regras/nivelDaIA.js)
+    // Contagem para o roteiro de testes: tiros de cada classe e quantos acabaram numa pedra
+    this.contagemDeTiros = { disparados: {}, naPedra: {} }
     this.anguloDaMira = 0
     this.ultimaEsquiva = null
     this.fimDaEsquiva = 0
@@ -212,6 +219,13 @@ export default class CenaArena extends Phaser.Scene {
     return this.grupo.filter((membro) => !membro.lider)
   }
 
+  // Nível da IA de um aliado: o do nível dele (básica, média ou avançada), ou o forçado na barra de teste.
+  // "nivel" é o nível usado na chance de erro (forçado: um nível do meio da faixa).
+  perfilDaIA(aliado) {
+    if (this.iaForcada) return { id: this.iaForcada, nivel: nivelParaTestar(this.iaForcada) }
+    return { id: nivelDaIA(aliado.nivel), nivel: aliado.nivel }
+  }
+
   // Quem os inimigos podem atacar: os do grupo que estão de pé
   get membrosDePe() {
     return this.grupo.filter((membro) => !membro.caido)
@@ -219,10 +233,13 @@ export default class CenaArena extends Phaser.Scene {
 
   // Ponto livre mais próximo para um corpo deste tamanho: dentro da borda, fora das pedras e sem ninguém em cima.
   // Vale para começar a partida, Encher grupo e criar inimigos (ninguém nasce em pedra nem em cima de outro).
-  lugarLivre(tamanho, ponto, ignorar = null, folga = 4) {
-    const ocupados = [...this.grupo, ...this.inimigos, this.boneco]
-      .filter((entidade) => entidade && entidade !== ignorar && !entidade.morto)
-      .map((entidade) => ({ x: entidade.x, y: entidade.y, raio: entidade.raio }))
+  // comCorpos = false: só pedras e borda (a vaga de um aliado em volta do Líder).
+  lugarLivre(tamanho, ponto, ignorar = null, folga = 4, comCorpos = true) {
+    const ocupados = comCorpos
+      ? [...this.grupo, ...this.inimigos, this.boneco]
+          .filter((entidade) => entidade && entidade !== ignorar && !entidade.morto)
+          .map((entidade) => ({ x: entidade.x, y: entidade.y, raio: entidade.raio }))
+      : []
     const regras = { area: areaJogavel, paredes: this.retangulosDosObstaculos, ocupados, raio: tamanho / 2, folga }
     return pontoLivreMaisProximo(ponto, regras) ?? { x: ponto.x, y: ponto.y }
   }
@@ -340,8 +357,11 @@ export default class CenaArena extends Phaser.Scene {
       let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
-      // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo)
-      const outros = this.corposEncostados(entidade, andantes, agora)
+      // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo).
+      // O Líder é a exceção com os aliados: ele pode empurrá-los, para nunca ficar preso atrás de um aliado
+      // parado (a correção de sobreposição continua valendo).
+      const encostados = entidade.lider ? andantes.filter((outro) => !this.grupo.includes(outro)) : andantes
+      const outros = this.corposEncostados(entidade, [entidade, ...encostados], agora)
       // Quem anda sozinho escorrega em tudo; o Líder escorrega nos corpos e, nas pedras, só no afastamento
       // (contra uma pedra, quem manda é o jogador)
       // (o "segundos" faz cada um olhar à frente o tanto que vai andar neste quadro)
@@ -370,6 +390,17 @@ export default class CenaArena extends Phaser.Scene {
   // que entrou, sem entrar na pedra (regras/movimento.js). São poucos px por vez, então não dá tranco.
   corrigirSobreposicoes(agora) {
     const andantes = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
+    // Primeiro, quem ficou dentro de uma pedra sai dela (parado, a física o considera "enterrado" e não tira)
+    const foraDasPedras = tirarDasParedes(
+      andantes.map((entidade) => ({ x: entidade.x, y: entidade.y, raio: entidade.raio })),
+      this.retangulosDosObstaculos,
+      areaJogavel,
+    )
+    andantes.forEach((entidade, i) => {
+      if (entidade.deslizando) return
+      const { x, y } = foraDasPedras[i]
+      if (Math.abs(x - entidade.x) > 0.01 || Math.abs(y - entidade.y) > 0.01) entidade.corpo.body.reset(x, y)
+    })
     const corpos = andantes.map((entidade) => ({
       x: entidade.x,
       y: entidade.y,
@@ -435,6 +466,14 @@ export default class CenaArena extends Phaser.Scene {
     entidade.manobra = null
     const ponto = this.lugarLivre(entidade.tamanho, entidade, entidade, travamento.folgaDoPontoLivre)
     if (Math.hypot(ponto.x - entidade.x, ponto.y - entidade.y) < 4) return
+    // O deslize não passa por cima de ninguém: se o caminho cruza outro corpo, ele fica quieto e tenta depois
+    const outros = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
+      .filter((outro) => outro !== entidade)
+      .map((outro) => ({ x: outro.x, y: outro.y, largura: outro.tamanho, altura: outro.tamanho }))
+    if (!linhaLivre(entidade, ponto, outros, entidade.raio)) {
+      if (entidade.ia) entidade.ia.quietoAte = this.time.now + combateDeTeste.ia.tremor.msQuieto
+      return
+    }
     entidade.deslizando = true
     entidade.corpo.body.setVelocity(0, 0)
     entidade.corpo.body.checkCollision.none = true
@@ -468,6 +507,7 @@ export default class CenaArena extends Phaser.Scene {
     if (!podeUsar(agora, membro.ultimoAtaque, ataques[membro.classe].recargaMs)) return false
     membro.ultimoAtaque = agora
     membro.anguloDaMira = angulo
+    this.contagemDeTiros.disparados[membro.classe] = (this.contagemDeTiros.disparados[membro.classe] ?? 0) + 1
     if (membro.classe === 'guerreiro') golpeDeEspada(this, membro, angulo)
     if (membro.classe === 'arqueiro') this.adicionarProjetil(new Flecha(this, membro, angulo))
     if (membro.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, membro, angulo))
@@ -536,6 +576,12 @@ export default class CenaArena extends Phaser.Scene {
       circulo.x > limites.direita - circulo.raio ||
       circulo.y > limites.base - circulo.raio
     return fora || pedras.some((pedra) => circuloTocaRetangulo(circulo, pedra))
+  }
+
+  // Um tiro do grupo acabou numa pedra (não na borda): conta, para o roteiro conferir a linha de tiro da IA
+  registrarTiroNaPedra(dono, circulo) {
+    if (!dono || !pedras.some((pedra) => circuloTocaRetangulo(circulo, pedra))) return
+    this.contagemDeTiros.naPedra[dono.classe] = (this.contagemDeTiros.naPedra[dono.classe] ?? 0) + 1
   }
 
   // Golpe do grupo num alvo: dano (mais forte com o fortalecimento da Ressurreição), pisca branco,
@@ -645,8 +691,15 @@ export default class CenaArena extends Phaser.Scene {
         continue
       }
       const limpa = areaLimpa(caido, this.inimigos, desmaio.raioDaAreaLimpa)
-      const ajudando = this.grupo.some((membro) => estaAjudando(membro, caido, { raioDaAjuda: desmaio.raioDaAjuda, velocidadeQuerida: membro.querida }))
-      caido.progressoDaAjuda = avancarAjuda(caido.progressoDaAjuda, { temAjudante: ajudando, limpa, ms })
+      // Com "Aliados ajudam: não" (barra de teste), só o Líder conta como ajudante
+      const ajudando = this.grupo.some(
+        (membro) =>
+          (membro.lider || this.aliadosAjudam) &&
+          estaAjudando(membro, caido, { raioDaAjuda: desmaio.raioDaAjuda, velocidadeQuerida: membro.querida }),
+      )
+      // Só conta o tempo depois do desmaio (o primeiro quadro pode ter começado antes da queda)
+      const passou = Math.min(ms, agora - caido.caidoDesde)
+      caido.progressoDaAjuda = avancarAjuda(caido.progressoDaAjuda, { temAjudante: ajudando, limpa, ms: passou })
       if (caido.progressoDaAjuda >= msDaAjuda) {
         this.levantar(caido, { vida: vidaAoLevantar(caido.vidaMaxima, vidaAoSerAjudadoPercentual), fimDaFragilidade: agora + desmaio.msDeFragilidade })
         continue
@@ -723,8 +776,20 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'derrubarAliado') this.derrubar(this.aliados.find((aliado) => !aliado.caido))
     if (comando.tipo === 'derrubarLider') this.derrubar(this.lider)
     if (comando.tipo === 'alternarAjuda') this.aliadosAjudam = !this.aliadosAjudam
+    if (comando.tipo === 'trocarIA') this.trocarIA(comando.nivel)
     if (this.terminou) return
     this.avisarSituacao()
+  }
+
+  // Seletor da barra de teste: pelo nível de cada um → básica → média → avançada → pelo nível...
+  // (ou direto num nível, quando o comando diz qual)
+  trocarIA(nivel) {
+    const opcoes = [null, ...idsDosNiveisDaIA]
+    this.iaForcada = nivel !== undefined ? nivel : opcoes[(opcoes.indexOf(this.iaForcada) + 1) % opcoes.length]
+    for (const aliado of this.aliados) {
+      aliado.ia.proximaDecisao = 0
+      aliado.ia.parado = false
+    }
   }
 
   // Teste do desmaio: tira toda a vida de quem está de pé (passa por cima do Invencível)
@@ -837,11 +902,14 @@ export default class CenaArena extends Phaser.Scene {
         caido: aliado.caido,
         segundosParaLevantar: aliado.caido ? segundosRestantes(aliado.caidoDesde, agora, prazoParaLevantar) : null,
         fragil: aliado.fragil,
+        ia: this.perfilDaIA(aliado).id,
       })),
       perdidos: this.perdidos.map((perdido) => perdido.classe),
       houveDesmaio: this.houveDesmaio,
       invencivel: this.invencivel,
       aliadosAjudam: this.aliadosAjudam,
+      iaForcada: this.iaForcada,
+      emFoco: this.focoAte > agora,
       fps: Math.round(this.game.loop.actualFps),
       tamanhoDoGrupo: this.grupo.length,
       inimigos: this.inimigos.length,

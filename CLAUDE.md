@@ -17,8 +17,8 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Estado global em `src/estado/` (um reducer); salvamento no navegador em `src/salvamento/`, no formato `{ formato, versao, salvoEm, progresso, partidaEmAndamento }`. Campo novo no progresso entra pelo `normalizarProgresso`; campo que muda de nome ou lugar pede um formato novo com migração (`formato.js`). Durante a partida o progresso salvo não muda: os ganhos ficam na partida atual e só entram no progresso ao encerrar (RF12).
 - Regras puras (taxa, XP, atributos, mochila, fim da partida, Guilda, combate, movimento, grupo da partida, IA, desmaio, habilidades) em `src/regras/`, cada uma com teste ao lado. Na partida, o Phaser só desenha e move:
   - dano, recarga, empurrão, cura e acerto vêm de `regras/combate.js`;
-  - separação entre corpos, escorregar (pedras, borda e outros corpos), desfazer sobreposições depois da física, caminho em volta das pedras (grade), travamento e ponto livre vêm de `regras/movimento.js`;
-  - alvos e posições da IA (aliados e inimigos) vêm de `regras/iaDosAliados.js`;
+  - separação entre corpos, escorregar (pedras, borda e outros corpos), tirar de dentro das pedras e desfazer sobreposições depois da física (a física do Phaser não tira um corpo parado de dentro da pedra), caminho em volta das pedras (grade), travamento e ponto livre vêm de `regras/movimento.js`;
+  - alvos e posições da IA (aliados e inimigos), zona confortável, tremor, linha de tiro e formação de combate vêm de `regras/iaDosAliados.js`; o nível da IA de cada aliado (pelo nível do personagem), a chance de erro e o momento de foco, de `regras/nivelDaIA.js`;
   - os 30 s, a ajuda de 5 s, a área limpa e o fim por desmaio vêm de `regras/desmaio.js`;
   - mana e uso das teclas 1 a 3 vêm de `regras/habilidades.js`.
 - Valores da documentação ficam em `src/dados/regras.js` e `taxas.js`; os provisórios, só em `src/dados/balanceamento.js`. Os testes de limite em `balanceamento.test.js` barram números absurdos.
@@ -27,6 +27,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 ## Regras que moldam as telas
 - Conta: e-mail e senha, apelido único, confirmação de e-mail obrigatória e "esqueci minha senha". Dá para jogar como convidado (salvo só no navegador); ao criar conta, o progresso do convidado vai para a conta. Uma conta = uma sessão ativa.
 - Ranking (Salão da Glória): visível para todos, até sem login, mas só quem tem conta aparece nele. Dentro do Salão da Glória ficam também o histórico de partidas (só para o próprio jogador logado) e as Conquistas (para quem já está jogando, convidado ou conta).
+- Na partida, só o Líder esquiva. A IA dos aliados vem do nível de cada personagem (básica, média e avançada) e o jogador nunca escolhe; o seletor "IA:" da barra de teste é só para testar.
 - Classes: Guerreiro, Mago, Tanque, Sacerdote e Arqueiro. A classe inicial é gratuita; um personagem por classe; as outras classes vêm de contratos na Guilda (temporário ou permanente).
 - Reino (hub): Guilda (contratos e missões), Mercado, Forja, Mochila, Árvores de Habilidades, Jogar, Ranking e Configurações.
 - Jogar abre um mapa em forma de ovo. No centro fica o Planalto (Reino, fazenda, mina e lago, com minijogos que não contam como partida). Em volta: Floresta, Deserto, Tundra e Vulcânico. No beta, só a Floresta.
@@ -69,7 +70,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 2. Esqueleto de telas navegável ✔
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
-5. Partida com quadrados (Phaser) ← em andamento (Fase 1 do `PLANO.md`): 5a (arena, Líder, grupo, ataques, inimigos) e 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste) feitas; falta a 5c (Q, F, pausa em combate, HUD completo, fim com números reais)
+5. Partida com quadrados (Phaser) ← em andamento (Fase 1 do `PLANO.md`): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste) e 5b.1 (IA em três níveis, sem tremor, linha de tiro) feitas; falta a 5c (Q, F, pausa em combate, HUD completo, fim com números reais)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta)

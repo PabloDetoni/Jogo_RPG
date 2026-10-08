@@ -398,6 +398,17 @@ body {
   color: #9fd8ff;
 }
 
+/* IA de cada aliado (básica, média ou avançada) e o momento de foco da avançada */
+.hud-ia {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.hud-foco {
+  color: #ffd700;
+  font-weight: bold;
+}
+
 .hud p {
   margin: 0;
 }

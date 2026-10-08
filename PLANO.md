@@ -1,6 +1,6 @@
 # Plano até a entrega (03/12/2026)
 
-Atualizado em 06/10/2026: Fase 0 (commit `d938108`) e Fase 1, parte 5a (commit `1143420`) no GitHub. Ajustes da 5a (colisão e travamento) e parte 5b (IA dos aliados, desmaio, Sacerdote, mana e habilidades) feitos, esperando o teste visual do Pablo e o commit. Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
+Atualizado em 07/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`) e ajustes da 5a + parte 5b (`e0c8d93`) no GitHub. Parte 5b.1 (IA dos aliados em três níveis, sem tremor e com linha de tiro) feita, esperando o teste visual do Pablo e o commit. Base: o documento "Auditoria e Backlog do Jogo RPG" (06/10), conferido contra o repositório de verdade na TASK-001.
 
 **Regra deste plano:** cumprir todos os requisitos da pasta `documentacao`. A auditoria sugere cortes (seção 12 dela), mas cortar uma funcionalidade é deixar de cumprir um requisito. Por isso, aqui os cortes só entram se o grupo decidir, e o que for cortado vai para o Conceito como "fora do beta".
 
@@ -94,7 +94,16 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - Pedras coladas em L na arena e botão "Juntar todos".
   - Painel de desenvolvimento minimizável ("</> DEV").
   - Roteiro do navegador no repositório: `npm run testar:navegador` (116 conferências; cada rodada usa uma porta livre e fecha o próprio Edge).
-- **TASK-043 a TASK-046 (parte 5b):** FEITO (06/10), esperando o teste visual do Pablo.
+- **Parte 5b.1, ajustes da IA dos aliados (07/10):** FEITO, esperando o teste visual do Pablo.
+  - **Sem tremor:** parados, os aliados param em qualquer ponto de uma zona confortável em volta do Líder e só voltam a andar quando ele se afasta além de uma folga. Também têm um detector de tremor e dão passagem ao Líder.
+  - **Separação:** só age quando dois corpos se encostam.
+  - **Linha de tiro:** Arqueiro e Mago não atiram na pedra de propósito; trocam de alvo ou vão para um lugar livre.
+  - **Três níveis de IA, pelo nível de cada personagem:** básica (1 a 29), média (30 a 69) e avançada (70 a 100), com erros sorteados a cada poucos segundos.
+    - A avançada tem formação de combate, Arqueiro no inimigo mais forte, recuo andando do golpe avisado e momentos de foco.
+    - Os aliados não esquivam.
+    - Seletor "IA:" na barra de teste.
+  - **Regras:** em `regras/nivelDaIA.js` e `regras/iaDosAliados.js`, com testes.
+- **TASK-043 a TASK-046 (parte 5b):** FEITO (06/10), teste visual do Pablo e commit `e0c8d93`.
   - **TASK-043:** IA de cada classe. Tanque atrai, Guerreiro vai no mais próximo, Arqueiro de longe, Mago onde há mais mobs e todos voltam se o Líder se afastar. Os inimigos atacam qualquer um do grupo e os aliados levam dano.
   - **TASK-044:** desmaio de 30 s, ajuda de 5 s com a área limpa, perdido pela Pedra de Retorno (lugar guardado), Retorno forçado se o Líder não for levantado e Derrota quando todos caem. Fica registrado se houve desmaio. A "Derrota em 2 s" saiu.
   - **TASK-045:** Sacerdote cura e levanta, sempre o Líder primeiro, e usa a Ressurreição quando tem mana e recarga.
@@ -106,7 +115,8 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - **Fim da partida sem números reais até a TASK-048:** Retorno forçado e Derrota já saem do desmaio, mas a taxa dos perdidos ainda não é cobrada. Os perdidos (com o lugar onde caíram) e o "houve desmaio" já chegam ao Resumo para a TASK-048 usar.
   - **HUD:** parte da TASK-049 foi adiantada (mana, habilidades e grupo). Tempo, pontuação, ouro, custo da fuga e minimapa vêm na 5c.
   - **Pausa a qualquer hora** (ainda sem "em combate") até a TASK-040.
-  - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "Invencível" só para o Líder e os 4 resultados) até a TASK-048 e a TASK-049. Quando ela sair, a faixa de baixo volta a ser área jogável.
+  - **IA dos aliados (5b.1):** as faixas de nível, as chances de erro, a zona confortável, o tremor, o foco e o recuo são números provisórios do `balanceamento.js`. O momento de foco ainda precisa de uma situação de teste própria (combinado com o Pablo). Os personagens do save estão todos no nível 1, então, sem o seletor, a IA é sempre a básica até existir XP na partida (TASK-048).
+  - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "IA: pelo nível/básica/média/avançada", "Invencível" só para o Líder e os 4 resultados) até a TASK-048 e a TASK-049. Quando ela sair, a faixa de baixo volta a ser área jogável.
 - **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** A FAZER na parte 5c.
 TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
 
@@ -172,11 +182,11 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 ## 4. Próximos passos, em ordem
 
 **Comigo:**
-1. Esperar o teste visual dos ajustes da 5a e da 5b e ajustar o que o Pablo pedir.
+1. Esperar o teste visual da 5b.1 (IA dos aliados) e ajustar o que o Pablo pedir.
 2. Fase 1, parte 5c: "em combate", pausa e retorno com Q (TASK-040), fuga com F (TASK-041), fim da partida com números reais (TASK-048), HUD completo e tecla M (TASK-049) e o roteiro dos 4 resultados (TEST-004). Antes de programar, mostro o plano curto.
 
 **Com vocês**, já:
-- fazer o teste visual dos ajustes da 5a e da 5b (roteiro no relatório) e commitar;
+- fazer o teste visual da 5b.1 (roteiro no relatório) e autorizar o commit;
 - criar o quadro no Trello (TASK-003);
 - perguntar ao professor o formato dos protótipos e se haverá apresentação (TASK-120);
 - criar o projeto de teste no Supabase para a prova do e-mail (TASK-090);
@@ -196,6 +206,8 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 | 8 | Nome do jogo, hospedagem, origem dos sons | Decisão do grupo, até 19/10 |
 | 9 | "Área limpa" do desmaio (TASK-044) | **DECIDIDO (06/10):** nenhum inimigo vivo a menos de 250 px (provisório) de quem caiu. A ajuda é automática (ficar parado perto, sem tecla) e a Ressurreição não precisa de área limpa. Já está nos Requisitos (RF43), nos Casos de Uso (UC37), nas Histórias (HU37) e no Conceito (21.5) |
 | 10 | HUD | **DECIDIDO (06/10):** faixa no topo, fora da área jogável (ninguém anda embaixo dele) |
+| 11 | Nível da IA dos aliados | **DECIDIDO (07/10):** pelo nível de cada personagem (básica 1–29, média 30–69, avançada 70–100), decidido pelo jogo. **Sem opção nas Configurações**: o jogador nunca escolhe (só a barra de teste força, para testar). Momentos de foco na avançada: sim |
+| 12 | Esquiva | **DECIDIDO (07/10):** só o Líder esquiva; os aliados, no máximo, recuam andando do golpe avisado (avançada) |
 
 ## 6. Decisões levadas para a documentação (DOC-001, feito em 06/10)
 
@@ -217,6 +229,8 @@ Todas as decisões abaixo já estão nos Requisitos, nos Casos de Uso, nas Hist�
   - "Acima do mínimo" quer dizer maior que o mínimo.
   - O XP guardado é o XP dentro do nível atual.
   - O atributo máximo é 100, com a curva de efeito.
+- **Etapa 5, parte 5b.1 (07/10):**
+  - A IA dos aliados tem três níveis pelo nível de cada personagem; os aliados não esquivam; parados, não tremem (RF36, RF42, UC31, HU31, Conceito 21.5).
 - **Etapa 5, parte 5b (06/10):**
   - Área limpa = nenhum inimigo vivo perto de quem caiu. A ajuda é automática e volta a zero se a área sujar. A Ressurreição não precisa de área limpa (RF43, UC37, HU37, Conceito 21.5).
 

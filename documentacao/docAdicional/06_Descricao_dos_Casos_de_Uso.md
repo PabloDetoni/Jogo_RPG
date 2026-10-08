@@ -58,7 +58,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil. |
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
 | UC30 | Preparar mochila da partida | «extend» de UC26 | — | Condição: o jogador quer levar itens | Leva itens da Mochila do Reino respeitando o limite de peso. |
-| UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos. |
+| UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos, com uma IA que melhora com o nível de cada personagem (básica, média e avançada). Só o Líder esquiva. |
 | UC32 | Combater monstros | «extend» de UC31 | Estendido por UC33 e UC34 | Condição: há mob hostil por perto | Luta em tempo real, com esquiva, knockback e breve imunidade. |
 | UC33 | Usar habilidade | «extend» de UC32 | — | Condição: mana e recarga disponíveis | Usa uma das 3 habilidades ativas com as teclas 1, 2 e 3. |
 | UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele. |
@@ -83,6 +83,7 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 | UC14 | "Efeitos" passou a se chamar Som; na partida, as opções de conta não aparecem. |
 | UC26 | A preparação permite voltar ao Mapa, além do Reino. |
 | UC43 | O minijogo é acessado pelo Mapa e volta ao Mapa. |
+| UC31 | Os aliados agem com uma IA que melhora com o nível de cada personagem; só o Líder esquiva. |
 | UC37 | "Área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha quando alguém fica parado perto. |
 
 Os requisitos ligados a cada mudança estão na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

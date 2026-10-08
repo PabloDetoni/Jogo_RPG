@@ -272,8 +272,10 @@ Como jogador, quero controlar o Líder com os aliados me acompanhando para explo
 
 Critérios de aceite:
 - O HUD mostra vida, mana, tempo, pontuação e ouro ganho.
-- Os aliados ficam sempre em volta do Líder.
-- Requisitos atendidos: RF34, RF35, RF42, RF53.
+- Os aliados ficam sempre em volta do Líder e, parados, não ficam tremendo nem se empurrando.
+- A IA dos aliados melhora com o nível de cada um (básica, média e avançada); nenhuma é perfeita.
+- Só o Líder esquiva.
+- Requisitos atendidos: RF34, RF35, RF36, RF42, RF53.
 
 ### HU32 · Combater monstros (UC32)
 
@@ -395,6 +397,7 @@ Decisões tomadas durante a programação (outubro de 2026). Os critérios acima
 - **HU26 e HU27:** da Preparação dá para voltar ao Mapa e trocar de bioma sem passar pelo Reino.
 - **HU38:** o "Voltar ao Reino" da pausa passa pelo retorno de 15 s.
 - **HU43:** o minijogo volta ao Mapa.
+- **HU31:** a IA dos aliados melhora com o nível de cada um; só o Líder esquiva; parados, os aliados não tremem.
 - **HU37:** "área limpa" quer dizer nenhum inimigo vivo perto de quem caiu; a ajuda começa sozinha.
 
 O motivo de cada mudança está na seção "Alterações do projeto" dos [Requisitos](08_Requisitos.md).

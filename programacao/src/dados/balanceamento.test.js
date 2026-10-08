@@ -131,6 +131,7 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
   it('todo número é positivo e finito', () => {
     const conferir = (objeto, caminho) => {
       for (const [chave, valor] of Object.entries(objeto)) {
+        if (typeof valor === 'string') continue // nomes (ex.: dos níveis da IA)
         if (typeof valor === 'object') conferir(valor, `${caminho}.${chave}`)
         else expect(Number.isFinite(valor) && valor > 0, `${caminho}.${chave} = ${valor}`).toBe(true)
       }
@@ -206,6 +207,50 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
     expect(habilidades.mago.raio).toBeGreaterThan(ataques.mago.raioDaExplosao)
     expect(habilidades.tanque.reducaoDeDano).toBeLessThan(1) // provocando, ainda leva algum dano
     for (const habilidade of Object.values(habilidades)) expect(habilidade.recargaMs).toBeGreaterThan(ataques.guerreiro.recargaMs)
+  })
+
+  it('níveis da IA: cobrem do nível 1 ao 100, e o erro só cai (nunca chega a 0)', () => {
+    const { niveisDaIA } = combateDeTeste
+    expect(niveisDaIA.map((faixa) => faixa.id)).toEqual(['basica', 'media', 'avancada'])
+    expect(niveisDaIA.at(-1).ateONivel).toBe(nivelMaximo)
+    niveisDaIA.forEach((faixa, i) => {
+      expect(faixa.erroNoComeco).toBeLessThanOrEqual(0.5)
+      expect(faixa.erroNoFim).toBeGreaterThan(0)
+      expect(faixa.erroNoFim).toBeLessThanOrEqual(faixa.erroNoComeco)
+      if (i > 0) {
+        expect(faixa.ateONivel).toBeGreaterThan(niveisDaIA[i - 1].ateONivel)
+        expect(faixa.erroNoComeco).toBeLessThanOrEqual(niveisDaIA[i - 1].erroNoFim)
+      }
+    })
+  })
+
+  it('zona confortável: o aliado parado não encosta no Líder e a vaga do X cabe nela', () => {
+    const { zonaConfortavel, raioDaFormacao: raio } = { ...combateDeTeste.ia, raioDaFormacao: combateDeTeste.raioDaFormacao }
+    expect(zonaConfortavel.minima).toBeGreaterThan(personagem.tamanho)
+    expect(raio).toBeGreaterThanOrEqual(zonaConfortavel.minima)
+    expect(raio + zonaConfortavel.toleranciaDaVaga).toBeLessThanOrEqual(zonaConfortavel.maxima)
+    expect(zonaConfortavel.maxima).toBeLessThan(combateDeTeste.ia.raioDaCorrente)
+  })
+
+  it('tremor: percebe rápido e fica quieto pouco tempo', () => {
+    const { tremor } = combateDeTeste.ia
+    expect(tremor.msDaJanela).toBeLessThanOrEqual(1000)
+    expect(tremor.msQuieto).toBeLessThanOrEqual(3000)
+    expect(tremor.razao).toBeGreaterThan(1)
+  })
+
+  it('foco e recuo: em foco a avançada erra menos que o normal dela e recua mais do aviso', () => {
+    const { foco, chanceDeRecuarDoAviso } = combateDeTeste.ia
+    expect(foco.erro).toBeLessThan(combateDeTeste.niveisDaIA.at(-1).erroNoFim)
+    expect(foco.chanceDeRecuar).toBeGreaterThanOrEqual(chanceDeRecuarDoAviso)
+    expect(foco.chanceDeRecuar).toBeLessThanOrEqual(1)
+  })
+
+  it('IA básica: Arqueiro e Mago ficam mais perto da luta que na média, mas não colados no mob', () => {
+    const { ia } = combateDeTeste
+    expect(ia.distanciaCurtaDoArqueiro.maxima).toBeLessThan(ia.distanciaDoArqueiro.minima)
+    expect(ia.distanciaCurtaDoMago.maxima).toBeLessThan(ia.distanciaDoMago.minima)
+    expect(ia.distanciaCurtaDoArqueiro.minima).toBeGreaterThan(mobVermelho.alcanceDoBote)
   })
 
   it('IA: a corrente é maior que a luta, e Arqueiro e Mago atacam de longe sem passar do alcance', () => {

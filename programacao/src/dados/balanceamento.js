@@ -68,9 +68,40 @@ export const combateDeTeste = {
     raioDeCombate: 380,
     distanciaDoArqueiro: { minima: 220, maxima: 320 },
     distanciaDoMago: { minima: 260, maxima: 420 },
+    // IA básica: Arqueiro e Mago ficam mais perto da luta ("todo mundo vai para o meio")
+    distanciaCurtaDoArqueiro: { minima: 120, maxima: 180 },
+    distanciaCurtaDoMago: { minima: 150, maxima: 230 },
     raioDeAtracaoDoTanque: 260,
     limiteParaCurar: 0.7,
+    // Parados (5b.1): cada aliado para em qualquer ponto entre a distância mínima e a máxima do Líder e só
+    // volta a andar quando o Líder passa da máxima + folga. Na IA média e na avançada, para a até
+    // toleranciaDaVaga px da vaga do X (posição mais arrumada).
+    zonaConfortavel: { minima: 50, maxima: 130, folga: 50, toleranciaDaVaga: 40 },
+    // Tremor: se numa janela anda mais que "razao" vezes o que sai do lugar (e sai menos que
+    // deslocamentoMaximo), fica quieto por msQuieto (parado na formação: até o Líder sair da zona)
+    tremor: { msDaJanela: 600, razao: 3, deslocamentoMaximo: 12, caminhoMinimo: 15, msQuieto: 1200 },
+    // A cada msEntreDecisoes, cada aliado sorteia se vai errar "a decisão do momento" (não muda a cada quadro)
+    msEntreDecisoes: 3000,
+    // Linha de tiro: folga em volta do tiro (px) e quantos pontos em volta do alvo testar para achar um livre
+    folgaDaLinhaDeTiro: { arqueiro: 6, mago: 16 },
+    pontosParaLinhaDeTiro: 16,
+    // IA avançada: formação de combate (distâncias em px)
+    formacaoDeCombate: { tanqueAteOMob: 60, guerreiroAoLado: 55, distanciaEntreArqueiroEMago: 120, sacerdoteAtras: 70 },
+    // Média: chance de o Sacerdote ficar mais para trás em cada decisão
+    chanceDoSacerdoteAtras: 0.5,
+    // Avançada: chance de recuar andando ao ver o aviso de golpe (os aliados não esquivam: a esquiva é só do Líder)
+    chanceDeRecuarDoAviso: 0.5,
+    // Momento de foco (avançada): quando o Líder fica abaixo de vidaDoLider ou alguém cai, por msDeDuracao
+    // os aliados quase não erram (erro) e recuam mais do aviso (chanceDeRecuar)
+    foco: { msDeDuracao: 8000, vidaDoLider: 0.3, erro: 0.02, chanceDeRecuar: 0.9 },
   },
+  // Níveis da IA dos aliados (5b.1), pelo nível do próprio personagem. A chance de errar uma decisão cai de
+  // erroNoComeco (primeiro nível da faixa) a erroNoFim (último). Nunca chega a 0: ninguém é perfeito.
+  niveisDaIA: [
+    { id: 'basica', nome: 'básica', ateONivel: 29, erroNoComeco: 0.45, erroNoFim: 0.3 },
+    { id: 'media', nome: 'média', ateONivel: 69, erroNoComeco: 0.3, erroNoFim: 0.15 },
+    { id: 'avancada', nome: 'avançada', ateONivel: 100, erroNoComeco: 0.15, erroNoFim: 0.05 },
+  ],
   // Habilidades de TESTE (tecla 1), uma por classe, até a TASK-010. Nomes em dados/habilidades.js.
   habilidades: {
     // Giro: golpe em volta de si
@@ -96,7 +127,8 @@ export const combateDeTeste = {
   // Zona em volta de cada corpo (ninguém fica em cima de ninguém). A zona de dois corpos vai até a soma das
   // metades + folga; dentro dela, os dois se afastam aos poucos, até "forca" px/s quando um está em cima do outro.
   // O Líder é mais pesado: quando ele esbarra, quem sai do caminho são os aliados.
-  separacao: { folga: 10, forca: 320, pesoDoLider: 4, pesoDoInimigo: 1.5 },
+  // 5b.1: folga de 1 px = a separação só age quando dois corpos se encostam de verdade (nunca para "arrumar")
+  separacao: { folga: 1, forca: 320, pesoDoLider: 4, pesoDoInimigo: 1.5 },
   // Quem anda sozinho e quase não sai do lugar: a cada janela, se andou menos que a fração do que queria,
   // o travamento sobe um nível (escorrega, escorrega para o outro lado, dá a volta e, no último nível,
   // desliza depressa até o ponto livre mais próximo, com essa folga em volta).

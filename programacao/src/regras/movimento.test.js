@@ -10,6 +10,7 @@ import {
   manobraParaDestravar,
   pontoLivreMaisProximo,
   separacao,
+  tirarDasParedes,
 } from './movimento.js'
 
 const tamanho = (v) => Math.hypot(v.x, v.y)
@@ -108,6 +109,26 @@ describe('escorregar em pedras e na borda', () => {
   })
 })
 
+describe('tirar de dentro das pedras', () => {
+  const pedra = { x: 100, y: 100, largura: 40, altura: 100 } // de x 80 a 120, de y 50 a 150
+
+  it('fora das pedras, ninguém se mexe', () => {
+    expect(tirarDasParedes([{ x: 300, y: 300, raio: 20 }], [pedra], area)).toEqual([{ x: 300, y: 300 }])
+  })
+
+  it('5 px dentro da quina: sai pelo lado em que entrou menos, e só encosta', () => {
+    // Corpo de x 45 a 85 (5 px dentro em x) e de y 35 a 75 (25 px dentro em y)
+    const [saiu] = tirarDasParedes([{ x: 65, y: 55, raio: 20 }], [pedra], area)
+    expect(saiu).toEqual({ x: 60, y: 55 })
+  })
+
+  it('se o lado mais curto dá em outra pedra, sai por outro', () => {
+    const vizinha = { x: 40, y: 100, largura: 40, altura: 100 } // de x 20 a 60, colada à esquerda
+    const [saiu] = tirarDasParedes([{ x: 75, y: 70, raio: 20 }], [pedra, vizinha], area)
+    expect(lugarLivre(saiu, { area, paredes: [pedra, vizinha], raio: 20 })).toBe(true)
+  })
+})
+
 describe('desfazer sobreposições (aperto)', () => {
   const pedra = { x: 100, y: 100, largura: 40, altura: 100 } // de x 80 a 120
   const sobrepoem = (a, b, raio = 20) => Math.abs(a.x - b.x) < 2 * raio - 0.01 && Math.abs(a.y - b.y) < 2 * raio - 0.01
@@ -136,6 +157,35 @@ describe('desfazer sobreposições (aperto)', () => {
     expect(outro).toEqual({ x: 240, y: 200 })
     const juntos = [{ x: 200, y: 200, raio: 20, ignorar: true }, { x: 200, y: 200, raio: 20 }]
     expect(desfazerSobreposicoes(juntos, [], area)).toEqual([{ x: 200, y: 200 }, { x: 200, y: 200 }])
+  })
+
+  it('os dois encostados em pedras no eixo em que entraram: saem pelo outro eixo, sem entrar em pedra', () => {
+    // Entre duas pedras (x 80 a 120 e x 160 a 200), dois corpos lado a lado em cima um do outro em y
+    const pedras = [
+      { x: 100, y: 300, largura: 40, altura: 400 },
+      { x: 180, y: 300, largura: 40, altura: 400 },
+    ]
+    // Corredor de x 120 a 160 (só 40 px): A e B entraram 10 px um no outro em x e 30 px em y
+    const [a, b] = desfazerSobreposicoes([{ x: 140, y: 300, raio: 20 }, { x: 140, y: 310, raio: 20 }], pedras, area)
+    const dentro = (p) => pedras.some((pedra) => Math.abs(p.x - pedra.x) < 20 + pedra.largura / 2 - 0.01 && Math.abs(p.y - pedra.y) < 20 + pedra.altura / 2 - 0.01)
+    expect(dentro(a)).toBe(false)
+    expect(dentro(b)).toBe(false)
+    expect(Math.abs(a.y - b.y)).toBeGreaterThanOrEqual(40 - 0.01)
+  })
+
+  it('travados nos dois eixos: ninguém é empurrado para dentro de uma pedra', () => {
+    const caixa = { x: 500, y: 300, largura: 1000, altura: 600 }
+    // Num buraco do tamanho de um corpo e meio, cercado de pedras: não há para onde ir
+    const pedras = [
+      { x: 140, y: 230, largura: 200, altura: 40 },
+      { x: 140, y: 370, largura: 200, altura: 40 },
+      { x: 30, y: 300, largura: 20, altura: 200 },
+      { x: 250, y: 300, largura: 20, altura: 200 },
+    ]
+    const [a, b] = desfazerSobreposicoes([{ x: 120, y: 300, raio: 20 }, { x: 150, y: 300, raio: 20 }], pedras, caixa)
+    const dentro = (p) => pedras.some((pedra) => Math.abs(p.x - pedra.x) < 20 + pedra.largura / 2 - 0.01 && Math.abs(p.y - pedra.y) < 20 + pedra.altura / 2 - 0.01)
+    expect(dentro(a)).toBe(false)
+    expect(dentro(b)).toBe(false)
   })
 
   it('três espremidos numa fila contra a pedra: no fim ninguém está dentro de ninguém nem da pedra', () => {

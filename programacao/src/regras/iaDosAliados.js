@@ -7,6 +7,8 @@
 //   Sacerdote: cura e levanta os caídos, com prioridade para o Líder.
 // Todos voltam para perto do Líder se ele se afastar demais.
 
+import { linhaLivre, lugarLivre } from './movimento.js'
+
 const distancia = (a, b) => Math.hypot(b.x - a.x, b.y - a.y)
 const vivos = (inimigos) => inimigos.filter((inimigo) => !inimigo.morto)
 
@@ -84,6 +86,136 @@ export function alvoDoInimigo(inimigo, membros, { alvoAtual, raioDeDeteccao, rai
   if (perseguindo) return alvoAtual
   const perto = membros.filter((membro) => distancia(inimigo, membro) <= raioDeDeteccao)
   return maisProximo(inimigo, perto)
+}
+
+// ---------- Parados em volta do Líder (5b.1: sem tremor) ----------
+
+// A vaga do X é só referência. Regras:
+// - parado: continua parado enquanto o Líder estiver até a distância máxima + folga (não corrige nada);
+// - andando com o Líder parado: para assim que entra na zona (entre a mínima e a máxima); com tolerância
+//   (IA média e avançada), só quando também está perto da vaga, ou quando não consegue chegar mais perto
+//   dela (travado: outro corpo, pedra ou borda no caminho);
+// - andando com o Líder andando: continua indo para a vaga.
+// Devolve true se deve ficar parado.
+export function deveFicarParado(
+  { parado, distanciaAoLider, distanciaAVaga, liderAndando, travado = false },
+  { minima, maxima, folga, tolerancia = null },
+) {
+  if (parado) return distanciaAoLider <= maxima + folga
+  if (liderAndando) return false
+  const naZona = distanciaAoLider >= minima && distanciaAoLider <= maxima
+  return naZona && (tolerancia === null || distanciaAVaga <= tolerancia || travado)
+}
+
+// Detector de tremor: numa janela de tempo, soma o caminho andado e compara com o quanto saiu do lugar.
+// Vai e volta (caminho bem maior que o deslocamento) sem sair do lugar = tremendo.
+// registro: { inicio, origem, ultima, caminho } (null no começo). Devolve { registro, tremendo }.
+export function acompanharTremor(registro, { agora, posicao }, { msDaJanela, razao, deslocamentoMaximo, caminhoMinimo }) {
+  if (!registro) return { registro: { inicio: agora, origem: { ...posicao }, ultima: { ...posicao }, caminho: 0 }, tremendo: false }
+  const caminho = registro.caminho + distancia(registro.ultima, posicao)
+  if (agora - registro.inicio < msDaJanela) {
+    return { registro: { ...registro, ultima: { ...posicao }, caminho }, tremendo: false }
+  }
+  const saiu = distancia(registro.origem, posicao)
+  const tremendo = caminho >= caminhoMinimo && saiu < deslocamentoMaximo && caminho > saiu * razao
+  return { registro: { inicio: agora, origem: { ...posicao }, ultima: { ...posicao }, caminho: 0 }, tremendo }
+}
+
+// Aliado parado no caminho do Líder: se o Líder anda na direção dele e está encostando, o aliado dá um
+// passo para o lado (o lado de que já está mais perto). Devolve a direção (tamanho 1) ou null.
+export function passagemParaOLider(aliado, lider, velocidadeDoLider, contato) {
+  const velocidade = Math.hypot(velocidadeDoLider.x, velocidadeDoLider.y)
+  if (velocidade < 20 || distancia(aliado, lider) > contato) return null
+  const frente = { x: velocidadeDoLider.x / velocidade, y: velocidadeDoLider.y / velocidade }
+  const ate = { x: aliado.x - lider.x, y: aliado.y - lider.y }
+  if (ate.x * frente.x + ate.y * frente.y <= 0) return null // está atrás ou do lado: não atrapalha
+  const lado = ate.x * -frente.y + ate.y * frente.x >= 0 ? 1 : -1
+  return { x: -frente.y * lado, y: frente.x * lado }
+}
+
+// ---------- Linha de tiro (5b.1) ----------
+
+// Nenhuma pedra entre quem atira e o alvo (folga = metade da grossura do tiro)
+export function temLinhaDeTiro(de, alvo, pedras, folga) {
+  return linhaLivre(de, alvo, pedras, folga)
+}
+
+// O inimigo mais perto que dá para acertar daqui (sem pedra no caminho), ou null
+export function alvoComLinhaDeTiro(de, inimigos, pedras, folga) {
+  return maisProximo(
+    de,
+    vivos(inimigos).filter((inimigo) => temLinhaDeTiro(de, inimigo, pedras, folga)),
+  )
+}
+
+// Um lugar, na distância certa do alvo, de onde dá para acertá-lo: testa pontos numa volta em volta dele
+// e fica com o mais perto de quem atira. Fora da área ou dentro de pedra não vale. null se não houver.
+export function pontoComLinhaDeTiro(atirador, alvo, { pedras, area, distanciaDoAlvo, folga, raioDoCorpo, pontos }) {
+  let melhor = null
+  for (let i = 0; i < pontos; i++) {
+    const angulo = (2 * Math.PI * i) / pontos
+    const ponto = { x: alvo.x + Math.cos(angulo) * distanciaDoAlvo, y: alvo.y + Math.sin(angulo) * distanciaDoAlvo }
+    if (!lugarLivre(ponto, { area, paredes: pedras, raio: raioDoCorpo })) continue
+    if (!temLinhaDeTiro(ponto, alvo, pedras, folga)) continue
+    if (!melhor || distancia(atirador, ponto) < distancia(atirador, melhor)) melhor = ponto
+  }
+  return melhor
+}
+
+// ---------- IA avançada ----------
+
+// O inimigo mais forte: o de mais vida máxima; no empate, o que bate mais; depois, o mais perto
+export function inimigoMaisForte(de, inimigos) {
+  let melhor = null
+  for (const inimigo of vivos(inimigos)) {
+    if (!melhor) {
+      melhor = inimigo
+      continue
+    }
+    const forca = (outro) => [outro.vidaMaxima ?? 0, outro.dano ?? 0]
+    const [vidaA, danoA] = forca(inimigo)
+    const [vidaB, danoB] = forca(melhor)
+    if (vidaA > vidaB || (vidaA === vidaB && (danoA > danoB || (danoA === danoB && distancia(de, inimigo) < distancia(de, melhor))))) {
+      melhor = inimigo
+    }
+  }
+  return melhor
+}
+
+// Formação de combate: "frente" é a direção do Líder para o meio dos inimigos.
+// Tanque sozinho na frente, colado no mob mais perto do grupo; Guerreiro ao lado dele, um pouco atrás;
+// Arqueiro e Mago lado a lado, atrás, cada um na sua distância do meio dos inimigos; Sacerdote no fundo,
+// entre os dois e um pouco atrás. Devolve { tanque, guerreiro, arqueiro, mago, sacerdote, frente }.
+export function posicoesDeCombate(lider, inimigos, { tanqueAteOMob, guerreiroAoLado, distanciaEntreArqueiroEMago, sacerdoteAtras, distanciaDoArqueiro, distanciaDoMago }) {
+  const lista = vivos(inimigos)
+  if (lista.length === 0) return null
+  const meio = { x: lista.reduce((s, i) => s + i.x, 0) / lista.length, y: lista.reduce((s, i) => s + i.y, 0) / lista.length }
+  const ate = distancia(lider, meio)
+  const frente = ate > 0 ? { x: (meio.x - lider.x) / ate, y: (meio.y - lider.y) / ate } : { x: 1, y: 0 }
+  const lado = { x: -frente.y, y: frente.x }
+  const maisPertoDoLider = maisProximo(lider, lista)
+  const tanque = { x: maisPertoDoLider.x - frente.x * tanqueAteOMob, y: maisPertoDoLider.y - frente.y * tanqueAteOMob }
+  const guerreiro = {
+    x: tanque.x + lado.x * guerreiroAoLado - frente.x * guerreiroAoLado * 0.4,
+    y: tanque.y + lado.y * guerreiroAoLado - frente.y * guerreiroAoLado * 0.4,
+  }
+  const meiaDistancia = distanciaEntreArqueiroEMago / 2
+  const arqueiroAte = (distanciaDoArqueiro.minima + distanciaDoArqueiro.maxima) / 2
+  const magoAte = (distanciaDoMago.minima + distanciaDoMago.maxima) / 2
+  const arqueiro = { x: meio.x - frente.x * arqueiroAte - lado.x * meiaDistancia, y: meio.y - frente.y * arqueiroAte - lado.y * meiaDistancia }
+  const mago = { x: meio.x - frente.x * magoAte + lado.x * meiaDistancia, y: meio.y - frente.y * magoAte + lado.y * meiaDistancia }
+  const sacerdote = {
+    x: (arqueiro.x + mago.x) / 2 - frente.x * sacerdoteAtras,
+    y: (arqueiro.y + mago.y) / 2 - frente.y * sacerdoteAtras,
+  }
+  return { tanque, guerreiro, arqueiro, mago, sacerdote, frente }
+}
+
+// Recuar andando do golpe avisado (os aliados não esquivam): direção para longe do mob, tamanho 1
+export function direcaoDeRecuo(aliado, mob) {
+  const ate = distancia(mob, aliado)
+  if (ate === 0) return { x: 1, y: 0 }
+  return { x: (aliado.x - mob.x) / ate, y: (aliado.y - mob.y) / ate }
 }
 
 // Sacerdote: quem curar. O Líder primeiro, se estiver abaixo do limite; senão, quem tem a menor fração de

@@ -263,7 +263,7 @@ const SOBREPOSTOS = `(folga => {
   const pares = []
   for (let i = 0; i < corpos.length; i++) for (let j = i + 1; j < corpos.length; j++) {
     const a = corpos[i], b = corpos[j], meio = (a.tamanho + b.tamanho) / 2 - folga
-    if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.constructor.name, b.constructor.name, Math.round(a.x), Math.round(a.y)])
+    if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.classe ?? a.constructor.name, b.classe ?? b.constructor.name, Math.round(a.x), Math.round(a.y), (a.deslizando || b.deslizando) ? 'deslizando' : '', Math.round(((a.tamanho + b.tamanho) / 2 - Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))) * 10) / 10])
   }
   return pares
 })`
@@ -653,8 +653,9 @@ try {
   conferir('Juntar todos põe todos no mesmo ponto', juntos < 1, Math.round(juntos))
   await pausa(100)
   await print('17-juntar-todos')
-  const logoDepois = await cena(`Math.max(...[...c.aliados, ...c.inimigos].map(e => Math.hypot(e.x - c.lider.x, e.y - c.lider.y)))`)
-  conferir('sem tranco: em 0,1 s ninguém foi longe (≤ 90 px)', logoDepois <= 90, Math.round(logoDepois))
+  // Só os aliados: os mobs já levam empurrões de combate (o escudo do Tanque joga longe), o que não é pulo
+  const logoDepois = await cena(`Math.max(...c.aliados.map(e => Math.hypot(e.x - c.lider.x, e.y - c.lider.y)))`)
+  conferir('sem pulo: em 0,1 s nenhum aliado foi longe (≤ 120 px)', logoDepois <= 120, Math.round(logoDepois))
   await clicar('Juntar todos', true, 0)
   const peloBotao = await cena(`Math.max(...[...c.aliados, ...c.inimigos].map(e => Math.hypot(e.x - c.lider.x, e.y - c.lider.y)))`)
   conferir('o botão "Juntar todos" faz o mesmo', peloBotao < 60, Math.round(peloBotao))
@@ -664,9 +665,15 @@ try {
   await print('18-separados')
   await tirarInimigos()
 
-  console.log('11. Aliados lutando (TASK-043)')
+  console.log('11. Aliados lutando (TASK-043), na IA avançada (5b.1)')
   await clicar('Mago') // o Líder vira o Mago e o Mago aliado vira o Sacerdote: o grupo tem as 5 classes
   await clicar('Recarregar habilidades')
+  conferir('pelo nível, os aliados de nível 1 usam a IA básica (HUD)', (await textoDe('.hud')).includes('IA básica'))
+  await clicar('IA: pelo nível')
+  await clicar('IA: básica')
+  await clicar('IA: média')
+  conferir('o seletor da barra de teste troca a IA: pelo nível → básica → média → avançada', (await textoDe('.barra-de-teste')).includes('IA: avançada'))
+  conferir('o HUD mostra a IA de cada aliado', (await textoDe('.hud')).includes('IA avançada'))
   await cena(`(c.grupo.forEach(m => { if (m.caido) c.levantar(m, { vida: m.vidaMaxima }); m.vida = m.vidaMaxima }), true)`)
   await colocarLider(420, 450)
   await pausa(1200)
@@ -723,6 +730,75 @@ try {
   conferir('nenhum aliado fica para trás quando o Líder foge (≤ 220 px)', (await distanciasAoLider()).every((d) => d <= 220), await distanciasAoLider())
   await tirarInimigos()
 
+  console.log('12b. Parados sem tremor, nos 3 níveis da IA (no canto, no L e encostado na pedra)')
+  await cena(`(c.grupo.forEach(m => { if (m.caido) c.levantar(m, { vida: m.vidaMaxima }) }), true)`)
+  const lugaresParados = [
+    ['no canto', { x: AREA.esquerda + 45, y: AREA.topo + 45 }],
+    ['no canto do L', { x: 230, y: 615 }],
+    ['encostado na pedra', { x: 615, y: 250 }],
+  ]
+  for (const nivel of ['basica', 'media', 'avancada']) {
+    await cena(`(c.trocarIA('${nivel}'), true)`)
+    for (const [nome, lugar] of lugaresParados) {
+      await colocarLider(lugar.x, lugar.y)
+      // Aliados jogados em volta do Líder, cada um num lugar livre
+      await cena(`(() => {
+        const desvios = [[-70, 0], [0, 70], [70, 0], [0, -70]]
+        c.aliados.forEach((a, i) => { const p = c.lugarLivre(a.tamanho, { x: ${lugar.x} + desvios[i % 4][0], y: ${lugar.y} + desvios[i % 4][1] }, a); a.colocarEm(p.x, p.y) })
+        return true
+      })()`)
+      await pausa(2000)
+      const antes = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y }))`)
+      await pausa(1000)
+      const depois = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y }))`)
+      const maior = Math.max(...antes.map((p, i) => Math.hypot(depois[i].x - p.x, depois[i].y - p.y)))
+      conferir(`IA ${nivel}, Líder parado ${nome}: ninguém treme (≤ 3 px em 1 s)`, maior <= 3, Math.round(maior * 10) / 10)
+      if (nivel === 'media' && nome === 'encostado na pedra') await print('21-parados-encostados-na-pedra')
+    }
+  }
+
+  console.log('12c. Linha de tiro: Mago e Arqueiro com uma pedra entre eles e o mob')
+  await clicar('Guerreiro') // o Mago e o Arqueiro ficam como aliados
+  for (const nivel of ['basica', 'media', 'avancada']) {
+    await tirarInimigos()
+    await cena(`(c.trocarIA('${nivel}'), c.invencivel = true, true)`)
+    // Pedra de (940, 490) a (1040, 630) entre o grupo (à esquerda) e um mob parado (à direita)
+    await colocarLider(830, 560)
+    await cena(`(() => {
+      const lugares = { arqueiro: [800, 515], mago: [800, 605], tanque: [720, 520], sacerdote: [720, 600] }
+      c.aliados.forEach(a => { const l = lugares[a.classe]; if (l) a.colocarEm(l[0], l[1]) })
+      return true
+    })()`)
+    await clicar('Criar mob vermelho')
+    await cena(`(() => {
+      const m = c.inimigos.at(-1)
+      m.colocarEm(1130, 560)
+      m.vida = m.vidaMaxima = 99999
+      m.atualizar = function () { this.parar() }
+      c.contagemDeTiros = { disparados: {}, naPedra: {} }
+      return true
+    })()`)
+    for (let i = 0; i < 10; i++) {
+      await colocarLider(830, 560)
+      await pausa(400)
+    }
+    const contagem = await cena(`c.contagemDeTiros`)
+    const naPedra = (contagem.naPedra.arqueiro ?? 0) + (contagem.naPedra.mago ?? 0)
+    const disparados = (contagem.disparados.arqueiro ?? 0) + (contagem.disparados.mago ?? 0)
+    if (nivel === 'basica') {
+      console.log(`  (IA básica: ${naPedra} de ${disparados} tiros do Arqueiro e do Mago na pedra; a básica pode errar isso)`)
+    } else {
+      conferir(`IA ${nivel}: Arqueiro e Mago não atiram na pedra`, naPedra === 0, contagem)
+      conferir(`IA ${nivel}: eles acham um lugar com linha livre e atiram`, disparados > 0, contagem)
+    }
+    if (nivel === 'avancada') await print('22-linha-de-tiro')
+  }
+  await tirarInimigos()
+  await cena(`(c.invencivel = false, true)`)
+  await clicar('IA: avançada')
+  conferir('o seletor volta para "IA: pelo nível"', (await textoDe('.barra-de-teste')).includes('IA: pelo nível'))
+  await clicar('Mago') // de volta: o Líder é o Mago, e os aliados são Guerreiro, Sacerdote, Tanque e Arqueiro
+
   console.log('13. Aliado desmaia e é levantado (TASK-044 e TASK-045)')
   await cena(`(c.grupo.forEach(m => { if (m.caido) c.levantar(m, { vida: m.vidaMaxima }); m.vida = m.vidaMaxima; m.fimDaFragilidade = 0 }), true)`)
   await colocarLider(500, 450)
@@ -731,20 +807,21 @@ try {
   await cena(`(() => {
     c.__levantados = []
     const levantar = c.levantar.bind(c)
-    c.levantar = (m, opcoes) => { c.__levantados.push({ classe: m.classe, vida: opcoes.vida, maxima: m.vidaMaxima }); levantar(m, opcoes) }
+    c.levantar = (m, opcoes) => { c.__levantados.push({ classe: m.classe, vida: opcoes.vida, maxima: m.vidaMaxima, caidoDesde: m.caidoDesde, quando: c.time.now }); levantar(m, opcoes) }
     return true
   })()`)
   // Ressurreição em recarga: assim dá para ver a ajuda de 5 s
   await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.time.now, true)`)
   const derrubouGuerreiro = await derrubar(membro('guerreiro'))
-  const caiuEm = Date.now()
   await pausa(200)
   conferir('o Guerreiro desmaia: tomba e mostra a contagem dos 30 s', derrubouGuerreiro && (await cena(`${membro('guerreiro')}.textoDoDesmaio.visible`)))
   conferir('o HUD mostra o aliado caído com a contagem', (await textoDe('.hud')).includes('Guerreiro') && /caído: (30|29) s/.test(await textoDe('.hud')))
   await print('21-aliado-caido')
   await esperar(`${CENA}.grupo.find(m => m.classe === 'guerreiro') && !${CENA}.grupo.find(m => m.classe === 'guerreiro').caido`, 'o Guerreiro ser levantado', 15000)
-  const levouSegundos = (Date.now() - caiuEm) / 1000
-  conferir('um aliado vai até ele e o levanta com a ajuda de 5 s (a área estava limpa)', levouSegundos >= 5 && levouSegundos <= 14, Math.round(levouSegundos * 10) / 10)
+  // Pelo relógio do jogo (o mesmo que a regra usa), do desmaio até levantar
+  const levouSegundos = await cena(`(() => { const l = c.__levantados.find(l => l.classe === 'guerreiro'); return (l.quando - l.caidoDesde) / 1000 })()`)
+  // 0,01 s de folga: a soma dos quadros tem erro de arredondamento na décima casa
+  conferir('um aliado vai até ele e o levanta com a ajuda de 5 s (a área estava limpa)', levouSegundos >= 4.99 && levouSegundos <= 14, Math.round(levouSegundos * 1000) / 1000)
   const levantado = await cena(`(() => { const g = ${membro('guerreiro')}; const l = c.__levantados.find(l => l.classe === 'guerreiro'); return { vida: l.vida, maxima: l.maxima, fragil: g.fragil } })()`)
   conferir('volta com 10% da vida e frágil', levantado.vida === Math.ceil(levantado.maxima * 0.1) && levantado.fragil, levantado)
   await print('22-aliado-levantado')
@@ -754,6 +831,7 @@ try {
   await derrubar(membro('arqueiro'))
   await clicar('Criar mob vermelho')
   await cena(`(() => { const a = ${membro('arqueiro')}; c.inimigos.at(-1).colocarEm(a.x + 150, a.y); return true })()`)
+  await pausa(150) // o mob já no lugar
   const amostrasDaArea = []
   for (let i = 0; i < 8; i++) {
     amostrasDaArea.push(

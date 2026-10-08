@@ -80,3 +80,16 @@ describe('barra de teste: encher o grupo e trocar o Líder', () => {
     expect(trocarClasseDoLider(grupo, 'mago')).toBe(grupo)
   })
 })
+
+describe('nível de cada um na partida (decide a IA, 5b.1)', () => {
+  it('permanente com o nível do save; temporário com o do contrato; de teste no nível 1', () => {
+    const mago = { ...novoPersonagem('mago'), nivel: 42 }
+    const progresso = { ...progressoInicial(), personagens: [mago], contratosTemporarios: [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 5 }] }
+    const grupo = montarGrupoDaPartida(progresso, 'mago')
+    expect(grupo.map((membro) => [membro.classe, membro.nivel])).toEqual([
+      ['mago', 42],
+      ['arqueiro', 5],
+    ])
+    expect(membroDeTeste('tanque').nivel).toBe(1)
+  })
+})

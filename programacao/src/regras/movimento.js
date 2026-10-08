@@ -144,6 +144,36 @@ function ladoParaEscorregar(parede, posicao, velocidadeDoLado, meioDaArea, eixo)
   return posicao < parede[eixo] ? -1 : 1
 }
 
+// ---------- Tirar de dentro das pedras ----------
+
+// Quem ficou um pouco dentro de uma pedra (empurrado no aperto) sai pelo lado em que entrou menos; se esse lado
+// der em outra pedra ou fora da área, tenta os outros lados. A física sozinha não tira um corpo parado de dentro
+// da pedra (ela o considera "enterrado"). corpos: [{ x, y, raio }]. Devolve as posições novas { x, y }.
+export function tirarDasParedes(corpos, paredes, area) {
+  return corpos.map((corpo) => {
+    let posicao = { x: corpo.x, y: corpo.y }
+    for (let volta = 0; volta < 3; volta++) {
+      const parede = paredes.find((outra) => sobrepoe(quadradoDoCorpo({ ...corpo, ...posicao }), outra))
+      if (!parede) break
+      const meioX = corpo.raio + parede.largura / 2
+      const meioY = corpo.raio + parede.altura / 2
+      const saidas = [
+        { x: parede.x - meioX, y: posicao.y },
+        { x: parede.x + meioX, y: posicao.y },
+        { x: posicao.x, y: parede.y - meioY },
+        { x: posicao.x, y: parede.y + meioY },
+      ].sort((a, b) => distancia(a, posicao) - distancia(b, posicao))
+      const livre = saidas.find(
+        (saida) =>
+          dentroDaArea({ ...corpo, ...saida }, area) && !paredes.some((outra) => sobrepoe(quadradoDoCorpo({ ...corpo, ...saida }), outra)),
+      )
+      if (!livre) break
+      posicao = livre
+    }
+    return posicao
+  })
+}
+
 // ---------- Desfazer sobreposições ----------
 
 // Depois da física, desfaz o que ainda ficou um dentro do outro (o aperto entre corpos e pedras): cada par
@@ -178,23 +208,29 @@ export function desfazerSobreposicoes(corpos, paredes, area, voltas = 3) {
         const entrouX = a.raio + b.raio - Math.abs(pa.x - pb.x)
         const entrouY = a.raio + b.raio - Math.abs(pa.y - pb.y)
         if (entrouX <= 0.5 || entrouY <= 0.5) continue
-        const eixo = entrouX <= entrouY ? 'x' : 'y'
-        const quanto = eixo === 'x' ? entrouX : entrouY
-        const sentido = Math.sign(pa[eixo] - pb[eixo]) || (i % 2 === 0 ? 1 : -1)
-        const moverA = (d) => ({ ...pa, [eixo]: pa[eixo] + sentido * d })
-        const moverB = (d) => ({ ...pb, [eixo]: pb[eixo] - sentido * d })
-        let parteDeA = a.fixo ? 0 : b.fixo ? 1 : 0.5
-        if (parteDeA === 0.5) {
-          const comoA = impedimento(i, moverA(quanto / 2).x, moverA(quanto / 2).y, j)
-          const comoB = impedimento(j, moverB(quanto / 2).x, moverB(quanto / 2).y, i)
+        // Tenta primeiro o eixo em que entraram menos; se ali os dois estão contra uma parede, tenta o outro
+        const eixos = entrouX <= entrouY ? ['x', 'y'] : ['y', 'x']
+        for (const eixo of eixos) {
+          const quanto = eixo === 'x' ? entrouX : entrouY
+          const sentido = Math.sign(pa[eixo] - pb[eixo]) || (i % 2 === 0 ? 1 : -1)
+          const moverA = (d) => ({ ...pa, [eixo]: pa[eixo] + sentido * d })
+          const moverB = (d) => ({ ...pb, [eixo]: pb[eixo] - sentido * d })
+          const comoA = a.fixo ? 'parede' : impedimento(i, moverA(quanto / 2).x, moverA(quanto / 2).y, j)
+          const comoB = b.fixo ? 'parede' : impedimento(j, moverB(quanto / 2).x, moverB(quanto / 2).y, i)
+          // Quem sai: quem tem o caminho mais livre (parede pesa mais que outro corpo); empatado, metade cada.
+          // Nunca para dentro de uma parede: se só um pode, ele sai todo; se nenhum pode, tenta o outro eixo.
           const peso = { parede: 2, corpo: 1, null: 0 }
-          // Sai quem tem o caminho mais livre (parede pesa mais que outro corpo); empatado, metade cada
+          let parteDeA = 0.5
           if (peso[comoA] > peso[comoB]) parteDeA = 0
           if (peso[comoB] > peso[comoA]) parteDeA = 1
+          if (comoA === 'parede' && comoB === 'parede') continue
+          if (parteDeA === 1 && impedimento(i, moverA(quanto).x, moverA(quanto).y, j) === 'parede') continue
+          if (parteDeA === 0 && impedimento(j, moverB(quanto).x, moverB(quanto).y, i) === 'parede') continue
+          posicoes[i] = moverA(quanto * parteDeA)
+          posicoes[j] = moverB(quanto * (1 - parteDeA))
+          mexeu = true
+          break
         }
-        posicoes[i] = moverA(quanto * parteDeA)
-        posicoes[j] = moverB(quanto * (1 - parteDeA))
-        mexeu = true
       }
     }
     if (!mexeu) break

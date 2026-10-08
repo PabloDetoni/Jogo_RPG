@@ -1,5 +1,6 @@
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
 import { classes } from '../../dados/classes.js'
+import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
 
 // Barra de TESTE da arena (Fase 1). Some quando a partida de verdade estiver pronta.
 // Fica numa faixa embaixo, fora da área jogável (ninguém anda embaixo dela).
@@ -27,6 +28,10 @@ export default function BarraDeTeste({ ponte, situacao, encerrarPartida }) {
         <BotaoDeTeste onClick={() => mandar({ tipo: 'derrubarLider' })}>Derrubar Líder</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'alternarAjuda' })} selecionado={situacao ? !situacao.aliadosAjudam : false}>
           Aliados ajudam: {situacao?.aliadosAjudam === false ? 'não' : 'sim'}
+        </BotaoDeTeste>
+        {/* Só para testar: no jogo, a IA de cada aliado vem do nível dele e o jogador não escolhe */}
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'trocarIA' })} selecionado={Boolean(situacao?.iaForcada)}>
+          IA: {situacao?.iaForcada ? nomeDoNivelDaIA(situacao.iaForcada) : 'pelo nível'}
         </BotaoDeTeste>
       </div>
       <div className="quebra-de-linha" />

@@ -1,5 +1,6 @@
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
 import { corDaClasseCss, nomeDaClasse } from '../../dados/classes.js'
+import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
 
 // HUD da partida (React, por cima do Phaser): uma faixa no topo, fora da área jogável (ninguém anda embaixo dela).
 // Linha de cima: o Líder (vida, mana), o ataque, a esquiva e as habilidades das teclas 1 a 3, com a recarga.
@@ -52,6 +53,7 @@ export default function HudDaPartida({ situacao }) {
         {situacao.caido && (
           <span className="hud-alerta">O Líder desmaiou: {situacao.segundosParaLevantar} s para ser levantado</span>
         )}
+        {situacao.emFoco && <span className="hud-foco">Foco!</span>}
       </div>
     </div>
   )
@@ -96,6 +98,7 @@ function Aliado({ aliado }) {
     <span className={`hud-aliado${aliado.caido ? ' hud-aliado-caido' : ''}`}>
       <span className="hud-cor" style={{ background: corDaClasseCss(aliado.classe) }} />
       {nomeDaClasse(aliado.classe)}
+      {aliado.ia && <span className="hud-ia">IA {nomeDoNivelDaIA(aliado.ia)}</span>}
       {!aliado.caido && <Barra fracao={aliado.vida / aliado.vidaMaxima} />}
       {estado && <span className="hud-estado">{estado}</span>}
     </span>

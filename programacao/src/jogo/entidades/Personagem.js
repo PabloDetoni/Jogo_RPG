@@ -65,6 +65,7 @@ export default class Personagem extends Entidade {
     }
     this.membro = membro
     this.classe = membro.classe
+    this.nivel = membro.nivel ?? 1 // decide a IA quando é aliado
     this.vidaMaxima = membro.vidaMaxima
     this.vida = Math.max(1, Math.round(fracaoDaVida * membro.vidaMaxima))
     this.manaMaxima = membro.manaMaxima

@@ -26,6 +26,11 @@ export default class Inimigo extends Entidade {
     this.corpo.body.setCollideWorldBounds(true)
   }
 
+  // Quanto bate (a IA avançada do Arqueiro foca o inimigo mais forte)
+  get dano() {
+    return this.config.dano
+  }
+
   get perseguindo() {
     return this.estado !== 'passeando'
   }

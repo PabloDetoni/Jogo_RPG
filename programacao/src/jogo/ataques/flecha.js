@@ -21,6 +21,7 @@ export default class Flecha extends Projetil {
       const circulo = this.circulo()
       if (this.percorrido >= config.alcance) acabou = true
       else if (this.cena.bateEmObstaculo(circulo)) {
+        this.cena.registrarTiroNaPedra(this.dono, circulo)
         particulas(this.cena, this.x, this.y, coresDaArena.pedra, 5, 120)
         acabou = true
       } else {

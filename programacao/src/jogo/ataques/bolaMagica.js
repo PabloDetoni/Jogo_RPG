@@ -21,7 +21,9 @@ export default class BolaMagica extends Projetil {
     this.mover(segundos, () => {
       this.raio = raioDaBolaMagica(this.percorrido, config.alcance, config.raioInicial, config.raioFinal)
       const circulo = this.circulo()
-      explodiu = this.percorrido >= config.alcance || this.cena.bateEmObstaculo(circulo) || Boolean(this.cena.alvoAtingido(circulo))
+      const naPedra = this.cena.bateEmObstaculo(circulo)
+      if (naPedra) this.cena.registrarTiroNaPedra(this.dono, circulo)
+      explodiu = this.percorrido >= config.alcance || naPedra || Boolean(this.cena.alvoAtingido(circulo))
       return explodiu
     })
     if (explodiu) {

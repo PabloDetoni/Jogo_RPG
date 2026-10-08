@@ -224,7 +224,7 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 - Andar: **220 px/s**, igual na diagonal.
 - Esquiva (Espaço): avança **160 px** em 0,15 s, sem levar dano; recarga de **0,8 s**.
 - Depois de levar um golpe, **0,5 s** de imunidade (RF36).
-- Separação: cada corpo tem uma zona de **10 px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **320 px/s** quando um está em cima do outro. O Líder pesa **4** (os aliados saem da frente dele) e os inimigos, **1,5**.
+- Separação: cada corpo tem uma zona de **1 px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **320 px/s** quando um está em cima do outro. O Líder pesa **4** (os aliados saem da frente dele) e os inimigos, **1,5**.
 - Travamento: quem anda sozinho e, em **0,6 s**, anda menos de **25%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível 4, desliza em **0,15 s** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **20 px**.
 
 | Inimigo | Vida | Dano | Velocidade | Persegue a | Desiste a | Recarga | Detalhe |
@@ -254,6 +254,22 @@ As teclas 2 e 3 ficam vazias até as habilidades de verdade (TASK-010). Os núme
 - Tanque: fica entre o mob e o grupo; mobs a até **260 px** dele vão nele. Guerreiro: o mob mais próximo.
 - Arqueiro: ataca de **220 a 320 px**. Mago: de **260 a 420 px**, mirando onde há mais mobs juntos.
 - Sacerdote: cura quem está abaixo de **70%** da vida (o Líder primeiro) e levanta os caídos (o Líder primeiro).
+
+### Níveis da IA dos aliados (5b.1)
+
+A IA de cada aliado vem do nível do próprio personagem; o jogador não escolhe. A cada poucos segundos, cada aliado sorteia se erra "a decisão do momento". Ninguém chega a 0% de erro.
+
+| Nível do personagem | IA | Chance de errar (começo → fim da faixa) |
+| --- | --- | --- |
+| 1 a 29 | básica | 45% → 30% |
+| 30 a 69 | média | 30% → 15% |
+| 70 a 100 | avançada | 15% → 5% |
+
+- Parados: cada aliado para em qualquer ponto entre **50 e 130 px** do Líder e só volta a andar quando o Líder passa de **180 px**. Na média e na avançada, para a até **40 px** da vaga do X.
+- Tremor: quem vai e volta sem sair do lugar em **0,6 s** fica quieto por **1,2 s**.
+- Básica: Arqueiro a **120–180 px** e Mago a **150–230 px** (mais perto da luta). O Tanque da média ainda erra como o da básica; o Sacerdote da média fica atrás em **50%** das decisões.
+- Avançada: formação de combate (Tanque a **60 px** do mob, Guerreiro ao lado, Arqueiro e Mago lado a lado a **120 px** um do outro, Sacerdote **70 px** atrás deles). Os aliados não esquivam: recuam andando do golpe avisado em **50%** das vezes.
+- Momento de foco (avançada): com o Líder abaixo de **30%** da vida ou alguém caído, por **8 s** o erro cai para **2%** e o recuo sobe para **90%**.
 
 ### Desmaio e resgate
 
