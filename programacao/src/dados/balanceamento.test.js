@@ -287,7 +287,9 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
   it('a aura cura menos do que um Sacerdote tem de vida a cada pulso', () => {
     const vidaDoSacerdote = classes.find((c) => c.id === 'sacerdote').atributosIniciais.vitalidade * combateDeTeste.vidaPorPontoDeVitalidade
     expect(ataques.sacerdote.curaPorPulso).toBeLessThan(vidaDoSacerdote)
-    expect(ataques.sacerdote.msDeDuracao).toBeLessThan(ataques.sacerdote.recargaMs)
+    // Cura sem pausa (08/10): a aura nova pode sair assim que a anterior acaba, e duas não se somam
+    expect(ataques.sacerdote.recargaMs).toBeLessThanOrEqual(ataques.sacerdote.msDeDuracao)
+    expect(ataques.sacerdote.recargaMs).toBeGreaterThanOrEqual(ataques.sacerdote.msDeDuracao * 0.9)
   })
 
   it('todo inimigo tem os números que a base dos inimigos usa (sem eles, a posição vira NaN)', () => {

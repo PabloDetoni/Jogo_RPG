@@ -179,7 +179,10 @@ export const combateDeTeste = {
       recargaMs: 1500,
       empurrao: 320,
     },
-    sacerdote: { raio: 150, curaPorPulso: 8, msEntrePulsos: 500, msDeDuracao: 3000, recargaMs: 6000 },
+    // Aura de cura (regra do Pablo de 08/10: cura sem pausa enquanto alguém estiver ferido): a recarga é igual à
+    // duração, então uma aura nova sai assim que a anterior acaba, sem pausa e sem duas ao mesmo tempo. 5 por pulso a
+    // cada 0,5 s = 10 de vida por segundo. Não gasta mana (é o ataque de clique, RF36).
+    sacerdote: { raio: 150, curaPorPulso: 5, msEntrePulsos: 500, msDeDuracao: 3000, recargaMs: 3000 },
     tanque: {
       larguraDoEscudo: 70,
       espessuraDoEscudo: 16,

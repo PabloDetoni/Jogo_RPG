@@ -159,7 +159,7 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
   1. **Encher grupo** e afaste-se dos mobs.
   2. Deixe um mob bater num aliado (ou ligue o Invencível e deixe os aliados apanharem) e depois derrote o mob.
   3. Espere o grupo sair de combate.
-- Deve acontecer: o Sacerdote vai até quem ficou ferido e solta a aura amarela, mesmo fora de combate, até a vida ficar cheia. Antes, ele só curava em combate e quem estivesse abaixo de 70%.
+- Deve acontecer: o Sacerdote vai até quem ficou ferido e solta a aura amarela, mesmo fora de combate, até a vida ficar cheia. Com alguém ferido, a aura não para: assim que uma acaba, outra começa (desde 08/10). Antes, ele só curava em combate e quem estivesse abaixo de 70%.
 
 **SA-02 · O mais ferido primeiro**
 - Fazer: com o grupo cheio e dois aliados feridos, um bem mais ferido que o outro e longe um do outro.

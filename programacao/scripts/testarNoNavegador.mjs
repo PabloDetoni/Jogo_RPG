@@ -867,8 +867,13 @@ try {
       await pausa(2000)
       const antes = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y, classe: a.classe }))`)
       await pausa(1000)
-      const depois = await cena(`c.aliados.map(a => ({ x: a.x, y: a.y, plano: a.ia.ultimoPlano }))`)
-      const andaram = antes.map((p, i) => ({ classe: p.classe, px: Math.round(Math.hypot(depois[i].x - p.x, depois[i].y - p.y) * 10) / 10, plano: depois[i].plano }))
+      // Na falha, o estado de cada um que andou: plano, parado, voltando, desvio, distância ao Líder, velocidade pedida e travamento
+      const depois = await cena(`c.aliados.map(a => ({
+        x: a.x, y: a.y, plano: a.ia.ultimoPlano, parado: !!a.ia.parado, voltando: !!a.ia.voltando, desvio: !!a.ia.desvio,
+        lider: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)), querida: Math.round(Math.hypot(a.querida.x, a.querida.y)),
+        travou: a.travamento?.nivel ?? 0, quieto: (a.ia.quietoAte ?? 0) > c.agora, inimigos: c.inimigos.length,
+      }))`)
+      const andaram = antes.map((p, i) => ({ classe: p.classe, px: Math.round(Math.hypot(depois[i].x - p.x, depois[i].y - p.y) * 10) / 10, ...depois[i], x: Math.round(depois[i].x), y: Math.round(depois[i].y) }))
       const maior = Math.max(...andaram.map((a) => a.px))
       conferir(`IA ${nivel}, Líder parado ${nome}: ninguém treme (≤ 3 px em 1 s)`, maior <= 3, maior <= 3 ? maior : andaram.filter((a) => a.px > 3))
       if (nivel === 'media' && nome === 'encostado na pedra') await print('21-parados-encostados-na-pedra')
@@ -1331,6 +1336,7 @@ try {
   console.log('27. Retorno forçado pelo Líder não levantado, com os perdidos (TEST-004)')
   await clicar('Jogar novamente')
   await irAteAPartida(false)
+  await tirarInimigos() // sem mobs: nenhum ouro novo entre a "foto" e o fim
   await clicar('+300 de ouro')
   await clicar('Aliados ajudam: sim')
   await cena(`(${membro('sacerdote')}.ultimoUsoDaHabilidade[0] = c.agora, true)`)
@@ -1511,12 +1517,8 @@ try {
   const ligada = comFerido.filter((a) => a.aura).length / Math.max(1, comFerido.length)
   console.log(`  (com alguém ferido, a aura ficou ligada ${Math.round(ligada * 100)}% do tempo; ${comFerido.length} amostras)`)
   const comecos = amostrasDaAura.filter((a, i) => a.aura && i > 0 && !amostrasDaAura[i - 1].aura).map((a) => a.agora)
-  const intervalos = comecos.slice(1).map((t, i) => t - comecos[i])
-  conferir(
-    'com alguém ferido, o Sacerdote solta a aura de novo assim que a recarga deixa (a cada ~6 s)',
-    intervalos.length > 0 && intervalos.every((ms) => ms <= 6800),
-    { intervalos: intervalos.map((ms) => Math.round(ms)), ligada: Math.round(ligada * 100) },
-  )
+  // Regra do Pablo (08/10): com alguém ferido, a cura fica ligada praticamente sem pausa
+  conferir('com alguém ferido o tempo todo, a aura do Sacerdote fica ligada sem pausa (≥ 90% do tempo)', ligada >= 0.9, { ligada: Math.round(ligada * 100), comecos: comecos.length })
 
   console.log('35. Cada nível sem ser atrapalhado pelos outros (5d)')
   // O Sacerdote avançado vai curar o Arqueiro; o Guerreiro, na IA básica, está parado no meio do caminho

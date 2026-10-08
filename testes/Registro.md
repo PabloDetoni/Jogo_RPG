@@ -15,7 +15,8 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | 5d (Sacerdote sempre curando; um nível da IA não atrapalha o outro) | 08/10 | 530 passando (17 novos) | ok | 215 de 215 | esperando o fim da Fase 1 | local |
 | 5e (DOC-003: ataques, esquiva e cores na documentação) | 08/10 | 530 passando | ok | — (só documentação) | esperando o fim da Fase 1 | local |
 | 7a (TASK-079: contratos na Guilda) | 08/10 | 539 passando (9 novos) | ok | 222 de 222 | esperando o fim da Fase 1 | local |
-| 7b (TASK-071: pentágono, Seleção, Árvores e HUD do Reino) | 08/10 | 544 passando (5 novos) | ok | 226 de 226 | esperando o fim da Fase 1 | local |
+| 7b (TASK-071: pentágono, Seleção, Árvores e HUD do Reino) | 08/10 | 544 passando (5 novos) | ok | 226 de 226 | Pablo aprovou a Fase 1 (08/10) | `a3567b7` |
+| 5f (cura do Sacerdote sem pausa) | 08/10 | 544 passando | ok | 225 de 226 (a falha foi do teste, corrigida); aura ligada 100% do tempo | na Fase 2 | local |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -52,6 +53,13 @@ Depois das correções: 513 testes automáticos passando, lint e build ok, rotei
 | O que aconteceu | Onde apareceu | O que foi feito |
 |---|---|---|
 | No canto, com a IA média e a avançada, o Guerreiro e o Arqueiro ficavam rodando (uns 30 px por segundo) sem parar: o desvio da 5d os fazia contornar quem estava parado para chegar à vaga exata, e no canto não havia espaço. | Roteiro do navegador (224 de 226) | Perto do Líder ("seguir"), não há desvio: qualquer ponto da zona confortável serve. O desvio continua para ir lutar, curar ou voltar quando está longe. |
+
+## 2e. Testes que dependiam da velocidade do computador (parte 5f)
+
+| O que aconteceu | O que foi feito |
+|---|---|
+| Numa rodada, 4 conferências antigas falharam sem nada ter mudado no jogo: dois mobs "encostados" por 0,04 px, um corpo 2 px dentro da pedra no aperto (risco já conhecido, de até cerca de 6 px), um pulo de 127 px contra o limite de 120 e o tremor no canto (IA média). Na rodada seguinte, todas passaram. | O tremor ganhou um relatório completo (plano, parado, voltando, desvio, distância e velocidade de cada aliado) para a próxima vez dizer a causa. As outras ficam de olho: se voltarem, o limite ou o jogo é revisto. |
+| A seção 27 esperava 300 de ouro e veio 312: os aliados derrotaram um mob entre a "foto" e o fim. A taxa bateu (4%). | O teste tira os mobs antes. |
 
 ## 3. Testes à mão
 

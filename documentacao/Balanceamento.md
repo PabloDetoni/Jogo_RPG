@@ -218,7 +218,7 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 | Guerreiro | 120 | Espada: varre um arco na frente | 25 | 0,4 s | arco de 120°, alcance 70 |
 | Mago | 80 | Bola mágica: explode em área | 30 | 1,5 s | cresce de 10 a 26; explosão de raio 90 |
 | Tanque | 180 | Escudo: bloqueia; o clique empurra | 8 | 0,6 s | escudo de 70 px; empurrão até 90 |
-| Sacerdote | 80 | Aura: cura quem está dentro | cura 8 por pulso | 6 s | raio 150; pulso a cada 0,5 s por 3 s |
+| Sacerdote | 80 | Aura: cura quem está dentro | cura 5 por pulso | 3 s | raio 150; pulso a cada 0,5 s por 3 s |
 | Arqueiro | 60 | Flecha: rápida, um alvo só | 18 | 0,35 s | 900 px/s, até 700 |
 
 - Andar: **220 px/s**, igual na diagonal.
