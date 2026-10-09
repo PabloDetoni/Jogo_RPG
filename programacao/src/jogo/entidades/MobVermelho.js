@@ -3,21 +3,21 @@ import { combateDeTeste } from '../../dados/balanceamento.js'
 import { podeUsar, velocidadeDoMovimento } from '../../regras/combate.js'
 import Inimigo from './Inimigo.js'
 
-const config = combateDeTeste.mobVermelho
-const velocidadeDoBote = config.distanciaDoBote / (config.msDeBote / 1000)
 // O bote para ao encostar (ninguém atravessa ninguém, e quem anda para a poucos px do outro);
 // a folga conta esse encostar como acerto
 const aumentar = (retangulo, folga) => ({ ...retangulo, largura: retangulo.largura + folga, altura: retangulo.altura + folga })
 
 // Mob vermelho (corpo a corpo). Ataca quem do grupo ele estiver perseguindo (o Tanque perto atrai). Estados:
 // passeando → perseguindo → avisando (pisca e encolhe) → bote (avanço curto) → descansando → perseguindo
+// Na Floresta (Fase 3), o lobo, o javali e o cervo são este mesmo mob com outra ficha (balanceamento.js, mundo.mobs).
 export default class MobVermelho extends Inimigo {
-  constructor(cena, x, y) {
-    super(cena, x, y, config, coresDaArena.mobVermelho)
+  constructor(cena, x, y, config = combateDeTeste.mobVermelho, cor = coresDaArena.mobVermelho) {
+    super(cena, x, y, config, cor)
     this.ultimoBote = null
   }
 
   atualizar(agora) {
+    const { config } = this
     if (this.morto || this.estaSendoEmpurrado(agora)) return
 
     if (this.estado === 'passeando' || this.estado === 'perseguindo') {
@@ -68,6 +68,7 @@ export default class MobVermelho extends Inimigo {
 
   // Meio segundo de aviso antes do golpe: pisca e encolhe (ninguém leva golpe sem ver)
   avisar(agora) {
+    const { config } = this
     this.estado = 'avisando'
     this.fimDoAviso = agora + config.msDeAviso
     this.parar()
@@ -77,6 +78,8 @@ export default class MobVermelho extends Inimigo {
 
   // O bote vai na direção do alvo (ou de onde ele estava, se caiu durante o aviso)
   darBote(agora) {
+    const { config } = this
+    const velocidadeDoBote = config.distanciaDoBote / (config.msDeBote / 1000)
     this.estado = 'bote'
     this.ultimoBote = agora
     this.fimDoBote = agora + config.msDeBote

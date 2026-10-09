@@ -26,6 +26,12 @@ export default function Partida() {
   // O progresso não muda durante a partida (RF12), então o grupo é montado uma vez só
   const lider = estado.partidaAtual?.lider ?? null
   const grupo = useMemo(() => montarGrupoDaPartida(estado.progresso, lider), [estado.progresso, lider])
+  // O mapa (bioma) e onde o grupo nasce (ponto de partida), escolhidos antes de começar
+  const bioma = estado.partidaAtual?.bioma ?? 'floresta'
+  const pontoPartida = estado.partidaAtual?.pontoPartida ?? 'inicio'
+  // O mapa já descoberto deste bioma (minimapa e XP das áreas): o progresso não muda durante a partida (RF12)
+  const descobertas = estado.progresso.mapasDescobertos?.[bioma] ?? null
+  const partida = useMemo(() => ({ bioma, pontoPartida, descobertas }), [bioma, pontoPartida, descobertas])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
   // Fim da partida (retorno, fuga, desmaio ou botão de teste): as contas e o save ficam com o estado do jogo
@@ -86,8 +92,8 @@ export default function Partida() {
 
   return (
     <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes}>
-      <ArenaDaPartida ponte={ponte} grupo={grupo} />
-      <HudDaPartida situacao={situacao} mudo={estado.preferencias.mudo} />
+      <ArenaDaPartida ponte={ponte} grupo={grupo} partida={partida} />
+      <HudDaPartida situacao={situacao} mudo={estado.preferencias.mudo} bioma={bioma} />
       <AvisosDaPartida situacao={situacao} mensagens={mensagens} />
       <BarraDeTeste ponte={ponte} situacao={situacao} />
     </Tela>

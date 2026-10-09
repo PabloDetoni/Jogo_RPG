@@ -6,7 +6,8 @@ let jogoAtivo = null
 // Lugar do Phaser na tela de Partida. Cria o jogo ao montar e destrói ao desmontar.
 // O Phaser é carregado só aqui (import dinâmico): o resto do site continua leve, e os testes
 // das telas não tentam rodar o jogo.
-export default function ArenaDaPartida({ ponte, grupo }) {
+// partida: { bioma, pontoPartida } (o mapa e onde o grupo nasce)
+export default function ArenaDaPartida({ ponte, grupo, partida }) {
   const caixa = useRef(null)
 
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function ArenaDaPartida({ ponte, grupo }) {
       .then(({ criarJogo }) => {
         if (cancelado) return
         jogoAtivo?.destroy(true)
-        jogo = criarJogo(caixa.current, { ponte, grupo })
+        jogo = criarJogo(caixa.current, { ponte, grupo, partida })
         jogoAtivo = jogo
         // Só no "npm run dev": deixa o teste no navegador olhar o jogo por dentro
         if (import.meta.env.DEV) window.__jogoDaPartida = jogo
@@ -30,7 +31,7 @@ export default function ArenaDaPartida({ ponte, grupo }) {
       if (jogoAtivo === jogo) jogoAtivo = null
       if (import.meta.env.DEV && window.__jogoDaPartida === jogo) delete window.__jogoDaPartida
     }
-  }, [ponte, grupo])
+  }, [ponte, grupo, partida])
 
   return <div ref={caixa} className="arena" />
 }

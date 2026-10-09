@@ -1,6 +1,7 @@
 import { combateDeTeste } from '../dados/balanceamento.js'
 import { velocidadeDoMovimento } from '../regras/combate.js'
 import { caminhoNaGrade, criarGrade, linhaLivre } from '../regras/movimento.js'
+import { retangulosEntre } from '../regras/vizinhanca.js'
 
 const { caminho: config, personagem } = combateDeTeste
 
@@ -8,16 +9,24 @@ const { caminho: config, personagem } = combateDeTeste
 // Se dá para ir reto, vai reto. Senão, guarda o caminho de cada um e só recalcula de tempos em tempos
 // ou quando o alvo muda bastante de lugar.
 export default class Navegador {
-  constructor(area, paredes) {
+  // indice: a busca rápida dos obstáculos (regras/vizinhanca.js), para o mapa grande da Fase 3
+  constructor(area, paredes, indice) {
     this.paredes = paredes
+    this.indice = indice
     this.grade = criarGrade(area, paredes, { celula: config.celula, folga: personagem.tamanho / 2 + 2 })
     this.caminhos = new Map()
+  }
+
+  // A reta de a até b passa longe (folga) dos obstáculos?
+  livre(a, b, folga) {
+    const paredes = this.indice ? retangulosEntre(this.indice, a, b, folga + 2) : this.paredes
+    return linhaLivre(a, b, paredes, folga)
   }
 
   // Próximo ponto para onde andar, a caminho do alvo
   proximoPonto(entidade, alvo, agora) {
     const folga = entidade.raio + 1
-    if (linhaLivre(entidade, alvo, this.paredes, folga)) {
+    if (this.livre(entidade, alvo, folga)) {
       this.caminhos.delete(entidade)
       return alvo
     }
@@ -31,7 +40,7 @@ export default class Navegador {
     // Pula os pontos já alcançados e os que não precisam mais (o seguinte já está à vista)
     while (
       pontos.length > 1 &&
-      (Math.hypot(pontos[0].x - entidade.x, pontos[0].y - entidade.y) < 12 || linhaLivre(entidade, pontos[1], this.paredes, folga))
+      (Math.hypot(pontos[0].x - entidade.x, pontos[0].y - entidade.y) < 12 || this.livre(entidade, pontos[1], folga))
     ) {
       pontos.shift()
     }

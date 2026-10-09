@@ -23,13 +23,14 @@ export default function Resumo() {
 
   const linhas = [
     ['Motivo', fim?.motivo ?? resultado?.motivo ?? '—'],
-    ['Bioma', bioma?.nome ?? '—'],
+    ['Bioma', bioma?.nome ?? (fim?.bioma === 'arena' ? 'Arena de teste' : '—')],
     ['Ouro ganho', fim?.ouroGanho ?? 0],
     ['Taxa', `${fim?.taxa ?? 0}% (−${fim?.taxaEmOuro ?? 0} de ouro)`],
     ['Ouro recebido', `${fim?.ouroRecebido ?? 0}${grandeVitoria ? ' (com +10%)' : ''}`],
     ['Pontuação', `${fim?.pontuacaoFinal ?? 0} (base ${fim?.pontuacaoBase ?? 0})`],
     ['Monstros derrotados', fim?.monstros ?? 0],
     ['Itens coletados', fim?.itens?.length ? fim.itens.length : 'nenhum'],
+    ['Exploração', fim?.areasNovas?.length ? `${fim.areasNovas.length} área${fim.areasNovas.length === 1 ? '' : 's'} nova${fim.areasNovas.length === 1 ? '' : 's'} (+${fim.xpDeExploracao} XP)` : 'nenhuma área nova'],
     ['Tempo total', relogio(fim?.segundosTotais ?? 0)],
     ['Tempo ativo', relogio(fim?.segundosAtivos ?? 0)],
     ['Perdidos', fim?.perdidos?.length ? fim.perdidos.map(nomeDaClasse).join(', ') : 'nenhum'],

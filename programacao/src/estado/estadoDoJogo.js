@@ -118,7 +118,12 @@ function encerrarPartida(estado, fim = {}) {
   let novo = { ...estado, controleDaPartida: controleInicialDaPartida() }
   let personagens = []
   if (partidaAtual) {
-    const aplicado = aplicarFimNoProgresso(progresso, { ouroRecebido: contas.ouroRecebido, xpPorClasse: fim.xpPorClasse, monstros: fim.monstros })
+    const aplicado = aplicarFimNoProgresso(progresso, {
+      ouroRecebido: contas.ouroRecebido,
+      xpPorClasse: fim.xpPorClasse,
+      monstros: fim.monstros,
+      descobertas: fim.descobertas ?? null,
+    })
     novo = { ...novo, progresso: aplicado.progresso }
     personagens = aplicado.personagens
   }
@@ -140,6 +145,9 @@ function encerrarPartida(estado, fim = {}) {
     segundosAtivos: fim.segundosAtivos ?? 0,
     perdidos: contas.perdidos,
     personagens, // XP de cada permanente: { classe, xp, nivelAntes, nivel, niveisGanhos }
+    // Exploração (Fase 3): as áreas descobertas pela primeira vez nesta partida e o XP que elas deram
+    areasNovas: fim.descobertas?.areasNovas ?? [],
+    xpDeExploracao: fim.descobertas?.xpDeExploracao ?? 0,
   }
 
   // Conta: a partida vai para o histórico e o ranking (TASK-100); o convidado nunca grava no banco
@@ -270,11 +278,16 @@ export function atualizarEstado(estado, acao) {
         'reino',
       )
 
-    case 'escolherBioma':
+    // Sem outra região descoberta naquele bioma, o grupo nasce no ponto inicial e a tela Ponto de partida nem aparece
+    // (RF32). A arena de teste (só no npm run dev) também vai direto para a Preparação.
+    case 'escolherBioma': {
+      const descobertas = (estado.progresso.regioesDescobertas[acao.bioma] ?? []).filter((regiao) => regiao !== 'inicio')
+      const direto = acao.bioma === 'arena' || descobertas.length === 0
       return navegar(
-        { ...estado, escolhasDaPartida: { ...estado.escolhasDaPartida, bioma: acao.bioma } },
-        'pontoPartida',
+        { ...estado, escolhasDaPartida: { ...estado.escolhasDaPartida, bioma: acao.bioma, pontoPartida: 'inicio' } },
+        direto ? 'preparacao' : 'pontoPartida',
       )
+    }
 
     case 'escolherPontoPartida':
       return navegar(

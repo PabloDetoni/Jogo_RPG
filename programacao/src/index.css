@@ -905,3 +905,23 @@ body {
   color: var(--tela);
   font-weight: bold;
 }
+
+/* Fase 3: a região atual no HUD; no domínio do Boss, em destaque */
+.hud-regiao-boss {
+  color: #ffb3b3;
+  font-weight: bold;
+}
+
+/* Minimapa da partida (Fase 3, RF40), no quadro do HUD */
+.hud-minimapa-ativo {
+  opacity: 1;
+  border-style: solid;
+  gap: 0.15em;
+}
+
+.minimapa {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border: 1px solid rgb(255 255 255 / 0.35);
+}

@@ -52,7 +52,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Na partida, cada entidade diz para onde quer andar (`andar`/`parar`) e a cena decide a velocidade final (`CenaArena.moverTodos`: separação, escorregar e destravar; `corrigirSobreposicoes` desfaz o que a física deixou um dentro do outro); para andar, ninguém chama `setVelocity` direto. Nascer ou reaparecer sempre passa por `lugarLivre` (nunca em pedra, fora da borda ou em cima de outro).
 - Não instalar bibliotecas sem perguntar (já aprovadas: Vitest, Phaser e `@supabase/supabase-js`, o cliente oficial do Supabase, instalado na Fase 2 dentro do passo a passo que o Pablo delegou em 08/10). Plano antes de qualquer mudança grande.
 - Ferramentas de teste que mexem no save ficam no painel `</> DEV` (só existe no `npm run dev`) e só funcionam fora da partida; a ação no estado também confere `import.meta.env.DEV`. A barra de teste inteira existe só no `npm run dev` (no build, a faixa de baixo da partida mostra só as teclas, e a cena ignora os comandos de teste).
-- Commits: no modo contínuo (seção abaixo), commit LOCAL no fim de cada parte, com todos os testes passando; o push só depois do teste visual do Pablo na fase. Fora do modo contínuo, não commitar sem ele pedir.
+- Commits e publicação: no modo contínuo, cada fase num ramo próprio (`fase-3`, `fase-4`...), com commit LOCAL no fim de cada parte e os testes passando; o `main` é o jogo público e só recebe uma fase depois do teste e do ok do Pablo (regras na seção "Modo contínuo"). Fora do modo contínuo, não commitar sem ele pedir.
 - Decisão que muda a documentação: atualizar o texto do documento e registrar na seção "Alterações do projeto" dele (no Conceito, a seção 21, sem reescrever o original). O PNG do diagrama sai do `.puml` pelo PlantUML.
 
 ## Protocolo de cada tarefa
@@ -93,11 +93,15 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
    3. testes: `npm test`, lint, build e `npm run testar:navegador`, com conferências novas para o que for novo;
    4. atualizar PLANO.md, CLAUDE.md, a documentação (com "Alterações do projeto"), o Balanceamento e a pasta `testes/`.
 3. **Sem esperar o ok do plano.** Parar e esperar o Pablo só quando:
-   - **uma fase terminar:** mandar os dois relatórios do protocolo, com o "Teste visual para o Pablo", e esperar o teste dele antes da próxima fase;
+   - **uma fase terminar:** fazer o push do ramo da fase, rodar o `npm run conferir:configuracao` na prévia da Vercel (`ENDERECO_DA_PREVIA`) e mandar os dois relatórios do protocolo, com o "Teste visual para o Pablo" e o endereço da prévia; esperar o teste dele antes da próxima fase;
    - **precisar de algo que só ele faz** (criar o projeto no Supabase, passar chaves, configurar e-mail, publicar, gerar arte): dizer exatamente o que fazer, passo a passo;
    - **precisar de uma decisão do grupo que mude regra do jogo;**
    - **algo quebrar** e não der para resolver.
-4. **Commits:** no fim de cada parte, com todos os testes passando, commit LOCAL com mensagem clara (terminando com a linha Co-Authored-By). O push só depois do teste visual do Pablo na fase.
+4. **Commits e publicação (regra do Pablo em 09/10/2026):** o `main` é o jogo público em `https://jogo-rpg-six.vercel.app`.
+   - Cada fase é feita num ramo próprio (`fase-3`, `fase-4`...), saído do `main`, com commits LOCAIS por parte (testes passando, mensagem clara terminando com a linha Co-Authored-By).
+   - No fim da fase, push do ramo. A Vercel gera uma prévia (as variáveis do Supabase valem em Production e Preview): rodar o `npm run conferir:configuracao` nela e mandar o endereço da prévia junto com os relatórios.
+   - Só juntar no `main` depois do teste e do ok do Pablo.
+   - **Nunca mandar direto para o `main` uma fase que ele não testou.**
 5. **"Onde parei":** antes de mudar de parte, atualizar no topo do PLANO.md a parte atual, o que falta e o próximo passo.
 6. **Conteúdo que o grupo ainda não entregou** (TASK-010, 012, 013, 014, 015 e 016):
    - não esperar: criar conteúdo provisório coerente com o Conceito (classes, Floresta, Reino, Pedra de Retorno);
@@ -123,8 +127,8 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
 5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, aprovada pelo Pablo em 08/10): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
-6. Mundo (zona segura, regiões, minimapa)
+6. Mundo (zona segura, regiões, minimapa) ← em andamento (Fase 3, ramo `fase-3`)
 7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino)
-8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ← Fase 2 pronta e publicada em 09/10 (`https://jogo-rpg-six.vercel.app`, TEST-007 com o banco de verdade passando), esperando o teste do Pablo
+8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ✔ (Fase 2, aprovada e publicada em 09/10 em `https://jogo-rpg-six.vercel.app`)
 9. Ranking, conquistas e som (o ranking com as 6 abas e o histórico já estão na Fase 2)
 10. Arte

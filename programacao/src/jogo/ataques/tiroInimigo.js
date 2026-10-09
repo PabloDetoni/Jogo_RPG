@@ -1,20 +1,21 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
-import { combateDeTeste } from '../../dados/balanceamento.js'
 import Projetil from './projetil.js'
-
-const config = combateDeTeste.atirador
 
 // Bolinha lenta do atirador: para numa pedra, na borda ou no escudo de um Tanque ("BLOQUEADO").
 // Acerta o primeiro do grupo que estiver de pé no caminho (TASK-043: os aliados também levam dano).
 // Quem está protegido (esquivando, imune ou com o Invencível ligado) deixa a bolinha passar.
 export default class TiroInimigo extends Projetil {
+  // A velocidade, o alcance e o dano vêm da ficha de quem atira (o atirador da arena, a aranha da Floresta)
   constructor(cena, atirador, angulo) {
+    const { config } = atirador
     const saida = atirador.tamanho * 0.7
     super(cena, atirador.x + Math.cos(angulo) * saida, atirador.y + Math.sin(angulo) * saida, angulo, config.velocidadeDoTiro, config.raioDoTiro, coresDaArena.tiroInimigo)
+    this.config = config
     this.forma.setStrokeStyle(3, 0xffb0b0)
   }
 
   atualizar(agora, segundos) {
+    const { config } = this
     let acabou = false
     this.mover(segundos, () => {
       const circulo = this.circulo()

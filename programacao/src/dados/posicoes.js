@@ -136,6 +136,7 @@ export const posicoes = {
     vulcanico: { x: 75, y: 27 },
     floresta: { x: 26, y: 70 },
     deserto: { x: 74, y: 73 },
+    arenaDeTeste: { x: 50, y: 86 }, // só no npm run dev
   },
   // Usada pelas telas de Fazenda, Mina e Lago
   minijogo: {

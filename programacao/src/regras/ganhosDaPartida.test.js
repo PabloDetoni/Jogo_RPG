@@ -60,3 +60,28 @@ describe('aplicarFimNoProgresso (TASK-048)', () => {
     expect(progresso).toEqual(copia)
   })
 })
+
+describe('mapa descoberto no fim da partida (Fase 3, RF40)', () => {
+  const descobertas = { bioma: 'floresta', nevoa: 'f0', areas: ['clareiraDasFlores'], regioes: ['facil'] }
+
+  it('a névoa e as áreas somam às de antes; as regiões descobertas liberam o Ponto de partida', () => {
+    const antes = { ...progresso, mapasDescobertos: { floresta: { nevoa: '0f', areas: ['trilhaDoReino'] } }, regioesDescobertas: {} }
+    const { progresso: depois } = aplicarFimNoProgresso(antes, { descobertas })
+    expect(depois.mapasDescobertos.floresta).toEqual({ nevoa: 'ff', areas: ['trilhaDoReino', 'clareiraDasFlores'] })
+    expect(depois.regioesDescobertas.floresta).toEqual(['facil'])
+  })
+
+  it('primeira vez no bioma: começa do nada; sem descobertas (arena de teste), o mapa não muda', () => {
+    const { progresso: depois } = aplicarFimNoProgresso(progresso, { descobertas })
+    expect(depois.mapasDescobertos.floresta).toEqual({ nevoa: 'f0', areas: ['clareiraDasFlores'] })
+    const { progresso: semNada } = aplicarFimNoProgresso(progresso, { descobertas: null })
+    expect(semNada.mapasDescobertos).toEqual(progresso.mapasDescobertos)
+  })
+
+  it('descobrir de novo o que já era conhecido não repete nada', () => {
+    const antes = { ...progresso, mapasDescobertos: { floresta: { nevoa: 'f0', areas: ['clareiraDasFlores'] } }, regioesDescobertas: { floresta: ['facil'] } }
+    const { progresso: depois } = aplicarFimNoProgresso(antes, { descobertas })
+    expect(depois.mapasDescobertos.floresta.areas).toEqual(['clareiraDasFlores'])
+    expect(depois.regioesDescobertas.floresta).toEqual(['facil'])
+  })
+})

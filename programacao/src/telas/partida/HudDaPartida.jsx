@@ -1,3 +1,4 @@
+import Minimapa from './Minimapa.jsx'
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
 import { corDaClasseCss, nomeDaClasse } from '../../dados/classes.js'
 import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
@@ -8,7 +9,7 @@ import { relogio } from './formato.js'
 // caído com a contagem dos 30 s, frágil, perdidos). No meio, os números da partida: tempo, pontuação, ouro ganho,
 // custo da fuga, "em combate", foco e o mudo. Depois, o lugar reservado do minimapa e da região (etapa 6).
 // Recebe a "situação" que o Phaser manda 8 vezes por segundo pela ponte.
-export default function HudDaPartida({ situacao, mudo = false }) {
+export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta' }) {
   const estilo = { height: emCqw(faixas.hud) }
   if (!situacao) {
     return (
@@ -78,10 +79,10 @@ export default function HudDaPartida({ situacao, mudo = false }) {
         </div>
       </div>
 
-      {/* Reservado para a etapa 6: o minimapa e o nome da região */}
-      <div className="hud-minimapa" aria-label="Minimapa (etapa 6)">
-        <span>Minimapa</span>
-        <span className="hud-regiao">Região: —</span>
+      {/* O minimapa (parte 3d) e a região atual (RF53); no domínio do Boss, em destaque (a taxa sobe ali, RF48) */}
+      <div className={`hud-minimapa${situacao?.minimapa ? ' hud-minimapa-ativo' : ''}`} aria-label="Minimapa">
+        {situacao?.minimapa ? <Minimapa bioma={bioma} minimapa={situacao.minimapa} /> : <span>Minimapa</span>}
+        <span className={`hud-regiao${situacao?.regiao?.dominioDeBoss ? ' hud-regiao-boss' : ''}`}>Região: {situacao?.regiao?.nome ?? '—'}</span>
       </div>
     </div>
   )

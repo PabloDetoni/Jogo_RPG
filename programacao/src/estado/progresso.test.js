@@ -145,3 +145,23 @@ describe('normalizarPreferencias (RF18)', () => {
     expect(normalizarPreferencias({ musica: 'nao', som: 0, mudo: 'sim', tema: 'roxo' })).toEqual(preferenciasPadrao)
   })
 })
+
+describe('mapa descoberto no save (Fase 3)', () => {
+  it('guarda a névoa em hexadecimal e as áreas; o que vem estragado é jogado fora sem travar', () => {
+    const lido = normalizarProgresso({
+      ...progressoInicial(),
+      mapasDescobertos: {
+        floresta: { nevoa: '0fa3', areas: ['clareiraDasFlores', 'clareiraDasFlores', 7, ''] },
+        deserto: { nevoa: 'NÃO É HEX', areas: [] },
+        marte: { nevoa: 'ff', areas: ['x'] },
+      },
+    })
+    expect(lido.mapasDescobertos).toEqual({ floresta: { nevoa: '0fa3', areas: ['clareiraDasFlores'] } })
+  })
+
+  it('save antigo, sem o campo: começa vazio', () => {
+    const { mapasDescobertos, ...semCampo } = progressoInicial()
+    expect(mapasDescobertos).toEqual({})
+    expect(normalizarProgresso(semCampo).mapasDescobertos).toEqual({})
+  })
+})
