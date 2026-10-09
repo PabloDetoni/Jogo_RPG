@@ -18,7 +18,8 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | 7b (TASK-071: pentágono, Seleção, Árvores e HUD do Reino) | 08/10 | 544 passando (5 novos) | ok | 226 de 226 | Pablo aprovou a Fase 1 (08/10) | `a3567b7` |
 | 5f (cura do Sacerdote sem pausa) | 08/10 | 544 passando | ok | 225 de 226 (a falha foi do teste, corrigida); aura ligada 100% do tempo | na Fase 2 | local |
 | Fase 2, 8a a 9a (contas, sessão única, save na nuvem, ranking e histórico) | 08/10 | 608 passando (64 novos) | ok | 225 de 226 (a falha: dois mobs nascendo encostados, 0 px; intermitente, já registrada na 2e) | — | `c3313d3` (local) |
-| Fase 2: configuração conferida e TEST-007 com o Supabase de verdade | 09/10 | 611 passando (3 novos) | ok | `testar:contas`: 51 de 52 na rodada do Pablo (a falha era do teste) e 51 de 51 depois da correção; `conferir:configuracao`: tudo certo | esperando o teste da Fase 2 | local |
+| Fase 2: configuração conferida e TEST-007 com o Supabase de verdade | 09/10 | 611 passando (3 novos) | ok | `testar:contas`: 51 de 52 na rodada do Pablo (a falha era do teste) e 51 de 51 depois da correção; `conferir:configuracao`: tudo certo | esperando o teste da Fase 2 | `bcda545` |
+| Fase 2 publicada na Vercel (`main`) | 09/10 | 611 passando | ok | `conferir:configuracao`: tudo certo no site publicado; checagem no site: ranking carregou do banco, a conta A entrou (Reino com TesteA), a partida mostra só a faixa das teclas, nenhum erro no console | esperando o teste da Fase 2 | `f2afdf2` e seguinte (no GitHub) |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -83,7 +84,9 @@ Também apareceu e foi arrumado: na tela Senha nova sem um link válido, a mensa
 
 O que o TEST-007 conferiu: ranking sem login (6 abas), dois navegadores na mesma conta ("Conta em uso"), duas abas do mesmo navegador, save no banco ao começar e terminar a partida, histórico e destaque no ranking, save antigo recusado (pelo banco e pelo jogo, que carrega o mais novo com aviso), conta A tentando ler, criar, alterar e apagar coisas da B (tudo barrado), queda de internet (nada trava; tudo sobe quando volta), Sair e fechar a aba liberando a conta na hora, convidado virando conta, link expirado, senha nova sem link, Supabase fora do ar (o convidado continua) e nenhum erro no console.
 
-**Ainda falta:** publicar a Fase 2 na Vercel (precisa do ok do Pablo para o push do ramo `fase-2`) e o teste à mão (CT-01 a CT-17).
+**Publicação (09/10):** a pedido do Pablo, a Fase 2 foi para o `main` antes do teste visual, e a Vercel publicou em `https://jogo-rpg-six.vercel.app`. Na primeira conferência do site publicado, o conferidor acusou "chave secreta no código": era alarme falso (a biblioteca do Supabase só tem o começo `sb_secret_`, para conferir o tipo da chave). O conferidor passou a procurar uma chave de verdade (`sb_secret_` seguido da chave, ou uma chave antiga com o papel service_role).
+
+**Ainda falta:** o teste à mão (CT-01 a CT-17).
 
 ## 3. Testes à mão
 

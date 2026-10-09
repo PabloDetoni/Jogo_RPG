@@ -138,6 +138,21 @@ if (entradas.length === 2) {
 
 // ---------- 6. Vercel ----------
 console.log('6. Vercel')
+// Uma chave secreta de verdade no código: "sb_secret_" seguido da chave (a biblioteca do Supabase só tem o começo,
+// "sb_secret_", para conferir o tipo de chave) ou uma chave antiga (JWT) com o papel service_role
+function temChaveSecreta(codigo) {
+  if (/sb_secret_[A-Za-z0-9_-]{10,}/.test(codigo)) return true
+  for (const [jwt] of codigo.matchAll(/eyJ[\w-]+\.([\w-]+)\.[\w-]+/g)) {
+    try {
+      const conteudo = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString('utf8'))
+      if (conteudo.role === 'service_role') return true
+    } catch {
+      // não era uma chave
+    }
+  }
+  return false
+}
+
 async function conferirSite(endereco, nome) {
   let pagina
   try {
@@ -159,7 +174,7 @@ async function conferirSite(endereco, nome) {
   const arquivos = [...pagina.matchAll(/assets\/[^"]+\.js/g)].map((achado) => achado[0])
   let codigo = ''
   for (const arquivo of arquivos) codigo += await (await fetch(`${endereco}/${arquivo}`)).text()
-  if (/sb_secret_|service_role/.test(codigo)) falta(`${nome} tem uma chave SECRETA no código`, 'troque a variável na Vercel pela publicável e gere uma chave secreta nova no Supabase')
+  if (temChaveSecreta(codigo)) falta(`${nome} tem uma chave SECRETA no código`, 'troque a variável na Vercel pela publicável e gere uma chave secreta nova no Supabase')
   const temContas = codigo.includes('Minhas partidas')
   if (!temContas) {
     aviso(`${nome} ainda está com o código da Fase 1 (sem as contas)`, 'normal até a Fase 2 ir para o GitHub; aí a Vercel monta de novo sozinha')
