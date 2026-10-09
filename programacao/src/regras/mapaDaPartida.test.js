@@ -40,6 +40,11 @@ describe('o mapa da Floresta (Fase 3, provisório)', () => {
     }
   })
 
+  it('o Boss fica longe da entrada do domínio dele: quem nasce em "Muito difícil" não está no raio em que ele percebe o grupo', () => {
+    const entrada = floresta.regioes.find((regiao) => regiao.pontoDePartida === 'muitoDificil').inicio
+    expect(Math.hypot(floresta.lugarDoBoss.x - entrada.x, floresta.lugarDoBoss.y - entrada.y)).toBeGreaterThan(mundo.boss.raioDeDeteccao + 60)
+  })
+
   it('árvores e pedras numa quantidade que dá para desenhar e passar', () => {
     const soltos = floresta.obstaculos.filter((obstaculo) => obstaculo.tipo !== 'mata')
     expect(soltos.length).toBeGreaterThan(50)

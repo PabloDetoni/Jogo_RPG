@@ -39,7 +39,9 @@ import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
+import { itemDoCatalogo } from '../../dados/itens.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
+import { capacidadeDaMochila, guardarNaMochila, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
@@ -62,6 +64,8 @@ import Flecha from '../ataques/flecha.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
 import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
+import GuardiaoDaFloresta from '../entidades/GuardiaoDaFloresta.js'
+import ItemNoChao from '../entidades/ItemNoChao.js'
 import Inimigo from '../entidades/Inimigo.js'
 import MobVermelho from '../entidades/MobVermelho.js'
 import Personagem from '../entidades/Personagem.js'
@@ -170,7 +174,10 @@ export default class CenaArena extends Phaser.Scene {
     this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
-    this.ganhos = { ouro: 0, monstros: 0, xpPorClasse: {} }
+    this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {} }
+    // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim
+    this.mochila = { itens: [], capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
+    this.itensNoChao = []
     this.niveisAvisados = {} // classe → último nível avisado no HUD ("subiu de nível")
     this.andamentoAvisado = ''
     this.anguloDaMira = 0
@@ -181,6 +188,15 @@ export default class CenaArena extends Phaser.Scene {
     this.grupoInicial.forEach((membro, indice) => this.adicionarAoGrupo(membro, indice, this.grupoInicial.length))
     for (const inimigo of this.mapa.inimigosIniciais ?? []) this.criarInimigo(inimigo.tipo, inimigo)
     if (this.mapa.populacao) this.povoarMundo()
+    this.boss = null
+    if (this.mapa.lugarDoBoss) {
+      // O Boss volta a cada partida (RF31), no meio do domínio dele
+      const lugar = this.lugarLivre(mundo.boss.tamanho, this.mapa.lugarDoBoss, null, mundo.nascimento.folga)
+      this.boss = this.adicionarInimigo(new GuardiaoDaFloresta(this, lugar.x, lugar.y))
+      this.boss.tipo = 'guardiao'
+      this.boss.regiao = 'dominioDoBoss'
+    }
+    if (this.mapa.recursos) this.espalharRecursos()
     this.prepararEscudos()
     this.prepararCamera()
     this.regiaoDoLider = this.regiaoEm(this.lider)
@@ -206,6 +222,7 @@ export default class CenaArena extends Phaser.Scene {
       habilidade1: 'ONE',
       habilidade2: 'TWO',
       habilidade3: 'THREE',
+      interagir: 'E',
     })
     this.input.on('pointerdown', (ponteiro) => {
       if (ponteiro.leftButtonDown() && !this.lider.caido) this.usarAtaque(this.lider, this.anguloDaMira)
@@ -335,6 +352,74 @@ export default class CenaArena extends Phaser.Scene {
     for (const mob of mobs) this.criarMobDoMundo(mob.tipo, mob.regiao, mob)
   }
 
+  // Recursos no chão de cada região (o bioma reinicia a cada partida, RF31), num lugar livre e longe uns dos outros
+  espalharRecursos() {
+    const sorteio = criarSorteio(Math.floor(Math.random() * 2 ** 31))
+    const pontos = espalharMobs(this.mapa.regioes, this.mapa.recursos, { distanciaEntreMobs: 160, margem: 90 }, sorteio)
+    for (const ponto of pontos) {
+      const item = itemDoCatalogo(ponto.tipo)
+      if (!item) continue
+      const lugar = this.lugarLivre(24, ponto, null, 4, false)
+      this.itensNoChao.push(new ItemNoChao(this, lugar.x, lugar.y, item, 1))
+    }
+  }
+
+  // Um item cai no chão (drop de mob, ou o que não coube na mochila), um pouco espalhado, e some depois de um tempo
+  soltarItem(item, quantidade, ponto, msNoChao) {
+    const angulo = Math.random() * Math.PI * 2
+    const lugar = this.lugarLivre(20, { x: ponto.x + Math.cos(angulo) * 26, y: ponto.y + Math.sin(angulo) * 26 }, null, 2, false)
+    const noChao = new ItemNoChao(this, lugar.x, lugar.y, item, quantidade, this.agora + msNoChao)
+    this.itensNoChao.push(noChao)
+    return noChao
+  }
+
+  // O item no chão mais perto do Líder, a até o alcance da coleta (ou null)
+  itemPerto() {
+    let melhor = null
+    let menor = mundo.coleta.alcance
+    for (const item of this.itensNoChao) {
+      const distancia = Math.hypot(item.x - this.lider.x, item.y - this.lider.y)
+      if (distancia <= menor) {
+        melhor = item
+        menor = distancia
+      }
+    }
+    return melhor
+  }
+
+  // Tecla E (RF35, TASK-064): pega o item mais perto, se couber na mochila (regras/mochila.js). O que não couber fica no
+  // chão, com aviso, e some depois de um tempo.
+  coletar(agora) {
+    const noChao = this.itemPerto()
+    if (!noChao || this.lider.caido) return
+    const { item } = noChao
+    const { itens, noChao: sobra } = guardarNaMochila(this.mochila.itens, { id: item.id, peso: item.peso, quantidade: noChao.quantidade }, this.mochila.capacidade)
+    const pegou = noChao.quantidade - (sobra?.quantidade ?? 0)
+    this.mochila.itens = itens
+    if (pegou > 0) {
+      if (item.tipo === 'recurso') this.ganhos.recursos += pegou
+      numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
+    }
+    if (!sobra) {
+      this.itensNoChao = this.itensNoChao.filter((outro) => outro !== noChao)
+      noChao.destruir(true)
+      return
+    }
+    noChao.quantidade = sobra.quantidade
+    if (noChao.expiraEm === null || noChao.expiraEm - agora > mundo.coleta.msQuandoNaoCabe) noChao.expiraEm = agora + mundo.coleta.msQuandoNaoCabe
+    this.mensagem(`Mochila cheia: ${sobra.quantidade} ${item.nome} ficou no chão (some em ${Math.round((noChao.expiraEm - agora) / 1000)} s)`, 'alerta')
+  }
+
+  // Itens no chão: sobem e descem e somem quando o tempo acaba
+  atualizarItensNoChao(agora) {
+    if (this.itensNoChao.length === 0) return
+    this.itensNoChao = this.itensNoChao.filter((item) => {
+      const fica = item.atualizar(agora)
+      if (!fica) item.destruir(true)
+      return fica
+    })
+  }
+
   // Em que região um ponto está (null na arena)
   regiaoEm(ponto) {
     return this.mapa.regioes.length ? regiaoEm(this.mapa.regioes, ponto) : null
@@ -420,6 +505,7 @@ export default class CenaArena extends Phaser.Scene {
       return continua
     })
     for (const membro of this.grupo) membro.escudo?.atualizar()
+    this.atualizarItensNoChao(agora)
     this.atualizarMana(segundos)
     this.prenderVidaDoTesteDoFoco(agora)
     this.atualizarDesmaios(agora, ms)
@@ -584,6 +670,7 @@ export default class CenaArena extends Phaser.Scene {
       const r = inimigo.tamanho
       inimigo.definirVisivel(naTela(inimigo.x - r, inimigo.y - r, inimigo.x + r, inimigo.y + r))
     }
+    for (const item of this.itensNoChao) item.definirVisivel(naTela(item.x - 20, item.y - 20, item.x + 20, item.y + 20))
   }
 
   atualizarLider(agora) {
@@ -595,6 +682,7 @@ export default class CenaArena extends Phaser.Scene {
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
+    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
     ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
       if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
@@ -955,6 +1043,24 @@ export default class CenaArena extends Phaser.Scene {
     this.ganhos.ouro += ouro
     this.ganhos.monstros += 1
     if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+    // Boss (TASK-065): o bônus na pontuação (RF49) e a pequena chance do equipamento especial (RF39)
+    if (inimigo.ehBoss) {
+      this.ganhos.bonusDeBoss += inimigo.config.bonus
+      this.mensagem(`${inimigo.config.nome} derrotado! (+${inimigo.config.bonus} pontos)`, 'nivel')
+      const { especial } = inimigo.config
+      const item = itemDoCatalogo(especial.item)
+      if (item && Math.random() < (this.chanceDoEspecialForcada ?? especial.chance)) {
+        this.soltarItem(item, 1, inimigo, mundo.coleta.msDoDrop)
+        this.mensagem(`O ${inimigo.config.nome} deixou: ${item.nome}!`, 'nivel')
+      }
+    }
+    // Drops (TASK-064): cada um sorteado pela chance dele; caem no chão e somem se ninguém pegar
+    for (const drop of inimigo.config.drops ?? []) {
+      const item = itemDoCatalogo(drop.item)
+      const [minimo, maximo] = drop.quantidade ?? [1, 1]
+      if (!item || Math.random() >= (this.chanceDeDropForcada ?? drop.chance)) continue
+      this.soltarItem(item, minimo + Math.floor(Math.random() * (maximo - minimo + 1)), inimigo, mundo.coleta.msDoDrop)
+    }
     this.matarInimigo(inimigo)
     this.dividirXp(xp)
   }
@@ -1155,7 +1261,10 @@ export default class CenaArena extends Phaser.Scene {
       distanciaAteABorda: this.mapa.distanciaAteABorda,
       ouroGanho: this.ganhos.ouro,
       monstros: this.ganhos.monstros,
-      recursos: 0, // a coleta entra na etapa 6
+      recursos: this.ganhos.recursos, // recursos coletados, para a pontuação (RF49)
+      bonusDeBoss: this.ganhos.bonusDeBoss, // Boss derrotado (RF49)
+      // A mochila da partida: vai para a Mochila do Reino em todos os resultados (RF50)
+      itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
       xpPorClasse: { ...this.ganhos.xpPorClasse },
       // O mapa descoberto (Fase 3): entra no save no fim, em qualquer resultado (RF50)
       descobertas: this.exploracao && {
@@ -1273,6 +1382,49 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'derrubarLider') this.derrubar(this.lider)
     if (comando.tipo === 'alternarAjuda') this.aliadosAjudam = !this.aliadosAjudam
     if (comando.tipo === 'trocarIA') this.trocarIA(comando.nivel)
+    if (comando.tipo === 'encherMochila') this.encherMochila()
+    if (comando.tipo === 'piorCenario') this.piorCenario()
+    if (comando.tipo === 'alternarDropEspecial') this.chanceDoEspecialForcada = this.chanceDoEspecialForcada === 1 ? undefined : 1
+  }
+
+  // TEST-005 (só no npm run dev): o pior cenário do beta, para medir o FPS. Grupo de 5 no meio da região Difícil (a com
+  // mais mobs) e todos os mobs vivos dela acordados em volta, perseguindo. O FPS aparece na barra de teste.
+  piorCenario() {
+    if (!this.mapa.comCamera) return
+    const regiao = this.mapa.regioes.find((uma) => uma.id === 'dificil')
+    const centro = this.lugarLivre(this.lider.tamanho, { x: (regiao.x0 + regiao.x1) / 2, y: (regiao.y0 + regiao.y1) / 2 }, this.lider, 8, false)
+    this.lider.colocarEm(centro.x, centro.y)
+    this.cameras.main.centerOn(centro.x, centro.y)
+    this.encherGrupo()
+    this.aliados.forEach((aliado, indice) => {
+      const vaga = vagaNaFormacao(indice, this.aliados.length, raioDaFormacao)
+      const lugar = this.lugarLivre(aliado.tamanho, { x: centro.x + vaga.x, y: centro.y + vaga.y }, aliado)
+      aliado.colocarEm(lugar.x, lugar.y)
+    })
+    const daRegiao = this.inimigos.filter((inimigo) => inimigo.regiao === 'dificil' && !inimigo.morto)
+    daRegiao.forEach((inimigo, indice) => {
+      const angulo = (indice / daRegiao.length) * Math.PI * 2
+      const distancia = 450 + (indice % 3) * 120
+      const lugar = this.lugarLivre(inimigo.tamanho, { x: centro.x + Math.cos(angulo) * distancia, y: centro.y + Math.sin(angulo) * distancia }, inimigo, mundo.nascimento.folga)
+      inimigo.colocarEm(lugar.x, lugar.y)
+      inimigo.casaFixa = { x: lugar.x, y: lugar.y }
+      inimigo.casa = { x: lugar.x, y: lugar.y }
+      inimigo.dormindo = false
+      inimigo.voltandoAte = 0
+      inimigo.provocadoAte = this.agora + 120000 // persegue o grupo o tempo todo (até o cervo)
+    })
+    this.mensagem(`Teste: pior cenário (grupo de ${this.grupo.length} e ${daRegiao.length} mobs da Difícil)`, 'aviso')
+  }
+
+  // Teste da mochila cheia (só no npm run dev): enche com madeira até não caber mais nada de peso 1
+  encherMochila() {
+    const madeira = itemDoCatalogo('madeira')
+    const livre = this.mochila.capacidade - pesoTotal(this.mochila.itens)
+    const quantas = Math.floor(livre / madeira.peso)
+    if (quantas > 0) this.mochila.itens = guardarNaMochila(this.mochila.itens, { id: madeira.id, peso: madeira.peso, quantidade: quantas }, this.mochila.capacidade).itens
+    const resto = this.mochila.capacidade - pesoTotal(this.mochila.itens)
+    if (resto > 0) this.mochila.itens = guardarNaMochila(this.mochila.itens, { id: 'cogumelo', peso: 1, quantidade: resto }, this.mochila.capacidade).itens
+    this.mensagem('Teste: mochila cheia', 'aviso')
   }
 
   // Os 4 botões de resultado: acabam a partida já, com os números reais dela e o resultado pedido
@@ -1459,7 +1611,18 @@ export default class CenaArena extends Phaser.Scene {
       contagemDoFoco: { ...this.contagemDoFoco },
       // Andamento e números da partida (5c)
       tempo: Math.floor(agora / 1000),
-      pontuacao: pontuacaoBase({ monstros: this.ganhos.monstros, ouroGanho: this.ganhos.ouro, segundosAtivos: Math.floor(this.msAtivos / 1000) }),
+      pontuacao: pontuacaoBase({
+        monstros: this.ganhos.monstros,
+        ouroGanho: this.ganhos.ouro,
+        recursos: this.ganhos.recursos,
+        bonusDeBoss: this.ganhos.bonusDeBoss,
+        segundosAtivos: Math.floor(this.msAtivos / 1000),
+      }),
+      // A barra grande do Boss (TASK-065): aparece quando ele persegue o grupo ou o Líder está no domínio dele
+      boss:
+        this.boss && !this.boss.morto && (this.boss.perseguindo || this.noDominioDeBoss(lider))
+          ? { nome: this.boss.config.nome, vida: Math.max(0, Math.round(this.boss.vida)), vidaMaxima: this.boss.vidaMaxima }
+          : null,
       ouroGanho: this.ganhos.ouro,
       monstros: this.ganhos.monstros,
       custoDaFuga: custoDaFuga(
@@ -1467,6 +1630,14 @@ export default class CenaArena extends Phaser.Scene {
         this.mapa.distanciaAteABorda,
       ),
       minimapa: this.situacaoDoMinimapa(),
+      // Mochila da partida e o item que o E pegaria agora (TASK-064)
+      mochila: { peso: pesoTotal(this.mochila.itens), capacidade: this.mochila.capacidade },
+      itemPerto: (() => {
+        const perto = this.itemPerto()
+        if (!perto) return null
+        const cabe = pesoTotal(this.mochila.itens) + perto.item.peso <= this.mochila.capacidade
+        return { nome: perto.item.nome, quantidade: perto.quantidade, cabe }
+      })(),
       // A região atual (HUD, RF53)
       regiao: this.mapa.comCamera
         ? { nome: this.regiaoDoLider?.nome ?? '—', dificuldade: this.regiaoDoLider?.dificuldade ?? null, dominioDeBoss: Boolean(this.regiaoDoLider?.dominioDeBoss) }
@@ -1476,6 +1647,7 @@ export default class CenaArena extends Phaser.Scene {
       fuga: this.fuga && { segundos: segundosDaContagem(this.fuga.msRestantes) },
       fps: Math.round(this.game.loop.actualFps),
       tamanhoDoGrupo: this.grupo.length,
+      dropEspecialForcado: this.chanceDoEspecialForcada === 1,
       inimigos: this.inimigos.length,
     })
   }

@@ -166,6 +166,31 @@ export const mundo = {
       drops: [{ item: 'chifreDeCervo', chance: 0.4, quantidade: [1, 1] }],
     },
   },
+  // O Boss da Floresta (TASK-065). PROVISÓRIO – substituir pelo do grupo (TASK-012). Fica no domínio dele
+  // (raioDoTerritorio a partir do lugar do Boss) e tem três ataques avisados no chão antes do golpe:
+  // pisão (área em volta), investida (faixa reta até o alvo) e espinhos (leque de tiros). "bonus" entra na
+  // pontuação (RF49); "especial" é a pequena chance de deixar o equipamento especial (RF39).
+  boss: {
+    nome: 'Guardião da Floresta',
+    cor: 0x6e3b1f,
+    tamanho: 92,
+    vida: 2400,
+    velocidade: 95,
+    dano: 26,
+    xp: 400,
+    ouro: 250,
+    bonus: 500,
+    raioDeDeteccao: 620,
+    raioDeDesistencia: 900,
+    raioDoTerritorio: 720,
+    raioDoPasseio: 60,
+    msEntreAtaques: 1500,
+    pisao: { alcance: 230, raio: 190, msDeAviso: 900, dano: 26, empurrao: 520 },
+    investida: { alcance: 520, comprimento: 440, largura: 80, msDeAviso: 800, msDaInvestida: 380, dano: 22, empurrao: 480 },
+    espinhos: { quantos: 5, abertura: 0.7, msDeAviso: 600, velocidadeDoTiro: 300, raioDoTiro: 9, alcanceDoTiro: 760, dano: 12, empurrao: 200 },
+    drops: [{ item: 'cascaAntiga', chance: 1, quantidade: [1, 2] }],
+    especial: { item: 'coroaDeRaizes', chance: 0.08 },
+  },
   // Vida, dano, XP e ouro dos mobs × este valor, pela dificuldade da região (regras/mobs.js)
   forcaDaRegiao: { segura: 1, facil: 1, media: 1.5, dificil: 2.2, boss: 2.6 },
   // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e
@@ -175,6 +200,10 @@ export const mundo = {
   msVoltandoParaCasa: 3500,
   // Atacado, o mob persegue mesmo fora do território por este tempo (um tiro de longe não fica sem resposta)
   msProvocado: 5000,
+  // Coleta (TASK-064): E pega o item mais perto a até "alcance" px do Líder. O drop de um mob fica no chão por
+  // msDoDrop; o que não coube na mochila, por msQuandoNaoCabe (os dois piscam nos últimos 5 s e somem). Os recursos do
+  // chão (cogumelo, erva, madeira) ficam até alguém pegar.
+  coleta: { alcance: 80, msDoDrop: 60000, msQuandoNaoCabe: 30000 },
   // Minimapa (RF40): o mapa é dividido em células de "celula" px; o grupo revela tudo a até "raioRevelado" px do Líder
   minimapa: { celula: 200, raioRevelado: 450 },
   // XP da primeira descoberta de cada área (RF40), pela dificuldade da região; dividido como o dos monstros (RF50)

@@ -40,13 +40,16 @@ Arquivos: `guerreiro.png`, `mago.png`, `tanque.png`, `sacerdote.png` e `arqueiro
 
 ## 2. Monstros e Boss da Floresta (TASK-113): PROVISÓRIO até a TASK-012
 
-| Monstro (proposta) | Faz o quê | Quadros |
-|---|---|---|
-| Lobo | Corre e morde (corpo a corpo, rápido) | Andar (4) e aviso + mordida (3), 4 direções |
-| Javali | Pisca e investe em linha reta | Andar (4) e aviso + investida (3), 4 direções |
-| Cogumelo venenoso | Lento; solta uma nuvem em volta | Andar (2) e soltar a nuvem (3) |
-| Goblin arqueiro | Fica longe e atira flechas | Andar (4) e mirar + atirar (3), 4 direções |
-| Boss: Guardião da Floresta (árvore viva) | Golpes em área avisados no chão | Parado (2), andar (4), aviso (2) e golpe (4); 128 × 128 |
+**Atualizado na Fase 3 (09/10):** estes são os mobs que o jogo já tem (provisórios, em `src/dados/balanceamento.js`, `mundo.mobs`); a arte pode seguir esta lista, e o grupo pode trocar os monstros na TASK-012.
+
+| Monstro (no jogo hoje) | Faz o quê | Quadros | Hitbox hoje |
+|---|---|---|---|
+| Lobo | Corre e morde (corpo a corpo, rápido); pisca antes do bote | Andar (4) e aviso + mordida (3), 4 direções | 34 × 34 |
+| Aranha | Fica longe e atira teia; pisca antes do tiro | Andar (4) e mirar + atirar (3), 4 direções | 30 × 30 |
+| Javali | Mais forte e lento; aviso longo e investida | Andar (4) e aviso + investida (3), 4 direções | 42 × 42 |
+| Cervo (não hostil) | Passeia; só revida se for atacado | Andar (4) e revidar (3), 4 direções | 34 × 34 |
+| Boss: Guardião da Floresta (árvore viva) | Pisão em área, investida em linha e leque de espinhos, sempre avisados no chão | Parado (2), andar (4), aviso (2) e golpe (4); 128 × 128 | 92 × 92 |
+| Marcas de aviso do Boss | Círculo, faixa e linhas vermelhas no chão antes do golpe | 1 quadro cada (o código estica) | — |
 
 O aviso do golpe precisa ser fácil de ler (piscar, encolher ou brilhar), como os mobs vermelhos de hoje.
 
@@ -77,7 +80,7 @@ O aviso do golpe precisa ser fácil de ler (piscar, encolher ou brilhar), como o
 
 - **Atributos:** 5 ícones (Vitalidade, Força, Sabedoria, Inteligência, Agilidade) e o ouro.
 - **Habilidades:** um por habilidade, quando a TASK-010 sair. São até 3 por classe, cerca de 15.
-- **Itens:** um por item do catálogo, quando a TASK-014 sair (estimativa: 30 a 40).
+- **Itens:** um por item do catálogo, quando a TASK-014 sair (estimativa: 30 a 40). Os que o jogo já tem (provisórios, `src/dados/itens.js`): cogumelo, erva medicinal, madeira, pele de lobo, teia de aranha, presa de javali, chifre de cervo, casca antiga, poção de vida, Coroa de raízes (especial do Boss) e o equipamento de teste (capacete, peitoral, calças, botas, manoplas, espada e escudo). Tamanho sugerido: 32 × 32 (o mesmo desenho serve para o item no chão e para a Mochila).
 
 ## 6. Som (TASK-104)
 

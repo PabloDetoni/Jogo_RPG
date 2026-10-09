@@ -83,6 +83,11 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
       <div className={`hud-minimapa${situacao?.minimapa ? ' hud-minimapa-ativo' : ''}`} aria-label="Minimapa">
         {situacao?.minimapa ? <Minimapa bioma={bioma} minimapa={situacao.minimapa} /> : <span>Minimapa</span>}
         <span className={`hud-regiao${situacao?.regiao?.dominioDeBoss ? ' hud-regiao-boss' : ''}`}>Região: {situacao?.regiao?.nome ?? '—'}</span>
+        {situacao?.mochila && (
+          <span className={`hud-regiao${situacao.mochila.peso >= situacao.mochila.capacidade ? ' hud-mochila-cheia' : ''}`} title="Peso na mochila da partida / capacidade (Força do grupo)">
+            Mochila {situacao.mochila.peso}/{situacao.mochila.capacidade}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -93,6 +98,14 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
 export function AvisosDaPartida({ situacao, mensagens }) {
   return (
     <div className="avisos-da-partida" style={{ top: emCqw(faixas.hud + 10) }} aria-live="polite">
+      {situacao?.boss && (
+        <div className="barra-do-boss" role="status" aria-label={`${situacao.boss.nome}: ${situacao.boss.vida} de vida`}>
+          <span>{situacao.boss.nome}</span>
+          <div className="barra-do-boss-fundo">
+            <div className="barra-do-boss-vida" style={{ width: `${(100 * situacao.boss.vida) / situacao.boss.vidaMaxima}%` }} />
+          </div>
+        </div>
+      )}
       {situacao?.fuga && <div className="faixa-da-partida faixa-fuga">Fugindo com a Pedra de Retorno em {situacao.fuga.segundos} s</div>}
       {situacao?.retorno && (
         <div className={`faixa-da-partida${situacao.retorno.interrompido ? ' faixa-alerta' : ''}`}>
@@ -100,6 +113,13 @@ export function AvisosDaPartida({ situacao, mensagens }) {
             ? `Em combate: o retorno espera (${situacao.retorno.segundos} s)`
             : `Voltando ao Reino em ${situacao.retorno.segundos} s`}{' '}
           · Q cancela
+        </div>
+      )}
+      {situacao?.itemPerto && (
+        <div className={`faixa-da-partida${situacao.itemPerto.cabe ? '' : ' faixa-alerta'}`}>
+          {situacao.itemPerto.cabe
+            ? `E: pegar ${situacao.itemPerto.nome}${situacao.itemPerto.quantidade > 1 ? ` ×${situacao.itemPerto.quantidade}` : ''}`
+            : `Mochila cheia: não cabe ${situacao.itemPerto.nome}`}
         </div>
       )}
       {situacao?.caido && (

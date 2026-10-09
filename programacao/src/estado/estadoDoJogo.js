@@ -123,6 +123,7 @@ function encerrarPartida(estado, fim = {}) {
       xpPorClasse: fim.xpPorClasse,
       monstros: fim.monstros,
       descobertas: fim.descobertas ?? null,
+      itens: fim.itens ?? [],
     })
     novo = { ...novo, progresso: aplicado.progresso }
     personagens = aplicado.personagens
@@ -140,11 +141,12 @@ function encerrarPartida(estado, fim = {}) {
     pontuacaoBase: contas.pontuacaoBase,
     pontuacaoFinal: contas.pontuacaoFinal,
     monstros: fim.monstros ?? 0,
-    itens: [], // a mochila da partida entra com o catálogo (TASK-047)
+    itens: (fim.itens ?? []).map((item) => ({ id: item.id, quantidade: item.quantidade })), // a mochila da partida (TASK-064)
     segundosTotais: fim.segundosTotais ?? 0,
     segundosAtivos: fim.segundosAtivos ?? 0,
     perdidos: contas.perdidos,
     personagens, // XP de cada permanente: { classe, xp, nivelAntes, nivel, niveisGanhos }
+    bonusDeBoss: Math.max(0, Math.floor(fim.bonusDeBoss ?? 0)), // Boss derrotado (RF49)
     // Exploração (Fase 3): as áreas descobertas pela primeira vez nesta partida e o XP que elas deram
     areasNovas: fim.descobertas?.areasNovas ?? [],
     xpDeExploracao: fim.descobertas?.xpDeExploracao ?? 0,

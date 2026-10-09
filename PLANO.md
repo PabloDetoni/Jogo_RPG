@@ -6,7 +6,8 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 - **Fase 2 aprovada pelo Pablo em 09/10** e publicada: o `main` é o jogo público em `https://jogo-rpg-six.vercel.app` (as variáveis do Supabase valem em Production e Preview). Relatório do grupo: https://claude.ai/artifact/7Wj2tXqwcjaffBpyusPjrD.
 - **Regra nova de publicação (09/10, no CLAUDE.md):** cada fase num ramo próprio; no fim, push do ramo, `conferir:configuracao` na prévia e o endereço dela junto com os relatórios; o `main` só recebe a fase depois do teste e do ok do Pablo.
-- **Fase atual: Fase 3, mundo da Floresta, no ramo `fase-3`.** Feitas (09/10, commit local): 3a (mundo, câmera, mira, bordas, arena só no dev), 3b (regiões, HUD, taxa real e do domínio do Boss), 3c (mobs por região, território, cervo não hostil, nascimento com folga, aliado longe volta por fora da tela), 3d (minimapa, áreas com XP, mapa no save) e 3e (Ponto de partida). 653 testes; `testar:navegador` 226 de 226 (as duas intermitentes da Fase 1 corrigidas); `testar:floresta` (novo) 45 de 45; 60 FPS no meio da Floresta com a placa de vídeo. Próximo passo: 3f (coleta, drops e mochila da partida).
+- **Fase 3 terminada (09/10), no ramo `fase-3`:** 3a a 3h feitas (Floresta com câmera, regiões, mobs com território, minimapa e áreas com XP, Ponto de partida, coleta com E, drops e mochila da partida, o Guardião da Floresta e o TEST-005). 660 testes; `testar:navegador` 226 de 226; `testar:floresta` 65 de 65; 60 FPS no pior cenário. Documentação: RF31, RF32, RF35, RF39, RF40, RF42, RF48, RF53, UC28, UC34, UC35, "Alterações do projeto", Balanceamento (seção do mundo), lista de arte, CLAUDE.md e `testes/` (roteiros FL-01 a FL-12).
+- **Parado esperando o Pablo (fim da Fase 3):** os dois relatórios e o endereço da prévia do ramo `fase-3`; o teste dele (roteiros FL-01 a FL-12); só depois do ok o `fase-3` junta no `main`. Depois, a Fase 4 (Reino com dados).
 - **Esperando o Pablo (sem travar a Fase 3):** confirmar a proposta do "Painel do Mestre" para a Fase 4 (seção abaixo).
 
 ### Plano da Fase 3 (modo contínuo, pedido do Pablo em 09/10)
@@ -263,10 +264,10 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - **Minimapa e região:** o lugar no HUD está reservado, sem conteúdo, até a etapa 6. Recursos coletados e itens da partida ficam em zero até a etapa 6 e a TASK-047.
   - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "IA: pelo nível/básica/média/avançada", "Invencível" só para o Líder, "Testar foco" e os 4 resultados, que agora usam os números reais da partida). Só no `npm run dev`: "Subir nível" e "+300 de ouro", que mexem no que a partida ganhou, e, no painel `</> DEV`, os personagens do save (contratar todas as classes, nível −1/+1/+10 e "Quase subir"), que só funcionam fora da partida. No build do jogo, nada disso existe. Quando a barra sair, a faixa de baixo volta a ser área jogável.
 - **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** FEITO na parte 5c (07/10), esperando o teste visual do Pablo.
-TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
+TASK-047 (itens na partida: Tab, E e R) fica para a Fase 4. Na Fase 3, o E já pega o item do chão, e o catálogo provisório (parte da TASK-070) existe em `src/dados/itens.js`.
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
-TASK-060 a TASK-065 e TEST-005: **A FAZER** na Fase 3. Dependem da TASK-012 e da TASK-013.
+TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVISÓRIO (layout, mobs, Boss e itens) até a TASK-012 e a TASK-013. Ramo `fase-3`, esperando o teste do Pablo. O TEST-005 deu 60 FPS de média e mínimo de 59 em 2 minutos de pior cenário (grupo de 5 e 20 mobs da Difícil), numa Intel Iris Xe.
 
 ### EPIC-08 · Reino com dados (etapa 7)
 - **TASK-079 (contratos):** FEITO (08/10) na parte 7a: abas de contrato temporário e permanente na Guilda, com o ouro, os preços, as partidas restantes e o motivo quando falta ouro; a Preparação mostra quem vai como temporário. O equipamento fixo do temporário (RF29) espera o catálogo (TASK-070, Fase 4).

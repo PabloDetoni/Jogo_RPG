@@ -85,3 +85,20 @@ describe('mapa descoberto no fim da partida (Fase 3, RF40)', () => {
     expect(depois.regioesDescobertas.floresta).toEqual(['facil'])
   })
 })
+
+describe('itens da mochila da partida (TASK-064, RF50)', () => {
+  it('vão para a Mochila do Reino, juntando os iguais', () => {
+    const antes = { ...progresso, mochila: [{ id: 'cogumelo', quantidade: 2 }] }
+    const { progresso: depois } = aplicarFimNoProgresso(antes, { itens: [{ id: 'cogumelo', quantidade: 3 }, { id: 'peleDeLobo', quantidade: 1 }] })
+    expect(depois.mochila).toEqual([
+      { id: 'cogumelo', quantidade: 5 },
+      { id: 'peleDeLobo', quantidade: 1 },
+    ])
+    expect(antes.mochila).toEqual([{ id: 'cogumelo', quantidade: 2 }]) // o original não muda
+  })
+
+  it('item estragado (sem id ou com quantidade zero ou quebrada) não entra', () => {
+    const { progresso: depois } = aplicarFimNoProgresso(progresso, { itens: [{ id: '', quantidade: 2 }, { id: 'madeira', quantidade: 0 }, { id: 'madeira', quantidade: 2.7 }, null] })
+    expect(depois.mochila).toEqual([{ id: 'madeira', quantidade: 2 }])
+  })
+})

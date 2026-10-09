@@ -93,8 +93,9 @@ export const floresta = {
     { id: 'coracaoDaMata', nome: 'Coração da Mata', regiao: 'dificil', x0: 5300, x1: 6000, y0: 200, y1: 3400 },
     { id: 'clareiraDoGuardiao', nome: 'Clareira do Guardião', regiao: 'dominioDoBoss', x0: 6000, x1: 7200, y0: 1000, y1: 2600 },
   ],
-  // Onde o Boss fica (TASK-065): no meio do domínio dele
-  lugarDoBoss: { x: 6750, y: 1800 },
+  // Onde o Boss fica (TASK-065): no fundo do domínio dele, longe da entrada ("Muito difícil", RF32): quem nasce ali não
+  // pode já estar no raio em que ele percebe o grupo
+  lugarDoBoss: { x: 6900, y: 1800 },
   // Quantos mobs de cada tipo em cada região, a cada partida (as fichas ficam em balanceamento.js, mundo.mobs).
   // PROVISÓRIO – substituir pelo do grupo (TASK-012). A zona segura não tem mobs.
   populacao: {
@@ -102,6 +103,13 @@ export const floresta = {
     media: { lobo: 6, aranha: 5, javali: 3, cervo: 3 },
     dificil: { lobo: 7, aranha: 6, javali: 5, cervo: 2 },
     dominioDoBoss: { lobo: 2 },
+  },
+  // Recursos no chão de cada região, a cada partida (coletados com E). PROVISÓRIO – substituir pelo do grupo (TASK-012).
+  recursos: {
+    zonaSegura: { ervaMedicinal: 2 },
+    facil: { cogumelo: 6, ervaMedicinal: 4, madeira: 3 },
+    media: { cogumelo: 5, ervaMedicinal: 4, madeira: 5 },
+    dificil: { cogumelo: 4, ervaMedicinal: 5, madeira: 6 },
   },
   cores: {
     mata: 0x1d4425, // a mata fechada (parede)
