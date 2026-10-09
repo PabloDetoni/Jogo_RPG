@@ -3,7 +3,9 @@
 As contas (cadastro, login, sessão única, save na nuvem, ranking e histórico) da Fase 2 usam o Supabase. Algumas coisas só dá para fazer no painel do Supabase, com a conta do Pablo; este arquivo diz exatamente onde clicar. Os nomes dos menus do site podem mudar um pouco.
 
 - **Parte 1 (TASK-090): FEITA em 08/10/2026.** Projeto criado, confirmação de e-mail ligada e e-mails chegando. A URL e a chave publicável estão no `programacao/.env.local` (fora do GitHub).
-- **Parte 2 (Fase 2): é a vez do Pablo.** Rodar o SQL, configurar os endereços dos links de e-mail, criar duas contas de teste e, se for preciso, o e-mail próprio (SMTP).
+- **Parte 2 (Fase 2): em andamento.** Em 09/10, o `npm run conferir:configuracao` mostrou: SQL rodado, tabelas protegidas, confirmação de e-mail ligada e Site URL na Vercel. Faltam o localhost e as prévias nas Redirect URLs e as duas contas de teste no `.env.local`.
+
+**Para conferir tudo de uma vez** (só lê, não muda nada): dentro de `programacao`, rode `npm run conferir:configuracao`. Ele diz o que está certo e, para o que faltar, o que fazer.
 
 ---
 
@@ -45,10 +47,11 @@ Se aparecer um erro vermelho, copie a mensagem e me mande; não tente consertar 
 Os links dos e-mails voltam para o endereço de onde o jogo foi aberto (o localhost no seu computador; a Vercel na internet). O Supabase só aceita voltar para os endereços desta lista.
 
 1. No menu da esquerda, abra **Authentication → URL Configuration**.
-2. **Site URL:** deixe `http://localhost:5173` por enquanto (depois da Vercel, troque pelo endereço dela; veja o `Vercel_passo_a_passo.md`). Clique em **Save**.
-3. Em **Redirect URLs**, clique em **Add URL** e confira que estes estão na lista:
-   - `http://localhost:5173/**`
-   - depois de publicar na Vercel: `https://jogo-rpg.vercel.app/**` (troque pelo endereço que a Vercel der) e `https://jogo-rpg-*.vercel.app/**` (as prévias de teste).
+2. **Site URL:** o endereço principal da Vercel, `https://jogo-rpg-six.vercel.app` (antes da Vercel, era `http://localhost:5173`). Clique em **Save**.
+3. Em **Redirect URLs**, clique em **Add URL** para cada um que faltar. A lista tem que ter os três:
+   - `http://localhost:5173/**` (o jogo no seu computador, `npm run dev`);
+   - `https://jogo-rpg-six.vercel.app/**` (o endereço principal da Vercel);
+   - `https://jogo-rpg-*.vercel.app/**` (as prévias de teste da Vercel, como a do ramo `fase-2`).
 4. Clique em **Save URLs**.
 
 ### Passo C · Tamanho mínimo da senha (para bater com o jogo)

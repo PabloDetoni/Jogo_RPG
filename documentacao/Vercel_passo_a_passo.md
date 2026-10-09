@@ -2,6 +2,8 @@
 
 A Vercel publica o jogo na internet a partir do GitHub (decidido pelo Pablo em 08/10/2026; adianta a TASK-130). Cada vez que um ramo do GitHub recebe commits novos, a Vercel monta o jogo de novo sozinha. Escrito em 08/10/2026; os nomes dos menus do site podem mudar um pouco.
 
+**Endereço do jogo:** `https://jogo-rpg-six.vercel.app` (criado pelo Pablo em 09/10; o `-six` veio da Vercel porque `jogo-rpg.vercel.app` já era de outra pessoa). Para conferir a Vercel e o Supabase de uma vez: `npm run conferir:configuracao`, dentro de `programacao`.
+
 ## Como o projeto está preparado
 
 - O jogo fica na pasta `programacao` do repositório (é a **Root Directory**).
@@ -54,10 +56,10 @@ Para o grupo e outra máquina conseguirem abrir a prévia:
 Sem isso, os links de confirmação e de senha nova que saem do jogo publicado não voltam para ele.
 
 1. No Supabase: **Authentication → URL Configuration**.
-2. **Site URL:** troque para o endereço principal da Vercel (por exemplo, `https://jogo-rpg.vercel.app`) e clique em **Save**.
+2. **Site URL:** troque para o endereço principal da Vercel, `https://jogo-rpg-six.vercel.app`, e clique em **Save**.
 3. Em **Redirect URLs**, deixe estes (clique em **Add URL** para cada um que faltar) e clique em **Save URLs**:
    - `http://localhost:5173/**` (o jogo no seu computador);
-   - `https://jogo-rpg.vercel.app/**` (troque pelo seu endereço);
+   - `https://jogo-rpg-six.vercel.app/**` (o endereço principal);
    - `https://jogo-rpg-*.vercel.app/**` (as prévias de teste).
 
 ## 5. A publicação de teste da Fase 2

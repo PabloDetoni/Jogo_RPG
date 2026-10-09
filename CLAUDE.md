@@ -5,7 +5,7 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Pastas
 Código em `programacao/` (rodar npm lá); documentação em `documentacao/` (fonte de verdade). O caminho até a entrega e a situação de cada item da auditoria (TASK/DOC/TEST) ficam no `PLANO.md` da raiz. Os roteiros de teste manual (passo a passo para o Pablo) e o registro de todos os testes rodados (o que passou e o que falhou) ficam em `testes/` na raiz.
-Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) e `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`).
+Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) e `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`).
 
 ## Stack e arquitetura
 - React na interface (obrigatório) + Supabase (contas e dados). A partida é desenhada com Phaser 4 (canvas) em `src/jogo/` (cenas, entidades, ataques); HUD, menus, janelas e a barra de teste continuam em React.

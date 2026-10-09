@@ -12,6 +12,7 @@
     "test:observar": "vitest",
     "testar:navegador": "node scripts/testarNoNavegador.mjs",
     "testar:contas": "node scripts/testarContas.mjs",
+    "conferir:configuracao": "node scripts/conferirConfiguracao.mjs",
     "balanceamento": "node scripts/gerarBalanceamento.js"
   },
   "dependencies": {
