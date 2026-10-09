@@ -156,9 +156,15 @@ function temChaveSecreta(codigo) {
 async function conferirSite(endereco, nome) {
   let pagina
   try {
-    const resposta = await fetch(`${endereco}/`)
-    if (resposta.status === 401 || resposta.status === 403) {
-      falta(`${nome} pede login da Vercel (${resposta.status})`, 'Vercel → projeto → Settings → Deployment Protection → Vercel Authentication: Disabled')
+    // Sem seguir o redirecionamento: a prévia protegida manda para o login da Vercel (e conferir aquela página enganaria)
+    const resposta = await fetch(`${endereco}/`, { redirect: 'manual' })
+    const destino = resposta.headers.get('location') ?? ''
+    const pedeLogin = resposta.status === 401 || resposta.status === 403 || (resposta.status >= 300 && resposta.status < 400 && /vercel\.com\/(sso|login)/.test(destino))
+    if (pedeLogin) {
+      falta(
+        `${nome} pede login da Vercel (Deployment Protection ligada)`,
+        'quem está logado na Vercel abre normalmente; para o grupo e outra máquina abrirem (e para este conferidor olhar), Vercel → projeto → Settings → Deployment Protection → Vercel Authentication: Disabled → Save',
+      )
       return
     }
     if (!resposta.ok) {
