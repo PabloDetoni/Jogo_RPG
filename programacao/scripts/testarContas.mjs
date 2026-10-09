@@ -346,6 +346,8 @@ const fecharAvisos = (aba) =>
 
 // ---------- Roteiro ----------
 
+const abasAbertas = new Set() // para conferir os erros do console no fim
+
 try {
   console.log(`Site: ${SITE} · navegador: ${caminhoDoNavegador}`)
 
@@ -365,6 +367,7 @@ try {
   console.log('1. Ranking sem login (RF15)')
   const nav1 = await abrirNavegador('um')
   const aba1 = await nav1.novaAba('aba1')
+  abasAbertas.add(aba1)
   await aba1.abrir()
   await aba1.clicar('Salão da Glória')
   await aba1.esperarTela('Salão da Glória')
@@ -373,8 +376,13 @@ try {
     await aba1.esperar(`!document.body.innerText.includes('Carregando o ranking')`, `a aba ${nomeDaAba} carregar`, 15000)
     const texto = await aba1.texto()
     conferir(`aba "${nomeDaAba}" carrega sem login`, (texto.includes('Jogador') || texto.includes('Ninguém no ranking')) && !texto.includes('Tentar de novo'))
+    if (nomeDaAba === 'Por classe') {
+      conferir('a aba "Por classe" tem a escolha da classe', await aba1.temBotao('Sacerdote', true))
+      await aba1.clicar('Sacerdote')
+      await aba1.esperar(`!document.body.innerText.includes('Carregando o ranking')`, 'o ranking do Sacerdote', 15000)
+      conferir('trocar a classe carrega o ranking dela', !(await aba1.texto()).includes('Tentar de novo'))
+    }
   }
-  conferir('a aba "Por classe" tem a escolha da classe', await aba1.temBotao('Sacerdote', true))
   conferir('sem login não há "Minhas partidas" nem Conquistas', !(await aba1.temBotao('Minhas partidas')) && !(await aba1.temBotao('Conquistas')))
   await aba1.print('01-ranking-sem-login')
   const linhas = (await anonimo.rpc('ranking', { p_aba: 'melhoresPontuacoes' })).data ?? []
@@ -400,6 +408,7 @@ try {
 
   const nav2 = await abrirNavegador('dois')
   const aba2 = await nav2.novaAba('aba1')
+  abasAbertas.add(aba2)
   await aba2.abrir()
   await irAoLogin(aba2)
   const telaNoSegundo = await entrar(aba2, contaA)
@@ -545,7 +554,7 @@ try {
   const partidasDepoisDaVolta = await esperarNoBanco(() => partidasNoBanco(a.cliente), (n) => n === partidasAntesDaQueda + 1, 'a partida subir')
   conferir('...e a partida jogada sem internet também', partidasDepoisDaVolta === partidasAntesDaQueda + 1, { antes: partidasAntesDaQueda, depois: partidasDepoisDaVolta })
 
-  console.log('9. Sair da conta (RF08) libera a conta na hora')
+  console.log('9. Sair da conta (RF08) e fechar a aba liberam a conta na hora (RF05)')
   await aba1.clicar('Sair da conta')
   await aba1.recarregou()
   conferir('Sair da conta recarrega e volta à Tela inicial', (await aba1.titulo()) === 'Tela inicial')
@@ -555,9 +564,16 @@ try {
   await irAoLogin(aba2)
   const telaDepoisDeSair = await entrar(aba2, contaA)
   conferir('logo depois de sair, o outro navegador entra (a sessão fechou na hora)', telaDepoisDeSair === 'Reino', await mensagemDoAcesso(aba2))
-  await abrirConfiguracoes(aba2)
-  await aba2.clicar('Sair da conta')
-  await aba2.recarregou()
+  // Agora fechando a aba sem sair: a sessão também acaba na hora (o pedido sai enquanto a página fecha)
+  await aba2.fechar()
+  abasAbertas.delete(aba2)
+  await pausa(2000)
+  const telaDepoisDeFechar = await entrar(aba1, contaA)
+  conferir('fechar a aba sem sair também libera a conta na hora', telaDepoisDeFechar === 'Reino', await mensagemDoAcesso(aba1))
+  await abrirConfiguracoes(aba1)
+  await aba1.clicar('Sair da conta')
+  await aba1.recarregou()
+  await irAoLogin(aba1)
 
   console.log('10. Passagem do convidado para a conta nova (RF03)')
   if (!passarConvidadoParaB) {
@@ -591,7 +607,10 @@ try {
   }
 
   console.log('11. Link de e-mail expirado, senha nova sem link e Supabase fora do ar')
-  const aba3 = await nav2.novaAba('aba3')
+  // Num navegador novo: o 2 fechou a aba sem sair e ainda lembra a conta A (a "Senha nova" trocaria a senha dela)
+  const nav3 = await abrirNavegador('tres')
+  const aba3 = await nav3.novaAba('aba1')
+  abasAbertas.add(aba3)
   await aba3.abrir(`${SITE}#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired`)
   await pausa(500)
   conferir('link expirado: o jogo abre no Login explicando', (await aba3.titulo()) === 'Login' && (await mensagemDoAcesso(aba3)).includes('expirou ou já foi usado'))
@@ -601,7 +620,7 @@ try {
   await aba3.digitar('Repita a senha nova', 'senhanova123')
   await aba3.clicar('Salvar senha nova')
   await esperarPedido(aba3)
-  conferir('senha nova sem um link válido: mensagem, sem travar', (await aba3.titulo()) === 'Senha nova' && (await mensagemDoAcesso(aba3)).length > 0, await mensagemDoAcesso(aba3))
+  conferir('senha nova sem um link válido: explica onde pedir outro link, sem travar', (await aba3.titulo()) === 'Senha nova' && (await mensagemDoAcesso(aba3)).includes('Esqueci minha senha'), await mensagemDoAcesso(aba3))
   await aba3.bloquear(['*supabase.co*'])
   await aba3.abrir()
   await irAoLogin(aba3)
@@ -614,7 +633,7 @@ try {
   conferir('...e o convidado continua jogando', true)
 
   const erros = []
-  for (const aba of [aba1, aba2, aba3]) {
+  for (const aba of abasAbertas) {
     const daAba = (await aba.avaliar(`window.__erros ?? []`)).filter((erro) => !/fetch|network|ERR_|Failed to load/i.test(erro))
     erros.push(...daAba.map((erro) => `${aba.nome}: ${erro}`))
   }

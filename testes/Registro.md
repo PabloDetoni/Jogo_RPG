@@ -17,7 +17,8 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | 7a (TASK-079: contratos na Guilda) | 08/10 | 539 passando (9 novos) | ok | 222 de 222 | esperando o fim da Fase 1 | local |
 | 7b (TASK-071: pentágono, Seleção, Árvores e HUD do Reino) | 08/10 | 544 passando (5 novos) | ok | 226 de 226 | Pablo aprovou a Fase 1 (08/10) | `a3567b7` |
 | 5f (cura do Sacerdote sem pausa) | 08/10 | 544 passando | ok | 225 de 226 (a falha foi do teste, corrigida); aura ligada 100% do tempo | na Fase 2 | local |
-| Fase 2, 8a a 9a (contas, sessão única, save na nuvem, ranking e histórico) | 08/10 | 608 passando (64 novos) | ok | 225 de 226 (a falha: dois mobs nascendo encostados, 0 px; intermitente, já registrada na 2e) | esperando o SQL e as contas de teste do Pablo; depois, o `npm run testar:contas` e o teste da Fase 2 | local |
+| Fase 2, 8a a 9a (contas, sessão única, save na nuvem, ranking e histórico) | 08/10 | 608 passando (64 novos) | ok | 225 de 226 (a falha: dois mobs nascendo encostados, 0 px; intermitente, já registrada na 2e) | — | `c3313d3` (local) |
+| Fase 2: configuração conferida e TEST-007 com o Supabase de verdade | 09/10 | 611 passando (3 novos) | ok | `testar:contas`: 51 de 52 na rodada do Pablo (a falha era do teste) e 51 de 51 depois da correção; `conferir:configuracao`: tudo certo | esperando o teste da Fase 2 | local |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -71,7 +72,18 @@ Depois das correções: 513 testes automáticos passando, lint e build ok, rotei
 | Revendo o SQL: alguém poderia gravar um número gigante no próprio save (ouro = 10^30, por exemplo) e derrubar o ranking de todos. | Revisão antes de mandar o SQL ao Pablo | A função que salva recusa números fora de limites folgados (ouro e monstros até 10^12, nível até 1000, até 10 personagens). |
 | O lint barrou o estado do jogo sendo lido de dentro do caminho das contas na hora de desenhar. | `npm run lint` | O caminho das contas recebe a fila de partidas como parâmetro; ele não lê o estado sozinho. |
 
-**Ainda não rodado (depende do Pablo):** o `npm run testar:contas` (TEST-007), com o Supabase de verdade: ranking sem login, dois navegadores na mesma conta, duas abas, save no banco e histórico, save antigo recusado, conta A tentando ler ou alterar a B, queda de internet, Sair liberando a conta, convidado virando conta, link expirado e Supabase fora do ar. Ele precisa do SQL rodado e das duas contas de teste no `.env.local` (`documentacao/Supabase_passo_a_passo.md`, parte 2).
+**TEST-007 com o Supabase de verdade (09/10).** Depois de o Pablo configurar o Supabase e a Vercel, o `npm run conferir:configuracao` deu "tudo certo" e o `npm run testar:contas` rodou duas vezes:
+
+| Rodada | Resultado | O que aconteceu |
+|---|---|---|
+| Pablo, 09/10 | 51 de 52 | "A aba Por classe tem a escolha da classe" falhou por erro do teste: ele procurava os botões de classe depois de já ter ido para a última aba. Todo o resto passou, inclusive a passagem do convidado para a conta B (que só dá para testar enquanto a conta é nova). |
+| Claude, 09/10 | 51 de 51 | Com o teste corrigido e duas conferências novas: trocar a classe no ranking "Por classe" e fechar a aba sem sair liberando a conta na hora. A passagem do convidado foi pulada (a conta B já tem save). |
+
+Também apareceu e foi arrumado: na tela Senha nova sem um link válido, a mensagem era "Algo deu errado (Auth session missing!)". Agora diz para abrir o link do e-mail ou pedir outro em "Esqueci minha senha" (com teste). E o "token vencido" (jwt expired) era tratado como link expirado; agora pede para entrar de novo.
+
+O que o TEST-007 conferiu: ranking sem login (6 abas), dois navegadores na mesma conta ("Conta em uso"), duas abas do mesmo navegador, save no banco ao começar e terminar a partida, histórico e destaque no ranking, save antigo recusado (pelo banco e pelo jogo, que carrega o mais novo com aviso), conta A tentando ler, criar, alterar e apagar coisas da B (tudo barrado), queda de internet (nada trava; tudo sobe quando volta), Sair e fechar a aba liberando a conta na hora, convidado virando conta, link expirado, senha nova sem link, Supabase fora do ar (o convidado continua) e nenhum erro no console.
+
+**Ainda falta:** publicar a Fase 2 na Vercel (precisa do ok do Pablo para o push do ramo `fase-2`) e o teste à mão (CT-01 a CT-17).
 
 ## 3. Testes à mão
 

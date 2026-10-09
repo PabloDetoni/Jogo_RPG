@@ -210,6 +210,20 @@ describe('save no banco durante o jogo (RF10, RNF06)', () => {
   })
 })
 
+describe('senha nova (RF06)', () => {
+  it('sem o link do e-mail (ninguém logado): explica onde pedir outro link', async () => {
+    const t = montar({ servico: { trocarSenha: vi.fn(async () => ({ ok: false, codigo: 'semSessao', mensagem: 'x' })) } })
+    expect(await t.fluxo.trocarSenha('senhanova123')).toMatchObject({ ok: false, mensagem: expect.stringContaining('Esqueci minha senha') })
+  })
+
+  it('com o link: troca, sai e volta ao Login com "Senha trocada!"', async () => {
+    const t = montar({ servico: { trocarSenha: vi.fn(async () => ({ ok: true })) } })
+    expect(await t.fluxo.trocarSenha('senhanova123')).toEqual({ ok: true })
+    expect(t.servico.sairDoSupabase).toHaveBeenCalled()
+    expect(t.estado()).toMatchObject({ tela: 'login', mensagemDoAcesso: { tipo: 'bom' } })
+  })
+})
+
 describe('sessão e saída (RF05, RF08)', () => {
   it('o sinal da sessão perdida (outra sessão entrou depois que esta expirou): sai e avisa', async () => {
     const t = montar()

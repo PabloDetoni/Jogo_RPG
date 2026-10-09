@@ -13,6 +13,7 @@ const mensagens = {
   linkEnviado: 'Se existir uma conta com este e-mail, mandamos um link para criar uma senha nova. Veja também o spam.',
   senhaTrocada: 'Senha trocada! Agora entre com a senha nova.',
   confirmacaoReenviada: 'Mandamos outro e-mail de confirmação. Veja também o spam.',
+  senhaSemLink: 'Para trocar a senha, abra o link que mandamos por e-mail. Se ele expirou ou já foi usado, peça outro em "Esqueci minha senha".',
 }
 
 // O caminho das contas (Fase 2), em cima do serviço (src/conta/servico.js): cadastro, entrada, sessão única, save no
@@ -279,7 +280,7 @@ export function criarFluxoDaConta({
         return { ok: false, codigo: 'campo', mensagem: `A senha precisa ter pelo menos ${tamanhoMinimoDaSenha} caracteres.` }
       }
       const resposta = await servico.trocarSenha(senha)
-      if (!resposta.ok) return resposta
+      if (!resposta.ok) return resposta.codigo === 'semSessao' ? erro('senhaSemLink') : resposta
       await servico.sairDoSupabase()
       despachar({ tipo: 'mostrarNoLogin', mensagem: { texto: mensagens.senhaTrocada, tipo: 'bom' } })
       return { ok: true }

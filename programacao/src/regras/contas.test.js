@@ -35,6 +35,11 @@ describe('erros do Supabase em português (RNF09)', () => {
     expect(traduzirErro(new TypeError('Failed to fetch')).codigo).toBe('semConexao')
   })
 
+  it('sem ninguém logado ("Auth session missing!") ou token vencido: "entre de novo"', () => {
+    expect(traduzirErro({ name: 'AuthSessionMissingError', message: 'Auth session missing!' }).codigo).toBe('semSessao')
+    expect(traduzirErro({ message: 'JWT expired' }).codigo).toBe('semSessao')
+  })
+
   it('banco sem as tabelas do jogo (SQL não rodado): "contas indisponíveis", com o convidado', () => {
     const semSql = traduzirErro({ code: 'PGRST202', message: 'Could not find the function public.ranking(p_aba) in the schema cache' })
     expect(semSql).toMatchObject({ codigo: 'indisponivel', mensagem: expect.stringContaining('convidado') })

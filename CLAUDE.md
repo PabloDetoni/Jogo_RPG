@@ -125,6 +125,6 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
 5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, aprovada pelo Pablo em 08/10): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
 6. Mundo (zona segura, regiões, minimapa)
 7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino)
-8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ← em andamento (Fase 2): código, SQL e testes de unidade prontos; falta o Pablo rodar o SQL, configurar o Auth e as contas de teste, e os testes ao vivo (TEST-007)
+8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ← Fase 2 pronta em 09/10 (TEST-007 com o banco de verdade passando), esperando a prévia na Vercel e o teste do Pablo
 9. Ranking, conquistas e som (o ranking com as 6 abas e o histórico já estão na Fase 2)
 10. Arte

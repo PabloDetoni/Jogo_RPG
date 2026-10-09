@@ -54,12 +54,19 @@ export function traduzirErro(erro) {
   else if (codigo === 'user_already_exists' || codigo === 'email_exists' || texto.includes('already registered')) nosso = 'jaExiste'
   else if (codigo === 'weak_password' || texto.includes('password should be')) nosso = 'senhaFraca'
   else if (codigo === 'over_email_send_rate_limit' || codigo === 'over_request_rate_limit' || texto.includes('rate limit')) nosso = 'limiteDeEmail'
+  else if (
+    codigo === 'session_not_found' ||
+    codigo === 'refresh_token_not_found' ||
+    erro.name === 'AuthSessionMissingError' ||
+    texto.includes('auth session missing') ||
+    texto.includes('jwt expired')
+  )
+    nosso = 'semSessao'
   else if (codigo === 'otp_expired' || texto.includes('expired')) nosso = 'linkExpirado'
   else if (codigo === 'email_address_invalid' || (texto.includes('email address') && texto.includes('invalid'))) nosso = 'emailInvalido'
   else if (codigo === 'same_password' || texto.includes('different from the old')) nosso = 'mesmaSenha'
   // O banco recusou criar o perfil: o apelido acabou de ser usado por outra pessoa (o jogo confere antes)
   else if (codigo === 'unexpected_failure' || texto.includes('database error saving new user')) nosso = 'apelidoEmUso'
-  else if (codigo === 'session_not_found' || codigo === 'refresh_token_not_found' || texto.includes('jwt expired')) nosso = 'semSessao'
   // O banco ainda não tem as tabelas ou funções do jogo (o SQL não foi rodado): para o jogador, contas indisponíveis
   else if (['PGRST202', 'PGRST205', '42P01', '42883'].includes(codigo)) nosso = 'indisponivel'
   const final = nosso ?? 'desconhecido'
