@@ -600,3 +600,19 @@ describe('Salão da Glória: conquistas (Fase 4, TASK-103)', () => {
     expect(html).toContain('Conquistas')
   })
 })
+
+describe('minijogos do Planalto (Fase 4, TASK-080 e TASK-081)', () => {
+  it('cada um mostra o nome, a regra, que não conta como partida, e Começar', () => {
+    for (const [tela, texto] of [
+      ['fazenda', 'Fazenda: Colheita'],
+      ['mina', 'Mina: Quebrar pedras'],
+      ['lago', 'Lago: Pescaria'],
+    ]) {
+      const html = desenhar(tela, 'convidado').replace(/<!-- -->/g, '')
+      expect(html, tela).toContain(texto)
+      expect(html, tela).toContain('Não conta como partida')
+      expect(html, tela).toContain('Começar')
+      expect(html, tela).toContain('Voltar ao Mapa')
+    }
+  })
+})

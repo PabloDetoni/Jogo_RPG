@@ -20,6 +20,11 @@ const dados = {
   cogumelo: { nome: 'Cogumelo', tipo: 'recurso', raridade: 'comum', peso: 1, preco: 3, cor: 0xd9604c, descricao: 'Cresce na sombra das árvores. Usado em poções.' },
   ervaMedicinal: { nome: 'Erva medicinal', tipo: 'recurso', raridade: 'comum', peso: 1, preco: 4, cor: 0x8fe36b, descricao: 'Folhas que ajudam a curar ferimentos.' },
   madeira: { nome: 'Madeira', tipo: 'recurso', raridade: 'comum', peso: 3, preco: 2, cor: 0xa0703f, descricao: 'Galhos firmes, bons para a Forja.' },
+  // Recursos do Planalto (minijogos da Fazenda, da Mina e do Lago, Fase 4)
+  trigo: { nome: 'Trigo', tipo: 'recurso', raridade: 'comum', peso: 1, preco: 3, cor: 0xe8c86a, descricao: 'Colhido na Fazenda do Planalto.' },
+  peixe: { nome: 'Peixe', tipo: 'recurso', raridade: 'comum', peso: 1, preco: 6, cor: 0x7fb3d9, descricao: 'Pescado no Lago do Planalto.' },
+  cristal: { nome: 'Cristal', tipo: 'material', raridade: 'raro', peso: 1, preco: 40, cor: 0xb8f0ff, descricao: 'Pedra brilhante achada na Mina.' },
+  perolaDoLago: { nome: 'Pérola do lago', tipo: 'material', raridade: 'raro', peso: 1, preco: 50, cor: 0xf5f0e6, descricao: 'Rara: às vezes vem junto com o peixe.' },
 
   // ---------- Partes de monstros (drops) e materiais ----------
   peleDeLobo: { nome: 'Pele de lobo', tipo: 'material', raridade: 'comum', peso: 2, preco: 8, cor: 0x9a8f86, descricao: 'Pele grossa de lobo da Floresta.' },
@@ -100,7 +105,7 @@ const segundos = (ms) => `${Math.round(ms / 1000)} s`
 // O que o item faz, numa linha, para a Mochila, o Mercado e a Forja (RF20). Sai dos campos do item.
 export function funcaoDoItem(item) {
   if (!item) return ''
-  if (item.tipo === 'recurso') return 'Recurso da Floresta: vende no Mercado e entra em receitas.'
+  if (item.tipo === 'recurso') return 'Recurso: vende no Mercado e entra em receitas e trocas.'
   if (item.tipo === 'material') return 'Material: entra nas receitas da Forja e nas trocas do Mercado.'
   const efeito = item.efeito
   if (efeito?.tipo === 'vida') return `Recupera ${porcento(efeito.fracao)} da vida. Não levanta quem desmaiou. Na partida: Tab, depois E (Líder) ou R (aliado).`

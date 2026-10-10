@@ -1342,3 +1342,97 @@ body {
   height: 100%;
   background: var(--texto);
 }
+
+/* Minijogos do Planalto (TASK-080 e TASK-081) */
+.minijogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6em;
+  max-width: 60cqw;
+}
+
+.minijogo h2,
+.minijogo p {
+  margin: 0;
+}
+
+.minijogo-campo {
+  position: relative;
+  width: 44cqw;
+  height: 26cqw;
+  border: 2px solid var(--borda);
+  background: #4f8a3f;
+}
+
+.minijogo-fazenda {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8cqw;
+  padding: 0.8cqw;
+  background: #7a5a3a;
+}
+
+.canteiro {
+  border: 2px solid #3d2a18;
+  cursor: pointer;
+}
+
+.canteiro-crescendo {
+  background: #6fae4f;
+}
+
+.canteiro-madura {
+  background: #ffd23f;
+  box-shadow: 0 0 0.8cqw #fff3a0;
+}
+
+.canteiro-murcha {
+  background: #8a6d4a;
+}
+
+.minijogo-mina {
+  background: #4a4a52;
+}
+
+.pedra-da-mina {
+  position: absolute;
+  width: 5cqw;
+  height: 5cqw;
+  transform: translate(-50%, -50%);
+  font: inherit;
+  font-weight: bold;
+  color: #fff;
+  background: #8a8f99;
+  border: 3px solid #2a2a30;
+  border-radius: 30%;
+  cursor: pointer;
+}
+
+.minijogo-lago {
+  display: grid;
+  place-items: center;
+  background: #2f6f9f;
+}
+
+.boia {
+  width: 4.5cqw;
+  height: 4.5cqw;
+  font: inherit;
+  font-weight: bold;
+  color: #fff;
+  background: #ff4d4d;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.boia-fisgando {
+  transform: translateY(0.8cqw) scale(0.8);
+  background: #c21d1d;
+}
+
+.boia-assustado {
+  opacity: 0.6;
+}

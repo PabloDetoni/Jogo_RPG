@@ -57,6 +57,19 @@ export const mercado = { fracaoDaVenda: 0.5, partidasPorRotacao: 3, rotativasAVe
 // até um teto (regras/equipamento.js). Provisório.
 export const equipamentoNaPartida = { reducaoPorPontoDeDefesa: 0.02, reducaoMaximaPelaDefesa: 0.5, reducaoDeRecargaMaxima: 0.3 }
 
+// MINIJOGOS DO PLANALTO (Fase 4, TASK-080 e TASK-081; RF54). Provisório até a TASK-016. Uma rodada dura "segundos";
+// cada ponto dá 1 do recurso do lugar e "xpPorPonto" de XP (dividido entre todos os permanentes, RF50); "chanceDoRaro"
+// é a chance de cada ponto trazer também o item raro. "pontosNoMaximo" barra números absurdos numa rodada.
+// Tempos em ms: Fazenda (a planta cresce, fica madura um tempo e murcha), Mina (cliques por pedra) e Lago (espera da
+// boia e a janela para fisgar).
+export const minijogos = {
+  segundos: 30,
+  pontosNoMaximo: 60,
+  fazenda: { xpPorPonto: 4, chanceDoRaro: 0.25, canteiros: 9, msCrescendo: [1500, 5000], msMadura: 1600, msMurcha: 900 },
+  mina: { xpPorPonto: 5, chanceDoRaro: 0.15, cliquesPorPedra: 3 },
+  lago: { xpPorPonto: 7, chanceDoRaro: 0.1, msEsperando: [1200, 3800], msFisgando: 900, msAssustado: 1500 },
+}
+
 // HABILIDADES DA ÁRVORE (Fase 4, TASK-077): cada nível (1 a 5) custa "pontosPorNivel" pontos de habilidade. A cada nível
 // acima do 1, os números da ativa sobem nesta fração do valor do nível 1 (dano +15% por nível...) e a recarga cai
 // "recargaPorNivel" (regras/habilidadesDaArvore.js). Provisório até as habilidades do grupo (TASK-010).
