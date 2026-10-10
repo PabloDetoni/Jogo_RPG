@@ -3,8 +3,12 @@ import { motivosDoFim, resultados } from '../dados/resultados.js'
 import { montarFimDaPartida } from '../regras/fimDaPartida.js'
 import { aplicarFimNoProgresso } from '../regras/ganhosDaPartida.js'
 import { contratarPermanente, contratarTemporario } from '../regras/guilda.js'
+import { aplicarConquistas, avisoDaConquista } from '../regras/conquistas.js'
+import { aplicarNoReino } from '../regras/reino.js'
+import { capacidadeDaPartida } from '../regras/grupoDaPartida.js'
+import { ajustarLevar, deixarNoReino, levarNaPartida } from '../regras/mochila.js'
 import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
-import { contratarTodasAsClasses, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
@@ -30,7 +34,7 @@ export function criarEstadoInicial(preferencias) {
     progresso: progressoInicial(),
 
     // Partida
-    escolhasDaPartida: { bioma: null, pontoPartida: null },
+    escolhasDaPartida: { bioma: null, pontoPartida: null, levar: {} }, // levar: { id: quantidade } (Fase 4, TASK-073)
     partidaAtual: null, // { bioma, pontoPartida, lider, iniciadaEm }, de "Começar partida" até o resultado
     controleDaPartida: controleInicialDaPartida(),
     ultimoResultado: null, // contas do fim da partida, mostradas no Resumo (ver encerrarPartida)
@@ -124,6 +128,10 @@ function encerrarPartida(estado, fim = {}) {
       monstros: fim.monstros,
       descobertas: fim.descobertas ?? null,
       itens: fim.itens ?? [],
+      levados: partidaAtual.levar ?? {},
+      eventos: fim.eventos ?? null,
+      bossDerrotado: (fim.bonusDeBoss ?? 0) > 0,
+      grandeVitoria: contas.resultado === 'grandeVitoria',
     })
     novo = { ...novo, progresso: aplicado.progresso }
     personagens = aplicado.personagens
@@ -141,7 +149,8 @@ function encerrarPartida(estado, fim = {}) {
     pontuacaoBase: contas.pontuacaoBase,
     pontuacaoFinal: contas.pontuacaoFinal,
     monstros: fim.monstros ?? 0,
-    itens: (fim.itens ?? []).map((item) => ({ id: item.id, quantidade: item.quantidade })), // a mochila da partida (TASK-064)
+    // Os itens coletados na partida (TASK-064), sem os que foram levados da Mochila do Reino (Fase 4)
+    itens: (fim.coletados ?? fim.itens ?? []).map((item) => ({ id: item.id, quantidade: item.quantidade })),
     segundosTotais: fim.segundosTotais ?? 0,
     segundosAtivos: fim.segundosAtivos ?? 0,
     perdidos: contas.perdidos,
@@ -178,11 +187,26 @@ function ferramentaDeDev(estado, acao) {
     devContratarTodas: (progresso) => contratarTodasAsClasses(progresso),
     devMudarNivel: (progresso) => mudarNivel(progresso, acao.classe, acao.quantos),
     devQuaseSubir: (progresso) => quaseSubir(progresso, acao.classe),
+    devItensDeTeste: (progresso) => itensDeTeste(progresso),
   }
   return pedirSalvamento({ ...estado, progresso: ferramentas[acao.tipo](estado.progresso) })
 }
 
+// Conquistas (Fase 4, TASK-103): depois de cada ação, fora da partida, as que acabaram de ser cumpridas ficam marcadas,
+// a recompensa entra uma vez só e aparece um aviso. Durante a partida o progresso não muda (RF12): elas vêm no fim.
 export function atualizarEstado(estado, acao) {
+  return conferirConquistas(atualizarSemConquistas(estado, acao))
+}
+
+function conferirConquistas(estado) {
+  if (estado.partidaAtual || estado.tipoJogador === 'nenhum' || !estado.progresso) return estado
+  const { progresso, novas } = aplicarConquistas(estado.progresso)
+  if (novas.length === 0) return estado
+  const comAvisos = novas.reduce((atual, conquista) => comAviso(atual, avisoDaConquista(conquista)), { ...estado, progresso })
+  return pedirSalvamento(comAvisos)
+}
+
+function atualizarSemConquistas(estado, acao) {
   switch (acao.tipo) {
     case 'irPara':
       return navegar(estado, acao.destino)
@@ -302,11 +326,24 @@ export function atualizarEstado(estado, acao) {
       if (!estado.progresso.personagens.some((p) => p.classe === acao.classe)) return estado
       return comProgresso(estado, { lider: acao.classe })
 
-    // "Começar partida" salva o progresso (RF34), já marcando a partida em andamento.
+    // Preparação (TASK-073): o que vai da Mochila do Reino para a da partida (quantidade negativa = deixar no Reino).
+    // Só o que se usa na partida, até o que existe e até caber na capacidade (a Força do grupo); senão, nada muda e a
+    // tela mostra o motivo, que vem da mesma regra (regras/mochila.js).
+    case 'levarNaPartida': {
+      const { progresso, escolhasDaPartida } = estado
+      const levar = escolhasDaPartida.levar ?? {}
+      if (acao.quantidade < 0) return { ...estado, escolhasDaPartida: { ...escolhasDaPartida, levar: deixarNoReino(levar, acao.id, -acao.quantidade) } }
+      const resultado = levarNaPartida(levar, progresso.mochila, acao.id, acao.quantidade, capacidadeDaPartida(progresso, progresso.lider))
+      return resultado.ok ? { ...estado, escolhasDaPartida: { ...escolhasDaPartida, levar: resultado.levar } } : estado
+    }
+
+    // "Começar partida" salva o progresso (RF34), já marcando a partida em andamento. O que vai na mochila da partida é
+    // conferido de novo com a Mochila do Reino de agora (a escolha fica guardada entre partidas).
     case 'comecarPartida': {
-      const { lider, personagens } = estado.progresso
+      const { lider, personagens, mochila } = estado.progresso
       if (!personagens.some((p) => p.classe === lider)) return estado
-      const partidaAtual = { ...estado.escolhasDaPartida, lider, iniciadaEm: acao.agora }
+      const levar = ajustarLevar(estado.escolhasDaPartida.levar, mochila, capacidadeDaPartida(estado.progresso, lider))
+      const partidaAtual = { ...estado.escolhasDaPartida, levar, lider, iniciadaEm: acao.agora }
       return navegar(pedirEnvioAoBanco(pedirSalvamento({ ...estado, partidaAtual, controleDaPartida: controleInicialDaPartida() })), 'partida')
     }
 
@@ -343,9 +380,19 @@ export function atualizarEstado(estado, acao) {
       return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
     }
 
+    // Mochila, Mercado, Forja, Árvores e Guilda (Fase 4): a operação pelo nome (regras/reino.js). Se a regra não
+    // deixar (sem ouro, sem o item...), nada muda; a tela mostra o motivo, que vem da mesma regra. Durante a partida,
+    // nada muda (RF12). Cada operação é um momento de salvamento no navegador.
+    case 'noReino': {
+      if (estado.partidaAtual) return estado
+      const resultado = aplicarNoReino(estado.progresso, acao.operacao, acao.argumentos)
+      return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
+    }
+
     case 'devContratarTodas':
     case 'devMudarNivel':
     case 'devQuaseSubir':
+    case 'devItensDeTeste':
       return ferramentaDeDev(estado, acao)
 
     // Música, som e mudo ligam/desligam (o mudo também pela tecla M); o tema alterna entre claro e escuro.

@@ -3,6 +3,7 @@
 // e confere o que um teste do Vitest não alcança: teclado, mouse, física, desenho e telas de verdade.
 // Os prints ficam em testes-do-navegador/ (fora do git). Não instala nada: precisa do Edge ou do Chrome
 // no computador (ou do caminho dele na variável NAVEGADOR). No fim, desliga o Vite e o navegador.
+import { conquistas } from '../src/dados/conquistas.js'
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer as criarServidorDeRede } from 'node:net'
@@ -1210,9 +1211,13 @@ try {
     { resumo: resumoDaGrande, xp: await textoDe('.xp-do-resumo') },
   )
   const depoisDaGrande = await salvo()
+  // Conquistas concluídas nesta partida (Fase 4) também dão ouro: a primeira Grande Vitória conclui "Volta triunfal"
+  const conquistasNovas = conquistas.filter((conquista) => depoisDaGrande.conquistas?.[conquista.id] && !antesDaGrande.conquistas?.[conquista.id])
+  const ouroDasConquistas = conquistasNovas.reduce((soma, conquista) => soma + (conquista.recompensa?.ouro ?? 0), 0)
+  conferir('a primeira Grande Vitória conclui a conquista "Volta triunfal" (Fase 4)', conquistasNovas.some((conquista) => conquista.id === 'grandeVitoria'), conquistasNovas.map((conquista) => conquista.id))
   conferir(
-    'o save recebeu o ouro, o XP, o monstro e mais uma partida',
-    depoisDaGrande.ouro === antesDaGrande.ouro + 1333 &&
+    'o save recebeu o ouro (e o das conquistas novas), o XP, o monstro e mais uma partida',
+    depoisDaGrande.ouro === antesDaGrande.ouro + 1333 + ouroDasConquistas &&
       xpTotal(depoisDaGrande.personagens[0]) === xpTotal(antesDaGrande.personagens[0]) + 20 &&
       depoisDaGrande.estatisticas.monstrosDerrotados === antesDaGrande.estatisticas.monstrosDerrotados + 1 &&
       depoisDaGrande.estatisticas.partidasJogadas === antesDaGrande.estatisticas.partidasJogadas + 1,

@@ -970,3 +970,469 @@ body {
   height: 100%;
   background: linear-gradient(#ff5a4a, #b8241c);
 }
+
+/* ---------- Reino com dados (Fase 4) ---------- */
+
+/* Lista que rola à esquerda e o detalhe do escolhido à direita (Mochila, Mercado, Forja) */
+.lista-com-detalhe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  width: 70cqw;
+  text-align: left;
+}
+
+.lista-com-detalhe-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1em;
+}
+
+.lista-com-detalhe-corpo {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 1em;
+  height: 21cqw;
+}
+
+.lista-com-detalhe-itens {
+  margin: 0;
+  padding: 0.2em;
+  list-style: none;
+  overflow-y: auto;
+  border: 2px solid var(--borda);
+  background: var(--botao);
+}
+
+.lista-com-detalhe-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  padding: 0.25em 0.5em;
+  background: transparent;
+  color: var(--texto);
+  border: none;
+  cursor: pointer;
+}
+
+.lista-com-detalhe-item:hover {
+  outline: 1px solid var(--borda);
+}
+
+.lista-com-detalhe-item[aria-pressed='true'] {
+  background: var(--texto);
+  color: var(--tela);
+}
+
+.lista-com-detalhe-item-nota {
+  opacity: 0.6;
+}
+
+.lista-com-detalhe-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista-com-detalhe-direita {
+  flex: none;
+}
+
+.lista-com-detalhe-vazio {
+  padding: 0.5em;
+  font-size: 1.15cqw;
+}
+
+.lista-com-detalhe-detalhe {
+  overflow-y: auto;
+  padding: 0.2em 0.4em;
+}
+
+.detalhe-do-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+
+.detalhe-do-item h3 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.detalhe-do-item p {
+  margin: 0;
+}
+
+.detalhe-do-item-funcao {
+  font-weight: bold;
+}
+
+.botoes-em-linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.confirmacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  padding: 0.4em;
+  border: 2px dashed var(--borda);
+}
+
+.confirmacao p {
+  margin: 0;
+}
+
+.mensagem-do-reino {
+  margin: 0;
+  font-weight: bold;
+}
+
+.mensagem-do-reino-erro {
+  color: #8b1a1a;
+}
+
+.moldura[data-tema='escuro'] .mensagem-do-reino-erro {
+  color: #ff9e9e;
+}
+
+/* Mochila da partida na Preparação (TASK-073) */
+.mochila-da-preparacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  width: 40cqw;
+  max-height: 30cqw;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.mochila-da-preparacao h2 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.mochila-da-preparacao p {
+  margin: 0;
+}
+
+.quantidade-que-vai {
+  min-width: 2em;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Mochila da partida (Tab, TASK-047): lista curta que rola, dentro da janela leve */
+.mochila-na-partida-itens {
+  max-height: 12cqw;
+}
+
+/* Janela ao lado (a mochila da partida): no lado direito, embaixo do HUD, para não cobrir o Líder no meio da tela */
+.janela-fundo-ao-lado {
+  place-items: start end;
+  padding: 7.5cqw 1.2cqw 0 0;
+}
+
+.janela-fundo-ao-lado .janela {
+  min-width: 24cqw;
+  max-width: 27cqw;
+}
+
+/* Listas curtas dentro do detalhe (trocas da Mercado, receitas da Forja); o que falta fica em destaque */
+.lista-simples {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.lista-simples .falta {
+  color: #8b1a1a;
+  font-weight: bold;
+}
+
+.moldura[data-tema='escuro'] .lista-simples .falta {
+  color: #ff9e9e;
+}
+
+/* Árvores de Habilidades (Fase 4): atributos e habilidades de cada personagem */
+.ficha-da-arvore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  min-width: 60cqw;
+  font-size: 0.8em;
+}
+
+.ficha-da-arvore-topo {
+  align-items: center;
+}
+
+.atributos-da-arvore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  min-width: 30cqw;
+}
+
+.atributos-da-arvore p {
+  margin: 0;
+}
+
+.atributos-da-arvore .lista-de-contratos .botao {
+  padding: 0 0.6em;
+}
+
+/* Conteúdo preso pelo topo do ponto (e não centralizado nele) */
+.area-no-topo {
+  transform: translate(-50%, 0);
+}
+
+/* Nas Árvores, o pentágono é um pouco menor (a ficha tem a lista dos atributos ao lado) */
+.ficha-da-arvore .pentagono {
+  width: 17cqw;
+  height: 17cqw;
+}
+
+.ficha-da-arvore .lista-de-contratos {
+  gap: 0.15em;
+}
+
+/* Árvore de habilidades (TASK-077): a raiz em cima, os três ramos embaixo, e o detalhe ao lado */
+.arvore-de-habilidades {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.arvore-de-habilidades-topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.5em;
+}
+
+.arvore-de-habilidades-corpo {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 1.2em;
+}
+
+.grade-da-arvore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.grade-da-arvore-ramos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6em;
+  width: 100%;
+}
+
+.grade-da-arvore-ramo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.no-da-arvore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 9.5em;
+  padding: 0.25em 0.4em;
+  font: inherit;
+  background: var(--botao);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+  cursor: pointer;
+}
+
+.no-da-arvore[aria-pressed='true'] {
+  outline: 3px solid var(--texto);
+  outline-offset: 1px;
+}
+
+.no-da-arvore-nivel {
+  font-size: 0.8em;
+}
+
+.no-aprendida,
+.no-maxima {
+  background: var(--texto);
+  color: var(--tela);
+}
+
+.no-liberada {
+  border-style: double;
+  border-width: 4px;
+}
+
+.no-bloqueada {
+  opacity: 0.65;
+}
+
+.no-foraDoBeta {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.detalhe-da-habilidade {
+  max-height: 22cqw;
+  overflow-y: auto;
+}
+
+.arvore-de-habilidades {
+  text-align: left;
+}
+
+/* Conquistas (TASK-103): uma lista que rola, com a barra de progresso de cada uma */
+.conquistas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  width: 62cqw;
+  text-align: left;
+}
+
+.conquistas p {
+  margin: 0;
+}
+
+.lista-de-conquistas {
+  margin: 0;
+  padding: 0.3em;
+  list-style: none;
+  max-height: 24cqw;
+  overflow-y: auto;
+  border: 2px solid var(--borda);
+  background: var(--botao);
+}
+
+.lista-de-conquistas li {
+  display: grid;
+  grid-template-columns: 11em 1fr 9em 8em;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.25em 0.3em;
+}
+
+.conquista-nome {
+  font-weight: bold;
+}
+
+.conquista-feita {
+  background: rgb(80 180 90 / 0.25);
+}
+
+.conquista-barra {
+  height: 0.6em;
+  border: 1px solid var(--borda);
+  background: var(--tela);
+}
+
+.conquista-barra span {
+  display: block;
+  height: 100%;
+  background: var(--texto);
+}
+
+/* Minijogos do Planalto (TASK-080 e TASK-081) */
+.minijogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6em;
+  max-width: 60cqw;
+}
+
+.minijogo h2,
+.minijogo p {
+  margin: 0;
+}
+
+.minijogo-campo {
+  position: relative;
+  width: 44cqw;
+  height: 26cqw;
+  border: 2px solid var(--borda);
+  background: #4f8a3f;
+}
+
+.minijogo-fazenda {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8cqw;
+  padding: 0.8cqw;
+  background: #7a5a3a;
+}
+
+.canteiro {
+  border: 2px solid #3d2a18;
+  cursor: pointer;
+}
+
+.canteiro-crescendo {
+  background: #6fae4f;
+}
+
+.canteiro-madura {
+  background: #ffd23f;
+  box-shadow: 0 0 0.8cqw #fff3a0;
+}
+
+.canteiro-murcha {
+  background: #8a6d4a;
+}
+
+.minijogo-mina {
+  background: #4a4a52;
+}
+
+.pedra-da-mina {
+  position: absolute;
+  width: 5cqw;
+  height: 5cqw;
+  transform: translate(-50%, -50%);
+  font: inherit;
+  font-weight: bold;
+  color: #fff;
+  background: #8a8f99;
+  border: 3px solid #2a2a30;
+  border-radius: 30%;
+  cursor: pointer;
+}
+
+.minijogo-lago {
+  display: grid;
+  place-items: center;
+  background: #2f6f9f;
+}
+
+.boia {
+  width: 4.5cqw;
+  height: 4.5cqw;
+  font: inherit;
+  font-weight: bold;
+  color: #fff;
+  background: #ff4d4d;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.boia-fisgando {
+  transform: translateY(0.8cqw) scale(0.8);
+  background: #c21d1d;
+}
+
+.boia-assustado {
+  opacity: 0.6;
+}

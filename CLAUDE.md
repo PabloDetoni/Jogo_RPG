@@ -5,7 +5,7 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Pastas
 Código em `programacao/` (rodar npm lá); documentação em `documentacao/` (fonte de verdade). O caminho até a entrega e a situação de cada item da auditoria (TASK/DOC/TEST) ficam no `PLANO.md` da raiz. Os roteiros de teste manual (passo a passo para o Pablo) e o registro de todos os testes rodados (o que passou e o que falhou) ficam em `testes/` na raiz.
-Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:floresta` (roteiro da Floresta, Fase 3), `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`) e `npm run testar:contas:publicado` (o mesmo roteiro no endereço principal, sem a barra de teste, conferindo também que a Floresta abre lá).
+Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:floresta` (roteiro da Floresta, Fase 3), `npm run testar:reino` (roteiro do Reino, Fase 4, com o TEST-006), `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`) e `npm run testar:contas:publicado` (o mesmo roteiro no endereço principal, sem a barra de teste, conferindo também que a Floresta abre lá).
 
 ## Stack e arquitetura
 - React na interface (obrigatório) + Supabase (contas e dados). A partida é desenhada com Phaser 4 (canvas) em `src/jogo/` (cenas, entidades, ataques); HUD, menus, janelas e a barra de teste continuam em React.
@@ -24,7 +24,15 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:fl
   - em combate, retorno com Q, fuga com F, tempo ativo, XP de cada abate e custo da fuga vêm de `regras/andamentoDaPartida.js`; o fim (resultado, taxa com perdidos e caídos, pontuação) de `regras/fimDaPartida.js` (`montarFimDaPartida`), e o que vai para o save de `regras/ganhosDaPartida.js`; o crítico, de `regras/combate.js`.
 - Na partida, todo tempo usa o relógio da cena (`cena.agora`), que para na pausa e com a aba escondida; nunca o `time.now` do Phaser, que continua correndo na pausa.
 - Valores da documentação ficam em `src/dados/regras.js` e `taxas.js`; os provisórios, só em `src/dados/balanceamento.js`. Os testes de limite em `balanceamento.test.js` barram números absurdos.
-- Habilidades de teste (uma por classe, tecla 1, até a TASK-010) ficam em `dados/habilidades.js` e o efeito de cada uma em `jogo/habilidades/`.
+- Habilidades (Fase 4, TASK-077): a árvore de cada classe fica em `dados/arvores.js` (PROVISÓRIO até a TASK-010: 10 lugares, 4 no beta; a raiz é a antiga habilidade de teste, gratuita e já no nível 1 na tecla 1). As teclas 1 a 3 de cada personagem, os números de cada nível, aprender/evoluir e as passivas vêm de `regras/habilidadesDaArvore.js`; o efeito de cada ativa, pelo campo "efeito", de `jogo/habilidades/` (cada efeito recebe a habilidade com os números do nível). Os aliados usam só a raiz da classe (`cena.usarHabilidadeDaRaiz`).
+- Reino com dados (Fase 4):
+  - catálogo em `dados/itens.js` (a "função" de cada item sai de `funcaoDoItem`), loja e receitas da Forja e equipamento fixo dos temporários em `dados/forja.js`, ofertas e trocas do Mercado em `dados/mercado.js` (tudo PROVISÓRIO até a TASK-014); números em `balanceamento.js` (`mercado`, `equipamentoNaPartida`, `evolucaoDasHabilidades`);
+  - toda mudança de progresso nas telas do Reino é uma operação pura com nome em `regras/reino.js` (`operacoesDoReino`: Mochila, Mercado, Forja e Árvores), aplicada pela ação `noReino` do estado; a tela usa `telas/reino/useNoReino.js`, que roda a mesma regra antes para mostrar o motivo quando não dá. Listas com detalhe: `componentes/ListaComDetalhe.jsx`;
+  - mochila da partida: o que vai é escolhido na Preparação (`escolhasDaPartida.levar`, só consumíveis, até a capacidade) e só sai da Mochila do Reino no fim da partida (`ganhosDaPartida`, `levados`); na partida, Tab abre a janela `mochilaDaPartida` (desenhada pela Partida, não pausa), E usa no Líder e R no aliado mais perto da mira (`regras/itensNaPartida.js`);
+  - equipamento: bônus, defesa e redução de recarga em `regras/equipamento.js`, somados ao montar o grupo da partida;
+  - missões: quadro em `dados/missoes.js`, regras em `regras/guilda.js` (etapa 4) e `regras/missoes.js` (quadro, telas e partida: a partida conta abates, coletas e áreas e só entra no save no fim);
+  - conquistas: lista em `dados/conquistas.js` e regras em `regras/conquistas.js`; o estado confere depois de cada ação fora da partida (`conferirConquistas`).
+- Som (Fase 4, TASK-105): um gerenciador só, `audio/gerenciador.js` (começa no primeiro clique; Música, Som e mudo pelas Configurações). Música por tela (`regras/som.js`, `musicaDaTela`) e efeitos chamados pela cena (`tocarEfeito`). Os arquivos entram sozinhos de `src/assets/audio/` com os nomes de `dados/sons.js` (`audio/arquivos.js`); sem arquivo, bipe provisório.
 - Mundo (Fase 3): a partida acontece num mapa montado por `regras/mapaDaPartida.js` (`mapaDoBioma`): a Floresta (layout PROVISÓRIO em `dados/mundo/floresta.js`: regiões, áreas, população de mobs, recursos e lugar do Boss) ou a arena de teste da Fase 1, que só existe no `npm run dev` (botão "Arena de teste" no Mapa; o `testar:navegador` usa ela). A cena continua sendo `jogo/cenas/CenaArena.js` (chave 'arena'):
   - na Floresta, a câmera segue o Líder e mostra o mundo entre o HUD e a faixa de baixo; a mira usa `cameras.main.getWorldPoint` a cada quadro;
   - a mata fechada em volta das regiões, as árvores e as pedras vêm de `regras/mundo.js` (paredes, obstáculos com passagem garantida, região e área de um ponto, borda da taxa e a névoa do minimapa); os obstáculos perto de um ponto vêm da busca rápida `regras/vizinhanca.js` (`cena.paredesPerto`, `paredesEntre`; os tiros usam `pedrasPerto`, sem o boneco);
@@ -84,34 +92,34 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:fl
 9. Junto com esse relatório, mandar um segundo, para o Pablo repassar ao grupo (Uener e Lucas): o que já aconteceu e o que está acontecendo, bem explicado, em linguagem simples, sem depender de ter lido a conversa nem o código.
 
 ## Modo contínuo (pedido do Pablo em 08/10/2026; vale nas próximas sessões)
-O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte. Se a sessão acabar no meio, o Pablo manda só "Continue o modo contínuo de onde parou": ler a seção **"Onde parei"** no topo do `PLANO.md` e seguir.
+O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte nem o teste do Pablo entre as fases (ritmo novo, pedido em 10/10/2026). Se a sessão acabar no meio, o Pablo manda só "Continue o modo contínuo de onde parou": ler a seção **"Onde parei"** no topo do `PLANO.md` e seguir.
 
-1. **Ordem (a do PLANO.md):**
-   1. fim da Fase 1 (TASK-079, TASK-071, DOC-003);
-   2. Fase 2 (contas e ranking);
-   3. Fase 3 (mundo da Floresta);
-   4. Fase 4 (Reino com dados);
-   5. arte e som, quando houver material;
-   6. Fase 5 (polimento e testes);
-   7. Fase 6 (entrega).
+1. **Ordem (a do PLANO.md; Fases 1, 2 e 3 feitas e aprovadas):**
+   1. Fase 4 (Reino com dados), partes 4a a 4m do PLANO.md: catálogo; Mochila do Reino; mochila da partida na Preparação e na partida (Tab, E e R); Mercado; Forja; Árvores (atributos, habilidades do nível 1 ao 5, 3 ativas, pergaminho); missões da Guilda; conquistas; minijogos da Fazenda, da Mina e do Lago, se couberem antes do congelamento. **O Painel do Mestre fica de fora até o Pablo confirmar;**
+   2. arte e som: o sistema pronto para receber os arquivos da `Lista_de_Arte_e_Som.md` sem mexer no código; avisar o Pablo quando for a hora de gerar a arte; até chegar, os quadrados continuam;
+   3. Fase 5 (polimento e testes): TEST-008 (navegadores, telas, acessibilidade), TEST-009 (checklist da especificação do professor) e TEST-010 (regressão completa); os problemas conhecidos (o apelido reservado de conta nunca confirmada; a partida jogada sem internet que se perde se a aba fechar; textos cortados ou que cobrem a tela); prints de todas as telas em `documentacao/` como protótipos atualizados (TASK-121 a TASK-123); DOC-006, a revisão final da documentação (diagramas de caso de uso e de atividades atualizados, PNG e PlantUML; requisitos; histórias; Conceito; matriz de rastreabilidade com tarefa e teste; o que ficou "fora do beta" marcado);
+   4. Fase 6 (entrega): pacote final no GitHub (TASK-131) e o endereço principal com a versão final; **lembrar o Pablo de apagar as contas TesteA e TesteB do ranking, explicando como.**
 2. **Cada parte segue o protocolo:**
    1. plano curto escrito no PLANO.md;
    2. programar;
-   3. testes: `npm test`, lint, build e `npm run testar:navegador`, com conferências novas para o que for novo;
+   3. testes: `npm test`, lint, build, `npm run testar:navegador`, `npm run testar:floresta` e `npm run testar:reino`, com conferências novas para o que for novo;
    4. atualizar PLANO.md, CLAUDE.md, a documentação (com "Alterações do projeto"), o Balanceamento e a pasta `testes/`.
-3. **Sem esperar o ok do plano.** Parar e esperar o Pablo só quando:
-   - **uma fase terminar:** publicar no endereço principal seguindo o item 4, mandar os dois relatórios do protocolo, com o "Teste visual para o Pablo" no endereço principal, e esperar o teste dele. Se ele achar problema na fase publicada, o trabalho novo para e a correção vem primeiro;
-   - **precisar de algo que só ele faz** (criar o projeto no Supabase, passar chaves, configurar e-mail, publicar, gerar arte): dizer exatamente o que fazer, passo a passo;
-   - **precisar de uma decisão do grupo que mude regra do jogo;**
-   - **algo quebrar** e não der para resolver.
+3. **Sem esperar o ok do plano nem o teste do Pablo entre as fases (ritmo do Pablo em 10/10/2026):**
+   - **No fim de cada fase:** publicar seguindo o item 4, mandar os dois relatórios do protocolo (com o "Teste visual para o Pablo" no endereço principal) e **seguir direto para a próxima fase**.
+   - **O Pablo testa no site em paralelo.** Se ele mandar um problema: parar o que estiver fazendo, corrigir, publicar a correção (mesma regra do item 4) e depois continuar.
+   - **Parar e esperar o Pablo só quando:**
+     - precisar de algo que só ele faz (painel do Supabase ou da Vercel, arte, som): dizer exatamente o que fazer, passo a passo, e **adiantar o que não depender disso**;
+     - precisar de uma decisão do grupo que mude regra do jogo (também adiantando o resto);
+     - algo quebrar e não der para resolver.
 4. **Commits e publicação (regra do Pablo em 09/10/2026; troca a das prévias por ramo, do mesmo dia):**
    - O único endereço do jogo é `https://jogo-rpg-six.vercel.app`, e ele mostra sempre o `main`. A Vercel só publica o `main` (`programacao/vercel.json`, `git.deploymentEnabled`): nada de endereços de prévia por ramo.
    - Dá para trabalhar em ramos LOCAIS (`fase-4`...), saídos do `main`, com commits por parte (testes passando, mensagem clara terminando com a linha Co-Authored-By). Esses ramos não vão para o GitHub: o que o Pablo testa é sempre o endereço principal.
    - No fim de cada fase:
-     1. rodar todos os testes (`npm test`, lint, build, `testar:navegador` e `testar:floresta`);
+     1. rodar todos os testes (`npm test`, lint, build, `testar:navegador`, `testar:floresta` e `testar:reino`);
      2. com tudo passando, juntar no `main` e fazer o push;
      3. depois que a Vercel publicar, conferir o endereço principal: `npm run conferir:configuracao` (diz também se o último `main` já está no ar) e `npm run testar:contas:publicado`;
-     4. mandar os relatórios.
+     4. mandar os dois relatórios, com o "Teste visual para o Pablo";
+     5. seguir direto para a próxima fase.
    - **Nunca publicar no `main` uma fase com teste falhando.**
    - Se algo quebrar no site depois de publicar: voltar o `main` para a versão anterior na hora, com `git revert` (nunca apagar histórico), e avisar o Pablo.
 5. **"Onde parei":** antes de mudar de parte, atualizar no topo do PLANO.md a parte atual, o que falta e o próximo passo.
@@ -121,16 +129,16 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
    - todo conteúdo fica em arquivos de dados, para trocar sem mexer no código;
    - quando o conteúdo de verdade chegar, trocar e rodar todos os testes.
 7. **O que depende do Pablo, avisado na hora certa:**
-   - **Fase 2:** projeto no Supabase, URL e chave no `.env` e o teste do e-mail de confirmação (TASK-090). Se ainda não estiver pronto, passar o passo a passo, adiantar a Fase 3 e voltar depois.
-   - **Arte:** a lista de assets com tamanhos (TASK-110), cedo, para ele gerar no PixelLab em paralelo. Até chegar, quadrados e cinza.
-   - **Som:** a lista de músicas e efeitos (TASK-104). Até chegar, o sistema de áudio pronto, com o mudo funcionando.
+   - **Arte:** a lista de assets com tamanhos (TASK-110, `documentacao/Lista_de_Arte_e_Som.md`) e o sistema pronto para receber os arquivos sem mexer no código; avisar quando for a hora de ele gerar no PixelLab. Até chegar, quadrados e cinza.
+   - **Som:** a lista de músicas e efeitos (TASK-104). Até chegar, o sistema de áudio pronto, com o mudo funcionando, recebendo os arquivos sem mexer no código.
    - **Decisões do grupo** (hospedagem TASK-130, nome do jogo, cor do Guerreiro, tema padrão): perguntar na hora e usar um valor provisório até lá.
 8. **Regras que não mudam:**
    - Nada pode travar o jogo a ponto de alguém não conseguir jogar: personagem preso, tela que não abre, save estragado que trava. Testar esses casos em cada fase.
    - Tudo o que é de teste (barra de teste, painel DEV, Subir nível, +300 de ouro) existe só no `npm run dev`.
    - Cronograma apertado: não cortar nada sozinho. Propor cortes na ordem da seção 12 da "Auditoria e Backlog" e perguntar.
    - **Congelamento em 22/11:** depois disso, só correção, testes e documentação.
-   - Na Fase 5: gerar prints de todas as telas em `documentacao/`, como reserva para os protótipos atualizados (TASK-121 a TASK-123), já que o professor ainda não respondeu.
+   - Na Fase 5: gerar prints de todas as telas em `documentacao/`, como protótipos atualizados (TASK-121 a TASK-123).
+   - Conteúdo do grupo que ainda não chegou continua provisório, marcado e em arquivos de dados; quando o Pablo mandar o de verdade, trocar e rodar todos os testes.
    - A decisão mais recente vale. Se a documentação contrariar o pedido do Pablo, avisar e atualizar a documentação.
 
 ## Etapas
@@ -139,8 +147,8 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
 5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, aprovada pelo Pablo em 08/10): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
-6. Mundo (zona segura, regiões, minimapa) ✔ (Fase 3, publicada em 10/10 no endereço principal; esperando o teste do Pablo)
-7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino)
+6. Mundo (zona segura, regiões, minimapa) ✔ (Fase 3, publicada e aprovada pelo Pablo em 10/10)
+7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino) ✔ (Fase 4, partes 4a a 4m: catálogo, Mochila, mochila da partida, Mercado, Forja, Árvores, missões, conquistas, som e minijogos)
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ✔ (Fase 2, aprovada e publicada em 09/10 em `https://jogo-rpg-six.vercel.app`)
-9. Ranking, conquistas e som (o ranking com as 6 abas e o histórico já estão na Fase 2)
+9. Ranking, conquistas e som ✔ (ranking e histórico na Fase 2; conquistas e o sistema de som na Fase 4: falta só pôr os arquivos de som)
 10. Arte

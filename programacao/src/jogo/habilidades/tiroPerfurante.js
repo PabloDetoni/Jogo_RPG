@@ -6,16 +6,20 @@ import { particulas } from '../efeitos.js'
 
 const config = combateDeTeste.habilidades.arqueiro
 
-// Tiro perfurante (Arqueiro, provisória): muito rápido, com bem mais dano que a flecha. Atravessa os
-// inimigos (acerta cada um uma vez) e cruza o mapa; só para numa pedra ou na borda.
+// Tiro perfurante (Arqueiro): muito rápido, com bem mais dano que a flecha. Atravessa os inimigos (acerta cada um uma
+// vez) e cruza o mapa; só para numa pedra ou na borda. Também serve à Descarga elétrica e à Flecha certeira (esta,
+// com perfura: false, para no primeiro inimigo), com os números e a cor delas.
 export default class TiroPerfurante extends Projetil {
-  constructor(cena, dono, angulo) {
+  constructor(cena, dono, angulo, h = config) {
     const saida = dono.tamanho * 0.7
-    super(cena, dono.x + Math.cos(angulo) * saida, dono.y + Math.sin(angulo) * saida, angulo, config.velocidade, config.raio, 0xffffff)
+    super(cena, dono.x + Math.cos(angulo) * saida, dono.y + Math.sin(angulo) * saida, angulo, h.velocidade, h.raio, 0xffffff)
     this.dono = dono
+    this.h = h
+    this.perfura = h.perfura !== false
+    this.cor = h.cor ?? 0x9ffcff
     this.acertados = new Set()
     this.forma.setStrokeStyle(3, coresDaArena.flecha)
-    this.risco = cena.add.rectangle(this.x, this.y, 110, 8, 0x9ffcff, 0.75).setOrigin(1, 0.5).setRotation(angulo)
+    this.risco = cena.add.rectangle(this.x, this.y, 110, 8, this.cor, 0.75).setOrigin(1, 0.5).setRotation(angulo)
     this.ultimaFaisca = 0
   }
 
@@ -23,7 +27,7 @@ export default class TiroPerfurante extends Projetil {
     let acabou = false
     this.mover(segundos, () => {
       const circulo = this.circulo()
-      if (this.percorrido >= config.alcance) acabou = true
+      if (this.percorrido >= this.h.alcance) acabou = true
       else if (this.cena.bateEmObstaculo(circulo)) {
         particulas(this.cena, this.x, this.y, coresDaArena.pedra, 10, 200)
         acabou = true
@@ -31,7 +35,11 @@ export default class TiroPerfurante extends Projetil {
         for (const alvo of this.cena.alvosDoJogador()) {
           if (this.acertados.has(alvo) || !circuloTocaRetangulo(circulo, alvo.retangulo())) continue
           this.acertados.add(alvo)
-          this.cena.acertar(alvo, config.dano, this.origemDoEmpurrao, config.empurrao, this.dono)
+          this.cena.acertar(alvo, this.h.dano, this.origemDoEmpurrao, this.h.empurrao, this.dono)
+          if (!this.perfura) {
+            acabou = true
+            break
+          }
         }
       }
       return acabou
@@ -40,7 +48,7 @@ export default class TiroPerfurante extends Projetil {
     this.risco.setPosition(this.x, this.y).setDepth(this.y + 4)
     if (agora - this.ultimaFaisca > 40) {
       this.ultimaFaisca = agora
-      particulas(this.cena, this.x, this.y, 0x9ffcff, 2, 60)
+      particulas(this.cena, this.x, this.y, this.cor, 2, 60)
     }
     return !acabou
   }

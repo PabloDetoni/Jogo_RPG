@@ -1,5 +1,7 @@
 import { classes } from '../dados/classes.js'
+import { itens } from '../dados/itens.js'
 import { nivelInicial, nivelMaximo } from '../dados/regras.js'
+import { porNaMochila } from '../regras/mochila.js'
 import { xpParaSubir } from '../regras/xp.js'
 import { novoPersonagem } from './progresso.js'
 
@@ -39,4 +41,24 @@ export function quaseSubir(progresso, classe) {
   return mudarPersonagem(progresso, classe, (personagem) =>
     personagem.nivel >= nivelMaximo ? personagem : { ...personagem, xp: xpParaSubir(personagem.nivel) - 1 },
   )
+}
+
+// Para testar o Reino (Fase 4): uma amostra do catálogo na Mochila (1 de cada equipamento, 3 de cada consumível, o
+// pergaminho e 10 de cada material e recurso), mais ouro e pontos livres de atributo e de habilidade para cada
+// permanente (para testar as Árvores sem jogar horas)
+export const ouroDeTeste = 1000
+export const pontosDeTeste = { atributo: 10, habilidade: 5 }
+export function itensDeTeste(progresso) {
+  const quantos = { equipamento: 1, consumivel: 3, utilitario: 1, material: 10, recurso: 10 }
+  const pedidos = Object.fromEntries(Object.values(itens).map((item) => [item.id, quantos[item.tipo] ?? 1]))
+  return {
+    ...progresso,
+    mochila: porNaMochila(progresso.mochila, pedidos),
+    ouro: progresso.ouro + ouroDeTeste,
+    personagens: progresso.personagens.map((personagem) => ({
+      ...personagem,
+      pontosDeAtributo: personagem.pontosDeAtributo + pontosDeTeste.atributo,
+      pontosDeHabilidade: personagem.pontosDeHabilidade + pontosDeTeste.habilidade,
+    })),
+  }
 }

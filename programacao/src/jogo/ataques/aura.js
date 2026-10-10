@@ -38,7 +38,7 @@ export default class Aura {
       vida: personagem.caido ? 0 : personagem.vida,
       vidaMaxima: personagem.vidaMaxima,
     }))
-    for (const { id: personagem, vida, curado } of curaDaAura(membros, this.dono, config.raio, config.curaPorPulso)) {
+    for (const { id: personagem, vida, curado } of curaDaAura(membros, this.dono, config.raio, config.curaPorPulso * (this.dono.multiplicadorDeCura ?? 1))) {
       personagem.vida = vida
       numeroFlutuante(this.cena, personagem.x, personagem.y - 34, `+${curado}`, coresDaArena.numeroDeCura, 22)
     }

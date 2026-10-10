@@ -152,7 +152,7 @@ A taxa incide só sobre o **ouro ganho na partida** (RF48). Cada perdido paga pe
 
 - A taxa em moedas é **arredondada para baixo**, a favor do jogador. O ouro que o jogador já tinha nunca é taxado.
 - Grande Vitória: taxa 0% e **+10%** no ouro (também arredondado para baixo).
-- Ainda sem valor: ouro por monstro, preços do Mercado e da Forja e do pergaminho (etapas 5 e 7). Os contratos já têm preço provisório (seção Guilda).
+- Preços do Mercado e da Forja, do pergaminho e dos contratos: provisórios (seções Guilda e Reino com dados).
 - **Teto do ouro: ainda não existe.** O maior número que o jogo guarda com segurança é 9.007.199.254.740.991. Se quiser um teto (por exemplo, 999.999.999), é só decidir.
 
 ### Quanto o jogador recebe
@@ -354,11 +354,172 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 - Aliado fora da tela e a mais de **1.100 px** do Líder (ou preso) por **3 s**: reaparece logo além da borda da tela (70 px) e entra andando.
 - Árvores e pedras: uma casa a cada **300 px**, com pelo menos **90 px** livres entre dois obstáculos (sempre há passagem).
 
+## Reino com dados (Fase 4, provisório)
+
+Catálogo, Mercado, Forja, habilidades, missões, conquistas e minijogos, todos PROVISÓRIOS até o conteúdo do grupo (TASK-010, TASK-014, TASK-015 e TASK-016). Para trocar, mude os arquivos de `src/dados/` e rode `npm run balanceamento`.
+
+### Catálogo de itens (TASK-070)
+
+Quem vende (no Mercado, ou equipamento na Forja) recebe **50%** do preço, para baixo. Os testes barram troca ou receita que dê lucro (ouro infinito).
+
+| Item | Tipo | Raridade | Peso | Preço | Venda | Função |
+| --- | --- | --- | --- | --- | --- | --- |
+| Cogumelo | recurso | Comum | 1 | 3 | 1 | Recurso: vende no Mercado e entra em receitas e trocas. |
+| Erva medicinal | recurso | Comum | 1 | 4 | 2 | Recurso: vende no Mercado e entra em receitas e trocas. |
+| Madeira | recurso | Comum | 3 | 2 | 1 | Recurso: vende no Mercado e entra em receitas e trocas. |
+| Trigo | recurso | Comum | 1 | 3 | 1 | Recurso: vende no Mercado e entra em receitas e trocas. |
+| Peixe | recurso | Comum | 1 | 6 | 3 | Recurso: vende no Mercado e entra em receitas e trocas. |
+| Cristal | material | Raro | 1 | 40 | 20 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Pérola do lago | material | Raro | 1 | 50 | 25 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Pele de lobo | material | Comum | 2 | 8 | 4 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Teia de aranha | material | Comum | 1 | 6 | 3 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Presa de javali | material | Incomum | 2 | 15 | 7 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Chifre de cervo | material | Incomum | 3 | 18 | 9 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Casca antiga | material | Raro | 4 | 60 | 30 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Minério de ferro | material | Comum | 3 | 12 | 6 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Poção de vida | consumivel | Comum | 1 | 25 | 12 | Recupera 40% da vida. Não levanta quem desmaiou. Na partida: Tab, depois E (Líder) ou R (aliado). |
+| Poção grande de vida | consumivel | Incomum | 2 | 60 | 30 | Recupera 75% da vida. Não levanta quem desmaiou. Na partida: Tab, depois E (Líder) ou R (aliado). |
+| Poção de mana | consumivel | Comum | 1 | 30 | 15 | Recupera 50% da mana. Na partida: Tab, depois E (Líder) ou R (aliado). |
+| Tônico ligeiro | consumivel | Incomum | 1 | 40 | 20 | Anda 25% mais rápido por 20 s. Na partida: Tab, depois E ou R. |
+| Elixir do foco | consumivel | Incomum | 1 | 50 | 25 | Recargas 30% mais rápidas por 20 s. Na partida: Tab, depois E ou R. |
+| Pergaminho de redefinição | utilitario | Raro | 1 | 300 | 150 | Devolve os pontos de atributo de um personagem (nas Árvores). Habilidades não mudam. |
+| Espada curta | equipamento | Comum | 3 | 120 | 60 | Arma · Força +3 · só Guerreiro |
+| Lâmina de presa | equipamento | Incomum | 3 | 260 | 130 | Arma · Força +6 · Agilidade +2 · só Guerreiro |
+| Arco de caça | equipamento | Comum | 2 | 120 | 60 | Arma · Agilidade +3 · só Arqueiro |
+| Arco de teia | equipamento | Incomum | 2 | 260 | 130 | Arma · Agilidade +6 · Força +2 · só Arqueiro |
+| Cajado de carvalho | equipamento | Comum | 3 | 120 | 60 | Arma · Inteligência +3 · só Mago |
+| Cajado de chifre | equipamento | Incomum | 3 | 260 | 130 | Arma · Inteligência +6 · Sabedoria +2 · só Mago |
+| Martelo de guerra | equipamento | Comum | 5 | 120 | 60 | Arma · Força +2 · Vitalidade +1 · só Tanque |
+| Cetro da aurora | equipamento | Comum | 2 | 120 | 60 | Arma · Sabedoria +3 · só Sacerdote |
+| Cetro de ervas | equipamento | Incomum | 2 | 260 | 130 | Arma · Sabedoria +6 · Vitalidade +2 · só Sacerdote |
+| Escudo de madeira | equipamento | Comum | 4 | 100 | 50 | Escudo · Vitalidade +2 · Defesa 3 · só Tanque |
+| Escudo de casca antiga | equipamento | Raro | 5 | 420 | 210 | Escudo · Vitalidade +5 · Força +2 · Defesa 7 · só Tanque |
+| Capuz de couro | equipamento | Comum | 1 | 60 | 30 | Capacete · Agilidade +1 · Defesa 1 · todas as classes |
+| Colete de couro | equipamento | Comum | 3 | 90 | 45 | Peitoral · Vitalidade +2 · Defesa 2 · todas as classes |
+| Calças de couro | equipamento | Comum | 2 | 70 | 35 | Calças · Agilidade +1 · Defesa 1 · todas as classes |
+| Botas de couro | equipamento | Comum | 1 | 60 | 30 | Botas · Agilidade +1 · todas as classes |
+| Luvas de couro | equipamento | Comum | 1 | 60 | 30 | Manoplas · Força +1 · todas as classes |
+| Elmo de ferro | equipamento | Incomum | 3 | 180 | 90 | Capacete · Vitalidade +2 · Defesa 3 · todas as classes |
+| Peitoral de ferro | equipamento | Incomum | 6 | 260 | 130 | Peitoral · Vitalidade +4 · Defesa 5 · todas as classes |
+| Grevas de ferro | equipamento | Incomum | 4 | 200 | 100 | Calças · Vitalidade +2 · Força +1 · Defesa 3 · todas as classes |
+| Botas de vento | equipamento | Incomum | 1 | 220 | 110 | Botas · Agilidade +3 · Recarga −5% · todas as classes |
+| Manoplas de ferro | equipamento | Incomum | 3 | 180 | 90 | Manoplas · Força +3 · Defesa 2 · todas as classes |
+| Coroa de raízes | equipamento | Especial | 2 | 500 | 250 | Capacete · Vitalidade +6 · Sabedoria +4 · Defesa 4 · todas as classes |
+| Capacete de teste | equipamento | Teste | 2 | 10 | 5 | Capacete · Vitalidade +1 · todas as classes |
+| Peitoral de teste | equipamento | Teste | 4 | 10 | 5 | Peitoral · Vitalidade +2 · todas as classes |
+| Calças de teste | equipamento | Teste | 3 | 10 | 5 | Calças · Agilidade +1 · todas as classes |
+| Botas de teste | equipamento | Teste | 2 | 10 | 5 | Botas · Agilidade +1 · todas as classes |
+| Manoplas de teste | equipamento | Teste | 2 | 10 | 5 | Manoplas · Força +1 · todas as classes |
+| Espada de teste | equipamento | Teste | 3 | 10 | 5 | Arma · Força +2 · só Guerreiro |
+| Escudo de teste | equipamento | Teste | 4 | 10 | 5 | Escudo · Vitalidade +2 · só Tanque |
+
+### Mercado (TASK-074)
+
+- Sempre à venda: Poção de vida, Poção de mana, Pergaminho de redefinição, Minério de ferro.
+- Rotativas (3 de cada vez, mudam a cada **3 partidas** jogadas): Poção grande de vida, Tônico ligeiro, Elixir do foco, Pele de lobo, Teia de aranha, Presa de javali, Chifre de cervo, Erva medicinal.
+- Troca: 3 Pele de lobo → 1 Presa de javali.
+- Troca: 4 Teia de aranha → 1 Chifre de cervo.
+- Troca: 3 Cogumelo + 3 Erva medicinal → 1 Poção de vida.
+- Troca: 4 Madeira → 1 Minério de ferro.
+- Troca: 5 Presa de javali → 1 Casca antiga.
+
+### Forja (TASK-075)
+
+À venda (o equipamento comum): Espada curta, Arco de caça, Cajado de carvalho, Martelo de guerra, Cetro da aurora, Escudo de madeira, Capuz de couro, Colete de couro, Calças de couro, Botas de couro, Luvas de couro. Na partida, cada ponto de defesa tira **2%** do dano recebido (até **50%**), e a redução de recarga das peças soma até **30%**.
+
+| Receita | Materiais | Ouro |
+| --- | --- | --- |
+| Capuz de couro | 2 Pele de lobo | 15 |
+| Colete de couro | 4 Pele de lobo | 25 |
+| Calças de couro | 3 Pele de lobo | 20 |
+| Botas de couro | 2 Pele de lobo | 15 |
+| Luvas de couro | 2 Pele de lobo | 15 |
+| Elmo de ferro | 3 Minério de ferro + 1 Pele de lobo | 80 |
+| Peitoral de ferro | 5 Minério de ferro + 2 Pele de lobo | 120 |
+| Grevas de ferro | 4 Minério de ferro + 1 Pele de lobo | 90 |
+| Botas de vento | 5 Teia de aranha + 2 Pele de lobo | 100 |
+| Manoplas de ferro | 3 Minério de ferro + 1 Presa de javali | 80 |
+| Lâmina de presa | 3 Presa de javali + 2 Minério de ferro | 120 |
+| Arco de teia | 6 Teia de aranha + 3 Madeira | 120 |
+| Cajado de chifre | 2 Chifre de cervo + 3 Madeira | 120 |
+| Cetro de ervas | 8 Erva medicinal + 2 Madeira | 120 |
+| Escudo de casca antiga | 2 Casca antiga + 4 Madeira | 200 |
+
+Equipamento fixo do contrato temporário (RF29): Guerreiro: Espada curta, Colete de couro; Mago: Cajado de carvalho, Colete de couro; Tanque: Martelo de guerra, Escudo de madeira, Colete de couro; Sacerdote: Cetro da aurora, Colete de couro; Arqueiro: Arco de caça, Colete de couro.
+
+### Habilidades da árvore (TASK-077)
+
+Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cura **+15%**, bônus de dano **+10%**, proteção **+8%**, duração **+10%** e recarga **−4%** (do valor do nível 1). No beta, 4 por classe (a raiz e a primeira de cada ramo).
+
+| Classe | Habilidade | Tipo | Mana | Recarga (nível 1 → 5) | Efeito (nível 1 → 5) |
+| --- | --- | --- | --- | --- | --- |
+| Guerreiro | Giro | ativa | 20 | 5,0 s → 4,2 s | dano 35 → 56 |
+| Guerreiro | Golpe pesado | ativa | 25 | 7,0 s → 5,9 s | dano 70 → 112 |
+| Guerreiro | Fúria | ativa | 30 | 20,0 s → 16,8 s | +30% → +42% de dano |
+| Guerreiro | Pele grossa | passiva (vida) | — | — | +4% → +20% |
+| Mago | Meteoro | ativa | 35 | 8,0 s → 6,7 s | dano 50 → 80 |
+| Mago | Descarga elétrica | ativa | 25 | 5,0 s → 4,2 s | dano 40 → 64 |
+| Mago | Explosão de fogo | ativa | 30 | 7,0 s → 5,9 s | dano 45 → 72 |
+| Mago | Mente clara | passiva (mana) | — | — | +8% → +40% |
+| Tanque | Provocação | ativa | 15 | 10,0 s → 8,4 s | −50% → −66% de dano recebido |
+| Tanque | Golpe de escudo | ativa | 15 | 6,0 s → 5,0 s | dano 20 → 32 |
+| Tanque | Muralha | ativa | 30 | 25,0 s → 21,0 s | −30% → −40% de dano recebido |
+| Tanque | Pele de ferro | passiva (defesa) | — | — | +2 defesa → +10 defesa |
+| Sacerdote | Ressurreição | ativa | 60 | 180,0 s → 151,2 s | +20% → +28% de dano |
+| Sacerdote | Cura em área | ativa | 30 | 8,0 s → 6,7 s | cura 30 → 48 |
+| Sacerdote | Bênção | ativa | 35 | 20,0 s → 16,8 s | +20% → +28% de dano |
+| Sacerdote | Fé | passiva (cura) | — | — | +8% → +40% |
+| Arqueiro | Tiro perfurante | ativa | 25 | 6,0 s → 5,0 s | dano 60 → 96 |
+| Arqueiro | Chuva de flechas | ativa | 30 | 9,0 s → 7,6 s | dano 40 → 64 |
+| Arqueiro | Flecha certeira | ativa | 20 | 4,0 s → 3,4 s | dano 90 → 144 |
+| Arqueiro | Olho de águia | passiva (critico) | — | — | +2% → +10% |
+
+### Missões da Guilda (TASK-078)
+
+| Missão | Tipo | Objetivo | Ouro | XP | Multa por abandonar |
+| --- | --- | --- | --- | --- | --- |
+| Caçar lobos | matar | 8 lobo | 80 | 120 | 8 |
+| Aranhas no caminho | matar | 6 aranha | 110 | 180 | 11 |
+| Javalis bravos | matar | 4 javali | 150 | 240 | 15 |
+| O Guardião da Floresta | matar | 1 Guardião da Floresta | 400 | 600 | 40 |
+| Cogumelos para poções | coletar | 6 Cogumelo | 60 | 80 | 6 |
+| Lenha para o inverno | coletar | 8 Madeira | 70 | 90 | 7 |
+| Peles para o curtidor | entregar | 4 Pele de lobo | 90 | 100 | 9 |
+| Fios para a tecelã | entregar | 5 Teia de aranha | 80 | 100 | 8 |
+| O coração da mata | explorar | Coração da Mata | 120 | 200 | 12 |
+| A clareira do Guardião | explorar | Clareira do Guardião | 150 | 250 | 15 |
+
+### Conquistas (TASK-103)
+
+| Conquista | O que pede | Recompensa |
+| --- | --- | --- |
+| Primeiros passos | Jogue a primeira partida. | 20 de ouro |
+| Caçador | Derrote 50 monstros. | 100 de ouro |
+| Exterminador | Derrote 1.000 monstros. | 300 de ouro |
+| Lenda da Floresta | Derrote 10.000 monstros. | 1.000 de ouro |
+| Queda do Guardião | Derrote o Guardião da Floresta. | 200 de ouro |
+| Volta triunfal | Consiga uma Grande Vitória. | 100 de ouro |
+| A serviço da Guilda | Entregue 5 missões na Guilda. | 150 de ouro |
+| Explorador | Descubra todas as áreas da Floresta. | 150 de ouro |
+| Aventureiro | Leve um personagem ao nível 10. | 100 de ouro |
+| Mestre | Leve um personagem ao nível 100. | 2.000 de ouro |
+| Grupo completo | Tenha as 5 classes como personagens permanentes. | 300 de ouro |
+| Cofre cheio | Tenha 2.000 de ouro de uma vez. | — |
+
+### Minijogos do Planalto (TASK-080 e TASK-081)
+
+Rodada de **30 s**, no máximo 60 pontos. Cada ponto dá 1 do recurso e o XP do lugar (dividido entre todos os permanentes); o raro vem com a chance de cada ponto. Não é partida (sem taxa, ranking ou histórico).
+
+| Lugar | Como joga | Recurso | Raro (chance por ponto) | XP por ponto |
+| --- | --- | --- | --- | --- |
+| Fazenda | Clique nas plantas maduras (douradas) antes que murchem. | Trigo | Erva medicinal (25%) | 4 |
+| Mina | Clique 3 vezes em cada pedra para quebrar. Algumas têm cristal. | Minério de ferro | Cristal (15%) | 5 |
+| Lago | Quando a boia afundar, clique rápido para fisgar. Antes da hora, o peixe foge. | Peixe | Pérola do lago (10%) | 7 |
+
 ## Ainda sem valor (a decidir)
 
 Valores do Conceito §19 que ainda não existem no código:
 
 - os mobs, o Boss e o layout definitivos da Floresta (TASK-012 e TASK-013): os valores acima são provisórios;
-- dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);
-- preços do Mercado e da Forja e do pergaminho (o catálogo provisório já tem preço e peso de cada item: src/dados/itens.js);
-- recompensas de missões e conquistas.
+- as habilidades de verdade (TASK-010): a árvore provisória já tem números por nível;
+- o catálogo, as ofertas, as receitas, as missões, as conquistas e os minijogos do grupo (TASK-014, TASK-015 e TASK-016): os provisórios já têm todos os números acima.

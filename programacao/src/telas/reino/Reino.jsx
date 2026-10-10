@@ -2,7 +2,7 @@ import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { nomeDaClasse } from '../../dados/classes.js'
-import { descreverMissao } from '../../dados/missoes.js'
+import { missaoEmUmaLinha } from '../../regras/missoes.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 
@@ -15,7 +15,7 @@ export default function Reino() {
   // O apelido vem da conta (Fase 2); o resto vem do save (TASK-071)
   const apelido = tipoJogador === 'conta' ? (estado.conta?.apelido ?? 'Conta') : 'Convidado'
   const lider = progresso.lider ? nomeDaClasse(progresso.lider) : 'nenhum'
-  const missao = descreverMissao(progresso.missaoAtiva) ?? 'nenhuma'
+  const missao = missaoEmUmaLinha(progresso) ?? 'nenhuma' // na de entrega, conta o que está na Mochila agora
 
   return (
     <Tela>

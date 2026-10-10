@@ -40,8 +40,13 @@ import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
+import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
+import { reducaoPelaDefesa } from '../../regras/equipamento.js'
+import { tocarEfeito } from '../../audio/gerenciador.js'
+import { efeitoDoAtaque } from '../../regras/som.js'
+import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
-import { capacidadeDaMochila, guardarNaMochila, pesoTotal } from '../../regras/mochila.js'
+import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
@@ -102,7 +107,13 @@ export default class CenaArena extends Phaser.Scene {
     this.ponte = ponte
     this.grupoInicial = grupo
     // descobertas: o mapa já descoberto deste bioma, do save ({ nevoa, areas }), para o minimapa e o XP das áreas
-    this.partida = { bioma: partida.bioma ?? 'floresta', pontoPartida: partida.pontoPartida ?? 'inicio', descobertas: partida.descobertas ?? null }
+    this.partida = {
+      bioma: partida.bioma ?? 'floresta',
+      pontoPartida: partida.pontoPartida ?? 'inicio',
+      descobertas: partida.descobertas ?? null,
+      levar: partida.levar ?? null,
+      missao: partida.missao ?? null, // a missão ativa (Fase 4): a partida avisa quando algo conta para ela
+    }
   }
 
   // Relógio da partida, em ms: só anda quando a cena roda. Na pausa (e com a aba escondida) ele para, e com ele
@@ -174,9 +185,13 @@ export default class CenaArena extends Phaser.Scene {
     this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
-    this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {} }
-    // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim
-    this.mochila = { itens: [], capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
+    this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {}, coletados: {} }
+    // Para a missão ativa (Fase 4, TASK-078): abates por tipo de mob e áreas visitadas nesta partida (os coletados já
+    // estão em ganhos.coletados). Só entram no save no fim (RF12).
+    this.eventosDaMissao = { abates: {}, areasVisitadas: [] }
+    // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim. Começa
+    // com o que foi levado da Mochila do Reino na Preparação (Fase 4, TASK-073).
+    this.mochila = { itens: itensLevados(this.partida?.levar), capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
     this.itensNoChao = []
     this.niveisAvisados = {} // classe → último nível avisado no HUD ("subiu de nível")
     this.andamentoAvisado = ''
@@ -398,6 +413,9 @@ export default class CenaArena extends Phaser.Scene {
     this.mochila.itens = itens
     if (pegou > 0) {
       if (item.tipo === 'recurso') this.ganhos.recursos += pegou
+      this.contarParaAMissao(() => {
+        this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
+      })
       numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
     }
     if (!sobra) {
@@ -544,6 +562,9 @@ export default class CenaArena extends Phaser.Scene {
     const regiao = this.regiaoDoLider
     if (regiao && regiao.pontoDePartida !== 'inicio') exploracao.regioes.add(regiao.pontoDePartida)
     const area = areaEm(this.mapa.areas, this.lider)
+    if (area && !this.eventosDaMissao.areasVisitadas.includes(area.id)) {
+      this.contarParaAMissao(() => this.eventosDaMissao.areasVisitadas.push(area.id))
+    }
     if (!area || exploracao.conhecidas.has(area.id)) return
     exploracao.conhecidas.add(area.id)
     exploracao.novas.push(area.id)
@@ -682,7 +703,8 @@ export default class CenaArena extends Phaser.Scene {
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
-    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
+    // Com a mochila da partida aberta (Tab), o E usa o item escolhido, não pega do chão (RF41; Partida.jsx manda o comando)
+    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir) && !this.mochilaAberta) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
     ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
       if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
@@ -711,6 +733,7 @@ export default class CenaArena extends Phaser.Scene {
     this.velocidadeDaEsquiva = velocidadeDoMovimento(direcao.x, direcao.y, esquiva.distancia / (esquiva.ms / 1000))
     this.ultimaEsquiva = agora
     this.fimDaEsquiva = agora + esquiva.ms
+    tocarEfeito('esquiva')
     this.lider.fimDoEmpurrao = 0 // a esquiva tira o Líder do empurrão
     const deitado = Math.abs(this.velocidadeDaEsquiva.x) >= Math.abs(this.velocidadeDaEsquiva.y)
     this.lider.deformar(deitado ? 1.4 : 0.7, deitado ? 0.7 : 1.4, 60, 160)
@@ -749,6 +772,9 @@ export default class CenaArena extends Phaser.Scene {
       }
       const empurrado = entidade.estaSendoEmpurrado(agora)
       let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
+      // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
+      const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora)
+      if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
       // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo).
@@ -932,13 +958,14 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, membro, angulo))
     if (membro.classe === 'sacerdote') this.adicionarProjetil(new Aura(this, membro, agora))
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
+    if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
   }
 
   // A habilidade dá para usar agora? (para a IA decidir; não avisa nada)
   habilidadeDisponivel(membro, indice) {
-    const habilidade = membro.habilidades[indice]
-    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : false
+    const habilidade = indice >= 0 ? membro.habilidades[indice] : null
+    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.efeito]?.(this, membro, habilidade) ?? true) : false
     const agora = this.agora
     return podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo }).ok
   }
@@ -949,18 +976,32 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.caido || this.terminou) return false
     const agora = this.agora
     const habilidade = membro.habilidades[indice]
-    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : true
+    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.efeito]?.(this, membro, habilidade) ?? true) : true
     const pode = podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo })
     if (!pode.ok) {
       if (membro.lider) numeroFlutuante(this, membro.x, membro.y - 50, avisoDoMotivo[pode.motivo], pode.motivo === 'semMana' ? '#8fd3ff' : '#dddddd', 18)
       return false
     }
     membro.mana = gastarMana(membro.mana, habilidade.custoDeMana)
-    membro.ultimoUsoDaHabilidade[indice] = agora
+    // Com o Elixir do foco (Fase 4), a recarga fica mais curta: o último uso conta como se fosse um pouco antes
+    const recarga = recargaComEfeitos(habilidade.recargaMs, multiplicadorAtivo(membro.efeitos, 'recarga', agora), membro.reducaoDeRecarga ?? 0)
+    membro.ultimoUsoDaHabilidade[indice] = agora - (habilidade.recargaMs - recarga)
     membro.anguloDaMira = mira.angulo
-    const ponto = habilidade.id === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
-    efeitosDasHabilidades[habilidade.id](this, membro, { ...mira, ponto })
+    const ponto = habilidade.efeito === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
+    efeitosDasHabilidades[habilidade.efeito](this, membro, { ...mira, ponto }, habilidade)
     return true
+  }
+
+  // A habilidade raiz da classe (a primeira da árvore), em qualquer tecla em que o jogador a tenha posto: é a que a IA
+  // dos aliados sabe usar (regras de cada classe em jogo/iaDosAliados.js). Fora das teclas, o aliado não a usa.
+  usarHabilidadeDaRaiz(membro, mira) {
+    const indice = this.indiceDaRaiz(membro)
+    return indice >= 0 ? this.usarHabilidade(membro, indice, mira) : false
+  }
+
+  // Em que tecla (0, 1 ou 2) está a habilidade raiz do membro (-1: em nenhuma)
+  indiceDaRaiz(membro) {
+    return membro.habilidades.findIndex((habilidade) => habilidade?.raiz)
   }
 
   // O Meteoro cai no ponto mirado, mas no máximo até o alcance e dentro da área jogável
@@ -1015,12 +1056,15 @@ export default class CenaArena extends Phaser.Scene {
   acertar(alvo, dano, origem, forcaDoEmpurrao, autor = null) {
     if (alvo.morto) return
     const agora = this.agora
-    const fortalecido = autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano
+    const fortalecido =
+      (autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano) * multiplicadorAtivo(autor?.efeitos, 'dano', agora) // Fúria e Bênção (Fase 4)
     const golpe = rolarCritico(fortalecido, autor?.chanceDeCritico ?? 0, critico.multiplicador)
     const { vida, danoFeito } = aplicarDano(alvo.vida, golpe.dano)
     alvo.vida = vida
     alvo.piscar()
     const numero = String(alvo.mostraDanoCheio ? Math.round(golpe.dano) : danoFeito)
+    // Som (Fase 4): acerto ou crítico, quando é o grupo que acerta
+    if (autor && this.grupo.includes(autor)) tocarEfeito(golpe.critico ? 'critico' : 'acerto')
     if (golpe.critico) {
       numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, `CRÍTICO ${numero}`, coresDaArena.critico, 26)
       if (autor?.lider) this.mensagem(`Crítico! ${numero} de dano`, 'critico')
@@ -1042,7 +1086,14 @@ export default class CenaArena extends Phaser.Scene {
     const { xp = 0, ouro = 0 } = inimigo.config
     this.ganhos.ouro += ouro
     this.ganhos.monstros += 1
-    if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+    const tipo = inimigo.ehBoss ? 'guardiao' : (inimigo.tipo ?? 'outro')
+    this.contarParaAMissao(() => {
+      this.eventosDaMissao.abates[tipo] = (this.eventosDaMissao.abates[tipo] ?? 0) + 1
+    })
+    if (ouro > 0) {
+      numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+      tocarEfeito('moeda')
+    }
     // Boss (TASK-065): o bônus na pontuação (RF49) e a pequena chance do equipamento especial (RF39)
     if (inimigo.ehBoss) {
       this.ganhos.bonusDeBoss += inimigo.config.bonus
@@ -1086,6 +1137,7 @@ export default class CenaArena extends Phaser.Scene {
       if (nivel <= (this.niveisAvisados[classe] ?? membro.membro.nivel)) continue
       this.niveisAvisados[classe] = nivel
       this.mensagem(`${nomeDaClasse(classe)} subiu para o nível ${nivel}! (vale na próxima partida)`, 'nivel')
+      tocarEfeito('nivel')
       numeroFlutuante(this, membro.x, membro.y - 56, `NÍVEL ${nivel}!`, coresDaArena.nivel, 24)
       particulas(this, membro.x, membro.y, 0xffe14a, 14, 240)
     }
@@ -1133,7 +1185,9 @@ export default class CenaArena extends Phaser.Scene {
     if (protegido) return 'protegido'
     let danoFinal = dano
     if (membro.fragil) danoFinal *= 1 + desmaio.danoExtraFragil
-    if (membro.provocando) danoFinal *= 1 - combateDeTeste.habilidades.tanque.reducaoDeDano
+    if (membro.provocando) danoFinal *= 1 - (membro.reducaoDaProvocacao ?? combateDeTeste.habilidades.tanque.reducaoDeDano)
+    danoFinal *= multiplicadorAtivo(membro.efeitos, 'protecao', agora) // Muralha (Fase 4)
+    danoFinal *= 1 - reducaoPelaDefesa(membro.defesa ?? 0) // a defesa do equipamento (Fase 4)
     const { vida, danoFeito } = aplicarDano(membro.vida, danoFinal)
     membro.vida = vida
     membro.piscar()
@@ -1153,6 +1207,7 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   mostrarBloqueado(x, y) {
+    tocarEfeito('bloqueio')
     numeroFlutuante(this, x, y - 22, 'BLOQUEADO', coresDaArena.bloqueado, 22)
     particulas(this, x, y, 0xffffff, 6, 160)
   }
@@ -1161,6 +1216,7 @@ export default class CenaArena extends Phaser.Scene {
 
   // Sem vida: desmaia e abre os 30 s. Se era o último de pé, é Derrota na hora.
   desmaiar(membro) {
+    tocarEfeito('desmaio')
     membro.cair()
     membro.caidoDesde = this.agora
     this.houveDesmaio = true
@@ -1204,6 +1260,7 @@ export default class CenaArena extends Phaser.Scene {
   // Volta de pé (pela ajuda: pouca vida e frágil; pela Ressurreição: vida cheia, imune e fortalecido)
   levantar(membro, { vida, fimDaFragilidade = 0, fimDaImunidade = 0, fimDoFortalecimento = 0 }) {
     membro.levantar(vida)
+    tocarEfeito('levantar')
     membro.fimDaFragilidade = fimDaFragilidade
     membro.fimDaImunidade = Math.max(membro.fimDaImunidade, fimDaImunidade)
     membro.fimDoFortalecimento = fimDoFortalecimento
@@ -1222,6 +1279,7 @@ export default class CenaArena extends Phaser.Scene {
     particulas(this, membro.x, membro.y, 0x9fd8ff, 20, 260)
     numeroFlutuante(this, membro.x, membro.y - 50, 'PERDIDO', '#9fd8ff', 24)
     this.mensagem(`${nomeDaClasse(membro.classe)} foi levado pela Pedra de Retorno: perdido`, 'perdido')
+    tocarEfeito('perdido')
     membro.perdido = true
     membro.escudo?.destruir()
     membro.escudo = null
@@ -1263,8 +1321,12 @@ export default class CenaArena extends Phaser.Scene {
       monstros: this.ganhos.monstros,
       recursos: this.ganhos.recursos, // recursos coletados, para a pontuação (RF49)
       bonusDeBoss: this.ganhos.bonusDeBoss, // Boss derrotado (RF49)
-      // A mochila da partida: vai para a Mochila do Reino em todos os resultados (RF50)
+      // A mochila da partida: vai para a Mochila do Reino em todos os resultados (RF50); "coletados" é só o que se pegou
+      // nesta partida (o Resumo mostra), sem o que veio da Mochila do Reino
       itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+      coletados: Object.entries(this.ganhos.coletados).map(([id, quantidade]) => ({ id, quantidade })),
+      // O que conta para a missão ativa (Fase 4): entra no save no fim, como o resto (RF12)
+      eventos: { abates: { ...this.eventosDaMissao.abates }, coletados: { ...this.ganhos.coletados }, areasVisitadas: [...this.eventosDaMissao.areasVisitadas] },
       xpPorClasse: { ...this.ganhos.xpPorClasse },
       // O mapa descoberto (Fase 3): entra no save no fim, em qualquer resultado (RF50)
       descobertas: this.exploracao && {
@@ -1331,6 +1393,7 @@ export default class CenaArena extends Phaser.Scene {
     this.fuga = comecarFuga(this.fuga, msDaFuga)
     this.retorno = null
     this.mensagem('A Pedra de Retorno vai levar o grupo ao Reino', 'alerta')
+    tocarEfeito('fuga')
     particulas(this, this.lider.x, this.lider.y, 0x9fd8ff, 16, 240)
     this.avisarAndamento()
   }
@@ -1354,12 +1417,54 @@ export default class CenaArena extends Phaser.Scene {
 
   // ---------- Barra de teste (comandos do React) ----------
 
+  // Missão ativa (Fase 4, TASK-078): o que conta para ela vai para eventosDaMissao; se o progresso subiu, o HUD avisa
+  eventosParaAMissao() {
+    return { ...this.eventosDaMissao, coletados: this.ganhos.coletados }
+  }
+
+  contarParaAMissao(registrar) {
+    const missao = this.partida.missao
+    const antes = missao ? avancarComEventos(missao, this.eventosParaAMissao()).progresso : 0
+    registrar()
+    const aviso = missao && avisoDaMissao(missao, antes, this.eventosParaAMissao())
+    if (aviso) this.mensagem(aviso, 'bom')
+  }
+
+  // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé mais perto da mira (em = 'aliado').
+  // A regra (regras/itensNaPartida.js) diz o que muda; quando não dá (desmaiado, vida cheia), nada é gasto.
+  usarItem(id, em) {
+    const pilha = this.mochila.itens.find((item) => item.id === id)
+    const item = itemDoCatalogo(id)
+    if (!pilha || !item) return
+    const alvo = em === 'aliado' ? aliadoPelaMira(this.aliados, this.mouseNoMundo ?? this.lider) : this.lider
+    if (!alvo) {
+      this.mensagem('Nenhum aliado de pé para usar o item', 'aviso')
+      return
+    }
+    const resultado = usarItemEm(item, alvo, this.agora)
+    if (!resultado.ok) {
+      this.mensagem(resultado.texto, 'aviso')
+      return
+    }
+    const { vida, mana, efeito } = resultado.mudancas
+    if (vida !== undefined) alvo.vida = vida
+    if (mana !== undefined) alvo.mana = mana
+    if (efeito) alvo.efeitos = { ...alvo.efeitos, [efeito.tipo]: efeito }
+    pilha.quantidade -= 1
+    if (pilha.quantidade <= 0) this.mochila.itens = this.mochila.itens.filter((outro) => outro !== pilha)
+    numeroFlutuante(this, alvo.x, alvo.y - 44, resultado.texto, vida !== undefined ? '#7dff9a' : '#8fd3ff', 18)
+    this.mensagem(`${item.nome} em ${alvo === this.lider ? 'você' : nomeDaClasse(alvo.classe)}: ${resultado.texto}`, 'aviso')
+  }
+
   executarComando(comando) {
     if (this.terminou) return
     // Teclas e pedidos do jogo (não são de teste): Q, Voltar ao Reino da pausa e a fuga confirmada
     if (comando.tipo === 'alternarRetorno') this.alternarRetorno()
     if (comando.tipo === 'comecarRetorno') this.alternarRetorno(true)
     if (comando.tipo === 'fugir') this.fugir()
+    // Mochila da partida (Fase 4, TASK-047): Tab abre sem pausar; E usa no Líder e R no aliado mais perto da mira
+    if (comando.tipo === 'mochilaAberta') this.mochilaAberta = Boolean(comando.aberta)
+    if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)
     if (import.meta.env.DEV) this.comandoDeTeste(comando)
     if (this.terminou) return
@@ -1631,9 +1736,13 @@ export default class CenaArena extends Phaser.Scene {
       ),
       minimapa: this.situacaoDoMinimapa(),
       // Mochila da partida e o item que o E pegaria agora (TASK-064)
-      mochila: { peso: pesoTotal(this.mochila.itens), capacidade: this.mochila.capacidade },
+      mochila: {
+        peso: pesoTotal(this.mochila.itens),
+        capacidade: this.mochila.capacidade,
+        itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+      },
       itemPerto: (() => {
-        const perto = this.itemPerto()
+        const perto = this.mochilaAberta ? null : this.itemPerto()
         if (!perto) return null
         const cabe = pesoTotal(this.mochila.itens) + perto.item.peso <= this.mochila.capacidade
         return { nome: perto.item.nome, quantidade: perto.quantidade, cabe }

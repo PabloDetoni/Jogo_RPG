@@ -173,7 +173,8 @@ describe('save no banco durante o jogo (RF10, RNF06)', () => {
     t.despachar({ tipo: 'contratar', contrato: 'temporario', classe: 'arqueiro' })
     expect(await t.salvarAgora()).toEqual({ aceito: false })
     expect(t.estado().progresso.ouro).toBe(5000)
-    expect(t.estado().avisos.at(-1).texto).toContain('mais novo')
+    // (com 5000 de ouro, a conquista "Cofre cheio" também avisa: Fase 4)
+    expect(t.estado().avisos.some((aviso) => aviso.texto.includes('mais novo'))).toBe(true)
   })
 
   it('outra sessão entrou na conta: esta aba sai da conta e volta à Tela inicial com o aviso', async () => {

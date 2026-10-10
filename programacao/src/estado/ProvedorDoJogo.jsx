@@ -256,11 +256,14 @@ export default function ProvedorDoJogo({ children }) {
       confirmarFuga: () => despachar({ tipo: 'confirmarFuga' }),
       encerrarPartida: (fim) => despachar({ tipo: 'encerrarPartida', fim }),
       contratar: (contrato, classe) => despachar({ tipo: 'contratar', contrato, classe }),
+      noReino: (operacao, ...argumentos) => despachar({ tipo: 'noReino', operacao, argumentos }),
+      levarNaPartida: (id, quantidade) => despachar({ tipo: 'levarNaPartida', id, quantidade }),
       alternarPreferencia: (chave) => despachar({ tipo: 'alternarPreferencia', chave }),
 
       // Painel de desenvolvimento (só no npm run dev; mexem no save só fora da partida)
       salvarAgora,
       devContratarTodas: () => despachar({ tipo: 'devContratarTodas' }),
+      devItensDeTeste: () => despachar({ tipo: 'devItensDeTeste' }),
       devMudarNivel: (classe, quantos) => despachar({ tipo: 'devMudarNivel', classe, quantos }),
       devQuaseSubir: (classe) => despachar({ tipo: 'devQuaseSubir', classe }),
       apagarProgressoDoConvidado: () => {

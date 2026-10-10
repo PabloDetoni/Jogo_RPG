@@ -46,6 +46,39 @@ export const contratos = {
   precoDoPermanente: 1000,
 }
 
+// MERCADO E FORJA (Fase 4, TASK-074 e TASK-075). Provisório até o catálogo do grupo (TASK-014).
+// - fracaoDaVenda: quem vende um item (no Mercado, ou equipamento na Forja) recebe esta parte do preço, para baixo;
+// - rotação das ofertas rotativas (dados/mercado.js): mudam a cada "partidasPorRotacao" partidas jogadas, e aparecem
+//   "rotativasAVenda" de cada vez (a regra da rotação é a decisão em aberto da TASK-014).
+export const mercado = { fracaoDaVenda: 0.5, partidasPorRotacao: 3, rotativasAVenda: 3 }
+
+// EQUIPAMENTO NA PARTIDA (Fase 4, TASK-075): os bônus de atributo somam aos do personagem (até o máximo de cada atributo);
+// cada ponto de defesa tira uma parte do dano que o personagem leva, até um teto; a redução de recarga das peças soma,
+// até um teto (regras/equipamento.js). Provisório.
+export const equipamentoNaPartida = { reducaoPorPontoDeDefesa: 0.02, reducaoMaximaPelaDefesa: 0.5, reducaoDeRecargaMaxima: 0.3 }
+
+// MINIJOGOS DO PLANALTO (Fase 4, TASK-080 e TASK-081; RF54). Provisório até a TASK-016. Uma rodada dura "segundos";
+// cada ponto dá 1 do recurso do lugar e "xpPorPonto" de XP (dividido entre todos os permanentes, RF50); "chanceDoRaro"
+// é a chance de cada ponto trazer também o item raro. "pontosNoMaximo" barra números absurdos numa rodada.
+// Tempos em ms: Fazenda (a planta cresce, fica madura um tempo e murcha), Mina (cliques por pedra) e Lago (espera da
+// boia e a janela para fisgar).
+export const minijogos = {
+  segundos: 30,
+  pontosNoMaximo: 60,
+  fazenda: { xpPorPonto: 4, chanceDoRaro: 0.25, canteiros: 9, msCrescendo: [1500, 5000], msMadura: 1600, msMurcha: 900 },
+  mina: { xpPorPonto: 5, chanceDoRaro: 0.15, cliquesPorPedra: 3 },
+  lago: { xpPorPonto: 7, chanceDoRaro: 0.1, msEsperando: [1200, 3800], msFisgando: 900, msAssustado: 1500 },
+}
+
+// HABILIDADES DA ÁRVORE (Fase 4, TASK-077): cada nível (1 a 5) custa "pontosPorNivel" pontos de habilidade. A cada nível
+// acima do 1, os números da ativa sobem nesta fração do valor do nível 1 (dano +15% por nível...) e a recarga cai
+// "recargaPorNivel" (regras/habilidadesDaArvore.js). Provisório até as habilidades do grupo (TASK-010).
+export const evolucaoDasHabilidades = {
+  pontosPorNivel: 1,
+  porNivel: { dano: 0.15, cura: 0.15, bonusDeDano: 0.1, reducaoDeDano: 0.08, msDeDuracao: 0.1 },
+  recargaPorNivel: 0.04,
+}
+
 // MUNDO (Fase 3): a Floresta maior que a tela (layout em dados/mundo/floresta.js). Tudo provisório até o layout do
 // grupo (TASK-013). Distâncias em px do mapa, tempos em ms.
 export const mundo = {

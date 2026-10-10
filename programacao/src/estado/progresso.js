@@ -2,6 +2,7 @@ import { atributoMaximo } from '../dados/balanceamento.js'
 import { biomas, pontosDePartida } from '../dados/biomas.js'
 import { atributos, atributosIniciaisDaClasse, classes } from '../dados/classes.js'
 import { espacosDeEquipamento } from '../dados/equipamento.js'
+import { conquistas as listaDeConquistas } from '../dados/conquistas.js'
 import { tiposDeMissao } from '../dados/missoes.js'
 import {
   habilidadesAtivasNoMaximo,
@@ -9,6 +10,9 @@ import {
   nivelMaximo,
   nivelMaximoDaHabilidade,
 } from '../dados/regras.js'
+import { arvoreDaClasse, raizDaClasse } from '../dados/arvores.js'
+import { habilidadesIniciais } from '../regras/habilidadesDaArvore.js'
+import { juntarItens } from '../regras/mochila.js'
 import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
 
 // Progresso do jogador: é tudo o que fica salvo (no navegador para o convidado; no Supabase
@@ -28,15 +32,16 @@ export function progressoInicial() {
     // bioma → { nevoa, areas }: o minimapa já revelado (texto hexadecimal, regras/mundo.js) e as áreas que já deram
     // o XP da primeira descoberta (RF40). Fase 3.
     mapasDescobertos: {},
-    conquistas: {}, // conquista → progresso (etapa 9)
-    estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0 },
+    conquistas: {}, // conquistas concluídas: { id: true } (Fase 4, regras/conquistas.js); o progresso sai das estatísticas
+    // Para o Resumo, o ranking e as conquistas. bossesDerrotados, grandesVitorias e missoesEntregues entraram na Fase 4.
+    estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0, bossesDerrotados: 0, grandesVitorias: 0, missoesEntregues: 0 },
   }
 }
 
 // xp: o que o personagem já juntou dentro do nível atual (regras/xp.js).
 // pontosDeAtributo e pontosDeHabilidade: ganhos ao subir de nível e ainda não usados (RF55).
-// habilidades: habilidade → nível (1 a 5); ativas: até 3 delas (RF24). A lista de habilidades
-// do beta (TASK-010) ainda não existe; a primeira de cada classe, gratuita, entra com ela.
+// habilidades: habilidade → nível (1 a 5); ativas: até 3 delas, na ordem das teclas (RF24). As árvores ficam em
+// dados/arvores.js (Fase 4); a primeira de cada classe, gratuita, já vem no nível 1 e na tecla 1.
 // equipamento: espaço → item (RF22).
 export function novoPersonagem(classe) {
   return {
@@ -46,27 +51,32 @@ export function novoPersonagem(classe) {
     atributos: atributosIniciaisDaClasse(classe),
     pontosDeAtributo: 0,
     pontosDeHabilidade: 0,
-    habilidades: {},
-    ativas: [],
+    ...habilidadesIniciais(classe),
     equipamento: {},
   }
 }
 
-function normalizarHabilidades(salvas) {
+// Só habilidades da árvore da classe que existem no beta, com nível de 1 a 5. A raiz é gratuita: um save de antes da
+// Fase 4 (sem habilidades) ganha a raiz no nível 1.
+function normalizarHabilidades(salvas, classe) {
+  const daArvore = new Map(arvoreDaClasse(classe).map((habilidade) => [habilidade.id, habilidade]))
   const resultado = {}
   for (const [id, nivel] of Object.entries(ehObjeto(salvas) ? salvas : {})) {
-    if (Number.isInteger(nivel) && nivel >= 1) resultado[id] = Math.min(nivel, nivelMaximoDaHabilidade)
+    if (daArvore.get(id)?.noBeta && Number.isInteger(nivel) && nivel >= 1) resultado[id] = Math.min(nivel, nivelMaximoDaHabilidade)
   }
+  const raiz = raizDaClasse(classe)
+  if (raiz && !resultado[raiz.id]) resultado[raiz.id] = 1
   return resultado
 }
 
-// Só habilidades que o personagem tem, sem repetir, no máximo 3
-function normalizarAtivas(salvas, habilidades) {
+// Só ativas que o personagem aprendeu, sem repetir, no máximo 3. Um save de antes da Fase 4 (sem habilidades salvas)
+// já começa com a raiz na tecla 1, como um personagem novo.
+function normalizarAtivas(salvas, habilidades, classe, eraSemHabilidades) {
+  const ativasDaArvore = new Set(arvoreDaClasse(classe).filter((habilidade) => habilidade.tipo === 'ativa').map((habilidade) => habilidade.id))
   const lista = Array.isArray(salvas) ? salvas : []
-  return [...new Set(lista.filter((id) => typeof id === 'string' && id in habilidades))].slice(
-    0,
-    habilidadesAtivasNoMaximo,
-  )
+  const validas = [...new Set(lista.filter((id) => typeof id === 'string' && id in habilidades && ativasDaArvore.has(id)))].slice(0, habilidadesAtivasNoMaximo)
+  if (validas.length === 0 && eraSemHabilidades) return habilidadesIniciais(classe).ativas
+  return validas
 }
 
 const espacosValidos = new Set(espacosDeEquipamento.map((espaco) => espaco.id))
@@ -121,7 +131,8 @@ export function normalizarProgresso(dados) {
   for (const personagem of Array.isArray(dados.personagens) ? dados.personagens : []) {
     if (!ehObjeto(personagem) || !classesValidas.has(personagem.classe)) continue
     if (personagens.some((outro) => outro.classe === personagem.classe)) continue // um por classe
-    const habilidades = normalizarHabilidades(personagem.habilidades)
+    const habilidades = normalizarHabilidades(personagem.habilidades, personagem.classe)
+    const eraSemHabilidades = !ehObjeto(personagem.habilidades) || Object.keys(personagem.habilidades).length === 0
     personagens.push({
       ...personagem,
       nivel: inteiroEntre(personagem.nivel, nivelInicial, nivelMaximo, nivelInicial),
@@ -130,7 +141,7 @@ export function normalizarProgresso(dados) {
       pontosDeAtributo: inteiroNaoNegativo(personagem.pontosDeAtributo),
       pontosDeHabilidade: inteiroNaoNegativo(personagem.pontosDeHabilidade),
       habilidades,
-      ativas: normalizarAtivas(personagem.ativas, habilidades),
+      ativas: normalizarAtivas(personagem.ativas, habilidades, personagem.classe, eraSemHabilidades),
       equipamento: normalizarEquipamento(personagem.equipamento),
     })
   }
@@ -180,14 +191,18 @@ export function normalizarProgresso(dados) {
     contratosTemporarios,
     lider: temPermanente(dados.lider) ? dados.lider : (personagens[0]?.classe ?? null),
     ouro: inteiroNaoNegativo(dados.ouro),
-    mochila: mochila.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+    mochila: juntarItens(mochila.map((item) => ({ id: item.id, quantidade: item.quantidade }))),
     missaoAtiva: normalizarMissao(dados.missaoAtiva),
     regioesDescobertas,
     mapasDescobertos,
-    conquistas: ehObjeto(dados.conquistas) ? dados.conquistas : {},
+    // Só conquistas que existem, marcadas como concluídas
+    conquistas: Object.fromEntries(listaDeConquistas.filter((conquista) => ehObjeto(dados.conquistas) && dados.conquistas[conquista.id] === true).map((conquista) => [conquista.id, true])),
     estatisticas: {
       partidasJogadas: inteiroNaoNegativo(estatisticas.partidasJogadas),
       monstrosDerrotados: inteiroNaoNegativo(estatisticas.monstrosDerrotados),
+      bossesDerrotados: inteiroNaoNegativo(estatisticas.bossesDerrotados),
+      grandesVitorias: inteiroNaoNegativo(estatisticas.grandesVitorias),
+      missoesEntregues: inteiroNaoNegativo(estatisticas.missoesEntregues),
     },
   }
 }

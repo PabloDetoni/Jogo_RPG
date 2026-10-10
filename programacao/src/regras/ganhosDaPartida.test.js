@@ -19,7 +19,7 @@ describe('aplicarFimNoProgresso (TASK-048)', () => {
       monstros: 7,
     })
     expect(depois.ouro).toBe(242)
-    expect(depois.estatisticas).toEqual({ partidasJogadas: 4, monstrosDerrotados: 17 })
+    expect(depois.estatisticas).toMatchObject({ partidasJogadas: 4, monstrosDerrotados: 17, bossesDerrotados: 0, grandesVitorias: 0 })
     // Mago: 250 XP do nível 1 → nível 2 (100) e nível 3 (200)? 100 + 200 = 300 > 250: só o nível 2, com 150
     expect(depois.personagens[0]).toMatchObject({ nivel: 2, xp: 150, pontosDeAtributo: 3, pontosDeHabilidade: 1 })
     // Guerreiro: 2890 + 20 = 2910 ≥ 2900 → nível 30 (a IA dele vira a média na próxima partida)
@@ -100,5 +100,40 @@ describe('itens da mochila da partida (TASK-064, RF50)', () => {
   it('item estragado (sem id ou com quantidade zero ou quebrada) não entra', () => {
     const { progresso: depois } = aplicarFimNoProgresso(progresso, { itens: [{ id: '', quantidade: 2 }, { id: 'madeira', quantidade: 0 }, { id: 'madeira', quantidade: 2.7 }, null] })
     expect(depois.mochila).toEqual([{ id: 'madeira', quantidade: 2 }])
+  })
+})
+
+describe('itens levados da Mochila do Reino (Fase 4, TASK-073)', () => {
+  it('o que foi levado sai do Reino; o que sobrou na mochila da partida volta, com o que foi coletado', () => {
+    const progresso = { ...progressoInicial(), mochila: [{ id: 'pocaoDeVida', quantidade: 5 }, { id: 'madeira', quantidade: 1 }] }
+    // levou 3 poções, usou 2 na partida e coletou 2 peles
+    const { progresso: depois } = aplicarFimNoProgresso(progresso, {
+      levados: { pocaoDeVida: 3 },
+      itens: [{ id: 'pocaoDeVida', quantidade: 1 }, { id: 'peleDeLobo', quantidade: 2 }],
+    })
+    expect(depois.mochila).toEqual([
+      { id: 'pocaoDeVida', quantidade: 3 },
+      { id: 'madeira', quantidade: 1 },
+      { id: 'peleDeLobo', quantidade: 2 },
+    ])
+  })
+
+  it('usou tudo o que levou: o item some da Mochila do Reino; nunca tira mais do que havia', () => {
+    const progresso = { ...progressoInicial(), mochila: [{ id: 'pocaoDeVida', quantidade: 2 }] }
+    expect(aplicarFimNoProgresso(progresso, { levados: { pocaoDeVida: 2 }, itens: [] }).progresso.mochila).toEqual([])
+    expect(aplicarFimNoProgresso(progresso, { levados: { pocaoDeVida: 9 }, itens: [] }).progresso.mochila).toEqual([])
+  })
+})
+
+describe('missão ativa no fim da partida (Fase 4, TASK-078)', () => {
+  it('avança com o que a partida contou, em qualquer resultado', () => {
+    const missaoAtiva = { id: 'm', tipo: 'matar', alvo: 'lobo', quantidade: 10, progresso: 4, recompensa: { ouro: 80, xp: 100 } }
+    const { progresso } = aplicarFimNoProgresso({ ...progressoInicial(), missaoAtiva }, { eventos: { abates: { lobo: 3 } } })
+    expect(progresso.missaoAtiva.progresso).toBe(7)
+  })
+
+  it('sem eventos (partida antiga, botões de teste), a missão fica como estava', () => {
+    const missaoAtiva = { id: 'm', tipo: 'matar', alvo: 'lobo', quantidade: 10, progresso: 4, recompensa: { ouro: 80, xp: 100 } }
+    expect(aplicarFimNoProgresso({ ...progressoInicial(), missaoAtiva }, {}).progresso.missaoAtiva).toEqual(missaoAtiva)
   })
 })

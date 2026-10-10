@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { novoPersonagem, progressoInicial } from '../estado/progresso.js'
-import { classesQueFaltam, membroDeTeste, montarGrupoDaPartida, trocarClasseDoLider } from './grupoDaPartida.js'
+import { atributosIniciaisDaClasse } from '../dados/classes.js'
+import { capacidadeDaPartida, classesQueFaltam, membroDeTeste, montarGrupoDaPartida, trocarClasseDoLider } from './grupoDaPartida.js'
+import { capacidadeDaMochila } from './mochila.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
 
 vi.mock('../dados/balanceamento.js', async (importarOriginal) => {
@@ -24,8 +26,19 @@ describe('montarGrupoDaPartida (RF34)', () => {
     expect(grupo.map(({ classe, vidaMaxima, lider, temporario }) => ({ classe, vidaMaxima, lider, temporario }))).toEqual([
       { classe: 'tanque', vidaMaxima: 200, lider: true, temporario: false },
       { classe: 'mago', vidaMaxima: 80, lider: false, temporario: false },
-      { classe: 'arqueiro', vidaMaxima: 60, lider: false, temporario: true },
+      // o temporário vai com o equipamento fixo (RF29, Fase 4): o Colete de couro dá +2 de Vitalidade (60 → 80)
+      { classe: 'arqueiro', vidaMaxima: 80, lider: false, temporario: true },
     ])
+  })
+
+  it('o equipamento entra nos números da partida: atributos, defesa e redução de recarga (Fase 4)', () => {
+    const tanque = { ...novoPersonagem('tanque'), equipamento: { escudo: 'escudoDeMadeira', botas: 'botasDeVento' } }
+    const [membro] = montarGrupoDaPartida({ ...progressoInicial(), personagens: [tanque] }, 'tanque')
+    const [semNada] = montarGrupoDaPartida({ ...progressoInicial(), personagens: [novoPersonagem('tanque')] }, 'tanque')
+    expect(membro.vidaMaxima).toBe(semNada.vidaMaxima + 2 * 10) // Escudo de madeira: Vitalidade +2
+    expect(membro.defesa).toBe(3)
+    expect(membro.reducaoDeRecarga).toBe(0.05)
+    expect(semNada.defesa).toBe(0)
   })
 
   it('a vida vem da Vitalidade do personagem, não da classe', () => {
@@ -110,5 +123,18 @@ describe('Força de cada membro (capacidade da mochila, RF33)', () => {
     const progresso = { ...progressoInicial(), personagens: [{ ...novoPersonagem('tanque'), atributos: { ...novoPersonagem('tanque').atributos, forca: 30 } }], lider: 'tanque' }
     const [tanque] = montarGrupoDaPartida(progresso, 'tanque')
     expect(tanque.forca).toBe(30)
+  })
+})
+
+describe('capacidade da mochila da partida na Preparação (TASK-073)', () => {
+  it('é a Força de todo o grupo que vai (permanentes e temporários) × a capacidade por ponto', () => {
+    const progresso = {
+      ...progressoInicial(),
+      personagens: [novoPersonagem('mago'), novoPersonagem('tanque')],
+      contratosTemporarios: [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 5 }],
+      lider: 'tanque',
+    }
+    const forcas = ['mago', 'tanque', 'arqueiro'].map((classe) => atributosIniciaisDaClasse(classe).forca)
+    expect(capacidadeDaPartida(progresso, 'tanque')).toBe(capacidadeDaMochila(forcas))
   })
 })

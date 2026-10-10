@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:observar": "vitest",
     "testar:navegador": "node scripts/testarNoNavegador.mjs",
+    "testar:reino": "node scripts/testarReino.mjs",
     "testar:contas": "node scripts/testarContas.mjs",
     "testar:contas:publicado": "node scripts/testarContas.mjs --publicado",
     "testar:floresta": "node scripts/testarFloresta.mjs",

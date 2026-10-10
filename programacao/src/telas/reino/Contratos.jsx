@@ -2,6 +2,8 @@ import { useState } from 'react'
 import Botao from '../../componentes/Botao.jsx'
 import { contratos } from '../../dados/balanceamento.js'
 import { nomeDaClasse } from '../../dados/classes.js'
+import { equipamentoDosTemporarios } from '../../dados/forja.js'
+import { listarItens } from '../../regras/reino.js'
 import { useJogo } from '../../estado/contexto.js'
 import { classesParaContratar, contratarPermanente, contratarTemporario } from '../../regras/guilda.js'
 
@@ -43,13 +45,16 @@ export function ContratosTemporarios() {
   return (
     <div className="contratos">
       <p className="nota">
-        Dura {contratos.partidasDoTemporario} partidas, no nível {contratos.nivelDoTemporario}. Não ganha XP e não pode ser
-        Líder. Ouro: <strong>{progresso.ouro}</strong>
+        Dura {contratos.partidasDoTemporario} partidas, no nível {contratos.nivelDoTemporario}, com equipamento fixo. Não ganha XP
+        e não pode ser Líder. Ouro: <strong>{progresso.ouro}</strong>
       </p>
       <ul className="lista-de-contratos">
         {opcoes.map(({ classe }) => (
           <li key={classe}>
-            <span>{nomeDaClasse(classe)}</span>
+            <span>
+              {nomeDaClasse(classe)}
+              <span className="nota"> (vai com {listarItens(Object.fromEntries(Object.values(equipamentoDosTemporarios[classe] ?? {}).map((id) => [id, 1])))})</span>
+            </span>
             <Botao onClick={() => contratar(classe)}>Contratar ({contratos.precoDoTemporario} de ouro)</Botao>
           </li>
         ))}

@@ -190,6 +190,74 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
 
+## RE. Reino com dados (Fase 4)
+
+Para ter itens, ouro e pontos sem jogar horas: no `npm run dev`, painel `</> DEV` → **Itens de teste, +1000 de ouro e pontos livres** (no site publicado esse botão não existe: lá, jogue e compre).
+
+**RE-01 · Comprar sem ouro (TEST-006, caso 1)**
+- Fazer: com pouco ouro, Mercado → Comprar → Pergaminho de redefinição → Comprar 1.
+- Deve acontecer: nada é comprado e aparece "Ouro insuficiente: custa 300 e você tem X."
+
+**RE-02 · Vender e recomprar (TEST-006, caso 2)**
+- Fazer: Mercado → Vender → Poção de vida → Vender 1; depois Comprar → Poção de vida → Comprar 1.
+- Deve acontecer: vender soma 12 de ouro (metade do preço); recomprar desconta 25; a quantidade volta.
+
+**RE-03 · Missão de entrega depois de vender os itens (TEST-006, caso 3)**
+- Fazer: Guilda → Missões → Peles para o curtidor → Aceitar (com 4 peles ou mais). Venda as peles no Mercado. Volte e clique em Entregar.
+- Deve acontecer: com as peles, a linha mostra 4/4; vendidas, volta a 0/4 e Entregar explica que ainda falta.
+
+**RE-04 · Abandonar com ouro abaixo da multa (TEST-006, caso 4)**
+- Fazer: aceite O Guardião da Floresta (multa 40), gaste o ouro até ficar com menos de 40 e clique em Abandonar….
+- Deve acontecer: o aviso mostra a multa e diz que o ouro vai ficar em zero; confirmado, o ouro fica 0 e a missão sai.
+
+**RE-05 · Arma de outra classe (TEST-006, caso 5)**
+- Fazer: Forja → Equipar → Arma → tente equipar uma Espada curta no Arqueiro (ou um Cajado no Guerreiro).
+- Deve acontecer: "Espada curta é só para Guerreiro." e nada muda. A arma da própria classe equipa, e a antiga volta para a Mochila.
+
+**RE-06 · Permanente com o temporário da mesma classe ativo (TEST-006, caso 6)**
+- Fazer: Guilda → Contrato temporário de uma classe; depois Contrato permanente da mesma classe.
+- Deve acontecer: o permanente avisa que encerra o temporário; contratado, o temporário some.
+
+**RE-07 · Recarregar e conferir (TEST-006, caso 7)**
+- Fazer: depois de comprar, equipar, distribuir pontos e aceitar uma missão, recarregue a página (F5) e entre de novo.
+- Deve acontecer: ouro, Mochila, equipamento, atributos, habilidades, missão e conquistas continuam iguais.
+
+**RE-08 · Mochila do Reino**
+- Fazer: Mochila → escolha um item → Descartar 1 → Sim, descartar.
+- Deve acontecer: cada item mostra função, descrição, peso e raridade; descartar pede confirmação e tira só 1.
+
+**RE-09 · Forja: comprar e fabricar**
+- Fazer: Forja → Comprar (um item); Fabricar → uma receita sem os materiais; depois uma com os materiais.
+- Deve acontecer: sem materiais, "Falta(m) ..." e nada gasto; com eles, materiais e ouro saem e o equipamento aparece na Mochila. Em Equipar, os atributos mostram o bônus ("Agi 23 (+1)") e a defesa.
+
+**RE-10 · Árvores: atributos e pergaminho**
+- Fazer: Árvores → um personagem com pontos → + em Força duas vezes → Aplicar. Depois Usar pergaminho → Sim, usar.
+- Deve acontecer: o pentágono cresce antes de aplicar; aplicado, fica fixo. O pergaminho devolve os pontos, os atributos voltam aos iniciais e ele some; as habilidades não mudam.
+
+**RE-11 · Árvores: habilidades**
+- Fazer: Árvores → Habilidades. Evolua a raiz até o nível 5; aprenda a primeira de um ramo; ponha-a numa tecla.
+- Deve acontecer: a do ramo fica bloqueada até a raiz chegar ao 5; as "fora do beta" aparecem tracejadas; na partida, a tecla 2 usa a habilidade nova.
+
+**RE-12 · Mochila da partida (Tab, E e R)**
+- Fazer: Preparação → + em Poção de vida duas vezes → Começar partida. Leve um golpe, aperte Tab, depois E. Com o grupo cheio, mire perto de um aliado ferido e aperte R. Esc fecha.
+- Deve acontecer: a janela abre do lado direito sem pausar; E cura o Líder, R o aliado mais perto da mira; poção não levanta desmaiado. No fim, sai da Mochila do Reino só o que foi usado.
+
+**RE-13 · Missão de matar**
+- Fazer: aceite Caçar lobos e derrote lobos na Floresta.
+- Deve acontecer: o HUD avisa "Missão: 1/8 lobo" a cada um; no Reino, a linha da missão mostra o progresso; cumprida, Entregar dá o ouro e o XP.
+
+**RE-14 · Conquistas**
+- Fazer: jogue a primeira partida e abra Salão da Glória → Conquistas.
+- Deve acontecer: aparece "Conquista: Primeiros passos (+20 de ouro)"; a aba mostra a lista com o progresso de cada uma e as concluídas marcadas.
+
+**RE-15 · Som**
+- Fazer: clique em qualquer botão, ataque na partida, aperte M, desligue Som e depois Música nas Configurações.
+- Deve acontecer: bipes curtos provisórios nos cliques, ataques, acertos e outros acontecimentos (até os arquivos chegarem); M silencia tudo; Som desligado tira os efeitos. A música só toca quando os arquivos estiverem em `programacao/src/assets/audio/`.
+
+**RE-16 · Minijogos**
+- Fazer: Jogar → Fazenda (depois Mina e Lago) → Começar; jogue os 30 s.
+- Deve acontecer: Fazenda: clicar nas douradas; Mina: 3 cliques por pedra; Lago: clicar quando a boia afunda (antes, o peixe foge). No fim, os recursos vão para a Mochila e o XP é dividido; não aparece no histórico nem gasta contrato. Voltar ao Mapa no meio não dá nada.
+
 ## FL. Floresta (Fase 3)
 
 Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **Jogar → Floresta**. Na primeira vez não aparece a tela Ponto de partida: vai direto para a Preparação. No `npm run dev`, a barra de teste (faixa de baixo) tem **Invencível**, **Encher grupo**, **Encher mochila**, **Drop especial do Boss** e **Pior cenário (FPS)**. A Floresta é provisória: o layout, os mobs e o Boss do grupo (TASK-012 e TASK-013) substituem estes.

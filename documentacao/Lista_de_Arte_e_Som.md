@@ -80,7 +80,7 @@ O aviso do golpe precisa ser fácil de ler (piscar, encolher ou brilhar), como o
 
 - **Atributos:** 5 ícones (Vitalidade, Força, Sabedoria, Inteligência, Agilidade) e o ouro.
 - **Habilidades:** um por habilidade, quando a TASK-010 sair. São até 3 por classe, cerca de 15.
-- **Itens:** um por item do catálogo, quando a TASK-014 sair (estimativa: 30 a 40). Os que o jogo já tem (provisórios, `src/dados/itens.js`): cogumelo, erva medicinal, madeira, pele de lobo, teia de aranha, presa de javali, chifre de cervo, casca antiga, poção de vida, Coroa de raízes (especial do Boss) e o equipamento de teste (capacete, peitoral, calças, botas, manoplas, espada e escudo). Tamanho sugerido: 32 × 32 (o mesmo desenho serve para o item no chão e para a Mochila).
+- **Itens:** um por item do catálogo. O jogo já tem 48 (provisórios, `src/dados/itens.js`; a lista completa, com o tipo e a raridade, está no Balanceamento, seção "Reino com dados"): recursos (cogumelo, erva medicinal, madeira, trigo, peixe), partes de monstros e materiais (pele de lobo, teia de aranha, presa de javali, chifre de cervo, casca antiga, minério de ferro, cristal, pérola do lago), poções e aceleradores (vida, vida grande, mana, tônico ligeiro, elixir do foco), o pergaminho de redefinição, uma arma por classe em duas versões, dois escudos, duas linhas de armadura (couro e ferro), a Coroa de raízes (especial do Boss) e o equipamento de teste. Tamanho sugerido: 32 × 32 (o mesmo desenho serve para o item no chão, a Mochila, o Mercado e a Forja).
 
 ## 6. Som (TASK-104)
 
@@ -98,4 +98,10 @@ O aviso do golpe precisa ser fácil de ler (piscar, encolher ou brilhar), como o
 | Efeito | Moeda (ouro ganho) e clique de botão | `moeda.ogg`, `clique.ogg` |
 | Efeito | Fuga começando | `fuga.ogg` |
 
-Até os sons chegarem, o código deixa o sistema de áudio pronto, com Música, Som e o mudo (tecla M) funcionando.
+**Onde pôr os sons (pronto desde a Fase 4, TASK-105):** salve cada arquivo em `programacao/src/assets/audio/`, com o nome desta tabela (`.ogg`, `.mp3` ou `.wav`). O jogo encontra sozinho o que estiver lá, sem mexer em código; os nomes ficam em `programacao/src/dados/sons.js`.
+
+- **Sem arquivo:** cada efeito toca um bipe curto provisório, e a música fica em silêncio.
+- **Música do Boss (opcional):** sem ela, continua a da Floresta.
+- **Configurações:** Música e Som ligam e desligam cada parte, e a tecla M silencia tudo.
+- **Primeiro som:** o áudio começa no primeiro clique ou tecla (os navegadores bloqueiam som automático).
+- **Ataque básico:** na partida, só o do Líder toca som (o dos aliados encheria de barulho).

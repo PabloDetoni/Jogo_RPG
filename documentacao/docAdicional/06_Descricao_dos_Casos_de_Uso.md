@@ -91,6 +91,11 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 | UC40 | Confirmada, a fuga não se cancela. |
 | UC04 | Pode entrar por "Continuar como ..." quando o navegador lembra a conta (Fase 2). |
 | UC28 | Sem outra região descoberta, a tela Ponto de partida não aparece (Fase 3). |
+| UC17 | A Forja mostra os atributos com o bônus do equipamento, e a peça trocada volta para a Mochila (Fase 4). |
+| UC19 | Habilidades nas teclas 1 a 3 na ordem escolhida; com as 3 ocupadas, a tela pede qual trocar (Fase 4). |
+| UC30 | Na Preparação só vão poções e aceleradores, até a capacidade (Fase 4). |
+| UC36 | R usa o item no aliado de pé mais perto da mira (Fase 4). |
+| UC43 | Rodadas de 30 s; sair no meio não dá nada (Fase 4). |
 | UC34 | Os ataques do Boss são avisados no chão antes do golpe (Fase 3). |
 | UC35 | A primeira vez em cada área dá XP; a coleta é com E (Fase 3). |
 | UC06 | O link de recuperação abre a tela Senha nova (Fase 2). |

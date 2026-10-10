@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { combateDeTeste } from '../dados/balanceamento.js'
 import { classes } from '../dados/classes.js'
-import { habilidadesDeTeste, habilidadesNasTeclas } from '../dados/habilidades.js'
+import { habilidadesDeTeste } from '../dados/habilidades.js'
+import { habilidadesNasTeclas } from './habilidadesDaArvore.js'
 import { avisoDoMotivo, gastarMana, manaMaxima, manaPorSegundo, podeUsarHabilidade, regenerarMana } from './habilidades.js'
 
 const { mana } = combateDeTeste
@@ -57,10 +58,10 @@ describe('podeUsarHabilidade (TASK-046)', () => {
   })
 })
 
-describe('habilidades de teste (provisórias até a TASK-010)', () => {
-  it('cada classe tem uma na tecla 1; as teclas 2 e 3 ficam vazias', () => {
+describe('a raiz de cada classe (a antiga habilidade de teste; provisórias até a TASK-010)', () => {
+  it('sem árvore salva (temporário, membro de teste), a raiz vai na tecla 1 e as teclas 2 e 3 ficam vazias', () => {
     for (const classe of classes) {
-      const teclas = habilidadesNasTeclas(classe.id)
+      const teclas = habilidadesNasTeclas({ classe: classe.id })
       expect(teclas).toHaveLength(3)
       expect(teclas[0]).toMatchObject({ nome: habilidadesDeTeste[classe.id].nome })
       expect(teclas[0].custoDeMana).toBeGreaterThan(0)

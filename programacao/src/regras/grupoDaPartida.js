@@ -1,8 +1,12 @@
 import { combateDeTeste, contratos, critico } from '../dados/balanceamento.js'
 import { atributosIniciaisDaClasse, classes } from '../dados/classes.js'
+import { equipamentoDosTemporarios } from '../dados/forja.js'
 import { nivelInicial } from '../dados/regras.js'
 import { chanceDeCritico } from './combate.js'
+import { atributosComEquipamento, bonusDoEquipamento } from './equipamento.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
+import { bonusDasPassivas, habilidadesIniciais, habilidadesNasTeclas } from './habilidadesDaArvore.js'
+import { capacidadeDaMochila } from './mochila.js'
 
 // Quem vai para a partida, com quanta vida e quanta mana (Fase 1).
 // Cada membro do grupo: { classe, nivel, xp, vidaMaxima, manaMaxima, manaPorSegundo, chanceDeCritico, lider, temporario, deTeste? }
@@ -14,20 +18,29 @@ export function vidaMaximaPelaVitalidade(vitalidade) {
   return Math.max(1, Math.round(vitalidade * combateDeTeste.vidaPorPontoDeVitalidade))
 }
 
-// Vida pela Vitalidade, mana pela Inteligência, a volta da mana pela Sabedoria e o crítico pela Agilidade
-function numerosDoMembro(atributos) {
+// Vida pela Vitalidade, mana pela Inteligência, a volta da mana pela Sabedoria e o crítico pela Agilidade.
+// Com equipamento (Fase 4): os bônus somam aos atributos, e a defesa e a redução de recarga das peças vão junto.
+// Com a árvore (Fase 4): as ativas nas teclas 1 a 3, no nível de cada uma, e as passivas somadas aos números.
+function numerosDoMembro(atributosSemEquipamento, equipamento = {}, arvore = {}) {
+  const atributos = atributosComEquipamento(atributosSemEquipamento, equipamento)
+  const { defesa, reducaoDeRecarga } = bonusDoEquipamento(equipamento)
+  const passivas = bonusDasPassivas(arvore)
   return {
+    defesa: defesa + passivas.defesa,
+    reducaoDeRecarga,
     forca: atributos.forca ?? 0, // a capacidade da mochila da partida sai da Força do grupo (RF33)
-    vidaMaxima: vidaMaximaPelaVitalidade(atributos.vitalidade),
+    vidaMaxima: Math.round(vidaMaximaPelaVitalidade(atributos.vitalidade) * (1 + passivas.vida)),
     manaMaxima: manaMaxima(atributos.inteligencia),
-    manaPorSegundo: manaPorSegundo(atributos.sabedoria),
-    chanceDeCritico: chanceDeCritico(atributos.agilidade, critico),
+    manaPorSegundo: manaPorSegundo(atributos.sabedoria) * (1 + passivas.mana),
+    chanceDeCritico: chanceDeCritico(atributos.agilidade, critico) + passivas.critico,
+    multiplicadorDeCura: 1 + passivas.cura,
+    teclas: habilidadesNasTeclas(arvore),
   }
 }
 
 // Membro criado só na memória da partida (barra de teste); nunca vai para o save
 export function membroDeTeste(classe, lider = false) {
-  return { classe, nivel: nivelInicial, xp: 0, ...numerosDoMembro(atributosIniciaisDaClasse(classe)), lider, temporario: true, deTeste: true }
+  return { classe, nivel: nivelInicial, xp: 0, ...numerosDoMembro(atributosIniciaisDaClasse(classe), {}, { classe }), lider, temporario: true, deTeste: true }
 }
 
 // Todos os personagens permanentes e os contratados temporários vão juntos (RF34), com o Líder
@@ -37,6 +50,8 @@ export function montarGrupoDaPartida(progresso, lider) {
   const permanentes = progresso.personagens.map((personagem) => ({
     classe: personagem.classe,
     atributos: { ...atributosIniciaisDaClasse(personagem.classe), ...personagem.atributos },
+    equipamento: personagem.equipamento ?? {},
+    arvore: { classe: personagem.classe, habilidades: personagem.habilidades, ativas: personagem.ativas },
     nivel: personagem.nivel ?? nivelInicial,
     xp: personagem.xp ?? 0,
     temporario: false,
@@ -46,6 +61,8 @@ export function montarGrupoDaPartida(progresso, lider) {
     .map((contrato) => ({
       classe: contrato.classe,
       atributos: atributosIniciaisDaClasse(contrato.classe),
+      equipamento: equipamentoDosTemporarios[contrato.classe] ?? {}, // fixo (RF29)
+      arvore: { classe: contrato.classe, ...habilidadesIniciais(contrato.classe) }, // só a raiz, no nível 1 (fixo)
       nivel: contrato.nivel ?? contratos.nivelDoTemporario,
       xp: 0,
       temporario: true,
@@ -54,7 +71,7 @@ export function montarGrupoDaPartida(progresso, lider) {
     classe: membro.classe,
     nivel: membro.nivel,
     xp: membro.xp,
-    ...numerosDoMembro(membro.atributos),
+    ...numerosDoMembro(membro.atributos, membro.equipamento, membro.arvore),
     lider: membro.classe === lider,
     temporario: membro.temporario,
   }))
@@ -83,4 +100,10 @@ export function trocarClasseDoLider(grupo, novaClasse) {
     })
   }
   return grupo.map((membro) => (membro === lider ? membroDeTeste(novaClasse, true) : membro))
+}
+
+// Capacidade da mochila da partida com o grupo que vai (a Força de todos, RF33): a mesma conta que a partida faz ao
+// começar, para a Preparação mostrar e limitar o que vai junto
+export function capacidadeDaPartida(progresso, lider) {
+  return capacidadeDaMochila(montarGrupoDaPartida(progresso, lider).map((membro) => membro.forca ?? 0))
 }
