@@ -1127,3 +1127,19 @@ body {
   text-align: center;
   font-weight: bold;
 }
+
+/* Mochila da partida (Tab, TASK-047): lista curta que rola, dentro da janela leve */
+.mochila-na-partida-itens {
+  max-height: 12cqw;
+}
+
+/* Janela ao lado (a mochila da partida): no lado direito, embaixo do HUD, para não cobrir o Líder no meio da tela */
+.janela-fundo-ao-lado {
+  place-items: start end;
+  padding: 7.5cqw 1.2cqw 0 0;
+}
+
+.janela-fundo-ao-lado .janela {
+  min-width: 24cqw;
+  max-width: 27cqw;
+}

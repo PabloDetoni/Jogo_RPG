@@ -40,6 +40,7 @@ import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
+import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
@@ -684,7 +685,8 @@ export default class CenaArena extends Phaser.Scene {
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
-    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
+    // Com a mochila da partida aberta (Tab), o E usa o item escolhido, não pega do chão (RF41; Partida.jsx manda o comando)
+    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir) && !this.mochilaAberta) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
     ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
       if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
@@ -751,6 +753,9 @@ export default class CenaArena extends Phaser.Scene {
       }
       const empurrado = entidade.estaSendoEmpurrado(agora)
       let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
+      // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
+      const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora)
+      if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
       // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo).
@@ -958,7 +963,9 @@ export default class CenaArena extends Phaser.Scene {
       return false
     }
     membro.mana = gastarMana(membro.mana, habilidade.custoDeMana)
-    membro.ultimoUsoDaHabilidade[indice] = agora
+    // Com o Elixir do foco (Fase 4), a recarga fica mais curta: o último uso conta como se fosse um pouco antes
+    const recarga = recargaComEfeitos(habilidade.recargaMs, multiplicadorAtivo(membro.efeitos, 'recarga', agora))
+    membro.ultimoUsoDaHabilidade[indice] = agora - (habilidade.recargaMs - recarga)
     membro.anguloDaMira = mira.angulo
     const ponto = habilidade.id === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
     efeitosDasHabilidades[habilidade.id](this, membro, { ...mira, ponto })
@@ -1358,12 +1365,41 @@ export default class CenaArena extends Phaser.Scene {
 
   // ---------- Barra de teste (comandos do React) ----------
 
+  // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé mais perto da mira (em = 'aliado').
+  // A regra (regras/itensNaPartida.js) diz o que muda; quando não dá (desmaiado, vida cheia), nada é gasto.
+  usarItem(id, em) {
+    const pilha = this.mochila.itens.find((item) => item.id === id)
+    const item = itemDoCatalogo(id)
+    if (!pilha || !item) return
+    const alvo = em === 'aliado' ? aliadoPelaMira(this.aliados, this.mouseNoMundo ?? this.lider) : this.lider
+    if (!alvo) {
+      this.mensagem('Nenhum aliado de pé para usar o item', 'aviso')
+      return
+    }
+    const resultado = usarItemEm(item, alvo, this.agora)
+    if (!resultado.ok) {
+      this.mensagem(resultado.texto, 'aviso')
+      return
+    }
+    const { vida, mana, efeito } = resultado.mudancas
+    if (vida !== undefined) alvo.vida = vida
+    if (mana !== undefined) alvo.mana = mana
+    if (efeito) alvo.efeitos = { ...alvo.efeitos, [efeito.tipo]: efeito }
+    pilha.quantidade -= 1
+    if (pilha.quantidade <= 0) this.mochila.itens = this.mochila.itens.filter((outro) => outro !== pilha)
+    numeroFlutuante(this, alvo.x, alvo.y - 44, resultado.texto, vida !== undefined ? '#7dff9a' : '#8fd3ff', 18)
+    this.mensagem(`${item.nome} em ${alvo === this.lider ? 'você' : nomeDaClasse(alvo.classe)}: ${resultado.texto}`, 'aviso')
+  }
+
   executarComando(comando) {
     if (this.terminou) return
     // Teclas e pedidos do jogo (não são de teste): Q, Voltar ao Reino da pausa e a fuga confirmada
     if (comando.tipo === 'alternarRetorno') this.alternarRetorno()
     if (comando.tipo === 'comecarRetorno') this.alternarRetorno(true)
     if (comando.tipo === 'fugir') this.fugir()
+    // Mochila da partida (Fase 4, TASK-047): Tab abre sem pausar; E usa no Líder e R no aliado mais perto da mira
+    if (comando.tipo === 'mochilaAberta') this.mochilaAberta = Boolean(comando.aberta)
+    if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)
     if (import.meta.env.DEV) this.comandoDeTeste(comando)
     if (this.terminou) return
@@ -1635,9 +1671,13 @@ export default class CenaArena extends Phaser.Scene {
       ),
       minimapa: this.situacaoDoMinimapa(),
       // Mochila da partida e o item que o E pegaria agora (TASK-064)
-      mochila: { peso: pesoTotal(this.mochila.itens), capacidade: this.mochila.capacidade },
+      mochila: {
+        peso: pesoTotal(this.mochila.itens),
+        capacidade: this.mochila.capacidade,
+        itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+      },
       itemPerto: (() => {
-        const perto = this.itemPerto()
+        const perto = this.mochilaAberta ? null : this.itemPerto()
         if (!perto) return null
         const cabe = pesoTotal(this.mochila.itens) + perto.item.peso <= this.mochila.capacidade
         return { nome: perto.item.nome, quantidade: perto.quantidade, cabe }

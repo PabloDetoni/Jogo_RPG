@@ -10,6 +10,7 @@ import { componentesDasJanelas } from '../janelas/index.js'
 import { componentesDasTelas } from './index.js'
 import HudDaPartida, { AvisosDaPartida } from './partida/HudDaPartida.jsx'
 import Resumo from './partida/Resumo.jsx'
+import MochilaNaPartida from './partida/MochilaNaPartida.jsx'
 import Pentagono from '../componentes/Pentagono.jsx'
 import { atributosIniciaisDaClasse } from '../dados/classes.js'
 import { descreverMissao } from '../dados/missoes.js'
@@ -477,5 +478,32 @@ describe('Preparação: mochila da partida (Fase 4, TASK-073)', () => {
 
   it('sem poções, explica onde comprar', () => {
     expect(desenhar('preparacao', 'convidado')).toContain('Dá para comprar no Mercado')
+  })
+})
+
+describe('mochila da partida com Tab (Fase 4, TASK-047)', () => {
+  const mochila = { peso: 4, capacidade: 20, itens: [{ id: 'peleDeLobo', quantidade: 2 }, { id: 'pocaoDeVida', quantidade: 1 }] }
+  const desenharMochila = (escolhido) =>
+    renderToString(<MochilaNaPartida mochila={mochila} escolhido={escolhido} aoEscolher={() => {}} aoUsar={() => {}} />).replace(/<!-- -->/g, '')
+
+  it('poções primeiro, o escolhido marcado com a função, e os botões de E e R', () => {
+    const html = desenharMochila('pocaoDeVida')
+    expect(html).toContain('Peso 4 de 20')
+    expect(html.indexOf('Poção de vida')).toBeLessThan(html.indexOf('Pele de lobo'))
+    expect(html).toContain('Recupera 40% da vida')
+    expect(html).toContain('Usar no Líder (E)')
+    expect(html).toContain('Usar no aliado (R)')
+    expect(html).toContain('janela-fundo-ao-lado')
+  })
+
+  it('sem item escolhido (o escolhido acabou), pede para escolher e não deixa usar', () => {
+    const html = desenharMochila(null)
+    expect(html).toContain('Escolha um item')
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Usar no Líder/)
+  })
+
+  it('vazia, explica como pegar itens do chão', () => {
+    const html = renderToString(<MochilaNaPartida mochila={{ peso: 0, capacidade: 20, itens: [] }} escolhido={null} aoEscolher={() => {}} aoUsar={() => {}} />)
+    expect(html).toContain('Vazia')
   })
 })
