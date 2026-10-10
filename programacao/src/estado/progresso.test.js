@@ -126,6 +126,11 @@ describe('habilidades, equipamento, missão e mochila (TASK-020)', () => {
     expect(normalizarProgresso({ mochila }).mochila).toEqual([{ id: 'pocao', quantidade: 2 }])
   })
 
+  it('mochila: o mesmo item duas vezes vira uma linha só (Fase 4)', () => {
+    const mochila = [{ id: 'pocao', quantidade: 2 }, { id: 'pele', quantidade: 1 }, { id: 'pocao', quantidade: 3 }]
+    expect(normalizarProgresso({ mochila }).mochila).toEqual([{ id: 'pocao', quantidade: 5 }, { id: 'pele', quantidade: 1 }])
+  })
+
   it('contrato temporário guarda o nível; sem nível válido, nível 1', () => {
     const contratos = [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 300, extra: true }]
     expect(normalizarProgresso({ contratosTemporarios: contratos }).contratosTemporarios).toEqual([

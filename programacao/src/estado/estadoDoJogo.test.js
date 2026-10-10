@@ -368,6 +368,32 @@ describe('Guilda: contratos (TASK-079)', () => {
   })
 })
 
+describe('operações do Reino (Fase 4)', () => {
+  const comMochila = (mochila) => {
+    const base = convidadoComMago()
+    return { ...base, progresso: { ...base.progresso, mochila } }
+  }
+
+  it('descartar muda a Mochila e pede para salvar', () => {
+    const antes = comMochila([{ id: 'pocaoDeVida', quantidade: 3 }])
+    const e = fazer(antes, { tipo: 'noReino', operacao: 'descartar', argumentos: ['pocaoDeVida', 1] })
+    expect(e.progresso.mochila).toEqual([{ id: 'pocaoDeVida', quantidade: 2 }])
+    expect(e.pedidosDeSalvamento).toBe(antes.pedidosDeSalvamento + 1)
+  })
+
+  it('quando a regra não deixa, nada muda nem é salvo', () => {
+    const antes = comMochila([{ id: 'pocaoDeVida', quantidade: 1 }])
+    expect(fazer(antes, { tipo: 'noReino', operacao: 'descartar', argumentos: ['pocaoDeVida', 2] })).toBe(antes)
+    expect(fazer(antes, { tipo: 'noReino', operacao: 'naoExiste', argumentos: [] })).toBe(antes)
+  })
+
+  it('durante a partida nada muda (RF12)', () => {
+    const base = comMochila([{ id: 'pocaoDeVida', quantidade: 3 }])
+    const antes = fazer(base, ...irAtePreparacao, comecar)
+    expect(fazer(antes, { tipo: 'noReino', operacao: 'descartar', argumentos: ['pocaoDeVida', 1] }).progresso).toBe(antes.progresso)
+  })
+})
+
 describe('painel DEV: mexe no save só fora da partida (5c)', () => {
   it('contratar todas as classes cria os permanentes que faltam e salva', () => {
     const e = fazer(convidadoComMago(), { tipo: 'devContratarTodas' })

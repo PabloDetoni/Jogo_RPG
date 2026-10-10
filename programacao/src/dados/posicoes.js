@@ -112,6 +112,7 @@ export const posicoes = {
     voltarAoReino: { x: 10, y: 90 },
   },
   mochila: {
+    conteudo: { x: 50, y: 53 },
     voltarAoReino: { x: 10, y: 90 },
   },
   arvores: {

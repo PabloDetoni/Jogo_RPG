@@ -158,6 +158,9 @@ function Personagens() {
       <button type="button" onClick={acoes.devContratarTodas} disabled={naPartida || personagens.length >= 5}>
         Contratar todas as classes (permanentes, de graça)
       </button>
+      <button type="button" onClick={acoes.devItensDeTeste} disabled={naPartida} title="1 de cada equipamento, 3 de cada consumível, o pergaminho e 10 de cada material">
+        Itens de teste na Mochila e +1000 de ouro
+      </button>
       {personagens.map((personagem) => (
         <div key={personagem.classe} className="painel-dev-personagem">
           <span>

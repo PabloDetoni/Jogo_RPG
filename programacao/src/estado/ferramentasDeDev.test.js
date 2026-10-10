@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { contratarTodasAsClasses, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, mudarNivel, quaseSubir, itensDeTeste, ouroDeTeste } from './ferramentasDeDev.js'
+import { itemDoCatalogo } from '../dados/itens.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
 // Ferramentas do painel "</> DEV" (só no npm run dev). A regra "só fora da partida" fica no estado do jogo.
@@ -25,5 +26,17 @@ describe('ferramentas de teste do painel DEV', () => {
     expect(quaseSubir(comMago, 'mago').personagens[0].xp).toBe(99)
     const noMaximo = mudarNivel(comMago, 'mago', 99)
     expect(quaseSubir(noMaximo, 'mago')).toEqual(noMaximo)
+  })
+})
+
+describe('itens de teste (Fase 4, só no npm run dev)', () => {
+  it('põe uma amostra do catálogo na Mochila e soma o ouro, sem perder o que já havia', () => {
+    const antes = { ...progressoInicial(), ouro: 50, mochila: [{ id: 'pocaoDeVida', quantidade: 2 }] }
+    const depois = itensDeTeste(antes)
+    expect(depois.ouro).toBe(50 + ouroDeTeste)
+    expect(depois.mochila.find((item) => item.id === 'pocaoDeVida').quantidade).toBe(5)
+    expect(depois.mochila.find((item) => item.id === 'peleDeLobo').quantidade).toBe(10)
+    expect(depois.mochila.find((item) => item.id === 'espadaCurta').quantidade).toBe(1)
+    expect(depois.mochila.every((item) => itemDoCatalogo(item.id))).toBe(true)
   })
 })

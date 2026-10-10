@@ -434,3 +434,27 @@ describe('Floresta no HUD e no Resumo (Fase 3)', () => {
     expect(html).toContain('derrotado (+500 pontos)')
   })
 })
+
+describe('Mochila do Reino (Fase 4, TASK-072)', () => {
+  const comMochila = (mochila) => desenhar('mochila', 'convidado', null, { mudancas: { progresso: { ...progresso, mochila } } }).replace(/<!-- -->/g, '')
+
+  it('lista os itens com a quantidade e mostra função, descrição e peso do primeiro (consumíveis primeiro)', () => {
+    const html = comMochila([
+      { id: 'peleDeLobo', quantidade: 5 },
+      { id: 'pocaoDeVida', quantidade: 3 },
+    ])
+    expect(html).toContain('Pele de lobo')
+    expect(html).toContain('×5')
+    expect(html.indexOf('Poção de vida')).toBeLessThan(html.indexOf('Pele de lobo'))
+    expect(html).toContain('Recupera 40% da vida')
+    expect(html).toContain('Peso 1')
+    expect(html).toContain('Descartar 1')
+    expect(html).toContain('Descartar todos (3)')
+    expect(html).toContain('peso total 13')
+  })
+
+  it('vazia, explica de onde vêm os itens; item fora do catálogo aparece pelo id', () => {
+    expect(comMochila([])).toContain('A Mochila está vazia')
+    expect(comMochila([{ id: 'itemVelho', quantidade: 1 }])).toContain('não existe mais no catálogo')
+  })
+})

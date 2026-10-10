@@ -3,8 +3,9 @@ import { motivosDoFim, resultados } from '../dados/resultados.js'
 import { montarFimDaPartida } from '../regras/fimDaPartida.js'
 import { aplicarFimNoProgresso } from '../regras/ganhosDaPartida.js'
 import { contratarPermanente, contratarTemporario } from '../regras/guilda.js'
+import { aplicarNoReino } from '../regras/reino.js'
 import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
-import { contratarTodasAsClasses, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
@@ -178,6 +179,7 @@ function ferramentaDeDev(estado, acao) {
     devContratarTodas: (progresso) => contratarTodasAsClasses(progresso),
     devMudarNivel: (progresso) => mudarNivel(progresso, acao.classe, acao.quantos),
     devQuaseSubir: (progresso) => quaseSubir(progresso, acao.classe),
+    devItensDeTeste: (progresso) => itensDeTeste(progresso),
   }
   return pedirSalvamento({ ...estado, progresso: ferramentas[acao.tipo](estado.progresso) })
 }
@@ -343,9 +345,19 @@ export function atualizarEstado(estado, acao) {
       return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
     }
 
+    // Mochila, Mercado, Forja, Árvores e Guilda (Fase 4): a operação pelo nome (regras/reino.js). Se a regra não
+    // deixar (sem ouro, sem o item...), nada muda; a tela mostra o motivo, que vem da mesma regra. Durante a partida,
+    // nada muda (RF12). Cada operação é um momento de salvamento no navegador.
+    case 'noReino': {
+      if (estado.partidaAtual) return estado
+      const resultado = aplicarNoReino(estado.progresso, acao.operacao, acao.argumentos)
+      return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
+    }
+
     case 'devContratarTodas':
     case 'devMudarNivel':
     case 'devQuaseSubir':
+    case 'devItensDeTeste':
       return ferramentaDeDev(estado, acao)
 
     // Música, som e mudo ligam/desligam (o mudo também pela tecla M); o tema alterna entre claro e escuro.

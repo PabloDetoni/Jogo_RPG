@@ -9,6 +9,7 @@ import {
   nivelMaximo,
   nivelMaximoDaHabilidade,
 } from '../dados/regras.js'
+import { juntarItens } from '../regras/mochila.js'
 import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
 
 // Progresso do jogador: é tudo o que fica salvo (no navegador para o convidado; no Supabase
@@ -180,7 +181,7 @@ export function normalizarProgresso(dados) {
     contratosTemporarios,
     lider: temPermanente(dados.lider) ? dados.lider : (personagens[0]?.classe ?? null),
     ouro: inteiroNaoNegativo(dados.ouro),
-    mochila: mochila.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+    mochila: juntarItens(mochila.map((item) => ({ id: item.id, quantidade: item.quantidade }))),
     missaoAtiva: normalizarMissao(dados.missaoAtiva),
     regioesDescobertas,
     mapasDescobertos,

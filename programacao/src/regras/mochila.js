@@ -29,3 +29,36 @@ export function guardarNaMochila(itens, novo, capacidade) {
   }
   return { itens: resultado, noChao: sobram > 0 ? { ...novo, quantidade: sobram } : null }
 }
+
+// ---------- MOCHILA DO REINO (Fase 4, TASK-072) ----------
+// Lista de { id, quantidade }, praticamente ilimitada (RF20). Os nomes vêm do catálogo (dados/itens.js).
+
+// Junta itens repetidos (um save antigo pode ter o mesmo id duas vezes) e tira as quantidades zeradas
+export function juntarItens(lista) {
+  const total = new Map()
+  for (const item of lista) total.set(item.id, (total.get(item.id) ?? 0) + item.quantidade)
+  return [...total].filter(([, quantidade]) => quantidade > 0).map(([id, quantidade]) => ({ id, quantidade }))
+}
+
+export function quantidadeNaMochila(mochila, id) {
+  return mochila.reduce((soma, item) => (item.id === id ? soma + item.quantidade : soma), 0)
+}
+
+// Põe itens ({ id: quantidade }) na mochila
+export function porNaMochila(mochila, pedidos) {
+  return juntarItens([...mochila, ...Object.entries(pedidos).map(([id, quantidade]) => ({ id, quantidade }))])
+}
+
+// O que falta para ter todos os itens pedidos ({ id: quantidade }): [{ id, falta }] (vazio = tem tudo)
+export function oQueFalta(mochila, pedidos) {
+  return Object.entries(pedidos)
+    .map(([id, quantidade]) => ({ id, falta: quantidade - quantidadeNaMochila(mochila, id) }))
+    .filter((item) => item.falta > 0)
+}
+
+// Tira itens ({ id: quantidade }) da mochila. Sem o bastante, nada muda: { ok: false, falta }
+export function tirarDaMochila(mochila, pedidos) {
+  const falta = oQueFalta(mochila, pedidos)
+  if (falta.length > 0) return { ok: false, falta }
+  return { ok: true, mochila: juntarItens([...mochila, ...Object.entries(pedidos).map(([id, quantidade]) => ({ id, quantidade: -quantidade }))]) }
+}

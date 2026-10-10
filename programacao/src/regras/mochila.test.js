@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { capacidadeDaMochila, guardarNaMochila, pesoTotal } from './mochila.js'
+import { capacidadeDaMochila, guardarNaMochila, juntarItens, oQueFalta, pesoTotal, porNaMochila, quantidadeNaMochila, tirarDaMochila } from './mochila.js'
 
 vi.mock('../dados/balanceamento.js', async (importarOriginal) => ({
   ...(await importarOriginal()),
@@ -57,5 +57,39 @@ describe('guardarNaMochila (RF40)', () => {
     const antes = [pocao(1)]
     guardarNaMochila(antes, pocao(2), 20)
     expect(antes).toEqual([pocao(1)])
+  })
+})
+
+describe('Mochila do Reino (Fase 4, TASK-072)', () => {
+  const mochila = [
+    { id: 'pocaoDeVida', quantidade: 3 },
+    { id: 'peleDeLobo', quantidade: 5 },
+  ]
+
+  it('junta itens repetidos e tira os zerados', () => {
+    expect(juntarItens([{ id: 'a', quantidade: 2 }, { id: 'b', quantidade: 1 }, { id: 'a', quantidade: 3 }, { id: 'c', quantidade: 0 }])).toEqual([
+      { id: 'a', quantidade: 5 },
+      { id: 'b', quantidade: 1 },
+    ])
+  })
+
+  it('quantidade, pôr e o que falta', () => {
+    expect(quantidadeNaMochila(mochila, 'peleDeLobo')).toBe(5)
+    expect(quantidadeNaMochila(mochila, 'madeira')).toBe(0)
+    expect(porNaMochila(mochila, { peleDeLobo: 2, madeira: 1 })).toEqual([
+      { id: 'pocaoDeVida', quantidade: 3 },
+      { id: 'peleDeLobo', quantidade: 7 },
+      { id: 'madeira', quantidade: 1 },
+    ])
+    expect(oQueFalta(mochila, { peleDeLobo: 7, pocaoDeVida: 1, madeira: 2 })).toEqual([
+      { id: 'peleDeLobo', falta: 2 },
+      { id: 'madeira', falta: 2 },
+    ])
+  })
+
+  it('tirar: com o bastante, tira (e some o que zerou); sem o bastante, nada muda', () => {
+    expect(tirarDaMochila(mochila, { pocaoDeVida: 1 })).toEqual({ ok: true, mochila: [{ id: 'pocaoDeVida', quantidade: 2 }, { id: 'peleDeLobo', quantidade: 5 }] })
+    expect(tirarDaMochila(mochila, { peleDeLobo: 5 }).mochila).toEqual([{ id: 'pocaoDeVida', quantidade: 3 }])
+    expect(tirarDaMochila(mochila, { peleDeLobo: 6, pocaoDeVida: 1 })).toEqual({ ok: false, falta: [{ id: 'peleDeLobo', falta: 1 }] })
   })
 })
