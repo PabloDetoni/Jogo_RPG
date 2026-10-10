@@ -10,6 +10,7 @@ import { componentesDasJanelas } from '../janelas/index.js'
 import { componentesDasTelas } from './index.js'
 import HudDaPartida, { AvisosDaPartida } from './partida/HudDaPartida.jsx'
 import Resumo from './partida/Resumo.jsx'
+import ArvoreDeHabilidades from './reino/ArvoreDeHabilidades.jsx'
 import MochilaNaPartida from './partida/MochilaNaPartida.jsx'
 import Pentagono from '../componentes/Pentagono.jsx'
 import { atributosIniciaisDaClasse } from '../dados/classes.js'
@@ -546,4 +547,27 @@ describe('Forja (Fase 4, TASK-075)', () => {
     expect(html).toContain('(+3)')
   })
 
+})
+
+describe('árvore de habilidades (Fase 4, TASK-077)', () => {
+  const desenharArvore = (personagem) => {
+    const estado = { ...criarEstadoInicial(preferenciasPadrao), tela: 'arvores', tipoJogador: 'convidado', progresso: { ...progresso, personagens: [personagem] } }
+    const salvador = { inscrever: () => () => {}, obterInfo: () => ({}) }
+    return renderToString(
+      <ContextoJogo value={{ estado, acoes, salvador }}>
+        <ArvoreDeHabilidades personagem={personagem} />
+      </ContextoJogo>,
+    ).replace(/<!-- -->/g, '')
+  }
+
+  it('a raiz, os três ramos (com os de fora do beta), os pontos, as teclas e o detalhe da escolhida', () => {
+    const html = desenharArvore({ ...novoPersonagem('mago'), pontosDeHabilidade: 2 })
+    for (const nome of ['Meteoro', 'Descarga elétrica', 'Explosão de fogo', 'Mente clara', 'Tempestade']) expect(html).toContain(nome)
+    expect(html).toContain('fora do beta')
+    expect(html).toContain('Pontos de habilidade: <strong>2</strong>')
+    expect(html).toContain('Teclas: 1 Meteoro · 2 — · 3 —')
+    expect(html).toContain('Evoluir para o nível 2 (1 ponto)')
+    expect(html).toContain('Tirar da tecla 1')
+    expect(html).toContain('no-bloqueada')
+  })
 })

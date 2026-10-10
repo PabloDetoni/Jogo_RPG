@@ -1,7 +1,7 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { combateDeTeste } from '../../dados/balanceamento.js'
 import { corDaClasse } from '../../dados/classes.js'
-import { habilidadesNasTeclas } from '../../dados/habilidades.js'
+import { habilidadesNasTeclas } from '../../regras/habilidadesDaArvore.js'
 import { camadas } from '../efeitos.js'
 import Entidade, { BarraDeVida } from './Entidade.js'
 
@@ -74,7 +74,9 @@ export default class Personagem extends Entidade {
     this.manaMaxima = membro.manaMaxima
     this.mana = fracaoDaMana * membro.manaMaxima
     this.manaPorSegundo = membro.manaPorSegundo
-    this.habilidades = habilidadesNasTeclas(membro.classe)
+    // As teclas 1, 2 e 3 do personagem, com os números do nível de cada habilidade (Fase 4, a árvore)
+    this.habilidades = membro.teclas ?? habilidadesNasTeclas({ classe: membro.classe })
+    this.multiplicadorDeCura = membro.multiplicadorDeCura ?? 1 // passiva de cura (Sacerdote)
     this.lider = membro.lider
     // O Líder é mais pesado na separação (os aliados saem da frente dele) e é o jogador quem anda com ele
     this.peso = membro.lider ? combateDeTeste.separacao.pesoDoLider : 1

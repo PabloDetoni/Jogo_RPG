@@ -57,6 +57,15 @@ export const mercado = { fracaoDaVenda: 0.5, partidasPorRotacao: 3, rotativasAVe
 // até um teto (regras/equipamento.js). Provisório.
 export const equipamentoNaPartida = { reducaoPorPontoDeDefesa: 0.02, reducaoMaximaPelaDefesa: 0.5, reducaoDeRecargaMaxima: 0.3 }
 
+// HABILIDADES DA ÁRVORE (Fase 4, TASK-077): cada nível (1 a 5) custa "pontosPorNivel" pontos de habilidade. A cada nível
+// acima do 1, os números da ativa sobem nesta fração do valor do nível 1 (dano +15% por nível...) e a recarga cai
+// "recargaPorNivel" (regras/habilidadesDaArvore.js). Provisório até as habilidades do grupo (TASK-010).
+export const evolucaoDasHabilidades = {
+  pontosPorNivel: 1,
+  porNivel: { dano: 0.15, cura: 0.15, bonusDeDano: 0.1, reducaoDeDano: 0.08, msDeDuracao: 0.1 },
+  recargaPorNivel: 0.04,
+}
+
 // MUNDO (Fase 3): a Floresta maior que a tela (layout em dados/mundo/floresta.js). Tudo provisório até o layout do
 // grupo (TASK-013). Distâncias em px do mapa, tempos em ms.
 export const mundo = {

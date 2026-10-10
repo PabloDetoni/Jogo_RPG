@@ -4,7 +4,7 @@ import { normalizarPreferencias, preferenciasPadrao } from './preferencias.js'
 import { normalizarProgresso, novoPersonagem, progressoInicial } from './progresso.js'
 
 describe('novoPersonagem', () => {
-  it('começa no nível 1, sem XP, com os atributos iniciais da classe, sem pontos livres, habilidades nem equipamento', () => {
+  it('começa no nível 1, sem XP, com os atributos iniciais da classe, sem pontos livres nem equipamento, e com a primeira habilidade (gratuita) na tecla 1', () => {
     expect(novoPersonagem('tanque')).toEqual({
       classe: 'tanque',
       nivel: 1,
@@ -12,8 +12,8 @@ describe('novoPersonagem', () => {
       atributos: atributosIniciaisDaClasse('tanque'),
       pontosDeAtributo: 0,
       pontosDeHabilidade: 0,
-      habilidades: {},
-      ativas: [],
+      habilidades: { provocacao: 1 },
+      ativas: ['provocacao'],
       equipamento: {},
     })
   })
@@ -101,13 +101,27 @@ describe('normalizarProgresso', () => {
 describe('habilidades, equipamento, missão e mochila (TASK-020)', () => {
   const personagem = (mudancas) => normalizarProgresso({ personagens: [{ classe: 'mago', ...mudancas }] }).personagens[0]
 
-  it('habilidades: nível entre 1 e 5; o resto é descartado', () => {
-    expect(personagem({ habilidades: { fogo: 3, gelo: 9, raio: 0, vento: 'x' } }).habilidades).toEqual({ fogo: 3, gelo: 5 })
+  it('habilidades: só as da árvore da classe que estão no beta, nível entre 1 e 5; a raiz nunca falta', () => {
+    expect(personagem({ habilidades: { meteoro: 3, descargaEletrica: 9, explosaoDeFogo: 0, menteClara: 'x', tempestade: 2, giro: 4 } }).habilidades).toEqual({
+      meteoro: 3,
+      descargaEletrica: 5,
+    })
+    expect(personagem({ habilidades: { descargaEletrica: 2 } }).habilidades).toEqual({ descargaEletrica: 2, meteoro: 1 })
   })
 
-  it('ativas: só habilidades que o personagem tem, sem repetir, no máximo 3', () => {
-    const habilidades = { a: 1, b: 1, c: 1, d: 1 }
-    expect(personagem({ habilidades, ativas: ['a', 'a', 'x', 'b', 'c', 'd'] }).ativas).toEqual(['a', 'b', 'c'])
+  it('ativas: só ativas que o personagem aprendeu, sem repetir, no máximo 3', () => {
+    const habilidades = { meteoro: 5, descargaEletrica: 1, explosaoDeFogo: 1, menteClara: 2 }
+    expect(personagem({ habilidades, ativas: ['meteoro', 'meteoro', 'x', 'menteClara', 'descargaEletrica', 'explosaoDeFogo'] }).ativas).toEqual([
+      'meteoro',
+      'descargaEletrica',
+      'explosaoDeFogo',
+    ])
+    expect(personagem({ habilidades: { meteoro: 2 }, ativas: [] }).ativas).toEqual([]) // o jogador tirou tudo das teclas
+  })
+
+  it('save de antes da Fase 4 (sem habilidades): a raiz no nível 1, na tecla 1', () => {
+    expect(personagem({}).habilidades).toEqual({ meteoro: 1 })
+    expect(personagem({}).ativas).toEqual(['meteoro'])
   })
 
   it('equipamento: só espaços que existem', () => {

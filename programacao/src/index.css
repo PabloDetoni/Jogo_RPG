@@ -1201,3 +1201,93 @@ body {
 .ficha-da-arvore .lista-de-contratos {
   gap: 0.15em;
 }
+
+/* Árvore de habilidades (TASK-077): a raiz em cima, os três ramos embaixo, e o detalhe ao lado */
+.arvore-de-habilidades {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.arvore-de-habilidades-topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.5em;
+}
+
+.arvore-de-habilidades-corpo {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 1.2em;
+}
+
+.grade-da-arvore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.grade-da-arvore-ramos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6em;
+  width: 100%;
+}
+
+.grade-da-arvore-ramo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.no-da-arvore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 9.5em;
+  padding: 0.25em 0.4em;
+  font: inherit;
+  background: var(--botao);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+  cursor: pointer;
+}
+
+.no-da-arvore[aria-pressed='true'] {
+  outline: 3px solid var(--texto);
+  outline-offset: 1px;
+}
+
+.no-da-arvore-nivel {
+  font-size: 0.8em;
+}
+
+.no-aprendida,
+.no-maxima {
+  background: var(--texto);
+  color: var(--tela);
+}
+
+.no-liberada {
+  border-style: double;
+  border-width: 4px;
+}
+
+.no-bloqueada {
+  opacity: 0.65;
+}
+
+.no-foraDoBeta {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.detalhe-da-habilidade {
+  max-height: 22cqw;
+  overflow-y: auto;
+}
+
+.arvore-de-habilidades {
+  text-align: left;
+}

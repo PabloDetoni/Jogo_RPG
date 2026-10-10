@@ -5,24 +5,24 @@ const config = combateDeTeste.habilidades.sacerdote
 
 // Ressurreição (Sacerdote, Conceito §7; números provisórios): levanta todos os caídos no raio, com vida cheia,
 // fortalecimento curto e breve imunidade. Não precisa de área limpa (funciona no meio da luta).
-export function caidosNoRaio(cena, sacerdote) {
-  return cena.grupo.filter((membro) => membro.caido && Math.hypot(membro.x - sacerdote.x, membro.y - sacerdote.y) <= config.raio)
+export function caidosNoRaio(cena, sacerdote, h = config) {
+  return cena.grupo.filter((membro) => membro.caido && Math.hypot(membro.x - sacerdote.x, membro.y - sacerdote.y) <= h.raio)
 }
 
-export function ressuscitar(cena, sacerdote) {
+export function ressuscitar(cena, sacerdote, h = config) {
   const agora = cena.agora
   const anel = cena.add
-    .circle(sacerdote.x, sacerdote.y, config.raio, 0xffe680, 0.25)
+    .circle(sacerdote.x, sacerdote.y, h.raio, 0xffe680, 0.25)
     .setStrokeStyle(5, 0xffd700)
     .setDepth(camadas.aura)
     .setScale(0.2)
   cena.tweens.add({ targets: anel, scale: 1.1, alpha: 0, duration: 600, ease: 'Cubic.Out', onComplete: () => anel.destroy() })
   numeroFlutuante(cena, sacerdote.x, sacerdote.y - 50, 'RESSURREIÇÃO', '#ffe680', 24)
-  for (const caido of caidosNoRaio(cena, sacerdote)) {
+  for (const caido of caidosNoRaio(cena, sacerdote, h)) {
     cena.levantar(caido, {
       vida: caido.vidaMaxima,
-      fimDaImunidade: agora + config.msDeImunidade,
-      fimDoFortalecimento: agora + config.msDeFortalecimento,
+      fimDaImunidade: agora + h.msDeImunidade,
+      fimDoFortalecimento: agora + h.msDeFortalecimento,
     })
     particulas(cena, caido.x, caido.y, 0xffd700, 16, 260)
   }

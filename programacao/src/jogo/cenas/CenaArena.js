@@ -945,8 +945,8 @@ export default class CenaArena extends Phaser.Scene {
 
   // A habilidade dá para usar agora? (para a IA decidir; não avisa nada)
   habilidadeDisponivel(membro, indice) {
-    const habilidade = membro.habilidades[indice]
-    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : false
+    const habilidade = indice >= 0 ? membro.habilidades[indice] : null
+    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.efeito]?.(this, membro, habilidade) ?? true) : false
     const agora = this.agora
     return podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo }).ok
   }
@@ -957,7 +957,7 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.caido || this.terminou) return false
     const agora = this.agora
     const habilidade = membro.habilidades[indice]
-    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.id]?.(this, membro) ?? true) : true
+    const temAlvo = habilidade ? (temAlvoParaAHabilidade[habilidade.efeito]?.(this, membro, habilidade) ?? true) : true
     const pode = podeUsarHabilidade({ habilidade, mana: membro.mana, agora, ultimoUso: membro.ultimoUsoDaHabilidade[indice], temAlvo })
     if (!pode.ok) {
       if (membro.lider) numeroFlutuante(this, membro.x, membro.y - 50, avisoDoMotivo[pode.motivo], pode.motivo === 'semMana' ? '#8fd3ff' : '#dddddd', 18)
@@ -968,9 +968,21 @@ export default class CenaArena extends Phaser.Scene {
     const recarga = recargaComEfeitos(habilidade.recargaMs, multiplicadorAtivo(membro.efeitos, 'recarga', agora), membro.reducaoDeRecarga ?? 0)
     membro.ultimoUsoDaHabilidade[indice] = agora - (habilidade.recargaMs - recarga)
     membro.anguloDaMira = mira.angulo
-    const ponto = habilidade.id === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
-    efeitosDasHabilidades[habilidade.id](this, membro, { ...mira, ponto })
+    const ponto = habilidade.efeito === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
+    efeitosDasHabilidades[habilidade.efeito](this, membro, { ...mira, ponto }, habilidade)
     return true
+  }
+
+  // A habilidade raiz da classe (a primeira da árvore), em qualquer tecla em que o jogador a tenha posto: é a que a IA
+  // dos aliados sabe usar (regras de cada classe em jogo/iaDosAliados.js). Fora das teclas, o aliado não a usa.
+  usarHabilidadeDaRaiz(membro, mira) {
+    const indice = this.indiceDaRaiz(membro)
+    return indice >= 0 ? this.usarHabilidade(membro, indice, mira) : false
+  }
+
+  // Em que tecla (0, 1 ou 2) está a habilidade raiz do membro (-1: em nenhuma)
+  indiceDaRaiz(membro) {
+    return membro.habilidades.findIndex((habilidade) => habilidade?.raiz)
   }
 
   // O Meteoro cai no ponto mirado, mas no máximo até o alcance e dentro da área jogável
@@ -1025,7 +1037,8 @@ export default class CenaArena extends Phaser.Scene {
   acertar(alvo, dano, origem, forcaDoEmpurrao, autor = null) {
     if (alvo.morto) return
     const agora = this.agora
-    const fortalecido = autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano
+    const fortalecido =
+      (autor?.fortalecido ? dano * (1 + combateDeTeste.habilidades.sacerdote.bonusDeDano) : dano) * multiplicadorAtivo(autor?.efeitos, 'dano', agora) // Fúria e Bênção (Fase 4)
     const golpe = rolarCritico(fortalecido, autor?.chanceDeCritico ?? 0, critico.multiplicador)
     const { vida, danoFeito } = aplicarDano(alvo.vida, golpe.dano)
     alvo.vida = vida
@@ -1143,7 +1156,8 @@ export default class CenaArena extends Phaser.Scene {
     if (protegido) return 'protegido'
     let danoFinal = dano
     if (membro.fragil) danoFinal *= 1 + desmaio.danoExtraFragil
-    if (membro.provocando) danoFinal *= 1 - combateDeTeste.habilidades.tanque.reducaoDeDano
+    if (membro.provocando) danoFinal *= 1 - (membro.reducaoDaProvocacao ?? combateDeTeste.habilidades.tanque.reducaoDeDano)
+    danoFinal *= multiplicadorAtivo(membro.efeitos, 'protecao', agora) // Muralha (Fase 4)
     danoFinal *= 1 - reducaoPelaDefesa(membro.defesa ?? 0) // a defesa do equipamento (Fase 4)
     const { vida, danoFeito } = aplicarDano(membro.vida, danoFinal)
     membro.vida = vida

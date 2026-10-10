@@ -362,7 +362,9 @@ try {
   await cena(`(c.retorno.msRestantes = 300, true)`)
   await aba.esperarTela('Resumo', 8000)
   const linhaDosItens = (await aba.texto()).split('Itens coletados')[1]?.split(String.fromCharCode(10)).filter(Boolean)[0] ?? ''
-  conferir('o Resumo lista os itens coletados', linhaDosItens.includes('Cogumelo') && linhaDosItens.includes('Madeira'), linhaDosItens)
+  // Desde a Fase 4, o Resumo lista só o que foi coletado com E (a madeira do botão "Encher mochila" não foi coletada, mas
+  // vai para a Mochila do Reino do mesmo jeito: a conferência seguinte olha o save)
+  conferir('o Resumo lista os itens coletados (só o que foi pego com E)', linhaDosItens.includes('Cogumelo') && !linhaDosItens.includes('Madeira'), linhaDosItens)
   const mochilaDoReino = await aba.avaliar(`JSON.parse(localStorage.getItem('jogo-rpg:convidado')).progresso.mochila`)
   conferir('os itens foram para a Mochila do Reino (no save)', mochilaDoReino.some((i) => i.id === 'cogumelo') && mochilaDoReino.some((i) => i.id === 'madeira'), mochilaDoReino)
 

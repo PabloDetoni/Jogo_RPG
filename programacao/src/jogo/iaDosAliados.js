@@ -154,7 +154,7 @@ function golpeParaRecuar(aliado, perfil, { cena, emFoco }) {
 // Os outros precisam da área limpa: se há inimigo perto do caído, lutam com ele primeiro.
 function planoDeAjuda(aliado, caido, perfil, contexto) {
   const { cena } = contexto
-  if (aliado.classe === 'sacerdote' && cena.habilidadeDisponivel(aliado, 0)) return { tipo: 'ressuscitar', caido }
+  if (aliado.classe === 'sacerdote' && cena.habilidadeDisponivel(aliado, cena.indiceDaRaiz(aliado))) return { tipo: 'ressuscitar', caido }
   if (aliado.classe !== 'sacerdote' && !areaLimpa(caido, cena.inimigos, desmaio.raioDaAreaLimpa)) {
     const pertoDoCaido = inimigosPerto(cena.inimigos, caido, desmaio.raioDaAreaLimpa)
     if (pertoDoCaido.length > 0) return planoDeCombate(aliado, perfil, pertoDoCaido, contexto)
@@ -249,7 +249,7 @@ function executar(aliado, plano, contexto) {
     case 'ressuscitar': {
       if (distancia(aliado, plano.caido) <= habilidades.sacerdote.raio * 0.8) {
         aliado.parar()
-        cena.usarHabilidade(aliado, 0, mirandoEm(aliado, plano.caido))
+        cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, plano.caido))
       } else irPara(aliado, plano.caido, contexto, 1)
       break
     }
@@ -280,7 +280,7 @@ function executar(aliado, plano, contexto) {
       if (distancia(aliado, alvo) <= ataques.tanque.alcanceDoEmpurrao + alvo.tamanho / 2) cena.usarAtaque(aliado, aliado.anguloDaMira)
       // Provoca sem esperar: os mobs no raio vão nele
       const perto = plano.inimigos.some((inimigo) => distancia(aliado, inimigo) <= habilidades.tanque.raio)
-      if (perto && !aliado.provocando) cena.usarHabilidade(aliado, 0, mirandoEm(aliado, alvo))
+      if (perto && !aliado.provocando) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))
       break
     }
     case 'guerreiroComTanque': {
@@ -309,7 +309,7 @@ function executar(aliado, plano, contexto) {
       const fugiuDoTanque = plano.inimigos.some(
         (inimigo) => inimigo.alvo && inimigo.alvo !== aliado && distancia(aliado, inimigo) <= habilidades.tanque.raio,
       )
-      if (fugiuDoTanque) cena.usarHabilidade(aliado, 0, mirandoEm(aliado, alvo))
+      if (fugiuDoTanque) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))
       break
     }
     case 'longe':
@@ -360,8 +360,8 @@ function atirarDeLonge(aliado, plano, contexto) {
   const podeAtirar = livre || !plano.respeitaLinha
   if (podeAtirar && distancia(aliado, alvo) <= plano.alcance) cena.usarAtaque(aliado, aliado.anguloDaMira)
   // Habilidades: o Tiro perfurante também para em pedra; o Meteoro cai do céu
-  if (arqueiro && podeAtirar) cena.usarHabilidade(aliado, 0, mirandoEm(aliado, alvo))
-  if (!arqueiro && alvo.quantos >= 2 && distancia(aliado, alvo) <= habilidades.mago.alcance) cena.usarHabilidade(aliado, 0, mirandoEm(aliado, alvo))
+  if (arqueiro && podeAtirar) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))
+  if (!arqueiro && alvo.quantos >= 2 && distancia(aliado, alvo) <= habilidades.mago.alcance) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))
 }
 
 // Sem luta: fica em volta do Líder. A vaga do X é só referência: com o Líder parado, o aliado para assim que
@@ -412,7 +412,7 @@ function ficarEmVoltaDoLider(aliado, plano, contexto) {
 
 function usarGiroSeValer(aliado, inimigos, alvo, cena) {
   const emVolta = inimigos.filter((inimigo) => distancia(aliado, inimigo) <= habilidades.guerreiro.raio)
-  if (emVolta.length >= 2) cena.usarHabilidade(aliado, 0, mirandoEm(aliado, alvo))
+  if (emVolta.length >= 2) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))
 }
 
 // Anda até o ponto pelo caminho em volta das pedras; freia ao chegar (raioDeChegada).
