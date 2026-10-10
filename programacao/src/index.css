@@ -993,7 +993,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1.15fr;
   gap: 1em;
-  height: 24cqw;
+  height: 21cqw;
 }
 
 .lista-com-detalhe-itens {
@@ -1142,4 +1142,19 @@ body {
 .janela-fundo-ao-lado .janela {
   min-width: 24cqw;
   max-width: 27cqw;
+}
+
+/* Listas curtas dentro do detalhe (trocas da Mercado, receitas da Forja); o que falta fica em destaque */
+.lista-simples {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.lista-simples .falta {
+  color: #8b1a1a;
+  font-weight: bold;
+}
+
+.moldura[data-tema='escuro'] .lista-simples .falta {
+  color: #ff9e9e;
 }

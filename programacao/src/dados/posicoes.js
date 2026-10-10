@@ -103,12 +103,12 @@ export const posicoes = {
   },
   mercado: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 52 },
+    conteudo: { x: 50, y: 57 },
     voltarAoReino: { x: 10, y: 90 },
   },
   forja: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 52 },
+    conteudo: { x: 50, y: 57 },
     voltarAoReino: { x: 10, y: 90 },
   },
   mochila: {

@@ -507,3 +507,15 @@ describe('mochila da partida com Tab (Fase 4, TASK-047)', () => {
     expect(html).toContain('Vazia')
   })
 })
+
+describe('Mercado (Fase 4, TASK-074)', () => {
+  it('a aba Comprar mostra o ouro, as ofertas com preço (rotativas com ★) e quando elas mudam', () => {
+    const html = desenhar('mercado', 'convidado').replace(/<!-- -->/g, '')
+    expect(html).toContain('Ouro: <strong>120</strong>')
+    expect(html).toContain('Poção de vida')
+    expect(html).toContain('25 de ouro')
+    expect(html).toContain('★')
+    expect(html).toMatch(/mudam em \d+ partidas?/)
+    expect(html).toContain('Comprar 1 (25)')
+  })
+})
