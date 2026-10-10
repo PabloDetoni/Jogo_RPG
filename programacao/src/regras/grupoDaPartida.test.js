@@ -104,3 +104,11 @@ describe('nível de cada um na partida (decide a IA, 5b.1)', () => {
     expect(membroDeTeste('tanque').nivel).toBe(1)
   })
 })
+
+describe('Força de cada membro (capacidade da mochila, RF33)', () => {
+  it('cada membro leva a Força dele (a do save, ou a inicial da classe)', () => {
+    const progresso = { ...progressoInicial(), personagens: [{ ...novoPersonagem('tanque'), atributos: { ...novoPersonagem('tanque').atributos, forca: 30 } }], lider: 'tanque' }
+    const [tanque] = montarGrupoDaPartida(progresso, 'tanque')
+    expect(tanque.forca).toBe(30)
+  })
+})

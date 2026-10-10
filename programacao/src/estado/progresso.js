@@ -25,6 +25,9 @@ export function progressoInicial() {
     mochila: [], // Mochila do Reino: { id, quantidade } (o catálogo entra na etapa 7)
     missaoAtiva: null, // uma por vez: { id, tipo, alvo, quantidade, progresso, recompensa: { ouro, xp } }
     regioesDescobertas: {}, // bioma → regiões já descobertas, ex.: { floresta: ['facil'] } (etapa 6)
+    // bioma → { nevoa, areas }: o minimapa já revelado (texto hexadecimal, regras/mundo.js) e as áreas que já deram
+    // o XP da primeira descoberta (RF40). Fase 3.
+    mapasDescobertos: {},
     conquistas: {}, // conquista → progresso (etapa 9)
     estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0 },
   }
@@ -159,6 +162,17 @@ export function normalizarProgresso(dados) {
     if (validas.length > 0) regioesDescobertas[bioma] = validas
   }
 
+  // Mapa descoberto de cada bioma: névoa em hexadecimal (até 4096 caracteres) e ids das áreas
+  const mapasDescobertos = {}
+  const mapasSalvos = ehObjeto(dados.mapasDescobertos) ? dados.mapasDescobertos : {}
+  for (const bioma of biomasValidos) {
+    const mapa = ehObjeto(mapasSalvos[bioma]) ? mapasSalvos[bioma] : null
+    if (!mapa) continue
+    const nevoa = typeof mapa.nevoa === 'string' && /^[0-9a-f]{0,4096}$/.test(mapa.nevoa) ? mapa.nevoa : ''
+    const areas = [...new Set((Array.isArray(mapa.areas) ? mapa.areas : []).filter((area) => typeof area === 'string' && area.length > 0 && area.length <= 40))].slice(0, 200)
+    if (nevoa || areas.length > 0) mapasDescobertos[bioma] = { nevoa, areas }
+  }
+
   const estatisticas = ehObjeto(dados.estatisticas) ? dados.estatisticas : {}
 
   return {
@@ -169,6 +183,7 @@ export function normalizarProgresso(dados) {
     mochila: mochila.map((item) => ({ id: item.id, quantidade: item.quantidade })),
     missaoAtiva: normalizarMissao(dados.missaoAtiva),
     regioesDescobertas,
+    mapasDescobertos,
     conquistas: ehObjeto(dados.conquistas) ? dados.conquistas : {},
     estatisticas: {
       partidasJogadas: inteiroNaoNegativo(estatisticas.partidasJogadas),

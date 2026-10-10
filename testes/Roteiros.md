@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 08/10/2026, na Fase 2 (contas). A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 09/10/2026, na Fase 3 (Floresta). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -189,6 +189,69 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 **NV-02 · O Guerreiro avançado não espera o Tanque**
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
+
+## FL. Floresta (Fase 3)
+
+Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **Jogar → Floresta**. Na primeira vez não aparece a tela Ponto de partida: vai direto para a Preparação. No `npm run dev`, a barra de teste (faixa de baixo) tem **Invencível**, **Encher grupo**, **Encher mochila**, **Drop especial do Boss** e **Pior cenário (FPS)**. A Floresta é provisória: o layout, os mobs e o Boss do grupo (TASK-012 e TASK-013) substituem estes.
+
+**FL-01 · Andar até a borda**
+- Fazer: ande para a esquerda até o fim (você nasce perto da borda esquerda) e, na zona segura, tente subir e descer até a mata escura.
+- Deve acontecer: a câmera para no limite do mapa e o Líder não passa; a mata fechada (verde-escuro, com copas na beira) é parede, em cima e embaixo.
+
+**FL-02 · Câmera e mira**
+- Fazer: deixe o mouse parado num ponto da tela e ande com WASD; clique para atacar enquanto anda.
+- Deve acontecer: a câmera segue o Líder (ele fica perto do meio da tela); o mundo aparece só entre o HUD e a faixa de baixo; a flecha (ou o ataque) sai na direção do mouse mesmo com a câmera andando.
+
+**FL-03 · Descobrir regiões e ver o minimapa**
+- Fazer: ande para a direita, passando pela Fácil e pela Média. Olhe o quadro do minimapa no HUD (em cima, à direita).
+- Deve acontecer:
+  - o minimapa começa quase todo escuro e acende por onde você passa, com a cor da dificuldade: verde-claro (zona segura), verde (Fácil), amarelo (Média), laranja (Difícil) e vermelho (domínio do Boss);
+  - o ponto branco é o Líder, os azuis claros são os aliados e o retângulo é a parte que aparece na tela;
+  - embaixo do minimapa: "Região: ..." e "Mochila X/Y";
+  - ao mudar de região, aparece "Região: Fácil" (etc.); na primeira vez em cada área, "Área descoberta: Clareira das Flores (+30 XP)".
+
+**FL-04 · Nascer numa região descoberta e conferir a taxa**
+- Fazer: termine uma partida em que você chegou à Média (volte com Q). Depois, **Jogar → Floresta**.
+- Deve acontecer:
+  - o Resumo mostra "Exploração: N áreas novas (+X XP)";
+  - aparece a tela **Ponto de partida**, com Início, Fácil e Média liberados e Difícil e Muito difícil "(não descoberta)";
+  - escolhendo **Média**, o grupo nasce no começo da Média, sem mob perto, e o custo da fuga no HUD ("Fuga (F): X%") já começa maior que no início do bioma;
+  - o minimapa já começa com o que foi descoberto antes.
+
+**FL-05 · Fugir de um mob até ele desistir**
+- Fazer: chegue perto de um lobo (quadrado vermelho) até aparecer o "!" em cima dele; depois corra para longe, de volta para a esquerda.
+- Deve acontecer: ele persegue; quando você sai do território dele, aparece o "?" e ele volta para casa; uns 5 s depois o HUD troca "Em combate" por "Fora de combate".
+
+**FL-06 · Passar por um mob não hostil**
+- Fazer: ache um cervo (quadrado bege) e passe ao lado dele, bem perto. Depois ataque-o uma vez.
+- Deve acontecer: passando ao lado, ele não ataca; atacado, ele revida (persegue quem bateu).
+
+**FL-07 · Coleta com E**
+- Fazer: chegue perto de um losango colorido no chão (cogumelo vermelho, erva verde, madeira marrom) e aperte **E**. Derrote um lobo e pegue o que ele deixar.
+- Deve acontecer: perto do item aparece "E: pegar Cogumelo"; com E ele some do chão, aparece "+1 Cogumelo" e o "Mochila X/Y" sobe. No fim da partida, o Resumo lista os itens coletados e eles vão para a Mochila do Reino.
+
+**FL-08 · Mochila cheia com item no chão**
+- Fazer: na barra de teste, **Encher mochila**; chegue perto de um item e aperte **E**.
+- Deve acontecer: aparece "Mochila cheia: não cabe ..." em vermelho; com E, o item continua no chão com o aviso "ficou no chão (some em 30 s)"; nos últimos segundos ele pisca e depois some.
+
+**FL-09 · Enfrentar o Boss**
+- Fazer: vá até o domínio do Boss (o fundo, à direita; ou escolha **Muito difícil** no Ponto de partida). Deixe o Guardião da Floresta (quadrado grande marrom com uma faixa verde) atacar; tente sair das marcas vermelhas no chão. Para ver o drop especial: **Drop especial do Boss: 100%** antes de derrotá-lo (ligue o **Invencível** se precisar).
+- Deve acontecer:
+  - ao entrar no domínio: a mensagem "Domínio do Boss: aqui a fuga e os perdidos custam mais", a região em vermelho no HUD e a barra grande do Boss embaixo do HUD;
+  - antes de cada golpe, uma marca vermelha no chão (círculo em volta dele, faixa reta até você ou linhas em leque); quem sai da marca a tempo não leva dano;
+  - derrotado: "+500 pontos", a casca antiga no chão e, com 100%, a Coroa de raízes; o Resumo mostra "Boss: derrotado (+500 pontos)".
+
+**FL-10 · O grupo atravessa a Floresta sem ninguém ficar preso**
+- Fazer: com o grupo cheio (**Encher grupo**), atravesse a Floresta inteira, passando entre árvores e pedras e pelos degraus entre as regiões.
+- Deve acontecer: ninguém fica preso atrás de pedra nem fora da tela. Se um aliado ficar muito para trás, ele reaparece logo fora da tela e chega correndo (você não deve ver ele sumir nem "pular").
+
+**FL-11 · 60 FPS no pior cenário (TEST-005)**
+- Fazer: no `npm run dev`, na Floresta, **Pior cenário (FPS)** e jogue 2 minutos (ligue o **Invencível** para não cair).
+- Deve acontecer: o grupo de 5 fica no meio da Difícil, cercado por todos os mobs dela; o número de FPS na barra de teste fica perto de 60 no seu computador.
+
+**FL-12 · A arena de teste só no desenvolvimento**
+- Fazer: no `npm run dev`, abra o Mapa; depois, no endereço principal (`https://jogo-rpg-six.vercel.app`), abra o Mapa.
+- Deve acontecer: no `npm run dev` existe o botão **Arena de teste** (a arena da Fase 1, para testar o combate); na Vercel, ele não existe.
 
 ## CT. Contas e Salão da Glória (Fase 2)
 

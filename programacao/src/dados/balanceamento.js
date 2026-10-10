@@ -46,6 +46,173 @@ export const contratos = {
   precoDoPermanente: 1000,
 }
 
+// MUNDO (Fase 3): a Floresta maior que a tela (layout em dados/mundo/floresta.js). Tudo provisório até o layout do
+// grupo (TASK-013). Distâncias em px do mapa, tempos em ms.
+export const mundo = {
+  // Árvores e pedras espalhadas (regras/mundo.js, gerarObstaculos): uma casa a cada "espacamento" px, com desvio;
+  // "densidade" é a chance de cada casa ter um obstáculo, por região
+  obstaculos: {
+    espacamento: 300,
+    desvio: 55,
+    densidade: { zonaSegura: 0.25, facil: 0.45, media: 0.55, dificil: 0.62, dominioDoBoss: 0.22 },
+    arvore: { min: 56, max: 96 },
+    pedra: { largura: [70, 120], altura: [50, 90] },
+    chanceDePedra: 0.3,
+    margem: 40, // distância mínima da mata fechada
+    passagemMinima: 90, // px livres entre dois obstáculos (um corpo tem 40)
+    raioLivreDoInicio: 260, // nada em volta do início de cada região
+    raioLivreDoBoss: 420, // nem no meio do domínio do Boss
+  },
+  // Câmera: segue o Líder com esta suavidade (1 = colada, perto de 0 = bem atrasada)
+  camera: { suavidade: 0.12 },
+  // Longe do Líder (e fora da tela), os mobs dormem: não pensam nem andam (60 FPS, TEST-005)
+  raioAtivo: 1500,
+  // Mobs da Floresta (TASK-062). PROVISÓRIO – substituir pelo do grupo (TASK-012). Os campos são os do mob vermelho e
+  // do atirador da arena; "comportamento" diz qual dos dois ele é, "hostil: false" = só reage se for atacado, e
+  // "raioDoTerritorio" é até onde ele persegue, contando da casa dele (onde nasceu). Os drops vêm com a coleta (3f).
+  mobs: {
+    // Lobo: corpo a corpo, o mais comum
+    lobo: {
+      comportamento: 'corpoACorpo',
+      hostil: true,
+      cor: 0xd8483e,
+      xp: 18,
+      ouro: 10,
+      vida: 55,
+      tamanho: 34,
+      velocidade: 150,
+      dano: 10,
+      raioDeDeteccao: 340,
+      raioDeDesistencia: 520,
+      raioDoTerritorio: 650,
+      alcanceDoBote: 90,
+      msDeAviso: 500,
+      msDeBote: 200,
+      distanciaDoBote: 120,
+      recargaMs: 1300,
+      empurrao: 340,
+      raioDoPasseio: 140,
+      drops: [{ item: 'peleDeLobo', chance: 0.6, quantidade: [1, 2] }],
+    },
+    // Aranha: fica longe e atira teia (como o atirador da arena)
+    aranha: {
+      comportamento: 'atirador',
+      hostil: true,
+      cor: 0x9e1b2b,
+      xp: 22,
+      ouro: 12,
+      vida: 38,
+      tamanho: 30,
+      velocidade: 105,
+      raioDeDeteccao: 560,
+      raioDeDesistencia: 760,
+      raioDoTerritorio: 800,
+      distanciaMinima: 280,
+      distanciaMaxima: 430,
+      msEntreTiros: 1900,
+      msDeAviso: 320,
+      velocidadeDoTiro: 230,
+      raioDoTiro: 7,
+      alcanceDoTiro: 650,
+      dano: 8,
+      empurrao: 160,
+      raioDoPasseio: 100,
+      drops: [{ item: 'teiaDeAranha', chance: 0.7, quantidade: [1, 2] }],
+    },
+    // Javali: mais forte e mais lento, golpe pesado e bem avisado
+    javali: {
+      comportamento: 'corpoACorpo',
+      hostil: true,
+      cor: 0xb5502e,
+      xp: 35,
+      ouro: 18,
+      vida: 110,
+      tamanho: 42,
+      velocidade: 125,
+      dano: 18,
+      raioDeDeteccao: 300,
+      raioDeDesistencia: 480,
+      raioDoTerritorio: 600,
+      alcanceDoBote: 100,
+      msDeAviso: 650,
+      msDeBote: 240,
+      distanciaDoBote: 150,
+      recargaMs: 1700,
+      empurrao: 480,
+      raioDoPasseio: 110,
+      drops: [{ item: 'presaDeJavali', chance: 0.5, quantidade: [1, 1] }],
+    },
+    // Cervo: não hostil (passa ao lado do grupo sem atacar; atacado, revida)
+    cervo: {
+      comportamento: 'corpoACorpo',
+      hostil: false,
+      cor: 0xd9b48a,
+      xp: 12,
+      ouro: 6,
+      vida: 45,
+      tamanho: 34,
+      velocidade: 160,
+      dano: 7,
+      raioDeDeteccao: 0,
+      raioDeDesistencia: 500,
+      raioDoTerritorio: 700,
+      alcanceDoBote: 85,
+      msDeAviso: 450,
+      msDeBote: 200,
+      distanciaDoBote: 110,
+      recargaMs: 1400,
+      empurrao: 260,
+      raioDoPasseio: 180,
+      drops: [{ item: 'chifreDeCervo', chance: 0.4, quantidade: [1, 1] }],
+    },
+  },
+  // O Boss da Floresta (TASK-065). PROVISÓRIO – substituir pelo do grupo (TASK-012). Fica no domínio dele
+  // (raioDoTerritorio a partir do lugar do Boss) e tem três ataques avisados no chão antes do golpe:
+  // pisão (área em volta), investida (faixa reta até o alvo) e espinhos (leque de tiros). "bonus" entra na
+  // pontuação (RF49); "especial" é a pequena chance de deixar o equipamento especial (RF39).
+  boss: {
+    nome: 'Guardião da Floresta',
+    cor: 0x6e3b1f,
+    tamanho: 92,
+    vida: 2400,
+    velocidade: 95,
+    dano: 26,
+    xp: 400,
+    ouro: 250,
+    bonus: 500,
+    raioDeDeteccao: 620,
+    raioDeDesistencia: 900,
+    raioDoTerritorio: 720,
+    raioDoPasseio: 60,
+    msEntreAtaques: 1500,
+    pisao: { alcance: 230, raio: 190, msDeAviso: 900, dano: 26, empurrao: 520 },
+    investida: { alcance: 520, comprimento: 440, largura: 80, msDeAviso: 800, msDaInvestida: 380, dano: 22, empurrao: 480 },
+    espinhos: { quantos: 5, abertura: 0.7, msDeAviso: 600, velocidadeDoTiro: 300, raioDoTiro: 9, alcanceDoTiro: 760, dano: 12, empurrao: 200 },
+    drops: [{ item: 'cascaAntiga', chance: 1, quantidade: [1, 2] }],
+    especial: { item: 'coroaDeRaizes', chance: 0.08 },
+  },
+  // Vida, dano, XP e ouro dos mobs × este valor, pela dificuldade da região (regras/mobs.js)
+  forcaDaRegiao: { segura: 1, facil: 1, media: 1.5, dificil: 2.2, boss: 2.6 },
+  // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e
+  // longe da mata; "folga" é o espaço livre em volta de cada um ao nascer (ninguém nasce encostado em ninguém)
+  nascimento: { longeDosInicios: 700, distanciaEntreMobs: 140, margem: 90, folga: 24 },
+  // Mob que desistiu volta para casa sem olhar para o grupo por este tempo (dá para fugir dele)
+  msVoltandoParaCasa: 3500,
+  // Atacado, o mob persegue mesmo fora do território por este tempo (um tiro de longe não fica sem resposta)
+  msProvocado: 5000,
+  // Coleta (TASK-064): E pega o item mais perto a até "alcance" px do Líder. O drop de um mob fica no chão por
+  // msDoDrop; o que não coube na mochila, por msQuandoNaoCabe (os dois piscam nos últimos 5 s e somem). Os recursos do
+  // chão (cogumelo, erva, madeira) ficam até alguém pegar.
+  coleta: { alcance: 80, msDoDrop: 60000, msQuandoNaoCabe: 30000 },
+  // Minimapa (RF40): o mapa é dividido em células de "celula" px; o grupo revela tudo a até "raioRevelado" px do Líder
+  minimapa: { celula: 200, raioRevelado: 450 },
+  // XP da primeira descoberta de cada área (RF40), pela dificuldade da região; dividido como o dos monstros (RF50)
+  xpPorArea: { segura: 0, facil: 30, media: 50, dificil: 80, boss: 120 },
+  // Aliado longe ou preso: fora da tela e a mais de "distancia" px do Líder (ou travado) por "ms", reaparece fora da
+  // tela, logo além da borda do lado em que estava, e entra andando (o jogador não vê sumiço nem salto)
+  aliadoLonge: { distancia: 1100, ms: 3000, alemDaBorda: 70 },
+}
+
 // COMBATE DE TESTE (Fase 1, parte 5a): a arena com quadrados. Tudo aqui é provisório.
 // Distâncias em pixels da arena (1600 × 900), tempos em milissegundos, velocidades em pixels por segundo.
 export const combateDeTeste = {

@@ -99,10 +99,10 @@ A taxa incide só sobre o **ouro ganho na partida** (RF48). Cada perdido paga pe
 
 | Bioma | Distância até a borda (provisório) |
 | --- | --- |
-| Floresta | 1.000 |
-| Deserto | 1.000 |
-| Tundra | 1.000 |
-| Vulcânico | 1.000 |
+| Floresta | 7.026 px (do ponto inicial até o canto andável mais longe do mapa) |
+| Deserto | fora do beta (1.000, sem mapa) |
+| Tundra | fora do beta (1.000, sem mapa) |
+| Vulcânico | fora do beta (1.000, sem mapa) |
 
 ### Sem Boss
 
@@ -313,13 +313,52 @@ Chance = **5% + 0,5% por ponto de Agilidade**; o golpe crítico causa **1,5×** 
 - Botão "+300 de ouro" (só no npm run dev): soma ao ouro ganho na partida, para chegar à Grande Vitória (pontuação base acima de 1.000) sem jogar horas.
 - Botão "Testar foco": IA avançada para todos, Líder com **25%** da vida por **20 s** e **3 mobs** a 300 px.
 
+## Mundo da Floresta (Fase 3, provisório)
+
+Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **7.200 × 3.600 px**, começando estreito na zona segura (perto do Reino) e se abrindo até o domínio do Boss. Fora das regiões é mata fechada (parede). O Líder anda a 220 px/s.
+
+| Região | Tamanho (px) | Força dos mobs | XP da 1ª descoberta de cada área | Mobs por partida |
+| --- | --- | --- | --- | --- |
+| Zona segura | 1.000 × 600 | ×1,0 | 0 | nenhum |
+| Fácil | 1.800 × 1.600 | ×1,0 | 30 | 6 lobo, 4 cervo, 2 aranha |
+| Média | 1.800 × 2.600 | ×1,5 | 50 | 6 lobo, 5 aranha, 3 javali, 3 cervo |
+| Difícil | 1.400 × 3.200 | ×2,2 | 80 | 7 lobo, 6 aranha, 5 javali, 2 cervo |
+| Domínio do Boss | 1.200 × 1.600 | ×2,6 | 120 | 2 lobo |
+
+### Mobs (TASK-012, provisório)
+
+Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção é a distância em que o mob percebe o grupo; o território, até onde ele persegue (contando de onde nasceu): fora dele, desiste e volta para casa.
+
+| Mob | Jeito | Vida (fácil / difícil) | Dano (fácil / difícil) | XP (fácil / difícil) | Ouro (fácil / difícil) | Detecção | Território | Drop |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| lobo | corpo a corpo | 55 / 121 | 10 / 22 | 18 / 40 | 10 / 22 | 340 px | 650 px | peleDeLobo (60%) |
+| aranha | atira de longe | 38 / 84 | 8 / 18 | 22 / 48 | 12 / 26 | 560 px | 800 px | teiaDeAranha (70%) |
+| javali | corpo a corpo | 110 / 242 | 18 / 40 | 35 / 77 | 18 / 40 | 300 px | 600 px | presaDeJavali (50%) |
+| cervo | corpo a corpo, não hostil | 45 / 99 | 7 / 15 | 12 / 26 | 6 / 13 | só se atacado | 700 px | chifreDeCervo (40%) |
+
+### Boss da Floresta (TASK-065, provisório)
+
+- **Guardião da Floresta**: 2.400 de vida, 400 XP, 250 de ouro e **+500 na pontuação** (bônus de Boss, RF49). Território de 720 px no domínio dele.
+- Pisão (perto): área de 190 px em volta, aviso de 1 s, 26 de dano.
+- Investida (média distância): faixa de 440 × 80 px até o alvo, aviso de 1 s, 22 de dano.
+- Espinhos (longe): leque de 5 tiros, aviso de 1 s, 12 de dano cada.
+- Um ataque a cada 2 s no máximo. Drop: cascaAntiga sempre e **8%** de chance do equipamento especial (coroaDeRaizes, RF39; no npm run dev dá para forçar 100%).
+
+### Coleta, minimapa e outros
+
+- Coleta com E até **80 px** do Líder. O drop de um mob fica no chão por **60 s**; o que não coube na mochila, por **30 s** (os dois piscam nos últimos 5 s). Os recursos do chão ficam até alguém pegar e voltam a cada partida.
+- Minimapa: células de **200 px**; o grupo revela tudo a até **450 px** do Líder.
+- Mobs nascem a pelo menos **700 px** do início de cada região (o grupo nunca nasce com mob perto), a **140 px** uns dos outros e com **24 px** livres em volta.
+- Mob que desiste volta para casa sem olhar para o grupo por **4 s**; atacado, persegue mesmo fora do território por **5 s**.
+- Longe do Líder (mais de **1.500 px**), os mobs dormem (não pensam nem andam), para manter os 60 FPS.
+- Aliado fora da tela e a mais de **1.100 px** do Líder (ou preso) por **3 s**: reaparece logo além da borda da tela (70 px) e entra andando.
+- Árvores e pedras: uma casa a cada **300 px**, com pelo menos **90 px** livres entre dois obstáculos (sempre há passagem).
+
 ## Ainda sem valor (a decidir)
 
 Valores do Conceito §19 que ainda não existem no código:
 
-- XP e ouro dos monstros de verdade da Floresta (a arena tem dois de teste); bônus de Boss na pontuação; chance de drop dos Bosses;
+- os mobs, o Boss e o layout definitivos da Floresta (TASK-012 e TASK-013): os valores acima são provisórios;
 - dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);
-- preços do Mercado e da Forja e do pergaminho;
-- peso de cada item; tempo que um item fica no chão;
-- tamanho dos domínios de Boss; território dos mobs no mundo de verdade (a arena tem raios de teste);
+- preços do Mercado e da Forja e do pergaminho (o catálogo provisório já tem preço e peso de cada item: src/dados/itens.js);
 - recompensas de missões e conquistas.

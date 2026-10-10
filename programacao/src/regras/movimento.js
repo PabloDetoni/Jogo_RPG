@@ -248,12 +248,20 @@ export function criarGrade(area, paredes, { celula, folga }) {
   const colunas = Math.floor(area.largura / celula)
   const linhas = Math.floor(area.altura / celula)
   const livre = new Uint8Array(colunas * linhas)
-  const grossas = paredes.map((parede) => aumentar(parede, folga))
+  const centroDe = (c, l) => ({ x: esquerda + (c + 0.5) * celula, y: topo + (l + 0.5) * celula, raio: folga })
   for (let l = 0; l < linhas; l++) {
-    for (let c = 0; c < colunas; c++) {
-      const centro = { x: esquerda + (c + 0.5) * celula, y: topo + (l + 0.5) * celula, raio: folga }
-      const cabe = dentroDaArea(centro, area) && !grossas.some((parede) => pontoDentro(centro, parede))
-      livre[l * colunas + c] = cabe ? 1 : 0
+    for (let c = 0; c < colunas; c++) livre[l * colunas + c] = dentroDaArea(centroDe(c, l), area) ? 1 : 0
+  }
+  // Cada parede (engrossada pela folga) tampa só os quadradinhos embaixo dela: no mapa grande (Fase 3), olhar todas
+  // as paredes para cada quadradinho pesaria demais. O resultado é o mesmo.
+  for (const parede of paredes) {
+    const grossa = aumentar(parede, folga)
+    const c0 = Math.max(0, Math.floor((grossa.x - grossa.largura / 2 - esquerda) / celula - 0.5))
+    const c1 = Math.min(colunas - 1, Math.ceil((grossa.x + grossa.largura / 2 - esquerda) / celula - 0.5))
+    const l0 = Math.max(0, Math.floor((grossa.y - grossa.altura / 2 - topo) / celula - 0.5))
+    const l1 = Math.min(linhas - 1, Math.ceil((grossa.y + grossa.altura / 2 - topo) / celula - 0.5))
+    for (let l = l0; l <= l1; l++) {
+      for (let c = c0; c <= c1; c++) if (pontoDentro(centroDe(c, l), grossa)) livre[l * colunas + c] = 0
     }
   }
   return { colunas, linhas, celula, esquerda, topo, livre, paredes, folga }
@@ -322,9 +330,12 @@ export function caminhoNaGrade(grade, inicio, fim) {
   if (!de || !ate) return []
   const total = grade.colunas * grade.linhas
   const indice = (c, l) => l * grade.colunas + c
-  const custo = new Float64Array(total).fill(Infinity)
-  const veioDe = new Int32Array(total).fill(-1)
-  const fechado = new Uint8Array(total)
+  // Os vetores da busca ficam guardados na grade e são reaproveitados (no mapa grande, criar a cada busca pesaria)
+  grade.memoria ??= { custo: new Float64Array(total), veioDe: new Int32Array(total), fechado: new Uint8Array(total) }
+  const { custo, veioDe, fechado } = grade.memoria
+  custo.fill(Infinity)
+  veioDe.fill(-1)
+  fechado.fill(0)
   const estimativa = (c, l) => {
     const dc = Math.abs(c - ate.c)
     const dl = Math.abs(l - ate.l)

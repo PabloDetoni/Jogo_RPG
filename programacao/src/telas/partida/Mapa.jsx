@@ -26,6 +26,12 @@ export default function Mapa() {
       <Botao em={pos.mina} onClick={() => acoes.irPara('mina')}>
         Mina
       </Botao>
+      {/* Só no npm run dev: a arena da Fase 1, para testar o combate (e o roteiro do navegador) */}
+      {import.meta.env.DEV && (
+        <Botao em={pos.arenaDeTeste} onClick={() => acoes.escolherBioma('arena')}>
+          Arena de teste
+        </Botao>
+      )}
       {biomas.map((bioma) => (
         <Botao
           key={bioma.id}

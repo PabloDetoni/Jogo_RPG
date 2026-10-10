@@ -17,6 +17,7 @@ export function vidaMaximaPelaVitalidade(vitalidade) {
 // Vida pela Vitalidade, mana pela Inteligência, a volta da mana pela Sabedoria e o crítico pela Agilidade
 function numerosDoMembro(atributos) {
   return {
+    forca: atributos.forca ?? 0, // a capacidade da mochila da partida sai da Força do grupo (RF33)
     vidaMaxima: vidaMaximaPelaVitalidade(atributos.vitalidade),
     manaMaxima: manaMaxima(atributos.inteligencia),
     manaPorSegundo: manaPorSegundo(atributos.sabedoria),

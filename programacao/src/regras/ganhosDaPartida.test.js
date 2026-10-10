@@ -60,3 +60,45 @@ describe('aplicarFimNoProgresso (TASK-048)', () => {
     expect(progresso).toEqual(copia)
   })
 })
+
+describe('mapa descoberto no fim da partida (Fase 3, RF40)', () => {
+  const descobertas = { bioma: 'floresta', nevoa: 'f0', areas: ['clareiraDasFlores'], regioes: ['facil'] }
+
+  it('a névoa e as áreas somam às de antes; as regiões descobertas liberam o Ponto de partida', () => {
+    const antes = { ...progresso, mapasDescobertos: { floresta: { nevoa: '0f', areas: ['trilhaDoReino'] } }, regioesDescobertas: {} }
+    const { progresso: depois } = aplicarFimNoProgresso(antes, { descobertas })
+    expect(depois.mapasDescobertos.floresta).toEqual({ nevoa: 'ff', areas: ['trilhaDoReino', 'clareiraDasFlores'] })
+    expect(depois.regioesDescobertas.floresta).toEqual(['facil'])
+  })
+
+  it('primeira vez no bioma: começa do nada; sem descobertas (arena de teste), o mapa não muda', () => {
+    const { progresso: depois } = aplicarFimNoProgresso(progresso, { descobertas })
+    expect(depois.mapasDescobertos.floresta).toEqual({ nevoa: 'f0', areas: ['clareiraDasFlores'] })
+    const { progresso: semNada } = aplicarFimNoProgresso(progresso, { descobertas: null })
+    expect(semNada.mapasDescobertos).toEqual(progresso.mapasDescobertos)
+  })
+
+  it('descobrir de novo o que já era conhecido não repete nada', () => {
+    const antes = { ...progresso, mapasDescobertos: { floresta: { nevoa: 'f0', areas: ['clareiraDasFlores'] } }, regioesDescobertas: { floresta: ['facil'] } }
+    const { progresso: depois } = aplicarFimNoProgresso(antes, { descobertas })
+    expect(depois.mapasDescobertos.floresta.areas).toEqual(['clareiraDasFlores'])
+    expect(depois.regioesDescobertas.floresta).toEqual(['facil'])
+  })
+})
+
+describe('itens da mochila da partida (TASK-064, RF50)', () => {
+  it('vão para a Mochila do Reino, juntando os iguais', () => {
+    const antes = { ...progresso, mochila: [{ id: 'cogumelo', quantidade: 2 }] }
+    const { progresso: depois } = aplicarFimNoProgresso(antes, { itens: [{ id: 'cogumelo', quantidade: 3 }, { id: 'peleDeLobo', quantidade: 1 }] })
+    expect(depois.mochila).toEqual([
+      { id: 'cogumelo', quantidade: 5 },
+      { id: 'peleDeLobo', quantidade: 1 },
+    ])
+    expect(antes.mochila).toEqual([{ id: 'cogumelo', quantidade: 2 }]) // o original não muda
+  })
+
+  it('item estragado (sem id ou com quantidade zero ou quebrada) não entra', () => {
+    const { progresso: depois } = aplicarFimNoProgresso(progresso, { itens: [{ id: '', quantidade: 2 }, { id: 'madeira', quantidade: 0 }, { id: 'madeira', quantidade: 2.7 }, null] })
+    expect(depois.mochila).toEqual([{ id: 'madeira', quantidade: 2 }])
+  })
+})

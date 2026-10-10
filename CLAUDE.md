@@ -5,13 +5,13 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Pastas
 Código em `programacao/` (rodar npm lá); documentação em `documentacao/` (fonte de verdade). O caminho até a entrega e a situação de cada item da auditoria (TASK/DOC/TEST) ficam no `PLANO.md` da raiz. Os roteiros de teste manual (passo a passo para o Pablo) e o registro de todos os testes rodados (o que passou e o que falhou) ficam em `testes/` na raiz.
-Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) e `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`).
+Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:floresta` (roteiro da Floresta, Fase 3), `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`) e `npm run testar:contas:publicado` (o mesmo roteiro no endereço principal, sem a barra de teste, conferindo também que a Floresta abre lá).
 
 ## Stack e arquitetura
 - React na interface (obrigatório) + Supabase (contas e dados). A partida é desenhada com Phaser 4 (canvas) em `src/jogo/` (cenas, entidades, ataques); HUD, menus, janelas e a barra de teste continuam em React.
 - Phaser e React só conversam pela ponte (`src/jogo/ponte.js`): o Phaser manda a situação 8 vezes por segundo, o andamento (em combate, retornando, fugindo) quando muda, as mensagens curtas do HUD e o "fimDaPartida" (com os números para o Resumo); o React manda comandos (Q, fuga confirmada, Voltar ao Reino da pausa e a barra de teste) e a pausa. As contas do fim e o save ficam com o estado do jogo (`encerrarPartida`). O Phaser só carrega ao abrir a Partida (import dinâmico em `ArenaDaPartida.jsx`), e nunca há dois jogos ao mesmo tempo. No `npm run dev`, o jogo fica em `window.__jogoDaPartida` para testes no navegador.
-- Roteiro de testes no navegador: `npm run testar:navegador` liga o Vite e um Edge escondido, joga a arena e confere tudo (prints em `programacao/testes-do-navegador/`, fora do git). Rodar no fim de cada parte e acrescentar as conferências do que for novo.
-- Na partida, o HUD (faixa de cima) e a barra de teste (faixa de baixo) ficam fora da área jogável: a borda da arena é a beira delas (`dados/arenaDeTeste.js`).
+- Roteiro de testes no navegador: `npm run testar:navegador` liga o Vite e um Edge escondido, joga a arena e confere tudo (prints em `programacao/testes-do-navegador/`, fora do git). Rodar no fim de cada parte e acrescentar as conferências do que for novo. A Floresta tem o roteiro dela, `npm run testar:floresta` (Fase 3, com o TEST-005 de 2 minutos), que usa as ferramentas comuns de `scripts/ferramentasDoNavegador.mjs` e a placa de vídeo (com `NAVEGADOR_GPU=0`, desenha no processador e fica bem mais lento).
+- Na partida, o HUD (faixa de cima) e a barra de teste (faixa de baixo) ficam fora da área jogável: na arena, a borda é a beira delas (`dados/arenaDeTeste.js`); na Floresta, a câmera mostra o mundo só entre as duas.
 - Imagens são só fundo. Textos, botões e áreas clicáveis são componentes React por cima.
 - Primeiro funcional, depois bonito: no início cada classe é um quadrado colorido e os ataques são quadradinhos.
 - Estado global em `src/estado/` (um reducer); salvamento no navegador em `src/salvamento/`, no formato `{ formato, versao, salvoEm, progresso, partidaEmAndamento }`. Campo novo no progresso entra pelo `normalizarProgresso`; campo que muda de nome ou lugar pede um formato novo com migração (`formato.js`). Durante a partida o progresso salvo não muda: os ganhos ficam na partida atual e só entram no progresso ao encerrar (RF12).
@@ -25,6 +25,13 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Na partida, todo tempo usa o relógio da cena (`cena.agora`), que para na pausa e com a aba escondida; nunca o `time.now` do Phaser, que continua correndo na pausa.
 - Valores da documentação ficam em `src/dados/regras.js` e `taxas.js`; os provisórios, só em `src/dados/balanceamento.js`. Os testes de limite em `balanceamento.test.js` barram números absurdos.
 - Habilidades de teste (uma por classe, tecla 1, até a TASK-010) ficam em `dados/habilidades.js` e o efeito de cada uma em `jogo/habilidades/`.
+- Mundo (Fase 3): a partida acontece num mapa montado por `regras/mapaDaPartida.js` (`mapaDoBioma`): a Floresta (layout PROVISÓRIO em `dados/mundo/floresta.js`: regiões, áreas, população de mobs, recursos e lugar do Boss) ou a arena de teste da Fase 1, que só existe no `npm run dev` (botão "Arena de teste" no Mapa; o `testar:navegador` usa ela). A cena continua sendo `jogo/cenas/CenaArena.js` (chave 'arena'):
+  - na Floresta, a câmera segue o Líder e mostra o mundo entre o HUD e a faixa de baixo; a mira usa `cameras.main.getWorldPoint` a cada quadro;
+  - a mata fechada em volta das regiões, as árvores e as pedras vêm de `regras/mundo.js` (paredes, obstáculos com passagem garantida, região e área de um ponto, borda da taxa e a névoa do minimapa); os obstáculos perto de um ponto vêm da busca rápida `regras/vizinhanca.js` (`cena.paredesPerto`, `paredesEntre`; os tiros usam `pedrasPerto`, sem o boneco);
+  - o desenho da Floresta fica em `jogo/mapas.js` (imagens feitas uma vez, em pedaços escondidos fora da tela); mobs longe do Líder dormem;
+  - mobs da Floresta = o mob vermelho ou o atirador com outra ficha (`balanceamento.js`, `mundo.mobs`), com a força da região e o território (`regras/mobs.js`); o Boss é `jogo/entidades/GuardiaoDaFloresta.js`;
+  - itens: catálogo provisório em `dados/itens.js` (`itemDoCatalogo`); no chão, `jogo/entidades/ItemNoChao.js`; a mochila da partida usa `regras/mochila.js`;
+  - o que a partida descobre (névoa, áreas, regiões) e os itens só entram no save no fim (`regras/ganhosDaPartida.js`), no campo `mapasDescobertos` e na `mochila` do progresso.
 - Contas (Fase 2) em `src/conta/`:
   - `cliente.js` é o ÚNICO lugar que cria o cliente do Supabase, com a URL e a chave **publicável** do `.env.local` (fora do git; os nomes ficam no `.env.example`) ou das variáveis da Vercel. A chave secreta nunca entra no jogo: a segurança vem das políticas RLS e das funções do banco. No `npm run dev`, o cliente fica em `window.__supabase` (para o `testar:contas`);
   - `servico.js` faz cada pedido ao Supabase e nunca lança erro (devolve `{ ok, codigo, mensagem }`, com as mensagens de `regras/contas.js`);
@@ -52,7 +59,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run balanceam
 - Na partida, cada entidade diz para onde quer andar (`andar`/`parar`) e a cena decide a velocidade final (`CenaArena.moverTodos`: separação, escorregar e destravar; `corrigirSobreposicoes` desfaz o que a física deixou um dentro do outro); para andar, ninguém chama `setVelocity` direto. Nascer ou reaparecer sempre passa por `lugarLivre` (nunca em pedra, fora da borda ou em cima de outro).
 - Não instalar bibliotecas sem perguntar (já aprovadas: Vitest, Phaser e `@supabase/supabase-js`, o cliente oficial do Supabase, instalado na Fase 2 dentro do passo a passo que o Pablo delegou em 08/10). Plano antes de qualquer mudança grande.
 - Ferramentas de teste que mexem no save ficam no painel `</> DEV` (só existe no `npm run dev`) e só funcionam fora da partida; a ação no estado também confere `import.meta.env.DEV`. A barra de teste inteira existe só no `npm run dev` (no build, a faixa de baixo da partida mostra só as teclas, e a cena ignora os comandos de teste).
-- Commits: no modo contínuo (seção abaixo), commit LOCAL no fim de cada parte, com todos os testes passando; o push só depois do teste visual do Pablo na fase. Fora do modo contínuo, não commitar sem ele pedir.
+- Commits e publicação: o `main` é o jogo público, no único endereço `https://jogo-rpg-six.vercel.app` (a Vercel só publica o `main`: `programacao/vercel.json`). No modo contínuo, o trabalho pode ser feito num ramo LOCAL (`fase-4`...), com commit no fim de cada parte e os testes passando; no fim da fase, com todos os testes passando, ele junta no `main`, vai para o GitHub e o endereço principal é conferido (regras na seção "Modo contínuo"). Fora do modo contínuo, não commitar sem ele pedir.
 - Decisão que muda a documentação: atualizar o texto do documento e registrar na seção "Alterações do projeto" dele (no Conceito, a seção 21, sem reescrever o original). O PNG do diagrama sai do `.puml` pelo PlantUML.
 
 ## Protocolo de cada tarefa
@@ -93,11 +100,20 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
    3. testes: `npm test`, lint, build e `npm run testar:navegador`, com conferências novas para o que for novo;
    4. atualizar PLANO.md, CLAUDE.md, a documentação (com "Alterações do projeto"), o Balanceamento e a pasta `testes/`.
 3. **Sem esperar o ok do plano.** Parar e esperar o Pablo só quando:
-   - **uma fase terminar:** mandar os dois relatórios do protocolo, com o "Teste visual para o Pablo", e esperar o teste dele antes da próxima fase;
+   - **uma fase terminar:** publicar no endereço principal seguindo o item 4, mandar os dois relatórios do protocolo, com o "Teste visual para o Pablo" no endereço principal, e esperar o teste dele. Se ele achar problema na fase publicada, o trabalho novo para e a correção vem primeiro;
    - **precisar de algo que só ele faz** (criar o projeto no Supabase, passar chaves, configurar e-mail, publicar, gerar arte): dizer exatamente o que fazer, passo a passo;
    - **precisar de uma decisão do grupo que mude regra do jogo;**
    - **algo quebrar** e não der para resolver.
-4. **Commits:** no fim de cada parte, com todos os testes passando, commit LOCAL com mensagem clara (terminando com a linha Co-Authored-By). O push só depois do teste visual do Pablo na fase.
+4. **Commits e publicação (regra do Pablo em 09/10/2026; troca a das prévias por ramo, do mesmo dia):**
+   - O único endereço do jogo é `https://jogo-rpg-six.vercel.app`, e ele mostra sempre o `main`. A Vercel só publica o `main` (`programacao/vercel.json`, `git.deploymentEnabled`): nada de endereços de prévia por ramo.
+   - Dá para trabalhar em ramos LOCAIS (`fase-4`...), saídos do `main`, com commits por parte (testes passando, mensagem clara terminando com a linha Co-Authored-By). Esses ramos não vão para o GitHub: o que o Pablo testa é sempre o endereço principal.
+   - No fim de cada fase:
+     1. rodar todos os testes (`npm test`, lint, build, `testar:navegador` e `testar:floresta`);
+     2. com tudo passando, juntar no `main` e fazer o push;
+     3. depois que a Vercel publicar, conferir o endereço principal: `npm run conferir:configuracao` (diz também se o último `main` já está no ar) e `npm run testar:contas:publicado`;
+     4. mandar os relatórios.
+   - **Nunca publicar no `main` uma fase com teste falhando.**
+   - Se algo quebrar no site depois de publicar: voltar o `main` para a versão anterior na hora, com `git revert` (nunca apagar histórico), e avisar o Pablo.
 5. **"Onde parei":** antes de mudar de parte, atualizar no topo do PLANO.md a parte atual, o que falta e o próximo passo.
 6. **Conteúdo que o grupo ainda não entregou** (TASK-010, 012, 013, 014, 015 e 016):
    - não esperar: criar conteúdo provisório coerente com o Conceito (classes, Floresta, Reino, Pedra de Retorno);
@@ -123,8 +139,8 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte.
 3. Estado global e salvamento local (modo convidado) ✔
 4. Regras puras com testes (taxa, XP, peso) ✔
 5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, aprovada pelo Pablo em 08/10): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
-6. Mundo (zona segura, regiões, minimapa)
+6. Mundo (zona segura, regiões, minimapa) ✔ (Fase 3, publicada em 10/10 no endereço principal; esperando o teste do Pablo)
 7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino)
-8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ← Fase 2 pronta e publicada em 09/10 (`https://jogo-rpg-six.vercel.app`, TEST-007 com o banco de verdade passando), esperando o teste do Pablo
+8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ✔ (Fase 2, aprovada e publicada em 09/10 em `https://jogo-rpg-six.vercel.app`)
 9. Ranking, conquistas e som (o ranking com as 6 abas e o histórico já estão na Fase 2)
 10. Arte

@@ -4,13 +4,57 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 ## Onde parei
 
-- **Fase 1 aprovada pelo Pablo em 08/10** e no GitHub (`a3567b7`). A cura do Sacerdote ficou sem pausa (parte 5f, `dda3741`, local).
-- **Fase atual: Fase 2, contas e Salão da Glória.** O Pablo já criou o projeto no Supabase e testou o e-mail (TASK-090 concluída). A hospedagem é a Vercel.
-- **Feito (08/10, commit local):** o código das partes 8a a 9a inteiro: cadastro, confirmação, login, "Continuar como", senha nova, apelido, sessão única, save na nuvem com versão, passagem do convidado, sem internet sem travar, partidas registradas, ranking com as 6 abas e "Minhas partidas". Também: o SQL (`programacao/supabase/001_contas.sql`), a barra de teste só no `npm run dev`, os passo a passo do Supabase (parte 2) e da Vercel, o roteiro automático `npm run testar:contas` (TEST-007) e a documentação (RF02 a RF10, RF15, UC04, UC06, "Alterações do projeto", `testes/`). 608 testes, lint e build ok; roteiro do navegador 225 de 226 (a falha é a intermitente conhecida).
-- **09/10, configuração e TEST-007:** o Pablo configurou o Supabase (SQL, URLs, contas de teste) e a Vercel (`https://jogo-rpg-six.vercel.app`). O `npm run conferir:configuracao` deu "tudo certo"; o `npm run testar:contas` (TEST-007, com o banco de verdade) deu 51 de 52 na rodada dele (a falha era do teste) e 51 de 51 depois da correção. 611 testes. **A Fase 2 está pronta**, menos a publicação na Vercel.
-- **09/10, Fase 2 publicada:** a pedido do Pablo (as variáveis do Supabase na Vercel estão só em Production), os commits foram para o `main` antes do teste visual. A Vercel montou sozinha, e `https://jogo-rpg-six.vercel.app` já tem as contas: o conferidor deu "tudo certo" e uma checagem no site publicado entrou com a conta A, abriu o ranking e a partida (só a faixa das teclas, sem erros no console). Relatório do grupo: https://claude.ai/artifact/7Wj2tXqwcjaffBpyusPjrD.
-- **Parado esperando o Pablo (fim da Fase 2):** o teste visual dele, no endereço da Vercel ou no `npm run dev` (roteiros CT-01 a CT-17 em `testes/Roteiros.md`), e conferir no painel a senha mínima 8. Para prévias de outros ramos no futuro, as variáveis da Vercel precisam valer também em Preview.
-- **Próximo passo:** com a aprovação da fase, começar a Fase 3 (mundo da Floresta).
+- **Fase 2 aprovada pelo Pablo em 09/10** e publicada: o `main` é o jogo público em `https://jogo-rpg-six.vercel.app` (as variáveis do Supabase valem em Production e Preview). Relatório do grupo: https://claude.ai/artifact/7Wj2tXqwcjaffBpyusPjrD.
+- **Regra de publicação (Pablo, 09/10, no CLAUDE.md; troca a das prévias por ramo):** um endereço só, `https://jogo-rpg-six.vercel.app`, que mostra sempre o `main`; a Vercel só publica o `main` (`programacao/vercel.json`). Ramos só locais. No fim de cada fase: todos os testes → com tudo passando, junta no `main` e push → confere o endereço principal (`conferir:configuracao` e `testar:contas:publicado`) → relatórios. Nunca publicar com teste falhando; se quebrar no site, `git revert` na hora e avisar.
+- **Fase 3 terminada (09/10) e publicada no endereço principal (10/10):** 3a a 3h feitas (Floresta com câmera, regiões, mobs com território, minimapa e áreas com XP, Ponto de partida, coleta com E, drops e mochila da partida, o Guardião da Floresta e o TEST-005). 660 testes; `testar:navegador` 226 de 226; `testar:floresta` 65 de 65; 60 FPS no pior cenário. Documentação: RF31, RF32, RF35, RF39, RF40, RF42, RF48, RF53, UC28, UC34, UC35, "Alterações do projeto", Balanceamento (seção do mundo), lista de arte, CLAUDE.md e `testes/` (roteiros FL-01 a FL-12).
+- **Esperando o teste do Pablo na Fase 3** (roteiros FL-01 a FL-12, no endereço principal). Ele liberou começar a Fase 4 num ramo local enquanto isso; **se ele achar problema na Fase 3, a Fase 4 para e a correção vem primeiro.**
+- **Esperando o Pablo:** apagar o padrão antigo das prévias nas Redirect URLs do Supabase (o `conferir:configuracao` acusa); confirmar a proposta do "Painel do Mestre" (seção abaixo). **Não começar a Fase 4 pelo Painel do Mestre.**
+
+### Plano da Fase 3 (modo contínuo, pedido do Pablo em 09/10)
+
+Conteúdo provisório (TASK-012 e TASK-013 ainda não chegaram): o layout da Floresta, os mobs, o Boss e os itens ficam em arquivos de dados marcados **PROVISÓRIO – substituir pelo do grupo**. Números novos no `balanceamento.js`.
+
+- **3a · Mundo e câmera (TASK-060):**
+  - a partida passa a acontecer num mapa (`dados/mundo/`): a Floresta (7200 × 3600 px, provisória) e a arena de teste, que fica só no `npm run dev` (botão "Arena de teste" no Mapa, usado pelo roteiro do navegador);
+  - a câmera segue o Líder e para nos limites; o mundo aparece entre o HUD e a faixa de baixo (ninguém anda embaixo delas);
+  - a mira é recalculada a cada quadro pela câmera (com o mouse parado e a câmera andando, ela continua certa);
+  - a mata fechada em volta é parede: ninguém atravessa;
+  - longe da tela, os mobs "dormem" (não pensam nem andam), para manter os 60 FPS.
+- **3b · Regiões (TASK-061):**
+  - a Floresta começa estreita na zona segura, perto do Reino, e se abre da esquerda para a direita: fácil, média, difícil e o domínio do Boss;
+  - cada região tem um tom de verde (dá para perceber a mudança até a arte chegar);
+  - o HUD mostra a região atual;
+  - a taxa usa o ponto inicial e a borda reais do mapa, e o domínio do Boss soma os pontos do RF48 (+7 na fuga).
+- **3c · Mobs por região (TASK-062):**
+  - mobs provisórios: lobo (corpo a corpo), aranha (atira de longe), javali (mais forte, corpo a corpo) e cervo (não hostil: só reage se for atacado), mais fortes nas regiões mais difíceis;
+  - cada mob tem raio de detecção e território: persegue quem entra no raio, desiste quando o grupo sai do território dele e volta para casa;
+  - a cada partida o bioma reinicia (mobs e recursos voltam);
+  - **ninguém nasce em pedra, em cima de outro ou perto do grupo:** os mobs nascem com uma folga em volta (corrige a falha intermitente da Fase 1, dois inimigos nascendo encostados), e o grupo nunca nasce com mob perto.
+  - **Aliado longe ou preso (proposta):** se um aliado ficar fora da tela e longe do Líder (ou preso) por alguns segundos, ele reaparece fora da tela, logo além da borda mais próxima de onde estava, num lugar livre com caminho até o Líder, e entra andando. Como acontece fora da vista, o jogador só vê o aliado chegando correndo, sem sumiço nem salto na frente dele. Caído não volta (continua esperando ajuda).
+- **3d · Minimapa e descoberta (TASK-063, parte 1):**
+  - no quadro reservado do HUD: começa escuro e revela por onde o grupo passa;
+  - mostra a dificuldade das regiões descobertas, o Líder e a zona segura;
+  - cada região tem áreas com nome; a primeira descoberta de uma área dá XP, dividido como o dos monstros (RF50);
+  - o mapa descoberto entra no save (e na nuvem) no fim da partida, como os outros ganhos (RF12).
+- **3e · Ponto de partida (TASK-063, parte 2):** a tela só aparece quando houver outra região descoberta e só libera as descobertas; o grupo nasce no início da região escolhida, sem mob perto, e a taxa já começa naquela distância.
+- **3f · Coleta, drops e mochila da partida (TASK-064):**
+  - catálogo provisório de itens (`dados/itens.js`), já com o equipamento de teste pedido pelo Pablo (capacete, espada, peitoral, calças, botas, manoplas e escudo de teste);
+  - recursos no chão (cogumelo, erva, madeira) e drops dos mobs; E pega o mais perto;
+  - a mochila da partida tem a capacidade da Força do grupo (RF33); o que não cabe fica no chão por um tempo, pisca e some;
+  - os itens vão para a Mochila do Reino no fim, em todos os resultados (RF50), e aparecem no Resumo.
+- **3g · Boss da Floresta (TASK-065):** o Guardião da Floresta no domínio dele, com ataques avisados (marca no chão antes do golpe), barra de vida grande no HUD, bônus de Boss na pontuação e pequena chance de deixar um equipamento especial (no painel DEV dá para forçar 100%).
+- **3h · TEST-005 e fechamento:**
+  - pior cenário (grupo de 5 e o máximo de mobs numa região), com o FPS medido por 2 minutos;
+  - roteiro do navegador com as conferências novas; documentação (RF30 a RF41, RF48, RF53 e "Alterações do projeto"); roteiros manuais;
+  - publicação no endereço principal (a regra das prévias por ramo foi trocada em 09/10 por um endereço só) e os dois relatórios.
+
+### Proposta para a Fase 4: conteúdo por planilha e "Painel do Mestre" (esperando o ok do Pablo)
+
+Pedido do Pablo em 09/10: poder colocar o conteúdo do grupo de uma vez e ter uma conta de desenvolvedor ("Mestre do RPG").
+
+1. **Conteúdo por planilha:** itens, equipamentos, ofertas do Mercado, mobs e missões numa planilha modelo; `npm run importar:conteudo` põe tudo no jogo de uma vez e aponta os erros (id repetido, preço negativo) com a linha.
+2. **Painel do Mestre no jogo:** só para contas marcadas como mestre no banco. Adicionar e editar itens e ofertas do Mercado num formulário, importar uma planilha inteira e dar itens a uma conta de teste. Vale para todos na hora; sem internet, vale o catálogo base do projeto.
+3. **Segurança:** só uma linha de SQL rodada pelo Pablo marca uma conta como mestre (o e-mail dele não vai para o GitHub); o banco só deixa mestre mudar o catálogo. A conta pode ser a pessoal dele, com senha forte e própria.
 
 ### Plano da Fase 2 (modo contínuo)
 
@@ -220,10 +264,10 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - **Minimapa e região:** o lugar no HUD está reservado, sem conteúdo, até a etapa 6. Recursos coletados e itens da partida ficam em zero até a etapa 6 e a TASK-047.
   - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "IA: pelo nível/básica/média/avançada", "Invencível" só para o Líder, "Testar foco" e os 4 resultados, que agora usam os números reais da partida). Só no `npm run dev`: "Subir nível" e "+300 de ouro", que mexem no que a partida ganhou, e, no painel `</> DEV`, os personagens do save (contratar todas as classes, nível −1/+1/+10 e "Quase subir"), que só funcionam fora da partida. No build do jogo, nada disso existe. Quando a barra sair, a faixa de baixo volta a ser área jogável.
 - **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** FEITO na parte 5c (07/10), esperando o teste visual do Pablo.
-TASK-047 (itens na partida) depende do catálogo e fica para a Fase 4.
+TASK-047 (itens na partida: Tab, E e R) fica para a Fase 4. Na Fase 3, o E já pega o item do chão, e o catálogo provisório (parte da TASK-070) existe em `src/dados/itens.js`.
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
-TASK-060 a TASK-065 e TEST-005: **A FAZER** na Fase 3. Dependem da TASK-012 e da TASK-013.
+TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVISÓRIO (layout, mobs, Boss e itens) até a TASK-012 e a TASK-013. Publicada no endereço principal em 09/10, esperando o teste do Pablo. O TEST-005 deu 60 FPS de média e mínimo de 59 em 2 minutos de pior cenário (grupo de 5 e 20 mobs da Difícil), numa Intel Iris Xe.
 
 ### EPIC-08 · Reino com dados (etapa 7)
 - **TASK-079 (contratos):** FEITO (08/10) na parte 7a: abas de contrato temporário e permanente na Guilda, com o ouro, os preços, as partidas restantes e o motivo quando falta ouro; a Preparação mostra quem vai como temporário. O equipamento fixo do temporário (RF29) espera o catálogo (TASK-070, Fase 4).

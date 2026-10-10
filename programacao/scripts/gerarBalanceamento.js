@@ -12,6 +12,7 @@ import {
   curvaDosAtributos,
   distanciaAteABorda,
   minimoDaGrandeVitoria,
+  mundo,
   pesosDaPontuacao,
   pontosDeAtributoPorNivel,
   pontosDeHabilidadePorNivel,
@@ -39,6 +40,8 @@ import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
 import { chanceDeErro } from '../src/regras/nivelDaIA.js'
 import { calcularFimDaPartida } from '../src/regras/fimDaPartida.js'
 import { multaDaMissao } from '../src/regras/guilda.js'
+import { mapaDoBioma } from '../src/regras/mapaDaPartida.js'
+import { fichaNaRegiao } from '../src/regras/mobs.js'
 import { capacidadeDaMochila } from '../src/regras/mochila.js'
 import { aplicarTaxa, taxaNaDistancia } from '../src/regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../src/regras/xp.js'
@@ -53,7 +56,9 @@ const tabela = (cabecalho, linhas) =>
     '\n',
   )
 
-const borda = distanciaAteABorda.floresta
+// A borda de verdade da Floresta (Fase 3): do ponto inicial até o canto andável mais longe do mapa
+const floresta = mapaDoBioma('floresta')
+const borda = floresta.distanciaAteABorda
 const somaInicial = (classe) => Object.values(classe.atributosIniciais).reduce((soma, valor) => soma + valor, 0)
 const somas = classes.map(somaInicial)
 const menorSoma = Math.min(...somas)
@@ -171,7 +176,10 @@ escrever(
   `A taxa incide só sobre o **ouro ganho na partida** (RF48). Cada perdido paga pela distância em linha reta entre o ponto inicial do bioma e o lugar onde caiu: a taxa cresce em linha reta do início até a borda, e cada valor é truncado (3,5% vira 3%). Fuga e "todos desmaiam" usam uma taxa só, pela posição do Líder, no lugar das dos perdidos. No domínio de Boss somam-se +${adicionalNoDominioDeBoss.perdido} pontos por perdido, +${adicionalNoDominioDeBoss.fuga} na fuga e +${adicionalNoDominioDeBoss.todosDesmaiam} em "todos desmaiam". Itens e XP nunca são taxados.`,
   tabela(
     ['Bioma', 'Distância até a borda (provisório)'],
-    biomas.map((bioma) => [bioma.nome, numero(distanciaAteABorda[bioma.id])]),
+    biomas.map((bioma) => [
+      bioma.nome,
+      bioma.id === 'floresta' ? `${numero(borda)} px (do ponto inicial até o canto andável mais longe do mapa)` : `fora do beta (${numero(distanciaAteABorda[bioma.id])}, sem mapa)`,
+    ]),
   ),
   '### Sem Boss',
   tabela(['Situação', 'Início', 'Meio', 'Borda'], linhasDasTaxas(false)),
@@ -409,15 +417,68 @@ escrever(
   ),
 )
 
+
+const segundosDoMundo = (ms) => `${numero(ms / 1000)} s`
+escrever(
+  '## Mundo da Floresta (Fase 3, provisório)',
+  `Layout em \`src/dados/mundo/floresta.js\` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **${numero(floresta.tamanho.largura)} × ${numero(floresta.tamanho.altura)} px**, começando estreito na zona segura (perto do Reino) e se abrindo até o domínio do Boss. Fora das regiões é mata fechada (parede). O Líder anda a ${combate.personagem.velocidade} px/s.`,
+  tabela(
+    ['Região', 'Tamanho (px)', 'Força dos mobs', 'XP da 1ª descoberta de cada área', 'Mobs por partida'],
+    floresta.regioes.map((regiao) => [
+      regiao.nome,
+      `${numero(regiao.x1 - regiao.x0)} × ${numero(regiao.y1 - regiao.y0)}`,
+      `×${numero(mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
+      numero(mundo.xpPorArea[regiao.dificuldade] ?? 0),
+      Object.entries(floresta.populacao[regiao.id] ?? {}).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ') || 'nenhum',
+    ]),
+  ),
+  '### Mobs (TASK-012, provisório)',
+  'Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção é a distância em que o mob percebe o grupo; o território, até onde ele persegue (contando de onde nasceu): fora dele, desiste e volta para casa.',
+  tabela(
+    ['Mob', 'Jeito', 'Vida (fácil / difícil)', 'Dano (fácil / difícil)', 'XP (fácil / difícil)', 'Ouro (fácil / difícil)', 'Detecção', 'Território', 'Drop'],
+    Object.entries(mundo.mobs).map(([tipo, ficha]) => {
+      const facil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.facil)
+      const dificil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.dificil)
+      return [
+        tipo,
+        `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
+        `${facil.vida} / ${dificil.vida}`,
+        `${facil.dano} / ${dificil.dano}`,
+        `${facil.xp} / ${dificil.xp}`,
+        `${facil.ouro} / ${dificil.ouro}`,
+        ficha.raioDeDeteccao ? `${ficha.raioDeDeteccao} px` : 'só se atacado',
+        `${ficha.raioDoTerritorio} px`,
+        (ficha.drops ?? []).map((drop) => `${drop.item} (${numero(drop.chance * 100)}%)`).join(', '),
+      ]
+    }),
+  ),
+  '### Boss da Floresta (TASK-065, provisório)',
+  lista(
+    `**${mundo.boss.nome}**: ${numero(mundo.boss.vida)} de vida, ${mundo.boss.xp} XP, ${mundo.boss.ouro} de ouro e **+${mundo.boss.bonus} na pontuação** (bônus de Boss, RF49). Território de ${mundo.boss.raioDoTerritorio} px no domínio dele.`,
+    `Pisão (perto): área de ${mundo.boss.pisao.raio} px em volta, aviso de ${segundosDoMundo(mundo.boss.pisao.msDeAviso)}, ${mundo.boss.pisao.dano} de dano.`,
+    `Investida (média distância): faixa de ${mundo.boss.investida.comprimento} × ${mundo.boss.investida.largura} px até o alvo, aviso de ${segundosDoMundo(mundo.boss.investida.msDeAviso)}, ${mundo.boss.investida.dano} de dano.`,
+    `Espinhos (longe): leque de ${mundo.boss.espinhos.quantos} tiros, aviso de ${segundosDoMundo(mundo.boss.espinhos.msDeAviso)}, ${mundo.boss.espinhos.dano} de dano cada.`,
+    `Um ataque a cada ${segundosDoMundo(mundo.boss.msEntreAtaques)} no máximo. Drop: ${mundo.boss.drops.map((drop) => drop.item).join(', ')} sempre e **${numero(mundo.boss.especial.chance * 100)}%** de chance do equipamento especial (${mundo.boss.especial.item}, RF39; no npm run dev dá para forçar 100%).`,
+  ),
+  '### Coleta, minimapa e outros',
+  lista(
+    `Coleta com E até **${mundo.coleta.alcance} px** do Líder. O drop de um mob fica no chão por **${segundosDoMundo(mundo.coleta.msDoDrop)}**; o que não coube na mochila, por **${segundosDoMundo(mundo.coleta.msQuandoNaoCabe)}** (os dois piscam nos últimos 5 s). Os recursos do chão ficam até alguém pegar e voltam a cada partida.`,
+    `Minimapa: células de **${mundo.minimapa.celula} px**; o grupo revela tudo a até **${mundo.minimapa.raioRevelado} px** do Líder.`,
+    `Mobs nascem a pelo menos **${mundo.nascimento.longeDosInicios} px** do início de cada região (o grupo nunca nasce com mob perto), a **${mundo.nascimento.distanciaEntreMobs} px** uns dos outros e com **${mundo.nascimento.folga} px** livres em volta.`,
+    `Mob que desiste volta para casa sem olhar para o grupo por **${segundosDoMundo(mundo.msVoltandoParaCasa)}**; atacado, persegue mesmo fora do território por **${segundosDoMundo(mundo.msProvocado)}**.`,
+    `Longe do Líder (mais de **${numero(mundo.raioAtivo)} px**), os mobs dormem (não pensam nem andam), para manter os 60 FPS.`,
+    `Aliado fora da tela e a mais de **${numero(mundo.aliadoLonge.distancia)} px** do Líder (ou preso) por **${segundosDoMundo(mundo.aliadoLonge.ms)}**: reaparece logo além da borda da tela (${mundo.aliadoLonge.alemDaBorda} px) e entra andando.`,
+    `Árvores e pedras: uma casa a cada **${mundo.obstaculos.espacamento} px**, com pelo menos **${mundo.obstaculos.passagemMinima} px** livres entre dois obstáculos (sempre há passagem).`,
+  ),
+)
+
 escrever(
   '## Ainda sem valor (a decidir)',
   'Valores do Conceito §19 que ainda não existem no código:',
   lista(
-    'XP e ouro dos monstros de verdade da Floresta (a arena tem dois de teste); bônus de Boss na pontuação; chance de drop dos Bosses;',
+    'os mobs, o Boss e o layout definitivos da Floresta (TASK-012 e TASK-013): os valores acima são provisórios;',
     'dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);',
-    'preços do Mercado e da Forja e do pergaminho;',
-    'peso de cada item; tempo que um item fica no chão;',
-    'tamanho dos domínios de Boss; território dos mobs no mundo de verdade (a arena tem raios de teste);',
+    'preços do Mercado e da Forja e do pergaminho (o catálogo provisório já tem preço e peso de cada item: src/dados/itens.js);',
     'recompensas de missões e conquistas.',
   ),
 )

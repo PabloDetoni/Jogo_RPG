@@ -69,6 +69,11 @@ function BotoesDeTeste({ ponte, situacao }) {
         <BotaoDeTeste onClick={() => mandar({ tipo: 'criarInimigo', inimigo: 'mobVermelho' })}>Criar mob vermelho</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'criarInimigo', inimigo: 'atirador' })}>Criar atirador</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'recarregarHabilidades' })}>Recarregar habilidades</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'encherMochila' })}>Encher mochila</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'piorCenario' })}>Pior cenário (FPS)</BotaoDeTeste>
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'alternarDropEspecial' })} selecionado={Boolean(situacao?.dropEspecialForcado)}>
+          Drop especial do Boss: {situacao?.dropEspecialForcado ? '100%' : 'normal'}
+        </BotaoDeTeste>
       </div>
       <div className="quebra-de-linha" />
       <div className="grupo-de-teste">

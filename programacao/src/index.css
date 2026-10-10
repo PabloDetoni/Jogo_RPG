@@ -905,3 +905,53 @@ body {
   color: var(--tela);
   font-weight: bold;
 }
+
+/* Fase 3: a região atual no HUD; no domínio do Boss, em destaque */
+.hud-regiao-boss {
+  color: #ffb3b3;
+  font-weight: bold;
+}
+
+/* Minimapa da partida (Fase 3, RF40), no quadro do HUD */
+.hud-minimapa-ativo {
+  opacity: 1;
+  border-style: solid;
+  gap: 0.15em;
+}
+
+.minimapa {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border: 1px solid rgb(255 255 255 / 0.35);
+}
+
+/* Mochila da partida cheia (Fase 3) */
+.hud-mochila-cheia {
+  color: #ffd27a;
+  font-weight: bold;
+}
+
+/* Barra grande do Boss (Fase 3, TASK-065), logo abaixo do HUD */
+.barra-do-boss {
+  width: 34cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  color: #ffe0d0;
+  font-weight: bold;
+  text-shadow: 0 1px 2px #000;
+}
+
+.barra-do-boss-fundo {
+  width: 100%;
+  height: 0.9cqw;
+  background: rgb(0 0 0 / 0.6);
+  border: 2px solid #1c2230;
+}
+
+.barra-do-boss-vida {
+  height: 100%;
+  background: linear-gradient(#ff5a4a, #b8241c);
+}

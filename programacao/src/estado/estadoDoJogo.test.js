@@ -400,3 +400,28 @@ describe('painel DEV: mexe no save só fora da partida (5c)', () => {
     expect(() => atualizarEstado(inicio(), { tipo: 'voar' })).toThrow('voar')
   })
 })
+
+describe('Floresta: Ponto de partida e mapa descoberto (Fase 3, RF32, RF40)', () => {
+  it('sem outra região descoberta, a Floresta vai direto para a Preparação, nascendo no início', () => {
+    const e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'mapa' }, { tipo: 'escolherBioma', bioma: 'floresta' })
+    expect(e.tela).toBe('preparacao')
+    expect(e.escolhasDaPartida.pontoPartida).toBe('inicio')
+  })
+
+  it('o fim da partida guarda o mapa descoberto; na próxima, a tela Ponto de partida aparece', () => {
+    let e = fazer(convidadoComMago(), ...irAtePreparacao, comecar)
+    e = fazer(e, {
+      tipo: 'encerrarPartida',
+      fim: { resultado: 'vitoria', descobertas: { bioma: 'floresta', nevoa: 'ff', areas: ['clareiraDasFlores'], areasNovas: ['clareiraDasFlores'], regioes: ['facil'], xpDeExploracao: 30 } },
+    })
+    expect(e.progresso.regioesDescobertas.floresta).toEqual(['facil'])
+    expect(e.progresso.mapasDescobertos.floresta).toEqual({ nevoa: 'ff', areas: ['clareiraDasFlores'] })
+    expect(e.ultimoResultado).toMatchObject({ areasNovas: ['clareiraDasFlores'], xpDeExploracao: 30 })
+    e = fazer(e, { tipo: 'irPara', destino: 'mapa' }, { tipo: 'escolherBioma', bioma: 'floresta' })
+    expect(e.tela).toBe('pontoPartida')
+  })
+
+  it('a arena de teste (só no npm run dev) vai direto para a Preparação', () => {
+    expect(fazer(convidadoComMago(), { tipo: 'escolherBioma', bioma: 'arena' }).tela).toBe('preparacao')
+  })
+})

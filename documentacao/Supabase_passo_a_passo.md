@@ -3,7 +3,7 @@
 As contas (cadastro, login, sessão única, save na nuvem, ranking e histórico) da Fase 2 usam o Supabase. Algumas coisas só dá para fazer no painel do Supabase, com a conta do Pablo; este arquivo diz exatamente onde clicar. Os nomes dos menus do site podem mudar um pouco.
 
 - **Parte 1 (TASK-090): FEITA em 08/10/2026.** Projeto criado, confirmação de e-mail ligada e e-mails chegando. A URL e a chave publicável estão no `programacao/.env.local` (fora do GitHub).
-- **Parte 2 (Fase 2): em andamento.** Em 09/10, o `npm run conferir:configuracao` mostrou: SQL rodado, tabelas protegidas, confirmação de e-mail ligada e Site URL na Vercel. Faltam o localhost e as prévias nas Redirect URLs e as duas contas de teste no `.env.local`.
+- **Parte 2 (Fase 2): feita (09/10).** SQL rodado, tabelas protegidas, confirmação de e-mail ligada, Site URL na Vercel, localhost nas Redirect URLs e as duas contas de teste no `.env.local` (o `npm run conferir:configuracao` confere tudo). Desde 09/10 o jogo tem um endereço só: o padrão das prévias (`https://jogo-rpg-*.vercel.app/**`) deve sair das Redirect URLs.
 
 **Para conferir tudo de uma vez** (só lê, não muda nada): dentro de `programacao`, rode `npm run conferir:configuracao`. Ele diz o que está certo e, para o que faltar, o que fazer.
 
@@ -51,7 +51,7 @@ Os links dos e-mails voltam para o endereço de onde o jogo foi aberto (o localh
 3. Em **Redirect URLs**, clique em **Add URL** para cada um que faltar. A lista tem que ter os três:
    - `http://localhost:5173/**` (o jogo no seu computador, `npm run dev`);
    - `https://jogo-rpg-six.vercel.app/**` (o endereço principal da Vercel);
-   - `https://jogo-rpg-*.vercel.app/**` (as prévias de teste da Vercel, como a do ramo `fase-2`).
+   - ~~`https://jogo-rpg-*.vercel.app/**`~~ **não use mais** (era das prévias por ramo, que acabaram em 09/10). Um padrão com `*` no `vercel.app` aceita o endereço de qualquer projeto da Vercel com esse começo de nome, de qualquer pessoa: um link de "esqueci minha senha" poderia voltar para o site de outra pessoa. Se ele estiver na lista, apague (o `conferir:configuracao` avisa).
 4. Clique em **Save URLs**.
 
 ### Passo C · Tamanho mínimo da senha (para bater com o jogo)

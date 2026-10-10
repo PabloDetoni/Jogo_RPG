@@ -1,3 +1,4 @@
+import Minimapa from './Minimapa.jsx'
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
 import { corDaClasseCss, nomeDaClasse } from '../../dados/classes.js'
 import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
@@ -8,7 +9,7 @@ import { relogio } from './formato.js'
 // caído com a contagem dos 30 s, frágil, perdidos). No meio, os números da partida: tempo, pontuação, ouro ganho,
 // custo da fuga, "em combate", foco e o mudo. Depois, o lugar reservado do minimapa e da região (etapa 6).
 // Recebe a "situação" que o Phaser manda 8 vezes por segundo pela ponte.
-export default function HudDaPartida({ situacao, mudo = false }) {
+export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta' }) {
   const estilo = { height: emCqw(faixas.hud) }
   if (!situacao) {
     return (
@@ -78,10 +79,15 @@ export default function HudDaPartida({ situacao, mudo = false }) {
         </div>
       </div>
 
-      {/* Reservado para a etapa 6: o minimapa e o nome da região */}
-      <div className="hud-minimapa" aria-label="Minimapa (etapa 6)">
-        <span>Minimapa</span>
-        <span className="hud-regiao">Região: —</span>
+      {/* O minimapa (parte 3d) e a região atual (RF53); no domínio do Boss, em destaque (a taxa sobe ali, RF48) */}
+      <div className={`hud-minimapa${situacao?.minimapa ? ' hud-minimapa-ativo' : ''}`} aria-label="Minimapa">
+        {situacao?.minimapa ? <Minimapa bioma={bioma} minimapa={situacao.minimapa} /> : <span>Minimapa</span>}
+        <span className={`hud-regiao${situacao?.regiao?.dominioDeBoss ? ' hud-regiao-boss' : ''}`}>Região: {situacao?.regiao?.nome ?? '—'}</span>
+        {situacao?.mochila && (
+          <span className={`hud-regiao${situacao.mochila.peso >= situacao.mochila.capacidade ? ' hud-mochila-cheia' : ''}`} title="Peso na mochila da partida / capacidade (Força do grupo)">
+            Mochila {situacao.mochila.peso}/{situacao.mochila.capacidade}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -92,6 +98,14 @@ export default function HudDaPartida({ situacao, mudo = false }) {
 export function AvisosDaPartida({ situacao, mensagens }) {
   return (
     <div className="avisos-da-partida" style={{ top: emCqw(faixas.hud + 10) }} aria-live="polite">
+      {situacao?.boss && (
+        <div className="barra-do-boss" role="status" aria-label={`${situacao.boss.nome}: ${situacao.boss.vida} de vida`}>
+          <span>{situacao.boss.nome}</span>
+          <div className="barra-do-boss-fundo">
+            <div className="barra-do-boss-vida" style={{ width: `${(100 * situacao.boss.vida) / situacao.boss.vidaMaxima}%` }} />
+          </div>
+        </div>
+      )}
       {situacao?.fuga && <div className="faixa-da-partida faixa-fuga">Fugindo com a Pedra de Retorno em {situacao.fuga.segundos} s</div>}
       {situacao?.retorno && (
         <div className={`faixa-da-partida${situacao.retorno.interrompido ? ' faixa-alerta' : ''}`}>
@@ -99,6 +113,13 @@ export function AvisosDaPartida({ situacao, mensagens }) {
             ? `Em combate: o retorno espera (${situacao.retorno.segundos} s)`
             : `Voltando ao Reino em ${situacao.retorno.segundos} s`}{' '}
           · Q cancela
+        </div>
+      )}
+      {situacao?.itemPerto && (
+        <div className={`faixa-da-partida${situacao.itemPerto.cabe ? '' : ' faixa-alerta'}`}>
+          {situacao.itemPerto.cabe
+            ? `E: pegar ${situacao.itemPerto.nome}${situacao.itemPerto.quantidade > 1 ? ` ×${situacao.itemPerto.quantidade}` : ''}`
+            : `Mochila cheia: não cabe ${situacao.itemPerto.nome}`}
         </div>
       )}
       {situacao?.caido && (

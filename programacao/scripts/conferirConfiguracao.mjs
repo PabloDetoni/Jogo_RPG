@@ -1,8 +1,9 @@
-// Confere a configuração do Supabase e da Vercel (Fase 2). Uso: npm run conferir:configuracao
+// Confere a configuração do Supabase e da Vercel (Fase 2) e se o endereço principal já está com o último main. Uso: npm run conferir:configuracao
 // Só lê: não envia e-mail, não cria conta e não muda nada no banco nem na Vercel. Pode rodar quantas vezes quiser.
 // Para cada coisa que faltar, diz o que fazer (os passo a passo estão em documentacao/Supabase_passo_a_passo.md e
 // documentacao/Vercel_passo_a_passo.md).
 import { createClient } from '@supabase/supabase-js'
+import { spawnSync } from 'node:child_process'
 import { loadEnv } from 'vite'
 
 const env = loadEnv('development', process.cwd(), '')
@@ -10,7 +11,6 @@ const URL_DO_SUPABASE = (env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '')
 const CHAVE = env.VITE_SUPABASE_PUBLISHABLE_KEY ?? ''
 // O endereço principal do jogo na Vercel (pode trocar no .env.local com ENDERECO_DA_VERCEL)
 const VERCEL = (env.ENDERECO_DA_VERCEL || 'https://jogo-rpg-six.vercel.app').replace(/\/$/, '')
-const PREVIA = (env.ENDERECO_DA_PREVIA || '').replace(/\/$/, '')
 
 let faltas = 0
 let avisos = 0
@@ -102,7 +102,16 @@ const conferirEndereco = async (destino, nome, padrao) => {
 }
 await conferirEndereco('http://localhost:5173/conferencia', 'o jogo no seu computador (npm run dev)', 'http://localhost:5173/**')
 await conferirEndereco(`${VERCEL}/conferencia`, 'o endereço principal da Vercel', `${VERCEL}/**`)
-await conferirEndereco('https://jogo-rpg-git-fase-2-conferencia.vercel.app/conferencia', 'a prévia da Vercel (ramo de teste)', 'https://jogo-rpg-*.vercel.app/**')
+// Desde 09/10 o jogo tem um endereço só (sem prévias por ramo). Um padrão com * no vercel.app aceitaria o endereço de
+// qualquer projeto da Vercel com esse começo de nome, de qualquer pessoa: um link de "esqueci minha senha" pedido para a
+// conta de alguém poderia voltar para o site de outra pessoa, levando o acesso junto
+const outroProjeto = 'https://jogo-rpg-qualquer-outro-projeto.vercel.app/conferencia'
+if ((await voltaPara(outroProjeto)) === outroProjeto) {
+  falta(
+    'o padrão antigo das prévias (https://jogo-rpg-*.vercel.app/**) ainda está na lista: ele aceita endereços de outros projetos da Vercel',
+    'URL Configuration → Redirect URLs → apague https://jogo-rpg-*.vercel.app/** (lixeira) → Save URLs',
+  )
+} else ok('nenhum endereço de fora do jogo está na lista (sem o padrão das prévias)')
 
 // ---------- 5. Contas de teste e segurança entre contas ----------
 console.log('5. Contas de teste')
@@ -156,9 +165,15 @@ function temChaveSecreta(codigo) {
 async function conferirSite(endereco, nome) {
   let pagina
   try {
-    const resposta = await fetch(`${endereco}/`)
-    if (resposta.status === 401 || resposta.status === 403) {
-      falta(`${nome} pede login da Vercel (${resposta.status})`, 'Vercel → projeto → Settings → Deployment Protection → Vercel Authentication: Disabled')
+    // Sem seguir o redirecionamento: um site protegido manda para o login da Vercel (e conferir aquela página enganaria)
+    const resposta = await fetch(`${endereco}/`, { redirect: 'manual' })
+    const destino = resposta.headers.get('location') ?? ''
+    const pedeLogin = resposta.status === 401 || resposta.status === 403 || (resposta.status >= 300 && resposta.status < 400 && /vercel\.com\/(sso|login)/.test(destino))
+    if (pedeLogin) {
+      falta(
+        `${nome} pede login da Vercel (Deployment Protection ligada)`,
+        'Vercel → projeto → Settings → Deployment Protection → Vercel Authentication: Disabled → Save',
+      )
       return
     }
     if (!resposta.ok) {
@@ -182,12 +197,45 @@ async function conferirSite(endereco, nome) {
   }
   if (codigo.includes(URL_DO_SUPABASE) && codigo.includes(CHAVE)) ok(`${nome}: as variáveis do Supabase estão certas (as mesmas do .env.local)`)
   else if (codigo.includes('.supabase.co')) falta(`${nome}: as variáveis do Supabase são diferentes das do .env.local`, 'Vercel → Settings → Environment Variables: confira os dois valores e faça Redeploy')
-  else falta(`${nome}: faltam as variáveis do Supabase`, 'Vercel → Settings → Environment Variables: VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (marcadas para Production e Preview), depois Redeploy')
+  else falta(`${nome}: faltam as variáveis do Supabase`, 'Vercel → Settings → Environment Variables: VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (marcadas para Production), depois Redeploy')
   if (codigo.includes('Invencível vale só')) falta(`${nome} mostra a barra de teste`, 'me avise: no jogo publicado ela não deveria existir')
   else ok(`${nome} não tem a barra de teste nem o painel DEV`)
 }
 await conferirSite(VERCEL, 'o endereço principal')
-if (PREVIA) await conferirSite(PREVIA, 'a prévia')
+
+// O endereço principal está com o último commit do main? A Vercel avisa o GitHub de cada publicação (o repositório é
+// público, então dá para perguntar sem senha)
+async function conferirUltimoDoMain() {
+  const remoto = spawnSync('git', ['remote', 'get-url', 'origin'], { encoding: 'utf8' }).stdout.trim()
+  const repositorio = remoto.match(/github\.com[:/](.+?)(\.git)?$/)?.[1]
+  const sha = spawnSync('git', ['ls-remote', 'origin', 'refs/heads/main'], { encoding: 'utf8' }).stdout.split(/\s/)[0]
+  if (!repositorio || !sha) {
+    aviso('não deu para ver o último commit do main no GitHub', 'confira a internet e o git')
+    return
+  }
+  const curto = sha.slice(0, 7)
+  try {
+    const github = (caminho) => fetch(`https://api.github.com/repos/${repositorio}/${caminho}`, { headers: { Accept: 'application/vnd.github+json' } }).then((r) => r.json())
+    const publicacoes = (await github(`deployments?sha=${sha}`)).filter((publicacao) => /^production$/i.test(publicacao.environment))
+    let estado = 'ainda não começou'
+    for (const publicacao of publicacoes) {
+      const [ultimo] = await github(`deployments/${publicacao.id}/statuses?per_page=1`)
+      if (ultimo?.state === 'success') {
+        ok(`o endereço principal está com o último main (${curto})`)
+        return
+      }
+      if (ultimo) estado = ultimo.state
+    }
+    const montando = ['ainda não começou', 'pending', 'queued', 'in_progress'].includes(estado)
+    falta(
+      `o endereço principal ainda não está com o último main (${curto}; na Vercel: ${estado})`,
+      montando ? 'a Vercel ainda está montando: espere 1 ou 2 minutos e rode de novo' : 'Vercel → projeto → Deployments: abra o do commit e veja o erro',
+    )
+  } catch (erro) {
+    aviso(`não deu para perguntar ao GitHub se o main já foi publicado (${erro.message})`, 'veja em Vercel → projeto → Deployments')
+  }
+}
+await conferirUltimoDoMain()
 
 console.log(`\n${faltas === 0 ? 'Tudo certo' : `${faltas} coisa(s) para arrumar`}${avisos ? ` · ${avisos} aviso(s)` : ''}.`)
 process.exit(faltas === 0 ? 0 : 1)

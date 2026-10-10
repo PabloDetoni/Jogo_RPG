@@ -20,6 +20,9 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | Fase 2, 8a a 9a (contas, sessão única, save na nuvem, ranking e histórico) | 08/10 | 608 passando (64 novos) | ok | 225 de 226 (a falha: dois mobs nascendo encostados, 0 px; intermitente, já registrada na 2e) | — | `c3313d3` (local) |
 | Fase 2: configuração conferida e TEST-007 com o Supabase de verdade | 09/10 | 611 passando (3 novos) | ok | `testar:contas`: 51 de 52 na rodada do Pablo (a falha era do teste) e 51 de 51 depois da correção; `conferir:configuracao`: tudo certo | esperando o teste da Fase 2 | `bcda545` |
 | Fase 2 publicada na Vercel (`main`) | 09/10 | 611 passando | ok | `conferir:configuracao`: tudo certo no site publicado; checagem no site: ranking carregou do banco, a conta A entrou (Reino com TesteA), a partida mostra só a faixa das teclas, nenhum erro no console | esperando o teste da Fase 2 | `f2afdf2` e seguinte (no GitHub) |
+| Fase 3, 3a a 3e (Floresta, câmera, regiões, mobs, minimapa, Ponto de partida) | 09/10 | 653 passando (45 novos) | ok | arena 226 de 226 (as duas intermitentes da Fase 1 corrigidas); `testar:floresta` (novo) 45 de 45 | esperando o teste da Fase 3 | `e78687d` (local, ramo `fase-3`) |
+| Fase 3, 3f a 3h (coleta, drops, mochila da partida, Boss e TEST-005) | 09/10 | 660 passando (7 novos) | ok | arena 226 de 226 (3f) e `testar:floresta` 65 de 65; TEST-005: 60 FPS de média em 2 minutos de pior cenário | esperando o teste da Fase 3 | `c6aab73` (ramo `fase-3`) |
+| Fim da Fase 3: push do ramo e prévia da Vercel (regra antiga) | 09/10 | — | ok | `conferir:configuracao` na prévia: Supabase, segurança, links de e-mail, contas de teste e o endereço principal ok; **a prévia pede login da Vercel** (Deployment Protection ligada), então o conferidor não consegue olhar dentro dela. `testar:contas`: 12 de 13 (ranking sem login e segurança ok); parou antes do login porque a conta de teste A estava aberta em outra aba ("Conta em uso"), a rodar de novo com ela fechada | esperando o teste da Fase 3 | ramo `fase-3` |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -88,12 +91,38 @@ O que o TEST-007 conferiu: ranking sem login (6 abas), dois navegadores na mesma
 
 **Ainda falta:** o teste à mão (CT-01 a CT-17).
 
+## 2g. Fase 3 (Floresta): o que foi achado e o que foi feito
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| Na Floresta, o navegador escondido dava uns 24 FPS e o Líder andava "devagar". A lógica do jogo gastava só 0,2 ms por quadro: o lento era o desenho sem placa de vídeo (SwiftShader), e o Phaser encurta o tempo dos quadros quando a página não tem foco. | Medição no roteiro novo | O desenho da Floresta virou imagens feitas uma vez só, em pedaços escondidos fora da tela, e a mata deixou de ser desenhada por cima do fundo. O roteiro da Floresta passou a usar a placa de vídeo: 60 FPS. |
+| A flecha do Arqueiro não acertava mais o boneco de treino (arena). | `testar:navegador` (224 de 226) | A busca rápida de obstáculos incluía o boneco como parede. Os tiros e a linha de tiro voltaram a olhar só pedras e árvores. |
+| "Inimigos criados nascem em lugar livre" falhava de vez em quando (0,04 px), desde a Fase 1. | `testar:navegador` | Eles nasciam a 4 px uns dos outros e se encostavam passeando. Agora nascem com 24 px de folga, e a conferência mede sobreposição de verdade (mais de 1 px), não o contato normal da física. |
+| "Sem pulo: em 0,1 s nenhum aliado foi longe" falhava de vez em quando (122 a 127 px). | `testar:navegador` | Entre o comando e a medida havia um print, que às vezes deixava passar 0,3 s. A medida passou a ser feita em exatamente 0,1 s do relógio do jogo. |
+| O Boss nascia a 590 px da entrada do domínio ("Muito difícil"), dentro do raio em que ele percebe o grupo (620 px): quem nascesse ali já seria visto. | `testar:floresta` | O Boss foi para o fundo do domínio (740 px da entrada), com um teste que garante a distância. |
+| No dia da publicação, o `testar:floresta` deu 64 de 65 algumas vezes, cada vez numa conferência diferente (o tiro do clique, a mira parada, a câmera andando, o lobo que desiste). O jogo não tinha mudado: eram conferências que dependiam de sorte. | `testar:floresta` (rodado de novo antes de publicar) | O tiro passou a contar só a flecha nova do Líder (as dos aliados somem no meio); a mira usa a posição real do Líder (um aliado pode empurrá-lo uns pixels); a câmera é conferida pelo quanto andou junto com o Líder, não pela velocidade; o lobo do teste ganhou vida de sobra (os aliados o matavam) e sai do jogo no fim da seção dele. O teste da câmera punha o Líder dentro de uma árvore (o jogo o empurrava para fora) e às vezes um mob da Fácil parava na frente: agora usa uma faixa sem obstáculos e tira os mobs do caminho. No fundo da Floresta, o Líder sozinho às vezes caía para o Boss (Derrota, como deve ser) e a partida acabava no meio do roteiro: o roteiro liga o Invencível nesse passo. |
+| O `testar:contas` ainda clicava em "Início do bioma", que desde a Fase 3 só aparece com outra região descoberta, e usava ferramentas que só existem no `npm run dev`. | Revisão antes de rodar no site publicado | O roteiro clica no "Início do bioma" só se a tela aparecer, faz as conferências do banco pelo Node (com a mesma conta) e ganhou o `testar:contas:publicado`, que roda no endereço principal (lá a partida termina com Q) e confere a Floresta, o Mapa sem a arena e a partida sem a barra de teste. |
+| O `conferir:configuracao` seguia o redirecionamento da prévia protegida e conferia a página de login da Vercel, sem dizer que a prévia estava fechada. | `conferir:configuracao` com `ENDERECO_DA_PREVIA` | Agora ele não segue o redirecionamento: se a prévia mandar para o login da Vercel, aparece "FALTA a prévia pede login da Vercel", com o caminho para desligar a proteção. |
+| Conferências do roteiro novo que dependiam de outros mobs por perto (o lobo que desiste, o cervo que não ataca) e de mobs que se mexem depois de nascer. | `testar:floresta` | O roteiro limpa os mobs em volta antes desses testes e confere onde cada mob nasceu (a casa dele), não onde está depois. |
+
 ## 3. Testes à mão
 
 Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data, quem testou, **passou** ou **falhou**, e o que viu. As partes 5a, 5b e 5b.1 já foram aprovadas pelo Pablo no teste visual de cada uma; vale testar de novo de vez em quando, porque partes novas podem quebrar coisas antigas.
 
 | Código | Situação | Data | Quem | Resultado | Observação |
 |---|---|---|---|---|---|
+| FL-01 | Andar até a borda | | | | |
+| FL-02 | Câmera e mira | | | | |
+| FL-03 | Descobrir regiões e ver o minimapa | | | | |
+| FL-04 | Nascer numa região descoberta e conferir a taxa | | | | |
+| FL-05 | Fugir de um mob até ele desistir | | | | |
+| FL-06 | Passar por um mob não hostil | | | | |
+| FL-07 | Coleta com E | | | | |
+| FL-08 | Mochila cheia com item no chão | | | | |
+| FL-09 | Enfrentar o Boss | | | | |
+| FL-10 | O grupo atravessa a Floresta sem ninguém ficar preso | | | | |
+| FL-11 | 60 FPS no pior cenário (TEST-005) | | | | |
+| FL-12 | A arena de teste só no desenvolvimento | | | | |
 | CT-01 | Criar conta e confirmar o e-mail | | | | |
 | CT-02 | Cadastro com problema (apelido, senha, e-mail) | | | | |
 | CT-03 | E-mail não confirmado e Reenviar | | | | |

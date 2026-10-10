@@ -55,14 +55,14 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 |---|---|---|---|---|---|
 | UC26 | Iniciar partida | Associação | «include» UC27, UC29 e UC09; estendido por UC28 e UC30 | — | Abre o mapa, passa pela preparação e começa a partida. Da preparação dá para voltar ao Mapa ou ao Reino. |
 | UC27 | Selecionar bioma | Incluído por UC26 | — | — | Escolhe Floresta, Deserto, Tundra ou Vulcânico no mapa em ovo. |
-| UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil. |
+| UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil, entre as já descobertas; sem outra descoberta, a tela não aparece. |
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
 | UC30 | Preparar mochila da partida | «extend» de UC26 | — | Condição: o jogador quer levar itens | Leva itens da Mochila do Reino respeitando o limite de peso. |
 | UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos, com uma IA que melhora com o nível de cada personagem (básica, média e avançada), sem que um nível atrapalhe o outro. O Sacerdote cura sempre que alguém não está com a vida cheia. Só o Líder esquiva. |
 | UC32 | Combater monstros | «extend» de UC31 | Estendido por UC33 e UC34 | Condição: há mob hostil por perto | Luta em tempo real: o clique faz o ataque básico da classe do Líder; a esquiva não deixa levar dano durante o avanço; há knockback e breve imunidade. |
 | UC33 | Usar habilidade | «extend» de UC32 | — | Condição: mana e recarga disponíveis | Usa uma das 3 habilidades ativas com as teclas 1, 2 e 3. |
-| UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele. |
-| UC35 | Explorar e coletar recursos | «extend» de UC31 | — | — | Revela o minimapa e coleta materiais e itens. |
+| UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele; cada ataque é avisado no chão antes do golpe. |
+| UC35 | Explorar e coletar recursos | «extend» de UC31 | — | — | Revela o minimapa (a primeira vez em cada área dá XP) e coleta materiais e itens com E. |
 | UC36 | Usar item | «extend» de UC31 | — | Condição: há item na mochila da partida | Usa um item em si (E) ou em um aliado (R) pela Mochila. |
 | UC37 | Levantar aliado desmaiado | «extend» de UC31 | — | Condição: aliado desmaiado dentro dos 30 s e área limpa (nenhum inimigo vivo perto dele) | Levanta um aliado com a ajuda de 5 segundos: basta ficar parado perto, sem tecla. |
 | UC38 | Pausar partida | «extend» de UC31 | — | Condição: o grupo está fora de combate | Pausa o jogo com Esc e abre o menu de pausa. |
@@ -90,6 +90,9 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 | UC31 | O Sacerdote cura sempre que alguém do grupo não está com a vida cheia (caídos primeiro, depois o mais ferido, em empate o Líder); a IA de nível mais alto desvia de quem está parado e não espera quem errou. |
 | UC40 | Confirmada, a fuga não se cancela. |
 | UC04 | Pode entrar por "Continuar como ..." quando o navegador lembra a conta (Fase 2). |
+| UC28 | Sem outra região descoberta, a tela Ponto de partida não aparece (Fase 3). |
+| UC34 | Os ataques do Boss são avisados no chão antes do golpe (Fase 3). |
+| UC35 | A primeira vez em cada área dá XP; a coleta é com E (Fase 3). |
 | UC06 | O link de recuperação abre a tela Senha nova (Fase 2). |
 | UC41 | O nível ganho na partida vale a partir da partida seguinte. |
 

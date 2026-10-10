@@ -128,6 +128,13 @@ export default class Entidade {
     this.sombra.setPosition(this.x, this.y + this.tamanho * 0.5)
   }
 
+  // Esconde o desenho fora da tela (a hitbox continua)
+  definirVisivel(visivel) {
+    if (this.visual.visible === visivel) return
+    this.visual.setVisible(visivel)
+    this.sombra.setVisible(visivel)
+  }
+
   destruir() {
     this.morto = true
     this.cena.tweens.killTweensOf(this.escalaExtra)

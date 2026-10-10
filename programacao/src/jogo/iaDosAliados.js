@@ -1,4 +1,3 @@
-import { areaJogavel, pedras } from '../dados/arenaDeTeste.js'
 import { combateDeTeste } from '../dados/balanceamento.js'
 import { anguloEntre, vagaNaFormacao, velocidadeParaSeguir } from '../regras/combate.js'
 import { areaLimpa } from '../regras/desmaio.js'
@@ -329,9 +328,10 @@ function atirarDeLonge(aliado, plano, contexto) {
   const arqueiro = aliado.classe === 'arqueiro'
   const folga = ia.folgaDaLinhaDeTiro[aliado.classe]
   let { alvo } = plano
-  let livre = temLinhaDeTiro(aliado, alvo, pedras, folga)
+  // Os obstáculos que importam: os que ficam entre o aliado e o alvo (ou em volta dele, para os outros alvos)
+  let livre = temLinhaDeTiro(aliado, alvo, cena.pedrasEntre(aliado, alvo, folga), folga)
   if (!livre && plano.respeitaLinha) {
-    const outro = alvoComLinhaDeTiro(aliado, plano.inimigos, pedras, folga)
+    const outro = alvoComLinhaDeTiro(aliado, plano.inimigos, cena.pedrasPerto(aliado, plano.alcance + folga), folga)
     if (outro && distancia(aliado, outro) <= plano.alcance) {
       alvo = outro
       livre = true
@@ -342,8 +342,8 @@ function atirarDeLonge(aliado, plano, contexto) {
   const meio = (plano.faixa.minima + plano.faixa.maxima) / 2
   if (!livre && plano.respeitaLinha) {
     const ponto = pontoComLinhaDeTiro(aliado, alvo, {
-      pedras,
-      area: areaJogavel,
+      pedras: cena.pedrasPerto(aliado, plano.faixa.maxima + 300),
+      area: cena.area,
       distanciaDoAlvo: meio,
       folga,
       raioDoCorpo: aliado.raio,
@@ -374,7 +374,7 @@ function ficarEmVoltaDoLider(aliado, plano, contexto) {
   // Se esse lugar fica atrás de uma pedra (o outro lado do L, por exemplo), a vaga não vale: o aliado para em
   // qualquer ponto da zona, como na IA básica (dar a volta na pedra para "arrumar" a formação seria pior).
   const pontoDaVaga = cena.lugarLivre(aliado.tamanho, { x: lider.x + vaga.x, y: lider.y + vaga.y }, aliado, 0, false)
-  const vagaAVista = temLinhaDeTiro(lider, pontoDaVaga, pedras, aliado.raio)
+  const vagaAVista = temLinhaDeTiro(lider, pontoDaVaga, cena.pedrasEntre(lider, pontoDaVaga, aliado.raio), aliado.raio)
   const { zonaConfortavel } = ia
   const tolerancia = plano.perfil.id === 'basica' || !vagaAVista ? null : zonaConfortavel.toleranciaDaVaga
   aliado.ia.parado =

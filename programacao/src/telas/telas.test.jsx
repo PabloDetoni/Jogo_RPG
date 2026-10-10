@@ -385,3 +385,53 @@ describe('Pentágono, Seleção de classe e HUD do Reino (TASK-071)', () => {
     expect(html).toContain('Pontos livres: 0 de atributo e 0 de habilidade')
   })
 })
+
+describe('Floresta no HUD e no Resumo (Fase 3)', () => {
+  const daFloresta = {
+    ...situacao,
+    caido: false,
+    regiao: { nome: 'Domínio do Boss', dificuldade: 'boss', dominioDeBoss: true },
+    mochila: { peso: 20, capacidade: 20 },
+    itemPerto: { nome: 'Pele de lobo', quantidade: 2, cabe: false },
+    boss: { nome: 'Guardião da Floresta', vida: 1200, vidaMaxima: 2400 },
+  }
+
+  it('HUD: região em destaque no domínio do Boss e a mochila cheia', () => {
+    const html = renderToString(<HudDaPartida situacao={daFloresta} />).replace(/<!-- -->/g, '')
+    expect(html).toContain('Região: Domínio do Boss')
+    expect(html).toContain('hud-regiao-boss')
+    expect(html).toContain('Mochila 20/20')
+    expect(html).toContain('hud-mochila-cheia')
+  })
+
+  it('avisos: a barra grande do Boss e o "não cabe" da mochila', () => {
+    const html = renderToString(<AvisosDaPartida situacao={daFloresta} mensagens={[]} />).replace(/<!-- -->/g, '')
+    expect(html).toContain('Guardião da Floresta')
+    expect(html).toContain('width:50%')
+    expect(html).toContain('Mochila cheia: não cabe Pele de lobo')
+    const cabe = renderToString(<AvisosDaPartida situacao={{ ...daFloresta, itemPerto: { nome: 'Cogumelo', quantidade: 1, cabe: true } }} mensagens={[]} />)
+    expect(cabe).toContain('E: pegar Cogumelo')
+  })
+
+  it('Resumo: os itens com nome, a exploração e o Boss', () => {
+    const ultimoResultado = {
+      resultado: 'vitoria',
+      bioma: 'floresta',
+      itens: [{ id: 'peleDeLobo', quantidade: 2 }, { id: 'cogumelo', quantidade: 1 }],
+      areasNovas: ['clareiraDasFlores', 'bosqueDosLobos'],
+      xpDeExploracao: 60,
+      bonusDeBoss: 500,
+      personagens: [],
+      perdidos: [],
+    }
+    const estado = { ...criarEstadoInicial(preferenciasPadrao), tela: 'resumo', ultimoResultado }
+    const html = renderToString(
+      <ContextoJogo value={{ estado, acoes, salvador: { inscrever: () => () => {}, obterInfo: () => ({}) } }}>
+        <Resumo />
+      </ContextoJogo>,
+    ).replace(/<!-- -->/g, '')
+    expect(html).toContain('Pele de lobo ×2, Cogumelo ×1')
+    expect(html).toContain('2 áreas novas (+60 XP)')
+    expect(html).toContain('derrotado (+500 pontos)')
+  })
+})

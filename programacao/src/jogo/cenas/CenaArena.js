@@ -1,17 +1,6 @@
 import * as Phaser from 'phaser'
-import {
-  areaJogavel,
-  boneco as lugarDoBoneco,
-  coresDaArena,
-  faixas,
-  inicio,
-  inimigosIniciais,
-  manchas,
-  pedras,
-  pontosDeSurgimento,
-  tamanhoDaArena,
-} from '../../dados/arenaDeTeste.js'
-import { combateDeTeste, critico } from '../../dados/balanceamento.js'
+import { coresDaArena, faixas, tamanhoDaArena } from '../../dados/arenaDeTeste.js'
+import { combateDeTeste, critico, mundo } from '../../dados/balanceamento.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import {
   segundosDaAjuda,
@@ -50,6 +39,11 @@ import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
+import { itemDoCatalogo } from '../../dados/itens.js'
+import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
+import { capacidadeDaMochila, guardarNaMochila, pesoTotal } from '../../regras/mochila.js'
+import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
+import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import {
   acompanharTravamento,
@@ -61,6 +55,7 @@ import {
   separacao,
   tirarDasParedes,
 } from '../../regras/movimento.js'
+import { criarIndice, retangulosEntre, retangulosNaCaixa, retangulosPerto } from '../../regras/vizinhanca.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
 import Escudo from '../ataques/escudo.js'
@@ -69,46 +64,45 @@ import Flecha from '../ataques/flecha.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
 import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
+import GuardiaoDaFloresta from '../entidades/GuardiaoDaFloresta.js'
+import ItemNoChao from '../entidades/ItemNoChao.js'
 import Inimigo from '../entidades/Inimigo.js'
 import MobVermelho from '../entidades/MobVermelho.js'
 import Personagem from '../entidades/Personagem.js'
 import { efeitosDasHabilidades, temAlvoParaAHabilidade } from '../habilidades/index.js'
 import { pensarAliados } from '../iaDosAliados.js'
+import { desenharFloresta } from '../mapas.js'
 import Navegador from '../navegador.js'
 
 const { personagem, esquiva, ataques, raioDaFormacao, travamento, desmaio, testes } = combateDeTeste
-const { largura, altura } = tamanhoDaArena
 const prazoParaLevantar = segundosParaLevantar * 1000
 const msDaAjuda = segundosDaAjuda * 1000
 const msDoRetorno = segundosRetornoNormal * 1000
 const msDaFuga = segundosDaFuga * 1000
 const msDeCombate = segundosDeCombateDepoisDoDano * 1000
-// Taxa por distância na arena: o ponto inicial do bioma é onde o Líder nasce (provisório até a etapa 6)
-const lugarDaTaxa = { inicio, distanciaAteABorda: combateDeTeste.distanciaAteABorda }
 const somar = (a, b) => ({ x: a.x + b.x, y: a.y + b.y })
-// Limites da área jogável (entre a faixa do HUD e a da barra de teste)
-const limites = {
-  esquerda: areaJogavel.x - areaJogavel.largura / 2,
-  direita: areaJogavel.x + areaJogavel.largura / 2,
-  topo: areaJogavel.y - areaJogavel.altura / 2,
-  base: areaJogavel.y + areaJogavel.altura / 2,
-}
 const tiposDeInimigo = { mobVermelho: MobVermelho, atirador: Atirador }
-// Área sem borda (para o Líder não escorregar sozinho ao longo da borda quando o jogador anda contra ela)
-const semBorda = { x: areaJogavel.x, y: areaJogavel.y, largura: 1e6, altura: 1e6 }
+// Os mobs da Floresta são o mob vermelho ou o atirador com outra ficha (balanceamento.js, mundo.mobs)
+const classeDoComportamento = { corpoACorpo: MobVermelho, atirador: Atirador }
+// Alcance da busca de obstáculos em volta de quem anda (px): o que passa disso não muda nada neste quadro
+const alcanceDasParedes = 160
 
-// A arena de teste da Fase 1 (partes 5a, 5b e 5c).
-// Recebe da tela de Partida a ponte (src/jogo/ponte.js) e o grupo (regras/grupoDaPartida.js).
-// Avisa pela ponte a situação (8 vezes por segundo), o andamento (em combate, retornando, fugindo: quando muda),
-// as mensagens curtas do HUD e o fim da partida ("fimDaPartida", com os números para o Resumo).
+// A cena da partida (o nome "arena" ficou da Fase 1). Desenha e move a partida no mapa escolhido
+// (regras/mapaDaPartida.js): a Floresta (Fase 3), com câmera seguindo o Líder, ou a arena de teste da Fase 1, que
+// existe só no npm run dev.
+// Recebe da tela de Partida a ponte (src/jogo/ponte.js), o grupo (regras/grupoDaPartida.js) e a partida (bioma e
+// ponto de partida). Avisa pela ponte a situação (8 vezes por segundo), o andamento (em combate, retornando,
+// fugindo: quando muda), as mensagens curtas do HUD e o fim da partida ("fimDaPartida", com os números do Resumo).
 export default class CenaArena extends Phaser.Scene {
   constructor() {
     super('arena')
   }
 
-  init({ ponte, grupo }) {
+  init({ ponte, grupo, partida = {} }) {
     this.ponte = ponte
     this.grupoInicial = grupo
+    // descobertas: o mapa já descoberto deste bioma, do save ({ nevoa, areas }), para o minimapa e o XP das áreas
+    this.partida = { bioma: partida.bioma ?? 'floresta', pontoPartida: partida.pontoPartida ?? 'inicio', descobertas: partida.descobertas ?? null }
   }
 
   // Relógio da partida, em ms: só anda quando a cena roda. Na pausa (e com a aba escondida) ele para, e com ele
@@ -121,20 +115,42 @@ export default class CenaArena extends Phaser.Scene {
   create() {
     this.relogio = 0
     criarTexturas(this)
-    // A borda é a beira da área jogável: ninguém anda embaixo do HUD nem da barra de teste
-    this.physics.world.setBounds(limites.esquerda, limites.topo, areaJogavel.largura, areaJogavel.altura)
-    this.desenharChao()
+    // O mapa: a Floresta ou a arena de teste (só no npm run dev)
+    this.mapa = mapaDoBioma(this.partida.bioma)
+    const { area } = this.mapa
+    this.area = area
+    this.limites = {
+      esquerda: area.x - area.largura / 2,
+      direita: area.x + area.largura / 2,
+      topo: area.y - area.altura / 2,
+      base: area.y + area.altura / 2,
+    }
+    // Área sem borda (para o Líder não escorregar sozinho ao longo da borda quando o jogador anda contra ela)
+    this.semBorda = { x: area.x, y: area.y, largura: 1e7, altura: 1e7 }
+    // Onde o grupo nasce: no ponto de partida escolhido (RF32); na arena, no início dela
+    this.inicioDoGrupo = this.mapa.comCamera ? inicioDoPontoDePartida(this.mapa.regioes, this.partida.pontoPartida) : { ...this.mapa.inicio }
+    // A borda é a beira da área andável: na arena, ninguém anda embaixo do HUD nem da barra de teste; na Floresta,
+    // ninguém sai do mapa (e a mata fechada em volta das regiões é parede)
+    this.physics.world.setBounds(this.limites.esquerda, this.limites.topo, area.largura, area.altura)
+    if (this.mapa.comCamera) desenharFloresta(this, this.mapa)
+    else this.desenharChao()
 
     // Grupos de física: quem bate em quem
     this.obstaculos = this.physics.add.staticGroup()
     this.corposDoGrupo = this.physics.add.group({ collideWorldBounds: true })
     this.corposDosInimigos = this.physics.add.group({ collideWorldBounds: true })
-    this.criarPedras()
-    this.boneco = new BonecoDeTreino(this, lugarDoBoneco.x, lugarDoBoneco.y)
-    this.obstaculos.add(this.boneco.corpo)
-    // O que ninguém atravessa, para quem anda achar o caminho (aliados e inimigos)
-    this.retangulosDosObstaculos = [...pedras, this.boneco.retangulo()]
-    this.navegador = new Navegador(areaJogavel, this.retangulosDosObstaculos)
+    this.criarObstaculos()
+    this.boneco = null
+    if (this.mapa.boneco) {
+      this.boneco = new BonecoDeTreino(this, this.mapa.boneco.x, this.mapa.boneco.y)
+      this.obstaculos.add(this.boneco.corpo)
+    }
+    // O que ninguém atravessa, para quem anda achar o caminho (aliados e inimigos), e a busca rápida por perto.
+    // Os tiros e a linha de tiro olham só as pedras e árvores: o boneco de treino é alvo, não parede.
+    this.retangulosDosObstaculos = [...this.mapa.obstaculos, ...(this.boneco ? [this.boneco.retangulo()] : [])]
+    this.indiceDasParedes = criarIndice(this.retangulosDosObstaculos)
+    this.indiceDasPedras = this.boneco ? criarIndice(this.mapa.obstaculos) : this.indiceDasParedes
+    this.navegador = new Navegador(area, this.retangulosDosObstaculos, this.indiceDasParedes)
 
     this.grupo = [] // Líder e aliados (Personagem) que estão no mapa; o Líder é this.lider
     this.inimigos = []
@@ -158,7 +174,10 @@ export default class CenaArena extends Phaser.Scene {
     this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
-    this.ganhos = { ouro: 0, monstros: 0, xpPorClasse: {} }
+    this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {} }
+    // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim
+    this.mochila = { itens: [], capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
+    this.itensNoChao = []
     this.niveisAvisados = {} // classe → último nível avisado no HUD ("subiu de nível")
     this.andamentoAvisado = ''
     this.anguloDaMira = 0
@@ -167,8 +186,21 @@ export default class CenaArena extends Phaser.Scene {
     this.ultimoRastro = 0
 
     this.grupoInicial.forEach((membro, indice) => this.adicionarAoGrupo(membro, indice, this.grupoInicial.length))
-    for (const inimigo of inimigosIniciais) this.criarInimigo(inimigo.tipo, inimigo)
+    for (const inimigo of this.mapa.inimigosIniciais ?? []) this.criarInimigo(inimigo.tipo, inimigo)
+    if (this.mapa.populacao) this.povoarMundo()
+    this.boss = null
+    if (this.mapa.lugarDoBoss) {
+      // O Boss volta a cada partida (RF31), no meio do domínio dele
+      const lugar = this.lugarLivre(mundo.boss.tamanho, this.mapa.lugarDoBoss, null, mundo.nascimento.folga)
+      this.boss = this.adicionarInimigo(new GuardiaoDaFloresta(this, lugar.x, lugar.y))
+      this.boss.tipo = 'guardiao'
+      this.boss.regiao = 'dominioDoBoss'
+    }
+    if (this.mapa.recursos) this.espalharRecursos()
     this.prepararEscudos()
+    this.prepararCamera()
+    this.regiaoDoLider = this.regiaoEm(this.lider)
+    this.prepararExploracao()
 
     // Todos batem em todos (Líder, aliados e inimigos): ninguém atravessa ninguém
     const podemColidir = (a, b) => this.podemColidir(a.entidade, b.entidade)
@@ -190,6 +222,7 @@ export default class CenaArena extends Phaser.Scene {
       habilidade1: 'ONE',
       habilidade2: 'TWO',
       habilidade3: 'THREE',
+      interagir: 'E',
     })
     this.input.on('pointerdown', (ponteiro) => {
       if (ponteiro.leftButtonDown() && !this.lider.caido) this.usarAtaque(this.lider, this.anguloDaMira)
@@ -210,8 +243,11 @@ export default class CenaArena extends Phaser.Scene {
 
   // ---------- Montagem da arena ----------
 
+  // Arena de teste (só no npm run dev): o campo verde da Fase 1, entre a faixa do HUD e a da barra de teste
   desenharChao() {
-    for (const mancha of manchas) {
+    const { largura, altura } = tamanhoDaArena
+    const area = this.area
+    for (const mancha of this.mapa.manchas) {
       this.add.ellipse(mancha.x, mancha.y, mancha.largura, mancha.altura, coresDaArena.mancha).setDepth(camadas.manchas)
     }
     // Faixas do HUD e da barra de teste: fora da área jogável
@@ -220,26 +256,62 @@ export default class CenaArena extends Phaser.Scene {
       .rectangle(largura / 2, altura - faixas.barraDeTeste / 2, largura, faixas.barraDeTeste, coresDaArena.faixa)
       .setDepth(camadas.borda)
     this.add
-      .rectangle(areaJogavel.x, areaJogavel.y, areaJogavel.largura - 8, areaJogavel.altura - 8)
+      .rectangle(area.x, area.y, area.largura - 8, area.altura - 8)
       .setStrokeStyle(8, coresDaArena.borda)
       .setDepth(camadas.borda)
   }
 
-  criarPedras() {
-    for (const pedra of pedras) {
-      this.add.rectangle(pedra.x + 6, pedra.y + 8, pedra.largura, pedra.altura, coresDaArena.sombra, 0.22).setDepth(camadas.sombras)
-      this.add
-        .rectangle(pedra.x, pedra.y, pedra.largura, pedra.altura, coresDaArena.pedra)
-        .setStrokeStyle(2, coresDaArena.contorno)
-        .setDepth(pedra.y)
-      this.add.rectangle(pedra.x, pedra.y - pedra.altura / 2 + 7, pedra.largura - 12, 6, 0xffffff, 0.25).setDepth(pedra.y + 1)
+  // A hitbox de cada obstáculo é uma zona invisível; o desenho é separado (na arena, aqui; na Floresta, em
+  // jogo/mapas.js, junto com o chão)
+  criarObstaculos() {
+    for (const pedra of this.mapa.obstaculos) {
+      if (!this.mapa.comCamera) {
+        this.add.rectangle(pedra.x + 6, pedra.y + 8, pedra.largura, pedra.altura, coresDaArena.sombra, 0.22).setDepth(camadas.sombras)
+        this.add
+          .rectangle(pedra.x, pedra.y, pedra.largura, pedra.altura, coresDaArena.pedra)
+          .setStrokeStyle(2, coresDaArena.contorno)
+          .setDepth(pedra.y)
+        this.add.rectangle(pedra.x, pedra.y - pedra.altura / 2 + 7, pedra.largura - 12, 6, 0xffffff, 0.25).setDepth(pedra.y + 1)
+      }
       this.obstaculos.add(this.add.zone(pedra.x, pedra.y, pedra.largura, pedra.altura))
     }
   }
 
+  // Na Floresta, a câmera segue o Líder e para nos limites do mapa. Ela mostra o mundo só entre a faixa do HUD e a
+  // de baixo: ninguém fica escondido embaixo delas. Na arena, a câmera fica parada (a arena cabe na tela).
+  prepararCamera() {
+    if (!this.mapa.comCamera) return
+    const { largura, altura } = tamanhoDaArena
+    const camera = this.cameras.main
+    camera.setViewport(0, faixas.hud, largura, altura - faixas.hud - faixas.barraDeTeste)
+    camera.setBounds(0, 0, this.mapa.tamanho.largura, this.mapa.tamanho.altura)
+    camera.setBackgroundColor(this.mapa.cores.mata)
+    camera.startFollow(this.lider.corpo, true, mundo.camera.suavidade, mundo.camera.suavidade)
+    camera.centerOn(this.lider.x, this.lider.y)
+  }
+
+  // Obstáculos perto de um ponto (busca rápida: o mapa grande tem centenas)
+  paredesPerto(ponto, raio = alcanceDasParedes) {
+    return retangulosPerto(this.indiceDasParedes, ponto, raio)
+  }
+
+  // Obstáculos que podem cortar o caminho reto de a até b
+  paredesEntre(a, b, folga = 0) {
+    return retangulosEntre(this.indiceDasParedes, a, b, folga + 2)
+  }
+
+  // Pedras e árvores (sem o boneco de treino) perto de um ponto e entre dois pontos: para os tiros e a linha de tiro
+  pedrasPerto(ponto, raio) {
+    return retangulosPerto(this.indiceDasPedras, ponto, raio)
+  }
+
+  pedrasEntre(a, b, folga = 0) {
+    return retangulosEntre(this.indiceDasPedras, a, b, folga + 2)
+  }
+
   adicionarAoGrupo(membro, indice, total) {
     const vaga = membro.lider ? { x: 0, y: 0 } : vagaNaFormacao(indice - 1, Math.max(1, total - 1), raioDaFormacao)
-    const lugar = this.lugarLivre(personagem.tamanho, { x: inicio.x + vaga.x, y: inicio.y + vaga.y })
+    const lugar = this.lugarLivre(personagem.tamanho, { x: this.inicioDoGrupo.x + vaga.x, y: this.inicioDoGrupo.y + vaga.y })
     const novo = new Personagem(this, membro, lugar.x, lugar.y)
     this.corposDoGrupo.add(novo.corpo)
     this.grupo.push(novo)
@@ -247,12 +319,114 @@ export default class CenaArena extends Phaser.Scene {
     return novo
   }
 
+  // Inimigo da arena (mob vermelho ou atirador). Nasce com folga em volta: ninguém nasce encostado em ninguém.
   criarInimigo(tipo, ponto) {
-    const lugar = this.lugarLivre(combateDeTeste[tipo].tamanho, ponto)
-    const inimigo = new tiposDeInimigo[tipo](this, lugar.x, lugar.y)
+    const lugar = this.lugarLivre(combateDeTeste[tipo].tamanho, ponto, null, mundo.nascimento.folga)
+    return this.adicionarInimigo(new tiposDeInimigo[tipo](this, lugar.x, lugar.y))
+  }
+
+  adicionarInimigo(inimigo) {
     this.corposDosInimigos.add(inimigo.corpo)
     this.inimigos.push(inimigo)
     return inimigo
+  }
+
+  // Mob da Floresta: a ficha do tipo com a força da região (regras/mobs.js)
+  criarMobDoMundo(tipo, idDaRegiao, ponto) {
+    const regiao = this.mapa.regioes.find((uma) => uma.id === idDaRegiao)
+    const ficha = fichaNaRegiao(mundo.mobs[tipo], mundo.forcaDaRegiao[regiao?.dificuldade] ?? 1)
+    const lugar = this.lugarLivre(ficha.tamanho, ponto, null, mundo.nascimento.folga)
+    const inimigo = this.adicionarInimigo(new classeDoComportamento[ficha.comportamento](this, lugar.x, lugar.y, { ...ficha, tipo }, ficha.cor))
+    inimigo.tipo = tipo
+    inimigo.regiao = idDaRegiao
+    return inimigo
+  }
+
+  // A cada partida o bioma reinicia (RF31): os mobs nascem em lugares novos, nunca perto do início de uma região
+  // (o grupo nunca nasce com mob perto, RF32)
+  povoarMundo() {
+    const { nascimento } = mundo
+    const proibidos = this.mapa.regioes.map((regiao) => ({ ...regiao.inicio, raio: nascimento.longeDosInicios }))
+    const sorteio = criarSorteio(Math.floor(Math.random() * 2 ** 31))
+    const mobs = espalharMobs(this.mapa.regioes, this.mapa.populacao, { proibidos, distanciaEntreMobs: nascimento.distanciaEntreMobs, margem: nascimento.margem }, sorteio)
+    for (const mob of mobs) this.criarMobDoMundo(mob.tipo, mob.regiao, mob)
+  }
+
+  // Recursos no chão de cada região (o bioma reinicia a cada partida, RF31), num lugar livre e longe uns dos outros
+  espalharRecursos() {
+    const sorteio = criarSorteio(Math.floor(Math.random() * 2 ** 31))
+    const pontos = espalharMobs(this.mapa.regioes, this.mapa.recursos, { distanciaEntreMobs: 160, margem: 90 }, sorteio)
+    for (const ponto of pontos) {
+      const item = itemDoCatalogo(ponto.tipo)
+      if (!item) continue
+      const lugar = this.lugarLivre(24, ponto, null, 4, false)
+      this.itensNoChao.push(new ItemNoChao(this, lugar.x, lugar.y, item, 1))
+    }
+  }
+
+  // Um item cai no chão (drop de mob, ou o que não coube na mochila), um pouco espalhado, e some depois de um tempo
+  soltarItem(item, quantidade, ponto, msNoChao) {
+    const angulo = Math.random() * Math.PI * 2
+    const lugar = this.lugarLivre(20, { x: ponto.x + Math.cos(angulo) * 26, y: ponto.y + Math.sin(angulo) * 26 }, null, 2, false)
+    const noChao = new ItemNoChao(this, lugar.x, lugar.y, item, quantidade, this.agora + msNoChao)
+    this.itensNoChao.push(noChao)
+    return noChao
+  }
+
+  // O item no chão mais perto do Líder, a até o alcance da coleta (ou null)
+  itemPerto() {
+    let melhor = null
+    let menor = mundo.coleta.alcance
+    for (const item of this.itensNoChao) {
+      const distancia = Math.hypot(item.x - this.lider.x, item.y - this.lider.y)
+      if (distancia <= menor) {
+        melhor = item
+        menor = distancia
+      }
+    }
+    return melhor
+  }
+
+  // Tecla E (RF35, TASK-064): pega o item mais perto, se couber na mochila (regras/mochila.js). O que não couber fica no
+  // chão, com aviso, e some depois de um tempo.
+  coletar(agora) {
+    const noChao = this.itemPerto()
+    if (!noChao || this.lider.caido) return
+    const { item } = noChao
+    const { itens, noChao: sobra } = guardarNaMochila(this.mochila.itens, { id: item.id, peso: item.peso, quantidade: noChao.quantidade }, this.mochila.capacidade)
+    const pegou = noChao.quantidade - (sobra?.quantidade ?? 0)
+    this.mochila.itens = itens
+    if (pegou > 0) {
+      if (item.tipo === 'recurso') this.ganhos.recursos += pegou
+      numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
+    }
+    if (!sobra) {
+      this.itensNoChao = this.itensNoChao.filter((outro) => outro !== noChao)
+      noChao.destruir(true)
+      return
+    }
+    noChao.quantidade = sobra.quantidade
+    if (noChao.expiraEm === null || noChao.expiraEm - agora > mundo.coleta.msQuandoNaoCabe) noChao.expiraEm = agora + mundo.coleta.msQuandoNaoCabe
+    this.mensagem(`Mochila cheia: ${sobra.quantidade} ${item.nome} ficou no chão (some em ${Math.round((noChao.expiraEm - agora) / 1000)} s)`, 'alerta')
+  }
+
+  // Itens no chão: sobem e descem e somem quando o tempo acaba
+  atualizarItensNoChao(agora) {
+    if (this.itensNoChao.length === 0) return
+    this.itensNoChao = this.itensNoChao.filter((item) => {
+      const fica = item.atualizar(agora)
+      if (!fica) item.destruir(true)
+      return fica
+    })
+  }
+
+  // Em que região um ponto está (null na arena)
+  regiaoEm(ponto) {
+    return this.mapa.regioes.length ? regiaoEm(this.mapa.regioes, ponto) : null
+  }
+
+  noDominioDeBoss(ponto) {
+    return Boolean(this.regiaoEm(ponto)?.dominioDeBoss)
   }
 
   // Todo Tanque (Líder ou aliado) tem o escudo; quem deixou de ser Tanque perde o dele
@@ -291,7 +465,8 @@ export default class CenaArena extends Phaser.Scene {
           .filter((entidade) => entidade && entidade !== ignorar && !entidade.morto)
           .map((entidade) => ({ x: entidade.x, y: entidade.y, raio: entidade.raio }))
       : []
-    const regras = { area: areaJogavel, paredes: this.retangulosDosObstaculos, ocupados, raio: tamanho / 2, folga }
+    // A busca vai até 800 px do ponto: só os obstáculos até lá contam
+    const regras = { area: this.area, paredes: this.paredesPerto(ponto, 900 + tamanho), ocupados, raio: tamanho / 2, folga }
     return pontoLivreMaisProximo(ponto, regras) ?? { x: ponto.x, y: ponto.y }
   }
 
@@ -307,16 +482,21 @@ export default class CenaArena extends Phaser.Scene {
     const lider = this.lider
     this.corrigirSobreposicoes(agora)
 
+    // O mouse no mapa é recalculado a cada quadro: com a câmera andando e o mouse parado, a mira continua certa
+    this.mouseNoMundo = this.pontoDoMouse()
     if (!lider.caido) {
-      const ponteiro = this.input.activePointer
-      this.anguloDaMira = Math.atan2(ponteiro.worldY - lider.y, ponteiro.worldX - lider.x)
+      this.anguloDaMira = Math.atan2(this.mouseNoMundo.y - lider.y, this.mouseNoMundo.x - lider.x)
       lider.anguloDaMira = this.anguloDaMira
     }
     lider.atualizarMira(this.anguloDaMira)
     this.atualizarLider(agora)
+    this.acompanharRegiao()
+    this.explorar()
     pensarAliados(this, agora)
-    for (const inimigo of [...this.inimigos]) inimigo.atualizar(agora)
-    this.boneco.atualizar(agora)
+    this.trazerAliadosDeVolta(agora, ms)
+    this.acordarOuDormir()
+    for (const inimigo of [...this.inimigos]) if (!inimigo.dormindo) inimigo.atualizar(agora)
+    this.boneco?.atualizar(agora)
     this.moverTodos(agora, segundos)
 
     this.projeteis = this.projeteis.filter((projetil) => {
@@ -325,6 +505,7 @@ export default class CenaArena extends Phaser.Scene {
       return continua
     })
     for (const membro of this.grupo) membro.escudo?.atualizar()
+    this.atualizarItensNoChao(agora)
     this.atualizarMana(segundos)
     this.prenderVidaDoTesteDoFoco(agora)
     this.atualizarDesmaios(agora, ms)
@@ -332,7 +513,164 @@ export default class CenaArena extends Phaser.Scene {
     this.atualizarAndamento(agora, ms)
     if (this.terminou) return
 
-    for (const entidade of [...this.grupo, ...this.inimigos, this.boneco]) entidade.atualizarDesenho(agora, delta)
+    for (const entidade of this.desenhaveis()) entidade.atualizarDesenho(agora, delta)
+    if (this.mapa.comCamera) this.esconderForaDaTela()
+  }
+
+  // Exploração (RF40): a névoa do minimapa, as áreas já descobertas (do save) e o que esta partida descobriu.
+  // Tudo isso só entra no save no fim da partida, como os outros ganhos (RF12).
+  prepararExploracao() {
+    this.exploracao = null
+    if (!this.mapa.comCamera) return
+    const { celula } = mundo.minimapa
+    const total = Math.ceil(this.mapa.tamanho.largura / celula) * Math.ceil(this.mapa.tamanho.altura / celula)
+    const salvas = this.partida.descobertas
+    this.exploracao = {
+      nevoa: criarNevoa(this.mapa.tamanho, celula, decodificarNevoa(salvas?.nevoa, total)),
+      conhecidas: new Set(salvas?.areas ?? []),
+      novas: [],
+      xp: 0,
+      regioes: new Set(),
+    }
+    this.explorar()
+  }
+
+  // A cada quadro: revela o minimapa em volta do Líder; a primeira vez numa área dá XP (dividido como o dos monstros,
+  // RF50); a região entra na lista das descobertas (libera o Ponto de partida, RF32)
+  explorar() {
+    const exploracao = this.exploracao
+    if (!exploracao) return
+    revelarEmVolta(exploracao.nevoa, this.lider, mundo.minimapa.raioRevelado)
+    const regiao = this.regiaoDoLider
+    if (regiao && regiao.pontoDePartida !== 'inicio') exploracao.regioes.add(regiao.pontoDePartida)
+    const area = areaEm(this.mapa.areas, this.lider)
+    if (!area || exploracao.conhecidas.has(area.id)) return
+    exploracao.conhecidas.add(area.id)
+    exploracao.novas.push(area.id)
+    const dificuldade = this.mapa.regioes.find((uma) => uma.id === area.regiao)?.dificuldade
+    const xp = mundo.xpPorArea[dificuldade] ?? 0
+    if (xp > 0) {
+      exploracao.xp += xp
+      this.dividirXp(xp)
+    }
+    this.mensagem(`Área descoberta: ${area.nome}${xp > 0 ? ` (+${xp} XP)` : ''}`, 'bom')
+  }
+
+  // O que vai para o minimapa do HUD (8 vezes por segundo)
+  situacaoDoMinimapa() {
+    if (!this.exploracao) return null
+    const vista = this.cameras.main.worldView
+    const ponto = (entidade) => ({ x: Math.round(entidade.x), y: Math.round(entidade.y) })
+    return {
+      nevoa: codificarNevoa(this.exploracao.nevoa.bits),
+      lider: ponto(this.lider),
+      aliados: this.aliados.map(ponto),
+      vista: { x: Math.round(vista.x), y: Math.round(vista.y), largura: Math.round(vista.width), altura: Math.round(vista.height) },
+    }
+  }
+
+  // A região do Líder (HUD, RF53); entrar numa região nova mostra o nome dela
+  acompanharRegiao() {
+    const regiao = this.regiaoEm(this.lider)
+    if (!regiao || regiao === this.regiaoDoLider) return
+    this.regiaoDoLider = regiao
+    // No domínio do Boss, a taxa da fuga e dos perdidos sobe (RF48): o jogador fica sabendo ao entrar
+    this.mensagem(regiao.dominioDeBoss ? 'Domínio do Boss: aqui a fuga e os perdidos custam mais' : `Região: ${regiao.nome}`, regiao.dominioDeBoss ? 'alerta' : 'aviso')
+  }
+
+  // Aliado longe ou preso (Fase 3): fora da tela e longe do Líder (ou travado) por alguns segundos, ele reaparece
+  // logo além da borda da tela do lado em que estava, num lugar livre com caminho reto até o Líder, e entra andando.
+  // Acontece fora da vista: o jogador só vê o aliado chegando. Caído não volta (continua esperando ajuda).
+  trazerAliadosDeVolta(agora, ms) {
+    if (!this.mapa.comCamera) return
+    const { aliadoLonge } = mundo
+    const vista = this.cameras.main.worldView
+    for (const aliado of this.aliados) {
+      if (aliado.caido || aliado.deslizando) {
+        aliado.longeHa = 0
+        continue
+      }
+      const foraDaTela = aliado.x < vista.x - aliado.raio || aliado.x > vista.right + aliado.raio || aliado.y < vista.y - aliado.raio || aliado.y > vista.bottom + aliado.raio
+      const longe = Math.hypot(aliado.x - this.lider.x, aliado.y - this.lider.y) > aliadoLonge.distancia
+      const preso = (aliado.travamento?.nivel ?? 0) >= 2
+      aliado.longeHa = foraDaTela && (longe || preso) ? (aliado.longeHa ?? 0) + ms : 0
+      if (aliado.longeHa < aliadoLonge.ms) continue
+      const ponto = this.pontoParaVoltar(aliado, vista)
+      if (!ponto) continue
+      aliado.longeHa = 0
+      aliado.colocarEm(ponto.x, ponto.y)
+      this.navegador.esquecer(aliado)
+      if (aliado.ia) {
+        aliado.ia.parado = false
+        aliado.ia.quietoAte = 0
+      }
+    }
+  }
+
+  // Um ponto logo além da borda da tela, na direção do aliado (ou perto dela), livre e com caminho reto até o Líder
+  pontoParaVoltar(aliado, vista) {
+    const lider = this.lider
+    const angulo = Math.atan2(aliado.y - lider.y, aliado.x - lider.x)
+    const alem = mundo.aliadoLonge.alemDaBorda + aliado.raio
+    for (const desvio of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, Math.PI]) {
+      const direcao = { x: Math.cos(angulo + desvio), y: Math.sin(angulo + desvio) }
+      // Até a borda da tela nessa direção, e um pouco além
+      const ateBordaX = direcao.x > 0 ? (vista.right - lider.x) / direcao.x : direcao.x < 0 ? (vista.x - lider.x) / direcao.x : Infinity
+      const ateBordaY = direcao.y > 0 ? (vista.bottom - lider.y) / direcao.y : direcao.y < 0 ? (vista.y - lider.y) / direcao.y : Infinity
+      const distancia = Math.min(ateBordaX, ateBordaY) + alem
+      const alvo = { x: lider.x + direcao.x * distancia, y: lider.y + direcao.y * distancia }
+      const lugar = this.lugarLivre(aliado.tamanho, alvo, aliado, 6)
+      const naBorda = Math.hypot(lugar.x - alvo.x, lugar.y - alvo.y) < 120
+      if (naBorda && this.navegador.livre(lider, lugar, aliado.raio + 1)) return lugar
+    }
+    return null
+  }
+
+  // Quem tem desenho para atualizar neste quadro (os mobs que dormem longe ficam como estão)
+  desenhaveis() {
+    return [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.dormindo), ...(this.boneco ? [this.boneco] : [])]
+  }
+
+  // O ponto do mapa embaixo do mouse, pela câmera
+  pontoDoMouse() {
+    const ponteiro = this.input.activePointer
+    const ponto = this.cameras.main.getWorldPoint(ponteiro.x, ponteiro.y)
+    return { x: ponto.x, y: ponto.y }
+  }
+
+  // Longe do Líder e sem perseguir ninguém, o mob dorme: não pensa nem anda (TEST-005, 60 FPS). Acorda quando o
+  // grupo chega perto. Na arena (pequena), ninguém dorme.
+  acordarOuDormir() {
+    if (!this.mapa.comCamera) return
+    const lider = this.lider
+    for (const inimigo of this.inimigos) {
+      const longe = Math.hypot(inimigo.x - lider.x, inimigo.y - lider.y) > mundo.raioAtivo
+      const dormir = longe && !inimigo.perseguindo
+      if (dormir && !inimigo.dormindo) {
+        inimigo.parar()
+        inimigo.corpo.body?.setVelocity(0, 0)
+        this.navegador.esquecer(inimigo)
+      }
+      inimigo.dormindo = dormir
+    }
+  }
+
+  // Desenha só o que aparece na tela (com uma folga): os pedaços do chão da Floresta e os mobs longe
+  esconderForaDaTela() {
+    const vista = this.cameras.main.worldView
+    const folga = 200
+    const naTela = (x0, y0, x1, y1) => x1 >= vista.x - folga && x0 <= vista.right + folga && y1 >= vista.y - folga && y0 <= vista.bottom + folga
+    for (const pedaco of this.pedacosDoChao ?? []) {
+      const visivel = naTela(pedaco.x0, pedaco.y0, pedaco.x1, pedaco.y1)
+      if (visivel === pedaco.visivel) continue
+      pedaco.visivel = visivel
+      for (const objeto of pedaco.objetos) objeto.setVisible(visivel)
+    }
+    for (const inimigo of this.inimigos) {
+      const r = inimigo.tamanho
+      inimigo.definirVisivel(naTela(inimigo.x - r, inimigo.y - r, inimigo.x + r, inimigo.y + r))
+    }
+    for (const item of this.itensNoChao) item.definirVisivel(naTela(item.x - 20, item.y - 20, item.x + 20, item.y + 20))
   }
 
   atualizarLider(agora) {
@@ -344,6 +682,7 @@ export default class CenaArena extends Phaser.Scene {
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
+    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
     ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
       if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
@@ -362,8 +701,7 @@ export default class CenaArena extends Phaser.Scene {
 
   // Para onde o Líder mira: o ângulo e o ponto do mouse (o Meteoro cai nele, até o alcance)
   miraDoLider() {
-    const ponteiro = this.input.activePointer
-    return { angulo: this.anguloDaMira, ponto: { x: ponteiro.worldX, y: ponteiro.worldY } }
+    return { angulo: this.anguloDaMira, ponto: this.mouseNoMundo ?? this.pontoDoMouse() }
   }
 
   // Esquiva: avanço curto na direção do movimento (parado: na direção da mira), sem levar dano
@@ -392,8 +730,8 @@ export default class CenaArena extends Phaser.Scene {
   // quem está perto demais se afasta aos poucos; quem é empurrado contra uma pedra escorrega para o lado;
   // quem anda sozinho e não sai do lugar tenta outro jeito (regras/movimento.js).
   moverTodos(agora, segundos) {
-    const andantes = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
-    const corpos = [...andantes, this.boneco].map((entidade) => ({
+    const andantes = this.andantes()
+    const corpos = [...andantes, ...(this.boneco ? [this.boneco] : [])].map((entidade) => ({
       x: entidade.x,
       y: entidade.y,
       raio: entidade.raio,
@@ -401,7 +739,6 @@ export default class CenaArena extends Phaser.Scene {
       fixo: entidade.fixo,
     }))
     const afastamentos = separacao(corpos, combateDeTeste.separacao)
-    const paredes = this.retangulosDosObstaculos
     this.encerrarSeparacaoSuave(andantes, agora)
     andantes.forEach((entidade, i) => {
       if (entidade.deslizando) return
@@ -419,14 +756,15 @@ export default class CenaArena extends Phaser.Scene {
       // parado (a correção de sobreposição continua valendo).
       const encostados = entidade.lider ? andantes.filter((outro) => !this.grupo.includes(outro)) : andantes
       const outros = this.corposEncostados(entidade, [entidade, ...encostados], agora)
+      const paredes = this.paredesPerto(entidade)
       // Quem anda sozinho escorrega em tudo; o Líder escorrega nos corpos e, nas pedras, só no afastamento
       // (contra uma pedra, quem manda é o jogador)
       // (o "segundos" faz cada um olhar à frente o tanto que vai andar neste quadro)
       const final = entidade.andaSozinho
-        ? escorregar(somar(base, afastamentos[i]), entidade, [...paredes, ...outros], areaJogavel, 4, segundos)
+        ? escorregar(somar(base, afastamentos[i]), entidade, [...paredes, ...outros], this.area, 4, segundos)
         : somar(
-            escorregar(base, entidade, outros, semBorda, 4, segundos),
-            escorregar(afastamentos[i], entidade, [...paredes, ...outros], areaJogavel, 4, segundos),
+            escorregar(base, entidade, outros, this.semBorda, 4, segundos),
+            escorregar(afastamentos[i], entidade, [...paredes, ...outros], this.area, 4, segundos),
           )
       corpo.setVelocity(final.x, final.y)
     })
@@ -446,12 +784,15 @@ export default class CenaArena extends Phaser.Scene {
   // Depois da física: quem ficou um dentro do outro num aperto (corpos contra a pedra) é afastado pelo tanto
   // que entrou, sem entrar na pedra (regras/movimento.js). São poucos px por vez, então não dá tranco.
   corrigirSobreposicoes(agora) {
-    const andantes = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
+    const andantes = this.andantes()
+    if (andantes.length === 0) return
+    // Os obstáculos em volta de quem anda (todos ficam perto do Líder; os mobs longe dormem)
+    const paredes = this.paredesEmVolta(andantes)
     // Primeiro, quem ficou dentro de uma pedra sai dela (parado, a física o considera "enterrado" e não tira)
     const foraDasPedras = tirarDasParedes(
       andantes.map((entidade) => ({ x: entidade.x, y: entidade.y, raio: entidade.raio })),
-      this.retangulosDosObstaculos,
-      areaJogavel,
+      paredes,
+      this.area,
     )
     andantes.forEach((entidade, i) => {
       if (entidade.deslizando) return
@@ -465,11 +806,32 @@ export default class CenaArena extends Phaser.Scene {
       fixo: entidade.fixo,
       ignorar: entidade.deslizando || entidade.separandoAte > agora,
     }))
-    const posicoes = desfazerSobreposicoes(corpos, this.retangulosDosObstaculos, areaJogavel, 8)
+    const posicoes = desfazerSobreposicoes(corpos, paredes, this.area, 8)
     andantes.forEach((entidade, i) => {
       const { x, y } = posicoes[i]
       if (Math.abs(x - entidade.x) > 0.01 || Math.abs(y - entidade.y) > 0.01) entidade.corpo.body.reset(x, y)
     })
+  }
+
+  // Quem anda neste quadro: o grupo e os mobs acordados
+  andantes() {
+    return [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto && !inimigo.dormindo)]
+  }
+
+  // Os obstáculos na caixa que envolve todos os corpos dados (com folga)
+  paredesEmVolta(corpos) {
+    let x0 = Infinity
+    let y0 = Infinity
+    let x1 = -Infinity
+    let y1 = -Infinity
+    for (const corpo of corpos) {
+      x0 = Math.min(x0, corpo.x)
+      y0 = Math.min(y0, corpo.y)
+      x1 = Math.max(x1, corpo.x)
+      y1 = Math.max(y1, corpo.y)
+    }
+    const folga = alcanceDasParedes
+    return retangulosNaCaixa(this.indiceDasParedes, { x: (x0 + x1) / 2, y: (y0 + y1) / 2, largura: x1 - x0 + folga * 2, altura: y1 - y0 + folga * 2 })
   }
 
   // Quem já saiu do bolo do "Juntar todos" (ninguém mais em cima dele) volta a ter a batida dura
@@ -524,7 +886,7 @@ export default class CenaArena extends Phaser.Scene {
     const ponto = this.lugarLivre(entidade.tamanho, entidade, entidade, travamento.folgaDoPontoLivre)
     if (Math.hypot(ponto.x - entidade.x, ponto.y - entidade.y) < 4) return
     // O deslize não passa por cima de ninguém: se o caminho cruza outro corpo, ele fica quieto e tenta depois
-    const outros = [...this.grupo, ...this.inimigos.filter((inimigo) => !inimigo.morto)]
+    const outros = this.andantes()
       .filter((outro) => outro !== entidade)
       .map((outro) => ({ x: outro.x, y: outro.y, largura: outro.tamanho, altura: outro.tamanho }))
     if (!linhaLivre(entidade, ponto, outros, entidade.raio)) {
@@ -607,6 +969,7 @@ export default class CenaArena extends Phaser.Scene {
     const fator = ate > alcance ? alcance / ate : 1
     const x = dono.x + (ponto.x - dono.x) * fator
     const y = dono.y + (ponto.y - dono.y) * fator
+    const { limites } = this
     return {
       x: Math.min(limites.direita, Math.max(limites.esquerda, x)),
       y: Math.min(limites.base, Math.max(limites.topo, y)),
@@ -619,7 +982,7 @@ export default class CenaArena extends Phaser.Scene {
 
   // Quem os ataques do grupo acertam: os inimigos vivos e o boneco
   alvosDoJogador() {
-    return [...this.inimigos.filter((inimigo) => !inimigo.morto), this.boneco]
+    return [...this.inimigos.filter((inimigo) => !inimigo.morto), ...(this.boneco ? [this.boneco] : [])]
   }
 
   alvoAtingido(circulo) {
@@ -627,17 +990,22 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   bateEmObstaculo(circulo) {
+    const { limites } = this
     const fora =
       circulo.x < limites.esquerda + circulo.raio ||
       circulo.y < limites.topo + circulo.raio ||
       circulo.x > limites.direita - circulo.raio ||
       circulo.y > limites.base - circulo.raio
-    return fora || pedras.some((pedra) => circuloTocaRetangulo(circulo, pedra))
+    return fora || this.tocaObstaculo(circulo)
+  }
+
+  tocaObstaculo(circulo) {
+    return this.pedrasPerto(circulo, circulo.raio + 4).some((pedra) => circuloTocaRetangulo(circulo, pedra))
   }
 
   // Um tiro do grupo acabou numa pedra (não na borda): conta, para o roteiro conferir a linha de tiro da IA
   registrarTiroNaPedra(dono, circulo) {
-    if (!dono || !pedras.some((pedra) => circuloTocaRetangulo(circulo, pedra))) return
+    if (!dono || !this.tocaObstaculo(circulo)) return
     this.contagemDeTiros.naPedra[dono.classe] = (this.contagemDeTiros.naPedra[dono.classe] ?? 0) + 1
   }
 
@@ -674,6 +1042,31 @@ export default class CenaArena extends Phaser.Scene {
     const { xp = 0, ouro = 0 } = inimigo.config
     this.ganhos.ouro += ouro
     this.ganhos.monstros += 1
+    if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+    // Boss (TASK-065): o bônus na pontuação (RF49) e a pequena chance do equipamento especial (RF39)
+    if (inimigo.ehBoss) {
+      this.ganhos.bonusDeBoss += inimigo.config.bonus
+      this.mensagem(`${inimigo.config.nome} derrotado! (+${inimigo.config.bonus} pontos)`, 'nivel')
+      const { especial } = inimigo.config
+      const item = itemDoCatalogo(especial.item)
+      if (item && Math.random() < (this.chanceDoEspecialForcada ?? especial.chance)) {
+        this.soltarItem(item, 1, inimigo, mundo.coleta.msDoDrop)
+        this.mensagem(`O ${inimigo.config.nome} deixou: ${item.nome}!`, 'nivel')
+      }
+    }
+    // Drops (TASK-064): cada um sorteado pela chance dele; caem no chão e somem se ninguém pegar
+    for (const drop of inimigo.config.drops ?? []) {
+      const item = itemDoCatalogo(drop.item)
+      const [minimo, maximo] = drop.quantidade ?? [1, 1]
+      if (!item || Math.random() >= (this.chanceDeDropForcada ?? drop.chance)) continue
+      this.soltarItem(item, minimo + Math.floor(Math.random() * (maximo - minimo + 1)), inimigo, mundo.coleta.msDoDrop)
+    }
+    this.matarInimigo(inimigo)
+    this.dividirXp(xp)
+  }
+
+  // XP de monstro ou de exploração: dividido entre os permanentes de pé (RF50), com o aviso de quem sobe de nível
+  dividirXp(xp) {
     const membros = this.grupo.map((membro) => ({
       classe: membro.classe,
       temporario: membro.membro.temporario,
@@ -681,8 +1074,6 @@ export default class CenaArena extends Phaser.Scene {
       perdido: membro.perdido,
     }))
     this.ganhos.xpPorClasse = somarXpDoAbate(this.ganhos.xpPorClasse, xp, membros, this.lider.classe).xpDaPartida
-    if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
-    this.matarInimigo(inimigo)
     this.avisarNiveis()
   }
 
@@ -825,7 +1216,7 @@ export default class CenaArena extends Phaser.Scene {
   // Sem ajuda em 30 s: a Pedra de Retorno leva o personagem ao Reino. Ele vira perdido e sai do mapa,
   // e o lugar onde caiu fica guardado (a taxa de cada perdido sai da distância até o ponto inicial, RF48).
   perder(membro) {
-    this.perdidos.push({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y) })
+    this.perdidos.push({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y), noDominioDeBoss: this.noDominioDeBoss(membro) })
     const brilho = this.add.circle(membro.x, membro.y, membro.tamanho, 0x9fd8ff, 0.7).setDepth(camadas.textos - 4)
     this.tweens.add({ targets: brilho, scale: 2.5, alpha: 0, duration: 500, onComplete: () => brilho.destroy() })
     particulas(this, membro.x, membro.y, 0x9fd8ff, 20, 260)
@@ -856,7 +1247,7 @@ export default class CenaArena extends Phaser.Scene {
     this.terminou = true
     for (const membro of this.grupo) membro.corpo.body?.setVelocity(0, 0)
     for (const inimigo of this.inimigos) inimigo.corpo.body?.setVelocity(0, 0)
-    const lugar = (membro) => ({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y) })
+    const lugar = (membro) => ({ classe: membro.classe, x: Math.round(membro.x), y: Math.round(membro.y), noDominioDeBoss: this.noDominioDeBoss(membro) })
     this.ponte.avisar('fimDaPartida', {
       como,
       resultado,
@@ -865,11 +1256,25 @@ export default class CenaArena extends Phaser.Scene {
       perdidos: [...this.perdidos],
       caidosNoFim: this.grupo.filter((membro) => membro.caido).map(lugar),
       lider: lugar(this.lider),
-      ...lugarDaTaxa,
+      // A taxa conta do ponto inicial do bioma até a borda do mapa (RF48)
+      inicio: { ...this.mapa.inicio },
+      distanciaAteABorda: this.mapa.distanciaAteABorda,
       ouroGanho: this.ganhos.ouro,
       monstros: this.ganhos.monstros,
-      recursos: 0, // a coleta entra na etapa 6
+      recursos: this.ganhos.recursos, // recursos coletados, para a pontuação (RF49)
+      bonusDeBoss: this.ganhos.bonusDeBoss, // Boss derrotado (RF49)
+      // A mochila da partida: vai para a Mochila do Reino em todos os resultados (RF50)
+      itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
       xpPorClasse: { ...this.ganhos.xpPorClasse },
+      // O mapa descoberto (Fase 3): entra no save no fim, em qualquer resultado (RF50)
+      descobertas: this.exploracao && {
+        bioma: this.mapa.id,
+        nevoa: codificarNevoa(this.exploracao.nevoa.bits),
+        areas: [...this.exploracao.conhecidas],
+        areasNovas: [...this.exploracao.novas],
+        regioes: [...this.exploracao.regioes],
+        xpDeExploracao: this.exploracao.xp,
+      },
       segundosAtivos: Math.floor(this.msAtivos / 1000),
       segundosTotais: Math.floor(this.agora / 1000),
     })
@@ -977,6 +1382,49 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'derrubarLider') this.derrubar(this.lider)
     if (comando.tipo === 'alternarAjuda') this.aliadosAjudam = !this.aliadosAjudam
     if (comando.tipo === 'trocarIA') this.trocarIA(comando.nivel)
+    if (comando.tipo === 'encherMochila') this.encherMochila()
+    if (comando.tipo === 'piorCenario') this.piorCenario()
+    if (comando.tipo === 'alternarDropEspecial') this.chanceDoEspecialForcada = this.chanceDoEspecialForcada === 1 ? undefined : 1
+  }
+
+  // TEST-005 (só no npm run dev): o pior cenário do beta, para medir o FPS. Grupo de 5 no meio da região Difícil (a com
+  // mais mobs) e todos os mobs vivos dela acordados em volta, perseguindo. O FPS aparece na barra de teste.
+  piorCenario() {
+    if (!this.mapa.comCamera) return
+    const regiao = this.mapa.regioes.find((uma) => uma.id === 'dificil')
+    const centro = this.lugarLivre(this.lider.tamanho, { x: (regiao.x0 + regiao.x1) / 2, y: (regiao.y0 + regiao.y1) / 2 }, this.lider, 8, false)
+    this.lider.colocarEm(centro.x, centro.y)
+    this.cameras.main.centerOn(centro.x, centro.y)
+    this.encherGrupo()
+    this.aliados.forEach((aliado, indice) => {
+      const vaga = vagaNaFormacao(indice, this.aliados.length, raioDaFormacao)
+      const lugar = this.lugarLivre(aliado.tamanho, { x: centro.x + vaga.x, y: centro.y + vaga.y }, aliado)
+      aliado.colocarEm(lugar.x, lugar.y)
+    })
+    const daRegiao = this.inimigos.filter((inimigo) => inimigo.regiao === 'dificil' && !inimigo.morto)
+    daRegiao.forEach((inimigo, indice) => {
+      const angulo = (indice / daRegiao.length) * Math.PI * 2
+      const distancia = 450 + (indice % 3) * 120
+      const lugar = this.lugarLivre(inimigo.tamanho, { x: centro.x + Math.cos(angulo) * distancia, y: centro.y + Math.sin(angulo) * distancia }, inimigo, mundo.nascimento.folga)
+      inimigo.colocarEm(lugar.x, lugar.y)
+      inimigo.casaFixa = { x: lugar.x, y: lugar.y }
+      inimigo.casa = { x: lugar.x, y: lugar.y }
+      inimigo.dormindo = false
+      inimigo.voltandoAte = 0
+      inimigo.provocadoAte = this.agora + 120000 // persegue o grupo o tempo todo (até o cervo)
+    })
+    this.mensagem(`Teste: pior cenário (grupo de ${this.grupo.length} e ${daRegiao.length} mobs da Difícil)`, 'aviso')
+  }
+
+  // Teste da mochila cheia (só no npm run dev): enche com madeira até não caber mais nada de peso 1
+  encherMochila() {
+    const madeira = itemDoCatalogo('madeira')
+    const livre = this.mochila.capacidade - pesoTotal(this.mochila.itens)
+    const quantas = Math.floor(livre / madeira.peso)
+    if (quantas > 0) this.mochila.itens = guardarNaMochila(this.mochila.itens, { id: madeira.id, peso: madeira.peso, quantidade: quantas }, this.mochila.capacidade).itens
+    const resto = this.mochila.capacidade - pesoTotal(this.mochila.itens)
+    if (resto > 0) this.mochila.itens = guardarNaMochila(this.mochila.itens, { id: 'cogumelo', peso: 1, quantidade: resto }, this.mochila.capacidade).itens
+    this.mensagem('Teste: mochila cheia', 'aviso')
   }
 
   // Os 4 botões de resultado: acabam a partida já, com os números reais dela e o resultado pedido
@@ -1105,7 +1553,11 @@ export default class CenaArena extends Phaser.Scene {
   // Aparece no ponto de surgimento mais longe do Líder
   criarInimigoLonge(tipo) {
     const distancia = (ponto) => Math.hypot(ponto.x - this.lider.x, ponto.y - this.lider.y)
-    const ponto = pontosDeSurgimento.reduce((maisLonge, outro) => (distancia(outro) > distancia(maisLonge) ? outro : maisLonge))
+    // Na Floresta, num ponto a ~600 px do Líder, na direção da mira (fica na tela)
+    const pontos = this.mapa.pontosDeSurgimento ?? [
+      { x: this.lider.x + Math.cos(this.anguloDaMira) * 600, y: this.lider.y + Math.sin(this.anguloDaMira) * 600 },
+    ]
+    const ponto = pontos.reduce((maisLonge, outro) => (distancia(outro) > distancia(maisLonge) ? outro : maisLonge))
     const inimigo = this.criarInimigo(tipo, ponto)
     particulas(this, inimigo.x, inimigo.y, inimigo.cor, 12, 200)
   }
@@ -1159,15 +1611,43 @@ export default class CenaArena extends Phaser.Scene {
       contagemDoFoco: { ...this.contagemDoFoco },
       // Andamento e números da partida (5c)
       tempo: Math.floor(agora / 1000),
-      pontuacao: pontuacaoBase({ monstros: this.ganhos.monstros, ouroGanho: this.ganhos.ouro, segundosAtivos: Math.floor(this.msAtivos / 1000) }),
+      pontuacao: pontuacaoBase({
+        monstros: this.ganhos.monstros,
+        ouroGanho: this.ganhos.ouro,
+        recursos: this.ganhos.recursos,
+        bonusDeBoss: this.ganhos.bonusDeBoss,
+        segundosAtivos: Math.floor(this.msAtivos / 1000),
+      }),
+      // A barra grande do Boss (TASK-065): aparece quando ele persegue o grupo ou o Líder está no domínio dele
+      boss:
+        this.boss && !this.boss.morto && (this.boss.perseguindo || this.noDominioDeBoss(lider))
+          ? { nome: this.boss.config.nome, vida: Math.max(0, Math.round(this.boss.vida)), vidaMaxima: this.boss.vidaMaxima }
+          : null,
       ouroGanho: this.ganhos.ouro,
       monstros: this.ganhos.monstros,
-      custoDaFuga: custoDaFuga({ lider, inicio, ouroGanho: this.ganhos.ouro }, combateDeTeste.distanciaAteABorda),
+      custoDaFuga: custoDaFuga(
+        { lider, inicio: this.mapa.inicio, ouroGanho: this.ganhos.ouro, noDominioDeBoss: this.noDominioDeBoss(lider) },
+        this.mapa.distanciaAteABorda,
+      ),
+      minimapa: this.situacaoDoMinimapa(),
+      // Mochila da partida e o item que o E pegaria agora (TASK-064)
+      mochila: { peso: pesoTotal(this.mochila.itens), capacidade: this.mochila.capacidade },
+      itemPerto: (() => {
+        const perto = this.itemPerto()
+        if (!perto) return null
+        const cabe = pesoTotal(this.mochila.itens) + perto.item.peso <= this.mochila.capacidade
+        return { nome: perto.item.nome, quantidade: perto.quantidade, cabe }
+      })(),
+      // A região atual (HUD, RF53)
+      regiao: this.mapa.comCamera
+        ? { nome: this.regiaoDoLider?.nome ?? '—', dificuldade: this.regiaoDoLider?.dificuldade ?? null, dominioDeBoss: Boolean(this.regiaoDoLider?.dominioDeBoss) }
+        : { nome: this.mapa.nome, dificuldade: null, dominioDeBoss: false },
       emCombate: this.emCombate,
       retorno: this.retorno && { segundos: segundosDaContagem(this.retorno.msRestantes), interrompido: this.retorno.interrompido },
       fuga: this.fuga && { segundos: segundosDaContagem(this.fuga.msRestantes) },
       fps: Math.round(this.game.loop.actualFps),
       tamanhoDoGrupo: this.grupo.length,
+      dropEspecialForcado: this.chanceDoEspecialForcada === 1,
       inimigos: this.inimigos.length,
     })
   }

@@ -4,17 +4,17 @@ import { podeUsar, velocidadeDoMovimento } from '../../regras/combate.js'
 import TiroInimigo from '../ataques/tiroInimigo.js'
 import Inimigo from './Inimigo.js'
 
-const config = combateDeTeste.atirador
-
 // Atirador (vermelho escuro): fica longe de quem persegue, entre a distância mínima e a máxima,
 // e atira bolinhas lentas. Antes de cada tiro, pisca (o aviso). Serve para testar o escudo do Tanque.
+// Na Floresta (Fase 3), a aranha é este mesmo mob com outra ficha (balanceamento.js, mundo.mobs).
 export default class Atirador extends Inimigo {
-  constructor(cena, x, y) {
-    super(cena, x, y, config, coresDaArena.atirador)
+  constructor(cena, x, y, config = combateDeTeste.atirador, cor = coresDaArena.atirador) {
+    super(cena, x, y, config, cor)
     this.ultimoTiro = null
   }
 
   atualizar(agora) {
+    const { config } = this
     if (this.morto || this.estaSendoEmpurrado(agora)) return
 
     if (this.estado === 'mirando') {
