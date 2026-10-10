@@ -3,6 +3,7 @@ import { atributosIniciaisDaClasse, classes } from '../dados/classes.js'
 import { nivelInicial } from '../dados/regras.js'
 import { chanceDeCritico } from './combate.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
+import { capacidadeDaMochila } from './mochila.js'
 
 // Quem vai para a partida, com quanta vida e quanta mana (Fase 1).
 // Cada membro do grupo: { classe, nivel, xp, vidaMaxima, manaMaxima, manaPorSegundo, chanceDeCritico, lider, temporario, deTeste? }
@@ -83,4 +84,10 @@ export function trocarClasseDoLider(grupo, novaClasse) {
     })
   }
   return grupo.map((membro) => (membro === lider ? membroDeTeste(novaClasse, true) : membro))
+}
+
+// Capacidade da mochila da partida com o grupo que vai (a Força de todos, RF33): a mesma conta que a partida faz ao
+// começar, para a Preparação mostrar e limitar o que vai junto
+export function capacidadeDaPartida(progresso, lider) {
+  return capacidadeDaMochila(montarGrupoDaPartida(progresso, lider).map((membro) => membro.forca ?? 0))
 }

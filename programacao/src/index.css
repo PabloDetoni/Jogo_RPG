@@ -1101,3 +1101,29 @@ body {
 .moldura[data-tema='escuro'] .mensagem-do-reino-erro {
   color: #ff9e9e;
 }
+
+/* Mochila da partida na Preparação (TASK-073) */
+.mochila-da-preparacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  width: 40cqw;
+  max-height: 30cqw;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.mochila-da-preparacao h2 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.mochila-da-preparacao p {
+  margin: 0;
+}
+
+.quantidade-que-vai {
+  min-width: 2em;
+  text-align: center;
+  font-weight: bold;
+}

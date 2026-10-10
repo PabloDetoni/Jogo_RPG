@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { novoPersonagem, progressoInicial } from '../estado/progresso.js'
-import { classesQueFaltam, membroDeTeste, montarGrupoDaPartida, trocarClasseDoLider } from './grupoDaPartida.js'
+import { atributosIniciaisDaClasse } from '../dados/classes.js'
+import { capacidadeDaPartida, classesQueFaltam, membroDeTeste, montarGrupoDaPartida, trocarClasseDoLider } from './grupoDaPartida.js'
+import { capacidadeDaMochila } from './mochila.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
 
 vi.mock('../dados/balanceamento.js', async (importarOriginal) => {
@@ -110,5 +112,18 @@ describe('Força de cada membro (capacidade da mochila, RF33)', () => {
     const progresso = { ...progressoInicial(), personagens: [{ ...novoPersonagem('tanque'), atributos: { ...novoPersonagem('tanque').atributos, forca: 30 } }], lider: 'tanque' }
     const [tanque] = montarGrupoDaPartida(progresso, 'tanque')
     expect(tanque.forca).toBe(30)
+  })
+})
+
+describe('capacidade da mochila da partida na Preparação (TASK-073)', () => {
+  it('é a Força de todo o grupo que vai (permanentes e temporários) × a capacidade por ponto', () => {
+    const progresso = {
+      ...progressoInicial(),
+      personagens: [novoPersonagem('mago'), novoPersonagem('tanque')],
+      contratosTemporarios: [{ classe: 'arqueiro', partidasRestantes: 2, nivel: 5 }],
+      lider: 'tanque',
+    }
+    const forcas = ['mago', 'tanque', 'arqueiro'].map((classe) => atributosIniciaisDaClasse(classe).forca)
+    expect(capacidadeDaPartida(progresso, 'tanque')).toBe(capacidadeDaMochila(forcas))
   })
 })

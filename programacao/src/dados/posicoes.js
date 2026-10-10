@@ -156,7 +156,7 @@ export const posicoes = {
   preparacao: {
     tituloLider: { x: 25, y: 25 },
     lideres: { x: 25, y: 50 },
-    mochila: { x: 70, y: 25 },
+    mochila: { x: 70, y: 48 },
     comecarPartida: { x: 80, y: 88, grande: true },
     voltarAoReino: { x: 10, y: 90 },
     voltarAoMapa: { x: 27, y: 90 },

@@ -458,3 +458,24 @@ describe('Mochila do Reino (Fase 4, TASK-072)', () => {
     expect(comMochila([{ id: 'itemVelho', quantidade: 1 }])).toContain('não existe mais no catálogo')
   })
 })
+
+describe('Preparação: mochila da partida (Fase 4, TASK-073)', () => {
+  it('mostra o peso, a capacidade e as poções da Mochila com − e +; o que não é usável não aparece', () => {
+    const html = desenhar('preparacao', 'convidado', null, {
+      mudancas: {
+        progresso: { ...progresso, mochila: [{ id: 'pocaoDeVida', quantidade: 3 }, { id: 'peleDeLobo', quantidade: 2 }] },
+        escolhasDaPartida: { bioma: 'floresta', pontoPartida: 'inicio', levar: { pocaoDeVida: 2 } },
+      },
+    }).replace(/<!-- -->/g, '')
+    expect(html).toContain('Mochila da partida')
+    expect(html).toMatch(/Peso <strong>2<\/strong> de <strong>\d+<\/strong>/)
+    expect(html).toContain('Poção de vida')
+    expect(html).toContain('(tem 3, peso 1)')
+    expect(html).toContain('aria-label="Levando 2"')
+    expect(html).not.toContain('Pele de lobo')
+  })
+
+  it('sem poções, explica onde comprar', () => {
+    expect(desenhar('preparacao', 'convidado')).toContain('Dá para comprar no Mercado')
+  })
+})

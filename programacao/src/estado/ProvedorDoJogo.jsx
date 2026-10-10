@@ -257,6 +257,7 @@ export default function ProvedorDoJogo({ children }) {
       encerrarPartida: (fim) => despachar({ tipo: 'encerrarPartida', fim }),
       contratar: (contrato, classe) => despachar({ tipo: 'contratar', contrato, classe }),
       noReino: (operacao, ...argumentos) => despachar({ tipo: 'noReino', operacao, argumentos }),
+      levarNaPartida: (id, quantidade) => despachar({ tipo: 'levarNaPartida', id, quantidade }),
       alternarPreferencia: (chave) => despachar({ tipo: 'alternarPreferencia', chave }),
 
       // Painel de desenvolvimento (só no npm run dev; mexem no save só fora da partida)

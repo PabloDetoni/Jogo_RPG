@@ -31,7 +31,9 @@ export default function Partida() {
   const pontoPartida = estado.partidaAtual?.pontoPartida ?? 'inicio'
   // O mapa já descoberto deste bioma (minimapa e XP das áreas): o progresso não muda durante a partida (RF12)
   const descobertas = estado.progresso.mapasDescobertos?.[bioma] ?? null
-  const partida = useMemo(() => ({ bioma, pontoPartida, descobertas }), [bioma, pontoPartida, descobertas])
+  // O que foi levado da Mochila do Reino para a mochila da partida (Fase 4, TASK-073)
+  const levar = estado.partidaAtual?.levar ?? null
+  const partida = useMemo(() => ({ bioma, pontoPartida, descobertas, levar }), [bioma, pontoPartida, descobertas, levar])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
   // Fim da partida (retorno, fuga, desmaio ou botão de teste): as contas e o save ficam com o estado do jogo

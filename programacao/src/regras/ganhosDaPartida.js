@@ -9,12 +9,14 @@ import { ganharXp } from './xp.js'
 // - cada contrato temporário perde uma partida (RF52);
 // - o mapa descoberto (Fase 3, RF40): a névoa revelada e as áreas somam às de antes, e as regiões descobertas
 //   liberam o Ponto de partida (RF32);
-// - os itens da mochila da partida vão para a Mochila do Reino (RF50: ficam em todos os resultados).
+// - os itens da mochila da partida vão para a Mochila do Reino (RF50: ficam em todos os resultados). O que foi levado
+//   da Mochila do Reino (Fase 4, TASK-073) sai dela agora: o que sobrou dele volta junto com a mochila da partida, e o
+//   que foi usado na partida some de vez.
 // Vida e mana não ficam no progresso: toda partida começa com elas cheias (RF52).
 // fim = { ouroRecebido, xpPorClasse: { classe: xp }, monstros, descobertas: { bioma, nevoa, areas, regioes } | null,
-//         itens: [{ id, quantidade }] }
+//         itens: [{ id, quantidade }] (a mochila da partida no fim), levados: { id: quantidade } }
 // Devolve o progresso novo e, para o Resumo, o XP de cada permanente com o nível de antes e o de depois.
-export function aplicarFimNoProgresso(progresso, { ouroRecebido = 0, xpPorClasse = {}, monstros = 0, descobertas = null, itens = [] }) {
+export function aplicarFimNoProgresso(progresso, { ouroRecebido = 0, xpPorClasse = {}, monstros = 0, descobertas = null, itens = [], levados = {} }) {
   const xpDosPersonagens = []
   const personagens = progresso.personagens.map((personagem) => {
     const xp = Math.max(0, Math.floor(xpPorClasse[personagem.classe] ?? 0))
@@ -35,11 +37,18 @@ export function aplicarFimNoProgresso(progresso, { ouroRecebido = 0, xpPorClasse
         monstrosDerrotados: estatisticas.monstrosDerrotados + Math.max(0, Math.floor(monstros)),
       },
       contratosTemporarios: gastarPartidaDosContratos(progresso.contratosTemporarios),
-      mochila: juntarNaMochila(progresso.mochila, itens),
+      mochila: juntarNaMochila(tirarOsLevados(progresso.mochila, levados), itens),
       ...juntarDescobertas(progresso, descobertas),
     },
     personagens: xpDosPersonagens,
   }
+}
+
+// O que foi levado sai da Mochila do Reino (nunca mais do que havia nela)
+function tirarOsLevados(mochila, levados) {
+  return mochila
+    .map((item) => ({ ...item, quantidade: item.quantidade - Math.min(item.quantidade, Math.max(0, Math.floor(levados?.[item.id] ?? 0))) }))
+    .filter((item) => item.quantidade > 0)
 }
 
 // Itens da partida somados aos da Mochila do Reino (iguais ficam juntos; quantidade quebrada ou zero não entra)

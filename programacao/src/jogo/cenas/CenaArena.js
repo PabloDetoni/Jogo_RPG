@@ -41,7 +41,7 @@ import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regr
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
-import { capacidadeDaMochila, guardarNaMochila, pesoTotal } from '../../regras/mochila.js'
+import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
@@ -102,7 +102,7 @@ export default class CenaArena extends Phaser.Scene {
     this.ponte = ponte
     this.grupoInicial = grupo
     // descobertas: o mapa já descoberto deste bioma, do save ({ nevoa, areas }), para o minimapa e o XP das áreas
-    this.partida = { bioma: partida.bioma ?? 'floresta', pontoPartida: partida.pontoPartida ?? 'inicio', descobertas: partida.descobertas ?? null }
+    this.partida = { bioma: partida.bioma ?? 'floresta', pontoPartida: partida.pontoPartida ?? 'inicio', descobertas: partida.descobertas ?? null, levar: partida.levar ?? null }
   }
 
   // Relógio da partida, em ms: só anda quando a cena roda. Na pausa (e com a aba escondida) ele para, e com ele
@@ -174,9 +174,10 @@ export default class CenaArena extends Phaser.Scene {
     this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
-    this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {} }
-    // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim
-    this.mochila = { itens: [], capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
+    this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {}, coletados: {} }
+    // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim. Começa
+    // com o que foi levado da Mochila do Reino na Preparação (Fase 4, TASK-073).
+    this.mochila = { itens: itensLevados(this.partida?.levar), capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
     this.itensNoChao = []
     this.niveisAvisados = {} // classe → último nível avisado no HUD ("subiu de nível")
     this.andamentoAvisado = ''
@@ -398,6 +399,7 @@ export default class CenaArena extends Phaser.Scene {
     this.mochila.itens = itens
     if (pegou > 0) {
       if (item.tipo === 'recurso') this.ganhos.recursos += pegou
+      this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
       numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
     }
     if (!sobra) {
@@ -1263,8 +1265,10 @@ export default class CenaArena extends Phaser.Scene {
       monstros: this.ganhos.monstros,
       recursos: this.ganhos.recursos, // recursos coletados, para a pontuação (RF49)
       bonusDeBoss: this.ganhos.bonusDeBoss, // Boss derrotado (RF49)
-      // A mochila da partida: vai para a Mochila do Reino em todos os resultados (RF50)
+      // A mochila da partida: vai para a Mochila do Reino em todos os resultados (RF50); "coletados" é só o que se pegou
+      // nesta partida (o Resumo mostra), sem o que veio da Mochila do Reino
       itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
+      coletados: Object.entries(this.ganhos.coletados).map(([id, quantidade]) => ({ id, quantidade })),
       xpPorClasse: { ...this.ganhos.xpPorClasse },
       // O mapa descoberto (Fase 3): entra no save no fim, em qualquer resultado (RF50)
       descobertas: this.exploracao && {

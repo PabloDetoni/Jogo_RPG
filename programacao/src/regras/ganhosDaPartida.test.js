@@ -102,3 +102,25 @@ describe('itens da mochila da partida (TASK-064, RF50)', () => {
     expect(depois.mochila).toEqual([{ id: 'madeira', quantidade: 2 }])
   })
 })
+
+describe('itens levados da Mochila do Reino (Fase 4, TASK-073)', () => {
+  it('o que foi levado sai do Reino; o que sobrou na mochila da partida volta, com o que foi coletado', () => {
+    const progresso = { ...progressoInicial(), mochila: [{ id: 'pocaoDeVida', quantidade: 5 }, { id: 'madeira', quantidade: 1 }] }
+    // levou 3 poções, usou 2 na partida e coletou 2 peles
+    const { progresso: depois } = aplicarFimNoProgresso(progresso, {
+      levados: { pocaoDeVida: 3 },
+      itens: [{ id: 'pocaoDeVida', quantidade: 1 }, { id: 'peleDeLobo', quantidade: 2 }],
+    })
+    expect(depois.mochila).toEqual([
+      { id: 'pocaoDeVida', quantidade: 3 },
+      { id: 'madeira', quantidade: 1 },
+      { id: 'peleDeLobo', quantidade: 2 },
+    ])
+  })
+
+  it('usou tudo o que levou: o item some da Mochila do Reino; nunca tira mais do que havia', () => {
+    const progresso = { ...progressoInicial(), mochila: [{ id: 'pocaoDeVida', quantidade: 2 }] }
+    expect(aplicarFimNoProgresso(progresso, { levados: { pocaoDeVida: 2 }, itens: [] }).progresso.mochila).toEqual([])
+    expect(aplicarFimNoProgresso(progresso, { levados: { pocaoDeVida: 9 }, itens: [] }).progresso.mochila).toEqual([])
+  })
+})

@@ -394,6 +394,45 @@ describe('operações do Reino (Fase 4)', () => {
   })
 })
 
+describe('mochila da partida na Preparação (Fase 4, TASK-073)', () => {
+  const comPocoes = (quantidade) => {
+    const base = convidadoComMago()
+    return { ...base, progresso: { ...base.progresso, mochila: [{ id: 'pocaoDeVida', quantidade }, { id: 'peleDeLobo', quantidade: 3 }] } }
+  }
+
+  it('leva e deixa poções; o que não pode (pele, mais do que tem) não muda nada', () => {
+    let e = fazer(comPocoes(2), ...irAtePreparacao, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: 1 }, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: 1 })
+    expect(e.escolhasDaPartida.levar).toEqual({ pocaoDeVida: 2 })
+    expect(fazer(e, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: 1 })).toBe(e)
+    expect(fazer(e, { tipo: 'levarNaPartida', id: 'peleDeLobo', quantidade: 1 })).toBe(e)
+    e = fazer(e, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: -1 })
+    expect(e.escolhasDaPartida.levar).toEqual({ pocaoDeVida: 1 })
+    expect(e.progresso.mochila[0].quantidade).toBe(2) // escolher não tira nada da Mochila do Reino
+  })
+
+  it('a partida começa com o que vai, e o fim devolve o que sobrou; o Resumo mostra só o coletado', () => {
+    let e = fazer(comPocoes(4), ...irAtePreparacao, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: 3 }, comecar)
+    expect(e.partidaAtual.levar).toEqual({ pocaoDeVida: 3 })
+    expect(e.progresso.mochila.find((item) => item.id === 'pocaoDeVida').quantidade).toBe(4) // durante a partida, nada muda (RF12)
+    // usou 2 das 3 poções e coletou 1 pele
+    e = fazer(e, {
+      tipo: 'encerrarPartida',
+      fim: { resultado: 'vitoria', itens: [{ id: 'pocaoDeVida', quantidade: 1 }, { id: 'peleDeLobo', quantidade: 1 }], coletados: [{ id: 'peleDeLobo', quantidade: 1 }] },
+    })
+    expect(e.progresso.mochila).toEqual([
+      { id: 'pocaoDeVida', quantidade: 2 },
+      { id: 'peleDeLobo', quantidade: 4 },
+    ])
+    expect(e.ultimoResultado.itens).toEqual([{ id: 'peleDeLobo', quantidade: 1 }])
+  })
+
+  it('a escolha fica guardada, mas ao começar é ajustada à Mochila de agora', () => {
+    const e = fazer(comPocoes(3), ...irAtePreparacao, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: 3 })
+    const semPocoes = { ...e, progresso: { ...e.progresso, mochila: [{ id: 'pocaoDeVida', quantidade: 1 }] } }
+    expect(fazer(semPocoes, comecar).partidaAtual.levar).toEqual({ pocaoDeVida: 1 })
+  })
+})
+
 describe('painel DEV: mexe no save só fora da partida (5c)', () => {
   it('contratar todas as classes cria os permanentes que faltam e salva', () => {
     const e = fazer(convidadoComMago(), { tipo: 'devContratarTodas' })
