@@ -300,7 +300,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
   - **Minimapa e região:** o lugar no HUD está reservado, sem conteúdo, até a etapa 6. Recursos coletados e itens da partida ficam em zero até a etapa 6 e a TASK-047.
   - **Barra de teste** ("Encher grupo", "Juntar todos", "Recarregar habilidades", "Derrubar aliado", "Derrubar Líder", "Aliados ajudam: sim/não", "IA: pelo nível/básica/média/avançada", "Invencível" só para o Líder, "Testar foco" e os 4 resultados, que agora usam os números reais da partida). Só no `npm run dev`: "Subir nível" e "+300 de ouro", que mexem no que a partida ganhou, e, no painel `</> DEV`, os personagens do save (contratar todas as classes, nível −1/+1/+10 e "Quase subir"), que só funcionam fora da partida. No build do jogo, nada disso existe. Quando a barra sair, a faixa de baixo volta a ser área jogável.
 - **TASK-040, TASK-041, TASK-048, TASK-049 e TEST-004:** FEITO na parte 5c (07/10), esperando o teste visual do Pablo.
-TASK-047 (itens na partida: Tab, E e R) fica para a Fase 4. Na Fase 3, o E já pega o item do chão, e o catálogo provisório (parte da TASK-070) existe em `src/dados/itens.js`.
+TASK-047 (itens na partida: Tab, E e R): FEITO na Fase 4 (parte 4d).
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
 TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVISÓRIO (layout, mobs, Boss e itens) até a TASK-012 e a TASK-013. Publicada no endereço principal em 09/10, esperando o teste do Pablo. O TEST-005 deu 60 FPS de média e mínimo de 59 em 2 minutos de pior cenário (grupo de 5 e 20 mobs da Difícil), numa Intel Iris Xe.
@@ -308,7 +308,7 @@ TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVI
 ### EPIC-08 · Reino com dados (etapa 7)
 - **TASK-079 (contratos):** FEITO (08/10) na parte 7a: abas de contrato temporário e permanente na Guilda, com o ouro, os preços, as partidas restantes e o motivo quando falta ouro; a Preparação mostra quem vai como temporário. O equipamento fixo do temporário (RF29) espera o catálogo (TASK-070, Fase 4).
 - **TASK-071 (pentágono):** FEITO (08/10) na parte 7b: componente `Pentagono` na Seleção de classe (com papel e descrição do Conceito §5) e nas Árvores; o HUD do Reino mostra apelido, Líder, ouro e a missão ativa com o progresso.
-- **Os outros itens (TASK-070 a TASK-081 e TEST-006):** A FAZER na Fase 4.
+- **Os outros itens (TASK-070, TASK-072 a TASK-078, TASK-080, TASK-081 e TEST-006):** FEITOS na Fase 4 (10/10), com conteúdo PROVISÓRIO (catálogo, ofertas, receitas, árvores, missões, conquistas e minijogos) até a TASK-010, 014, 015 e 016. O TEST-006 virou roteiro automático (`npm run testar:reino`, os 7 casos) e manual (RE-01 a RE-16).
 
 ### EPIC-09 · Contas e Supabase (etapa 8)
 - **TASK-090 (prova do e-mail):** COM VOCÊS. Alguém precisa criar um projeto gratuito no Supabase; eu ajudo no resto.
@@ -316,9 +316,9 @@ TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVI
 
 ### EPIC-10 · Salão da Glória, conquistas e som (etapa 9)
 - **TASK-100 a TASK-102 (partidas no banco, ranking e histórico):** A FAZER na Fase 2.
-- **TASK-103 (conquistas):** A FAZER na Fase 4.
+- **TASK-103 (conquistas):** FEITO na Fase 4 (12 provisórias, até a TASK-015).
 - **TASK-104 (escolher os sons):** COM VOCÊS.
-- **TASK-105 (tocar os sons):** A FAZER na Fase 4.
+- **TASK-105 (tocar os sons):** FEITO na Fase 4: o sistema está pronto e recebe os arquivos sozinho (`programacao/src/assets/audio/`); até lá, bipes provisórios.
 
 ### EPIC-11 · Arte (etapa 10)
 - **TASK-110 a TASK-114 e TASK-116 (gerar a arte):** COM VOCÊS (PixelLab).

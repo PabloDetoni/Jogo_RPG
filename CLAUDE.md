@@ -5,7 +5,7 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Pastas
 Código em `programacao/` (rodar npm lá); documentação em `documentacao/` (fonte de verdade). O caminho até a entrega e a situação de cada item da auditoria (TASK/DOC/TEST) ficam no `PLANO.md` da raiz. Os roteiros de teste manual (passo a passo para o Pablo) e o registro de todos os testes rodados (o que passou e o que falhou) ficam em `testes/` na raiz.
-Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:floresta` (roteiro da Floresta, Fase 3), `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`) e `npm run testar:contas:publicado` (o mesmo roteiro no endereço principal, sem a barra de teste, conferindo também que a Floresta abre lá).
+Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run testar:floresta` (roteiro da Floresta, Fase 3), `npm run testar:reino` (roteiro do Reino, Fase 4, com o TEST-006), `npm run balanceamento` (gera o `documentacao/Balanceamento.md` com todos os valores e limites) `npm run testar:navegador` (roteiro da partida num Edge escondido) `npm run conferir:configuracao` (confere o Supabase e a Vercel sem mudar nada: SQL, segurança, links de e-mail, contas de teste e as variáveis do jogo publicado) `npm run testar:contas` (TEST-007: as contas com o Supabase de verdade, em dois Edges escondidos; precisa do SQL rodado e das duas contas de teste no `.env.local`) e `npm run testar:contas:publicado` (o mesmo roteiro no endereço principal, sem a barra de teste, conferindo também que a Floresta abre lá).
 
 ## Stack e arquitetura
 - React na interface (obrigatório) + Supabase (contas e dados). A partida é desenhada com Phaser 4 (canvas) em `src/jogo/` (cenas, entidades, ataques); HUD, menus, janelas e a barra de teste continuam em React.
@@ -102,7 +102,7 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte 
 2. **Cada parte segue o protocolo:**
    1. plano curto escrito no PLANO.md;
    2. programar;
-   3. testes: `npm test`, lint, build, `npm run testar:navegador` e `npm run testar:floresta`, com conferências novas para o que for novo;
+   3. testes: `npm test`, lint, build, `npm run testar:navegador`, `npm run testar:floresta` e `npm run testar:reino`, com conferências novas para o que for novo;
    4. atualizar PLANO.md, CLAUDE.md, a documentação (com "Alterações do projeto"), o Balanceamento e a pasta `testes/`.
 3. **Sem esperar o ok do plano nem o teste do Pablo entre as fases (ritmo do Pablo em 10/10/2026):**
    - **No fim de cada fase:** publicar seguindo o item 4, mandar os dois relatórios do protocolo (com o "Teste visual para o Pablo" no endereço principal) e **seguir direto para a próxima fase**.
@@ -115,7 +115,7 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte 
    - O único endereço do jogo é `https://jogo-rpg-six.vercel.app`, e ele mostra sempre o `main`. A Vercel só publica o `main` (`programacao/vercel.json`, `git.deploymentEnabled`): nada de endereços de prévia por ramo.
    - Dá para trabalhar em ramos LOCAIS (`fase-4`...), saídos do `main`, com commits por parte (testes passando, mensagem clara terminando com a linha Co-Authored-By). Esses ramos não vão para o GitHub: o que o Pablo testa é sempre o endereço principal.
    - No fim de cada fase:
-     1. rodar todos os testes (`npm test`, lint, build, `testar:navegador` e `testar:floresta`);
+     1. rodar todos os testes (`npm test`, lint, build, `testar:navegador`, `testar:floresta` e `testar:reino`);
      2. com tudo passando, juntar no `main` e fazer o push;
      3. depois que a Vercel publicar, conferir o endereço principal: `npm run conferir:configuracao` (diz também se o último `main` já está no ar) e `npm run testar:contas:publicado`;
      4. mandar os dois relatórios, com o "Teste visual para o Pablo";
@@ -148,7 +148,7 @@ O Claude programa o resto do jogo até a entrega sem esperar o ok de cada parte 
 4. Regras puras com testes (taxa, XP, peso) ✔
 5. Partida com quadrados (Phaser) ✔ (Fase 1 do `PLANO.md`, aprovada pelo Pablo em 08/10): 5a (arena, Líder, grupo, ataques, inimigos), 5b (colisão e travamento, IA dos aliados, desmaio e resgate, Sacerdote, mana e habilidades de teste), 5b.1 (IA em três níveis, sem tremor, linha de tiro), 5c (em combate, pausa, Q, F, fim com números reais, HUD completo, tecla M), 5d (Sacerdote sempre curando, um nível da IA não atrapalha o outro) e 5e (DOC-003)
 6. Mundo (zona segura, regiões, minimapa) ✔ (Fase 3, publicada e aprovada pelo Pablo em 10/10)
-7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino) ← em andamento (Fase 4, ramo local `fase-4`)
+7. Telas do Reino com dados de exemplo (adiantados na Fase 1: 7a, contratos na Guilda; 7b, pentágono na Seleção e nas Árvores e HUD do Reino) ✔ (Fase 4, partes 4a a 4m: catálogo, Mochila, mochila da partida, Mercado, Forja, Árvores, missões, conquistas, som e minijogos)
 8. Supabase (login, tabelas, sessão única, salvamentos, convidado → conta) ✔ (Fase 2, aprovada e publicada em 09/10 em `https://jogo-rpg-six.vercel.app`)
-9. Ranking, conquistas e som (o ranking com as 6 abas e o histórico já estão na Fase 2)
+9. Ranking, conquistas e som ✔ (ranking e histórico na Fase 2; conquistas e o sistema de som na Fase 4: falta só pôr os arquivos de som)
 10. Arte

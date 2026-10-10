@@ -116,6 +116,22 @@ Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data
 
 | Código | Situação | Data | Quem | Resultado | Observação |
 |---|---|---|---|---|---|
+| RE-01 | Comprar sem ouro | | | | |
+| RE-02 | Vender e recomprar | | | | |
+| RE-03 | Missão de entrega depois de vender | | | | |
+| RE-04 | Abandonar com ouro abaixo da multa | | | | |
+| RE-05 | Arma de outra classe | | | | |
+| RE-06 | Permanente com temporário ativo | | | | |
+| RE-07 | Recarregar e conferir | | | | |
+| RE-08 | Mochila do Reino | | | | |
+| RE-09 | Forja: comprar e fabricar | | | | |
+| RE-10 | Árvores: atributos e pergaminho | | | | |
+| RE-11 | Árvores: habilidades | | | | |
+| RE-12 | Mochila da partida (Tab, E e R) | | | | |
+| RE-13 | Missão de matar | | | | |
+| RE-14 | Conquistas | | | | |
+| RE-15 | Som | | | | |
+| RE-16 | Minijogos | | | | |
 | FL-01 | Andar até a borda | | | | |
 | FL-02 | Câmera e mira | | | | |
 | FL-03 | Descobrir regiões e ver o minimapa | | | | |

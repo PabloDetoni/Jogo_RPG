@@ -11,7 +11,11 @@ import {
   curvaDeXp,
   curvaDosAtributos,
   distanciaAteABorda,
+  equipamentoNaPartida,
+  evolucaoDasHabilidades,
+  mercado,
   minimoDaGrandeVitoria,
+  minijogos,
   mundo,
   pesosDaPontuacao,
   pontosDeAtributoPorNivel,
@@ -19,7 +23,14 @@ import {
 } from '../src/dados/balanceamento.js'
 import { biomas } from '../src/dados/biomas.js'
 import { atributos, classes } from '../src/dados/classes.js'
+import { arvoreDaClasse } from '../src/dados/arvores.js'
+import { conquistas } from '../src/dados/conquistas.js'
+import { aVendaNaForja, equipamentoDosTemporarios, receitas } from '../src/dados/forja.js'
 import { habilidadesDeTeste } from '../src/dados/habilidades.js'
+import { funcaoDoItem, itemDoCatalogo, itens, nomesDasRaridades } from '../src/dados/itens.js'
+import { ofertasFixas, ofertasRotativas, trocas } from '../src/dados/mercado.js'
+import { dadosDosMinijogos } from '../src/dados/minijogos.js'
+import { nomeDoAlvo, quadroDeMissoes } from '../src/dados/missoes.js'
 import {
   bonusDaGrandeVitoriaPercentual,
   multaPorAbandonoPercentual,
@@ -37,9 +48,11 @@ import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
 import { efeitoComExpoente, pontosDeAtributoAteONivel } from '../src/regras/atributos.js'
 import { chanceDeCritico } from '../src/regras/combate.js'
 import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
+import { numerosNoNivel } from '../src/regras/habilidadesDaArvore.js'
+import { precoDeVenda } from '../src/regras/mercado.js'
+import { multaDaMissao } from '../src/regras/guilda.js'
 import { chanceDeErro } from '../src/regras/nivelDaIA.js'
 import { calcularFimDaPartida } from '../src/regras/fimDaPartida.js'
-import { multaDaMissao } from '../src/regras/guilda.js'
 import { mapaDoBioma } from '../src/regras/mapaDaPartida.js'
 import { fichaNaRegiao } from '../src/regras/mobs.js'
 import { capacidadeDaMochila } from '../src/regras/mochila.js'
@@ -208,7 +221,7 @@ escrever(
   lista(
     'A taxa em moedas é **arredondada para baixo**, a favor do jogador. O ouro que o jogador já tinha nunca é taxado.',
     `Grande Vitória: taxa 0% e **+${bonusDaGrandeVitoriaPercentual}%** no ouro (também arredondado para baixo).`,
-    'Ainda sem valor: ouro por monstro, preços do Mercado e da Forja e do pergaminho (etapas 5 e 7). Os contratos já têm preço provisório (seção Guilda).',
+    'Preços do Mercado e da Forja, do pergaminho e dos contratos: provisórios (seções Guilda e Reino com dados).',
     '**Teto do ouro: ainda não existe.** O maior número que o jogo guarda com segurança é 9.007.199.254.740.991. Se quiser um teto (por exemplo, 999.999.999), é só decidir.',
   ),
   '### Quanto o jogador recebe',
@@ -472,14 +485,83 @@ escrever(
   ),
 )
 
+
+const listaDeItens = (pedidos) => Object.entries(pedidos).map(([id, quantidade]) => `${quantidade} ${itemDoCatalogo(id)?.nome ?? id}`).join(' + ')
+const nomesDeItens = (ids) => ids.map((id) => itemDoCatalogo(id)?.nome ?? id).join(', ')
+escrever(
+  '## Reino com dados (Fase 4, provisório)',
+  'Catálogo, Mercado, Forja, habilidades, missões, conquistas e minijogos, todos PROVISÓRIOS até o conteúdo do grupo (TASK-010, TASK-014, TASK-015 e TASK-016). Para trocar, mude os arquivos de `src/dados/` e rode `npm run balanceamento`.',
+  '### Catálogo de itens (TASK-070)',
+  `Quem vende (no Mercado, ou equipamento na Forja) recebe **${numero(mercado.fracaoDaVenda * 100)}%** do preço, para baixo. Os testes barram troca ou receita que dê lucro (ouro infinito).`,
+  tabela(
+    ['Item', 'Tipo', 'Raridade', 'Peso', 'Preço', 'Venda', 'Função'],
+    Object.values(itens).map((item) => [item.nome, item.tipo, nomesDasRaridades[item.raridade], item.peso, numero(item.preco), numero(precoDeVenda(item.id)), funcaoDoItem(item)]),
+  ),
+  '### Mercado (TASK-074)',
+  lista(
+    `Sempre à venda: ${nomesDeItens(ofertasFixas)}.`,
+    `Rotativas (${mercado.rotativasAVenda} de cada vez, mudam a cada **${mercado.partidasPorRotacao} partidas** jogadas): ${nomesDeItens(ofertasRotativas)}.`,
+    ...trocas.map((troca) => `Troca: ${listaDeItens(troca.dar)} → ${listaDeItens(troca.receber)}.`),
+  ),
+  '### Forja (TASK-075)',
+  `À venda (o equipamento comum): ${nomesDeItens(aVendaNaForja)}. Na partida, cada ponto de defesa tira **${numero(equipamentoNaPartida.reducaoPorPontoDeDefesa * 100)}%** do dano recebido (até **${numero(equipamentoNaPartida.reducaoMaximaPelaDefesa * 100)}%**), e a redução de recarga das peças soma até **${numero(equipamentoNaPartida.reducaoDeRecargaMaxima * 100)}%**.`,
+  tabela(
+    ['Receita', 'Materiais', 'Ouro'],
+    receitas.map((receita) => [itemDoCatalogo(receita.resultado).nome, listaDeItens(receita.materiais), numero(receita.ouro)]),
+  ),
+  `Equipamento fixo do contrato temporário (RF29): ${classes.map((classe) => `${classe.nome}: ${nomesDeItens(Object.values(equipamentoDosTemporarios[classe.id] ?? {}))}`).join('; ')}.`,
+  '### Habilidades da árvore (TASK-077)',
+  `Cada nível custa **${evolucaoDasHabilidades.pontosPorNivel} ponto** de habilidade. A cada nível acima do 1: dano e cura **+${numero(evolucaoDasHabilidades.porNivel.dano * 100)}%**, bônus de dano **+${numero(evolucaoDasHabilidades.porNivel.bonusDeDano * 100)}%**, proteção **+${numero(evolucaoDasHabilidades.porNivel.reducaoDeDano * 100)}%**, duração **+${numero(evolucaoDasHabilidades.porNivel.msDeDuracao * 100)}%** e recarga **−${numero(evolucaoDasHabilidades.recargaPorNivel * 100)}%** (do valor do nível 1). No beta, 4 por classe (a raiz e a primeira de cada ramo).`,
+  tabela(
+    ['Classe', 'Habilidade', 'Tipo', 'Mana', 'Recarga (nível 1 → 5)', 'Efeito (nível 1 → 5)'],
+    classes.flatMap((classe) =>
+      arvoreDaClasse(classe.id)
+        .filter((habilidade) => habilidade.noBeta)
+        .map((habilidade) => {
+          if (habilidade.tipo === 'passiva') {
+            const valor = (nivel) => (habilidade.efeito === 'defesa' ? `+${habilidade.porNivel * nivel} defesa` : `+${numero(habilidade.porNivel * nivel * 100)}%`)
+            return [classe.nome, habilidade.nome, `passiva (${habilidade.efeito})`, '—', '—', `${valor(1)} → ${valor(5)}`]
+          }
+          const n1 = numerosNoNivel(habilidade.numeros, 1)
+          const n5 = numerosNoNivel(habilidade.numeros, 5)
+          const efeito = n1.dano
+            ? `dano ${numero(n1.dano)} → ${numero(n5.dano)}`
+            : n1.cura
+              ? `cura ${numero(n1.cura)} → ${numero(n5.cura)}`
+              : n1.bonusDeDano
+                ? `+${numero(n1.bonusDeDano * 100)}% → +${numero(n5.bonusDeDano * 100)}% de dano`
+                : n1.reducaoDeDano
+                  ? `−${numero(n1.reducaoDeDano * 100)}% → −${numero(Math.min(0.8, n5.reducaoDeDano) * 100)}% de dano recebido`
+                  : 'levanta os caídos'
+          return [classe.nome, habilidade.nome, 'ativa', numero(n1.custoDeMana), `${numero(n1.recargaMs / 1000, 1)} s → ${numero(n5.recargaMs / 1000, 1)} s`, efeito]
+        }),
+    ),
+  ),
+  '### Missões da Guilda (TASK-078)',
+  tabela(
+    ['Missão', 'Tipo', 'Objetivo', 'Ouro', 'XP', 'Multa por abandonar'],
+    quadroDeMissoes.map((missao) => [missao.titulo, missao.tipo, `${missao.tipo === 'explorar' ? '' : `${missao.quantidade} `}${nomeDoAlvo(missao)}`, numero(missao.recompensa.ouro), numero(missao.recompensa.xp), numero(multaDaMissao(missao))]),
+  ),
+  '### Conquistas (TASK-103)',
+  tabela(
+    ['Conquista', 'O que pede', 'Recompensa'],
+    conquistas.map((conquista) => [conquista.nome, conquista.descricao, conquista.recompensa?.ouro ? `${numero(conquista.recompensa.ouro)} de ouro` : '—']),
+  ),
+  '### Minijogos do Planalto (TASK-080 e TASK-081)',
+  `Rodada de **${minijogos.segundos} s**, no máximo ${minijogos.pontosNoMaximo} pontos. Cada ponto dá 1 do recurso e o XP do lugar (dividido entre todos os permanentes); o raro vem com a chance de cada ponto. Não é partida (sem taxa, ranking ou histórico).`,
+  tabela(
+    ['Lugar', 'Como joga', 'Recurso', 'Raro (chance por ponto)', 'XP por ponto'],
+    Object.entries(dadosDosMinijogos).map(([id, dados]) => [dados.nome, dados.regra, itemDoCatalogo(dados.item).nome, `${itemDoCatalogo(dados.raro).nome} (${numero(minijogos[id].chanceDoRaro * 100)}%)`, minijogos[id].xpPorPonto]),
+  ),
+)
+
 escrever(
   '## Ainda sem valor (a decidir)',
   'Valores do Conceito §19 que ainda não existem no código:',
   lista(
     'os mobs, o Boss e o layout definitivos da Floresta (TASK-012 e TASK-013): os valores acima são provisórios;',
-    'dano, custo de mana e recarga das habilidades de verdade (a arena usa uma habilidade de teste por classe);',
-    'preços do Mercado e da Forja e do pergaminho (o catálogo provisório já tem preço e peso de cada item: src/dados/itens.js);',
-    'recompensas de missões e conquistas.',
+    'as habilidades de verdade (TASK-010): a árvore provisória já tem números por nível;',
+    'o catálogo, as ofertas, as receitas, as missões, as conquistas e os minijogos do grupo (TASK-014, TASK-015 e TASK-016): os provisórios já têm todos os números acima.',
   ),
 )
 
