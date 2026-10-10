@@ -10,6 +10,7 @@ import {
   capacidadePorPontoDeForca,
   combateDeTeste,
   contratos,
+  mercado,
   critico,
   distanciaAteABorda,
   minimoDaGrandeVitoria,
@@ -397,5 +398,17 @@ describe('limites dos contratos (RF29)', () => {
     expect(Number.isInteger(contratos.partidasDoTemporario) && contratos.partidasDoTemporario >= 1).toBe(true)
     expect(contratos.nivelDoTemporario).toBeGreaterThanOrEqual(nivelInicial)
     expect(contratos.nivelDoTemporario).toBeLessThanOrEqual(nivelMaximo)
+  })
+})
+
+describe('limites do Mercado e da Forja (Fase 4)', () => {
+  it('quem vende recebe uma parte do preço (nunca nada, nunca o preço todo)', () => {
+    expect(mercado.fracaoDaVenda).toBeGreaterThanOrEqual(0.2)
+    expect(mercado.fracaoDaVenda).toBeLessThanOrEqual(0.8)
+  })
+
+  it('as ofertas rotativas mudam de vez em quando, com poucas à venda de cada vez', () => {
+    expect(Number.isInteger(mercado.partidasPorRotacao) && mercado.partidasPorRotacao >= 1 && mercado.partidasPorRotacao <= 20).toBe(true)
+    expect(Number.isInteger(mercado.rotativasAVenda) && mercado.rotativasAVenda >= 1 && mercado.rotativasAVenda <= 8).toBe(true)
   })
 })

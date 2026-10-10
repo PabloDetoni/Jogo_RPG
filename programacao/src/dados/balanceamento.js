@@ -46,6 +46,12 @@ export const contratos = {
   precoDoPermanente: 1000,
 }
 
+// MERCADO E FORJA (Fase 4, TASK-074 e TASK-075). Provisório até o catálogo do grupo (TASK-014).
+// - fracaoDaVenda: quem vende um item (no Mercado, ou equipamento na Forja) recebe esta parte do preço, para baixo;
+// - rotação das ofertas rotativas (dados/mercado.js): mudam a cada "partidasPorRotacao" partidas jogadas, e aparecem
+//   "rotativasAVenda" de cada vez (a regra da rotação é a decisão em aberto da TASK-014).
+export const mercado = { fracaoDaVenda: 0.5, partidasPorRotacao: 3, rotativasAVenda: 3 }
+
 // MUNDO (Fase 3): a Floresta maior que a tela (layout em dados/mundo/floresta.js). Tudo provisório até o layout do
 // grupo (TASK-013). Distâncias em px do mapa, tempos em ms.
 export const mundo = {
