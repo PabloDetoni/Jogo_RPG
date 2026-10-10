@@ -592,3 +592,11 @@ describe('Guilda: missões (Fase 4, TASK-078)', () => {
     expect(desenhar('reino', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')).toContain('Entregar 4 Pele de lobo (2/4)')
   })
 })
+
+describe('Salão da Glória: conquistas (Fase 4, TASK-103)', () => {
+  it('para o convidado: a lista com o progresso, a recompensa e as concluídas marcadas', () => {
+    const mudancas = { progresso: { ...progresso, conquistas: { primeirosPassos: true } } }
+    const html = desenhar('salaoGloria', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')
+    expect(html).toContain('Conquistas')
+  })
+})

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { preferenciasPadrao } from './preferencias.js'
 import { atualizarEstado, criarEstadoInicial, dadosParaSalvar } from './estadoDoJogo.js'
+import { conquistas } from '../dados/conquistas.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
 const inicio = () => criarEstadoInicial(preferenciasPadrao)
@@ -15,14 +16,18 @@ const irAtePreparacao = [
 ]
 const comecar = { tipo: 'comecarPartida', agora: '2026-10-05T12:00:00.000Z' }
 
-// Um convidado novo que já escolheu o Mago e está no Reino
+// Todas as conquistas já concluídas: nos testes que não são sobre elas, nenhuma aparece no meio (Fase 4)
+const todasConcluidas = Object.fromEntries(conquistas.map((conquista) => [conquista.id, true]))
+
+// Um convidado novo que já escolheu o Mago e está no Reino (com as conquistas já concluídas)
 function convidadoComMago() {
-  return fazer(
+  const estado = fazer(
     inicio(),
     { tipo: 'irPara', destino: 'login' },
     { tipo: 'entrarComoConvidado', carregamento: novoConvidado },
     { tipo: 'escolherClasseInicial', classe: 'mago' },
   )
+  return { ...estado, progresso: { ...estado.progresso, conquistas: todasConcluidas } }
 }
 
 describe('entrada e classe inicial', () => {
@@ -118,7 +123,7 @@ describe('partida', () => {
     const mago = e.progresso.personagens[0]
     expect(mago).toMatchObject({ nivel: 2, xp: 50, pontosDeAtributo: 3, pontosDeHabilidade: 1 })
     expect(e.progresso.ouro).toBe(1650)
-    expect(e.progresso.estatisticas).toEqual({ partidasJogadas: 1, monstrosDerrotados: 30 })
+    expect(e.progresso.estatisticas).toEqual({ partidasJogadas: 1, monstrosDerrotados: 30, bossesDerrotados: 0, grandesVitorias: 1, missoesEntregues: 0 })
   })
 
   it('Líder não levantado: Retorno forçado, e ele e os perdidos pagam pela distância de onde caíram (RF48)', () => {
@@ -430,6 +435,26 @@ describe('mochila da partida na Preparação (Fase 4, TASK-073)', () => {
     const e = fazer(comPocoes(3), ...irAtePreparacao, { tipo: 'levarNaPartida', id: 'pocaoDeVida', quantidade: 3 })
     const semPocoes = { ...e, progresso: { ...e.progresso, mochila: [{ id: 'pocaoDeVida', quantidade: 1 }] } }
     expect(fazer(semPocoes, comecar).partidaAtual.levar).toEqual({ pocaoDeVida: 1 })
+  })
+})
+
+describe('conquistas (Fase 4, TASK-103)', () => {
+  const semConquistas = () => {
+    const base = convidadoComMago()
+    return { ...base, progresso: { ...base.progresso, conquistas: {} } }
+  }
+
+  it('a primeira partida conclui "Primeiros passos": o ouro entra uma vez só, com aviso, e salva', () => {
+    const e = fazer(semConquistas(), ...irAtePreparacao, comecar, { tipo: 'encerrarPartida', fim: { resultado: 'vitoria' } })
+    expect(e.progresso.conquistas.primeirosPassos).toBe(true)
+    expect(e.avisos.some((aviso) => aviso.texto === 'Conquista: Primeiros passos (+20 de ouro)')).toBe(true)
+    const outra = fazer(e, { tipo: 'irPara', destino: 'reino' })
+    expect(outra.progresso.ouro).toBe(e.progresso.ouro)
+  })
+
+  it('durante a partida nada é concedido (RF12): só no fim', () => {
+    const naPartida = fazer(semConquistas(), ...irAtePreparacao, comecar)
+    expect(naPartida.progresso.conquistas).toEqual({})
   })
 })
 

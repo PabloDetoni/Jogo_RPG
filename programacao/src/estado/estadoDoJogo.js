@@ -3,6 +3,7 @@ import { motivosDoFim, resultados } from '../dados/resultados.js'
 import { montarFimDaPartida } from '../regras/fimDaPartida.js'
 import { aplicarFimNoProgresso } from '../regras/ganhosDaPartida.js'
 import { contratarPermanente, contratarTemporario } from '../regras/guilda.js'
+import { aplicarConquistas, avisoDaConquista } from '../regras/conquistas.js'
 import { aplicarNoReino } from '../regras/reino.js'
 import { capacidadeDaPartida } from '../regras/grupoDaPartida.js'
 import { ajustarLevar, deixarNoReino, levarNaPartida } from '../regras/mochila.js'
@@ -129,6 +130,8 @@ function encerrarPartida(estado, fim = {}) {
       itens: fim.itens ?? [],
       levados: partidaAtual.levar ?? {},
       eventos: fim.eventos ?? null,
+      bossDerrotado: (fim.bonusDeBoss ?? 0) > 0,
+      grandeVitoria: contas.resultado === 'grandeVitoria',
     })
     novo = { ...novo, progresso: aplicado.progresso }
     personagens = aplicado.personagens
@@ -189,7 +192,21 @@ function ferramentaDeDev(estado, acao) {
   return pedirSalvamento({ ...estado, progresso: ferramentas[acao.tipo](estado.progresso) })
 }
 
+// Conquistas (Fase 4, TASK-103): depois de cada ação, fora da partida, as que acabaram de ser cumpridas ficam marcadas,
+// a recompensa entra uma vez só e aparece um aviso. Durante a partida o progresso não muda (RF12): elas vêm no fim.
 export function atualizarEstado(estado, acao) {
+  return conferirConquistas(atualizarSemConquistas(estado, acao))
+}
+
+function conferirConquistas(estado) {
+  if (estado.partidaAtual || estado.tipoJogador === 'nenhum' || !estado.progresso) return estado
+  const { progresso, novas } = aplicarConquistas(estado.progresso)
+  if (novas.length === 0) return estado
+  const comAvisos = novas.reduce((atual, conquista) => comAviso(atual, avisoDaConquista(conquista)), { ...estado, progresso })
+  return pedirSalvamento(comAvisos)
+}
+
+function atualizarSemConquistas(estado, acao) {
   switch (acao.tipo) {
     case 'irPara':
       return navegar(estado, acao.destino)

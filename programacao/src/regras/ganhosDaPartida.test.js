@@ -19,7 +19,7 @@ describe('aplicarFimNoProgresso (TASK-048)', () => {
       monstros: 7,
     })
     expect(depois.ouro).toBe(242)
-    expect(depois.estatisticas).toEqual({ partidasJogadas: 4, monstrosDerrotados: 17 })
+    expect(depois.estatisticas).toMatchObject({ partidasJogadas: 4, monstrosDerrotados: 17, bossesDerrotados: 0, grandesVitorias: 0 })
     // Mago: 250 XP do nível 1 → nível 2 (100) e nível 3 (200)? 100 + 200 = 300 > 250: só o nível 2, com 150
     expect(depois.personagens[0]).toMatchObject({ nivel: 2, xp: 150, pontosDeAtributo: 3, pontosDeHabilidade: 1 })
     // Guerreiro: 2890 + 20 = 2910 ≥ 2900 → nível 30 (a IA dele vira a média na próxima partida)

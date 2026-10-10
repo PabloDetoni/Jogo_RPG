@@ -36,9 +36,10 @@ export function entregarMissaoNaGuilda(progresso) {
   const resultado = entregarMissao(progresso)
   if (!resultado.ok) return resultado
   const subiram = Object.values(resultado.niveisGanhos).filter((niveis) => niveis > 0).length
+  const estatisticas = resultado.progresso.estatisticas
   return {
     ok: true,
-    progresso: resultado.progresso,
+    progresso: { ...resultado.progresso, estatisticas: { ...estatisticas, missoesEntregues: (estatisticas.missoesEntregues ?? 0) + 1 } },
     mensagem: `Missão entregue: +${missao.recompensa.ouro} de ouro e ${missao.recompensa.xp} XP divididos entre os personagens${subiram ? ` (${subiram} subiu de nível)` : ''}.`,
   }
 }

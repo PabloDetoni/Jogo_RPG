@@ -18,7 +18,10 @@ import { ganharXp } from './xp.js'
 //         itens: [{ id, quantidade }] (a mochila da partida no fim), levados: { id: quantidade },
 //         eventos: { abates, coletados, areasVisitadas } (para a missão ativa) }
 // Devolve o progresso novo e, para o Resumo, o XP de cada permanente com o nível de antes e o de depois.
-export function aplicarFimNoProgresso(progresso, { ouroRecebido = 0, xpPorClasse = {}, monstros = 0, descobertas = null, itens = [], levados = {}, eventos = null }) {
+export function aplicarFimNoProgresso(
+  progresso,
+  { ouroRecebido = 0, xpPorClasse = {}, monstros = 0, descobertas = null, itens = [], levados = {}, eventos = null, bossDerrotado = false, grandeVitoria = false },
+) {
   const xpDosPersonagens = []
   const personagens = progresso.personagens.map((personagem) => {
     const xp = Math.max(0, Math.floor(xpPorClasse[personagem.classe] ?? 0))
@@ -37,6 +40,9 @@ export function aplicarFimNoProgresso(progresso, { ouroRecebido = 0, xpPorClasse
         ...estatisticas,
         partidasJogadas: estatisticas.partidasJogadas + 1,
         monstrosDerrotados: estatisticas.monstrosDerrotados + Math.max(0, Math.floor(monstros)),
+        // Para as conquistas (Fase 4)
+        bossesDerrotados: (estatisticas.bossesDerrotados ?? 0) + (bossDerrotado ? 1 : 0),
+        grandesVitorias: (estatisticas.grandesVitorias ?? 0) + (grandeVitoria ? 1 : 0),
       },
       contratosTemporarios: gastarPartidaDosContratos(progresso.contratosTemporarios),
       mochila: juntarNaMochila(tirarOsLevados(progresso.mochila, levados), itens),

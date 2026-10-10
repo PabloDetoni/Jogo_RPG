@@ -93,7 +93,7 @@ describe('normalizarProgresso', () => {
     expect(bagunca.missaoAtiva).toBeNull()
     expect(bagunca.regioesDescobertas).toEqual({ floresta: ['facil'] })
     expect(bagunca.conquistas).toEqual({})
-    expect(bagunca.estatisticas).toEqual({ partidasJogadas: 3, monstrosDerrotados: 0 })
+    expect(bagunca.estatisticas).toEqual({ partidasJogadas: 3, monstrosDerrotados: 0, bossesDerrotados: 0, grandesVitorias: 0, missoesEntregues: 0 })
     expect(bagunca).not.toHaveProperty('lixo')
   })
 })

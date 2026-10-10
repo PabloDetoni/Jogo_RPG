@@ -2,6 +2,7 @@ import { atributoMaximo } from '../dados/balanceamento.js'
 import { biomas, pontosDePartida } from '../dados/biomas.js'
 import { atributos, atributosIniciaisDaClasse, classes } from '../dados/classes.js'
 import { espacosDeEquipamento } from '../dados/equipamento.js'
+import { conquistas as listaDeConquistas } from '../dados/conquistas.js'
 import { tiposDeMissao } from '../dados/missoes.js'
 import {
   habilidadesAtivasNoMaximo,
@@ -31,8 +32,9 @@ export function progressoInicial() {
     // bioma → { nevoa, areas }: o minimapa já revelado (texto hexadecimal, regras/mundo.js) e as áreas que já deram
     // o XP da primeira descoberta (RF40). Fase 3.
     mapasDescobertos: {},
-    conquistas: {}, // conquista → progresso (etapa 9)
-    estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0 },
+    conquistas: {}, // conquistas concluídas: { id: true } (Fase 4, regras/conquistas.js); o progresso sai das estatísticas
+    // Para o Resumo, o ranking e as conquistas. bossesDerrotados, grandesVitorias e missoesEntregues entraram na Fase 4.
+    estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0, bossesDerrotados: 0, grandesVitorias: 0, missoesEntregues: 0 },
   }
 }
 
@@ -193,10 +195,14 @@ export function normalizarProgresso(dados) {
     missaoAtiva: normalizarMissao(dados.missaoAtiva),
     regioesDescobertas,
     mapasDescobertos,
-    conquistas: ehObjeto(dados.conquistas) ? dados.conquistas : {},
+    // Só conquistas que existem, marcadas como concluídas
+    conquistas: Object.fromEntries(listaDeConquistas.filter((conquista) => ehObjeto(dados.conquistas) && dados.conquistas[conquista.id] === true).map((conquista) => [conquista.id, true])),
     estatisticas: {
       partidasJogadas: inteiroNaoNegativo(estatisticas.partidasJogadas),
       monstrosDerrotados: inteiroNaoNegativo(estatisticas.monstrosDerrotados),
+      bossesDerrotados: inteiroNaoNegativo(estatisticas.bossesDerrotados),
+      grandesVitorias: inteiroNaoNegativo(estatisticas.grandesVitorias),
+      missoesEntregues: inteiroNaoNegativo(estatisticas.missoesEntregues),
     },
   }
 }
