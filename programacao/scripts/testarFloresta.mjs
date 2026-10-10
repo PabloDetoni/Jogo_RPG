@@ -151,12 +151,25 @@ try {
   await aba.print('04-grupo-andando')
 
   console.log('6. Regiões: o HUD mostra a região, e a taxa conta do ponto inicial até a borda real (TASK-061)')
+  // O que está no quadro do minimapa (o mapa, a região e a mochila) fica dentro dele e dentro da faixa do HUD
+  const quadroDoMinimapa = () =>
+    aba.avaliar(`(() => {
+      const quadro = document.querySelector('.hud-minimapa').getBoundingClientRect()
+      const hud = document.querySelector('.hud').getBoundingClientRect()
+      const fora = [...document.querySelectorAll('.hud-minimapa > *')].filter((item) => {
+        const r = item.getBoundingClientRect()
+        return r.bottom > hud.bottom + 1 || r.top < hud.top - 1 || r.left < quadro.left - 1 || r.right > quadro.right + 1
+      })
+      return { regiao: document.querySelector('.hud-regiao')?.textContent ?? '', fora: fora.map((item) => item.textContent || item.className) }
+    })()`)
   await colocarLider(700, 1800)
   await pausa(500)
-  conferir('na zona segura, o HUD mostra "Zona segura"', (await aba.texto()).includes('Região: Zona segura'))
+  const naZonaSegura = await quadroDoMinimapa()
+  conferir('na zona segura, o HUD mostra "Zona segura"', naZonaSegura.regiao === 'Zona segura', naZonaSegura.regiao)
+  conferir('o quadro do minimapa cabe no HUD (a região numa linha, a mochila dentro da faixa)', naZonaSegura.fora.length === 0, naZonaSegura)
   await colocarLider(1400, 1800)
   await pausa(500)
-  conferir('entrando na Fácil, o HUD mostra "Fácil"', (await aba.texto()).includes('Região: Fácil'))
+  conferir('entrando na Fácil, o HUD mostra "Fácil"', (await quadroDoMinimapa()).regiao === 'Fácil')
   // A taxa da fuga como o HUD mostra ("Fuga (F): 11% · ...")
   const taxa = async (x, y) => {
     await colocarLider(x, y)
@@ -170,6 +183,8 @@ try {
   conferir('o custo da fuga sobe com a distância do ponto inicial', taxaPerto < taxaMedia && taxaMedia < taxaDificil, { taxaPerto, taxaMedia, taxaDificil })
   conferir('no domínio do Boss, a fuga custa +7 pontos (RF48)', taxaBoss - taxaDificil >= 7 && taxaBoss - taxaDificil <= 8, { taxaDificil, taxaBoss })
   conferir('no domínio do Boss, o HUD avisa a região em destaque', await aba.avaliar(`!!document.querySelector('.hud-regiao-boss')`))
+  const noDominio = await quadroDoMinimapa()
+  conferir('...e o nome mais comprido ("Domínio do Boss") também cabe no quadro', noDominio.regiao === 'Domínio do Boss' && noDominio.fora.length === 0, noDominio)
   await aba.print('05-dominio-do-boss')
 
   console.log('7. Mobs por região (TASK-062)')

@@ -79,10 +79,14 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
         </div>
       </div>
 
-      {/* O minimapa (parte 3d) e a região atual (RF53); no domínio do Boss, em destaque (a taxa sobe ali, RF48) */}
+      {/* O minimapa (parte 3d) e a região atual (RF53); no domínio do Boss, em destaque (a taxa sobe ali, RF48). O quadro é
+          estreito: embaixo do minimapa vai só o nome da região, numa linha ("Região: Zona segura" quebrava em 1366×768 e
+          empurrava a mochila para fora do HUD); o texto inteiro fica na dica do mouse */}
       <div className={`hud-minimapa${situacao?.minimapa ? ' hud-minimapa-ativo' : ''}`} aria-label="Minimapa">
         {situacao?.minimapa ? <Minimapa bioma={bioma} minimapa={situacao.minimapa} /> : <span>Minimapa</span>}
-        <span className={`hud-regiao${situacao?.regiao?.dominioDeBoss ? ' hud-regiao-boss' : ''}`}>Região: {situacao?.regiao?.nome ?? '—'}</span>
+        <span className={`hud-regiao${situacao?.regiao?.dominioDeBoss ? ' hud-regiao-boss' : ''}`} title={`Região: ${situacao?.regiao?.nome ?? '—'}`}>
+          {situacao?.regiao?.nome ?? 'Região: —'}
+        </span>
         {situacao?.mochila && (
           <span className={`hud-regiao${situacao.mochila.peso >= situacao.mochila.capacidade ? ' hud-mochila-cheia' : ''}`} title="Peso na mochila da partida / capacidade (Força do grupo)">
             Mochila {situacao.mochila.peso}/{situacao.mochila.capacidade}

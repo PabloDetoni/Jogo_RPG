@@ -207,7 +207,7 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
 - Deve acontecer:
   - o minimapa começa quase todo escuro e acende por onde você passa, com a cor da dificuldade: verde-claro (zona segura), verde (Fácil), amarelo (Média), laranja (Difícil) e vermelho (domínio do Boss);
   - o ponto branco é o Líder, os azuis claros são os aliados e o retângulo é a parte que aparece na tela;
-  - embaixo do minimapa: "Região: ..." e "Mochila X/Y";
+  - embaixo do minimapa, numa linha cada: o nome da região (por exemplo, "Zona segura"; com o mouse em cima, "Região: Zona segura") e "Mochila X/Y", sem nada passar para baixo da faixa do HUD, nem em 1366×768;
   - ao mudar de região, aparece "Região: Fácil" (etc.); na primeira vez em cada área, "Área descoberta: Clareira das Flores (+30 XP)".
 
 **FL-04 · Nascer numa região descoberta e conferir a taxa**

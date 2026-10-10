@@ -1140,7 +1140,9 @@ try {
   const hudCompleto = await textoDe('.hud')
   conferir(
     'HUD: tempo, pontos, ouro, custo da fuga, "Fora de combate", som e o lugar do minimapa e da região',
-    ['Tempo', 'Pontos', 'Ouro', 'Fuga (F)', 'Fora de combate', 'Som (M)', 'Minimapa', 'Região'].every((t) => hudCompleto.includes(t)),
+    // A região fica embaixo do minimapa só com o nome (na arena, "Arena de teste"); "Região: ..." vai na dica do mouse
+    ['Tempo', 'Pontos', 'Ouro', 'Fuga (F)', 'Fora de combate', 'Som (M)', 'Minimapa'].every((t) => hudCompleto.includes(t)) &&
+      (await avaliar(`(document.querySelector('.hud-regiao')?.title ?? '').startsWith('Região: ')`)),
     hudCompleto.replace(/\n/g, ' · '),
   )
   const cabeSozinho = await avaliar(CABE_NO_HUD)

@@ -473,7 +473,7 @@ try {
       minimapa: !!document.querySelector('.hud-minimapa-ativo canvas.minimapa'),
       barraDeTeste: [...document.querySelectorAll('button')].some(b => ['Vitória', 'Encher grupo', 'Encher mochila'].includes(b.textContent.trim())),
     })`)
-    conferir('no jogo publicado, a Floresta abre: desenho, minimapa e "Região: Zona segura" no HUD', hud.minimapa && hud.regiao.includes('Zona segura'), hud)
+    conferir('no jogo publicado, a Floresta abre: desenho, minimapa e "Zona segura" embaixo dele', hud.minimapa && hud.regiao.includes('Zona segura'), hud)
     conferir('no jogo publicado, a partida não tem a barra de teste', !hud.barraDeTeste)
     await aba1.print('04a-floresta-publicada')
   }

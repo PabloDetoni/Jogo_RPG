@@ -398,8 +398,7 @@ describe('Floresta no HUD e no Resumo (Fase 3)', () => {
 
   it('HUD: região em destaque no domínio do Boss e a mochila cheia', () => {
     const html = renderToString(<HudDaPartida situacao={daFloresta} />).replace(/<!-- -->/g, '')
-    expect(html).toContain('Região: Domínio do Boss')
-    expect(html).toContain('hud-regiao-boss')
+    expect(html).toMatch(/hud-regiao hud-regiao-boss" title="Região: Domínio do Boss">Domínio do Boss</)
     expect(html).toContain('Mochila 20/20')
     expect(html).toContain('hud-mochila-cheia')
   })

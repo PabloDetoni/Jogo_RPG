@@ -584,6 +584,11 @@ body {
 
 .hud-regiao {
   font-size: 0.9em;
+  /* Uma linha só: o quadro do minimapa é estreito e nada pode sair da faixa do HUD */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hud-rotulo {
