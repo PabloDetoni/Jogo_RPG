@@ -151,22 +151,38 @@ try {
   await aba.print('04-grupo-andando')
 
   console.log('6. Regiões: o HUD mostra a região, e a taxa conta do ponto inicial até a borda real (TASK-061)')
-  // O que está no quadro do minimapa (o mapa, a região e a mochila) fica dentro dele e dentro da faixa do HUD
+  // O que está no quadro do minimapa (o mapa, a região e a mochila) fica inteiro dentro dele, e o quadro dentro da faixa
+  // do HUD: nenhuma linha espremida ou cortada (altura ou largura do texto maior que o espaço dela)
   const quadroDoMinimapa = () =>
     aba.avaliar(`(() => {
       const quadro = document.querySelector('.hud-minimapa').getBoundingClientRect()
       const hud = document.querySelector('.hud').getBoundingClientRect()
-      const fora = [...document.querySelectorAll('.hud-minimapa > *')].filter((item) => {
+      const problemas = []
+      if (quadro.top < hud.top - 1 || quadro.bottom > hud.bottom + 1) problemas.push('o quadro sai do HUD')
+      for (const item of document.querySelectorAll('.hud-minimapa > *')) {
         const r = item.getBoundingClientRect()
-        return r.bottom > hud.bottom + 1 || r.top < hud.top - 1 || r.left < quadro.left - 1 || r.right > quadro.right + 1
-      })
-      return { regiao: document.querySelector('.hud-regiao')?.textContent ?? '', fora: fora.map((item) => item.textContent || item.className) }
+        const nome = item.textContent || item.className
+        if (r.top < quadro.top - 1 || r.bottom > quadro.bottom + 1 || r.left < quadro.left - 1 || r.right > quadro.right + 1) problemas.push(nome + ': sai do quadro')
+        if (item.tagName === 'SPAN' && (item.scrollHeight > item.clientHeight + 1 || item.scrollWidth > item.clientWidth + 1)) problemas.push(nome + ': cortado')
+        if (r.height < 2) problemas.push(nome + ': sem altura')
+      }
+      return { regiao: document.querySelector('.hud-regiao')?.textContent ?? '', fora: problemas }
     })()`)
   await colocarLider(700, 1800)
   await pausa(500)
   const naZonaSegura = await quadroDoMinimapa()
   conferir('na zona segura, o HUD mostra "Zona segura"', naZonaSegura.regiao === 'Zona segura', naZonaSegura.regiao)
-  conferir('o quadro do minimapa cabe no HUD (a região numa linha, a mochila dentro da faixa)', naZonaSegura.fora.length === 0, naZonaSegura)
+  conferir('o quadro do minimapa cabe no HUD (o mapa, a região e a mochila inteiros, numa linha cada)', naZonaSegura.fora.length === 0, naZonaSegura)
+  // O HUD muda de tamanho com a tela: confere também numa tela menor e numa maior
+  const emOutrasTelas = {}
+  for (const [largura, altura] of [[1280, 720], [1920, 1080]]) {
+    await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: largura, height: altura, deviceScaleFactor: 1, mobile: false })
+    await pausa(400)
+    emOutrasTelas[`${largura}x${altura}`] = (await quadroDoMinimapa()).fora
+  }
+  await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
+  await pausa(400)
+  conferir('...também em 1280×720 e em 1920×1080', Object.values(emOutrasTelas).every((lista) => lista.length === 0), emOutrasTelas)
   await colocarLider(1400, 1800)
   await pausa(500)
   conferir('entrando na Fácil, o HUD mostra "Fácil"', (await quadroDoMinimapa()).regiao === 'Fácil')

@@ -583,8 +583,10 @@ body {
 }
 
 .hud-regiao {
+  flex: none; /* nunca espremida pelo quadro (o minimapa é que encolhe, se faltar espaço) */
   font-size: 0.9em;
-  /* Uma linha só: o quadro do minimapa é estreito e nada pode sair da faixa do HUD */
+  line-height: 1.2;
+  /* Uma linha só: o quadro do minimapa é estreito e nada pode sair dele */
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
@@ -922,11 +924,19 @@ body {
   opacity: 1;
   border-style: solid;
   gap: 0.15em;
+  /* Mais alto que o quadro reservado: o minimapa e as duas linhas (região e mochila) cabem inteiros em qualquer tela */
+  height: 94%;
+  box-sizing: border-box;
+  padding: 0.15em 0;
 }
 
 .minimapa {
   width: 100%;
   height: auto;
+  /* Se faltar altura, o minimapa encolhe sem distorcer, e as linhas de texto continuam inteiras */
+  flex: 0 1 auto;
+  min-height: 0;
+  object-fit: contain;
   image-rendering: pixelated;
   border: 1px solid rgb(255 255 255 / 0.35);
 }
