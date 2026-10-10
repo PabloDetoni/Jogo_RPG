@@ -124,3 +124,16 @@ describe('itens levados da Mochila do Reino (Fase 4, TASK-073)', () => {
     expect(aplicarFimNoProgresso(progresso, { levados: { pocaoDeVida: 9 }, itens: [] }).progresso.mochila).toEqual([])
   })
 })
+
+describe('missão ativa no fim da partida (Fase 4, TASK-078)', () => {
+  it('avança com o que a partida contou, em qualquer resultado', () => {
+    const missaoAtiva = { id: 'm', tipo: 'matar', alvo: 'lobo', quantidade: 10, progresso: 4, recompensa: { ouro: 80, xp: 100 } }
+    const { progresso } = aplicarFimNoProgresso({ ...progressoInicial(), missaoAtiva }, { eventos: { abates: { lobo: 3 } } })
+    expect(progresso.missaoAtiva.progresso).toBe(7)
+  })
+
+  it('sem eventos (partida antiga, botões de teste), a missão fica como estava', () => {
+    const missaoAtiva = { id: 'm', tipo: 'matar', alvo: 'lobo', quantidade: 10, progresso: 4, recompensa: { ouro: 80, xp: 100 } }
+    expect(aplicarFimNoProgresso({ ...progressoInicial(), missaoAtiva }, {}).progresso.missaoAtiva).toEqual(missaoAtiva)
+  })
+})

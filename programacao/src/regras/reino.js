@@ -2,6 +2,7 @@ import { distribuirPontos, usarPergaminho } from './arvores.js'
 import { comprarNaForja, desequipar, equipar, fabricar, venderNaForja } from './forja.js'
 import { evoluirHabilidade, porNaTecla, tirarDaTecla, trocarNaTecla } from './habilidadesDaArvore.js'
 import { comprarNoMercado, trocarNoMercado, venderNoMercado } from './mercado.js'
+import { abandonarMissaoNaGuilda, aceitarMissaoDoQuadro, entregarMissaoNaGuilda } from './missoes.js'
 import { tirarDaMochila } from './mochila.js'
 import { nomeDoItem } from './textosDosItens.js'
 
@@ -40,6 +41,9 @@ export const operacoesDoReino = {
   porNaTecla,
   trocarNaTecla,
   tirarDaTecla,
+  aceitarMissaoDoQuadro,
+  entregarMissaoNaGuilda,
+  abandonarMissaoNaGuilda,
 }
 
 export function aplicarNoReino(progresso, operacao, argumentos = []) {

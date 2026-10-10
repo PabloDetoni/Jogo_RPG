@@ -128,6 +128,7 @@ function encerrarPartida(estado, fim = {}) {
       descobertas: fim.descobertas ?? null,
       itens: fim.itens ?? [],
       levados: partidaAtual.levar ?? {},
+      eventos: fim.eventos ?? null,
     })
     novo = { ...novo, progresso: aplicado.progresso }
     personagens = aplicado.personagens

@@ -42,6 +42,7 @@ import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '..
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
+import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
@@ -104,7 +105,13 @@ export default class CenaArena extends Phaser.Scene {
     this.ponte = ponte
     this.grupoInicial = grupo
     // descobertas: o mapa já descoberto deste bioma, do save ({ nevoa, areas }), para o minimapa e o XP das áreas
-    this.partida = { bioma: partida.bioma ?? 'floresta', pontoPartida: partida.pontoPartida ?? 'inicio', descobertas: partida.descobertas ?? null, levar: partida.levar ?? null }
+    this.partida = {
+      bioma: partida.bioma ?? 'floresta',
+      pontoPartida: partida.pontoPartida ?? 'inicio',
+      descobertas: partida.descobertas ?? null,
+      levar: partida.levar ?? null,
+      missao: partida.missao ?? null, // a missão ativa (Fase 4): a partida avisa quando algo conta para ela
+    }
   }
 
   // Relógio da partida, em ms: só anda quando a cena roda. Na pausa (e com a aba escondida) ele para, e com ele
@@ -177,6 +184,9 @@ export default class CenaArena extends Phaser.Scene {
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
     this.ganhos = { ouro: 0, monstros: 0, recursos: 0, bonusDeBoss: 0, xpPorClasse: {}, coletados: {} }
+    // Para a missão ativa (Fase 4, TASK-078): abates por tipo de mob e áreas visitadas nesta partida (os coletados já
+    // estão em ganhos.coletados). Só entram no save no fim (RF12).
+    this.eventosDaMissao = { abates: {}, areasVisitadas: [] }
     // Mochila da partida (RF33, TASK-064): a capacidade sai da Força de quem vai, calculada agora e fixa até o fim. Começa
     // com o que foi levado da Mochila do Reino na Preparação (Fase 4, TASK-073).
     this.mochila = { itens: itensLevados(this.partida?.levar), capacidade: capacidadeDaMochila(this.grupoInicial.map((membro) => membro.forca ?? 0)) }
@@ -401,7 +411,9 @@ export default class CenaArena extends Phaser.Scene {
     this.mochila.itens = itens
     if (pegou > 0) {
       if (item.tipo === 'recurso') this.ganhos.recursos += pegou
-      this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
+      this.contarParaAMissao(() => {
+        this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
+      })
       numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
     }
     if (!sobra) {
@@ -548,6 +560,9 @@ export default class CenaArena extends Phaser.Scene {
     const regiao = this.regiaoDoLider
     if (regiao && regiao.pontoDePartida !== 'inicio') exploracao.regioes.add(regiao.pontoDePartida)
     const area = areaEm(this.mapa.areas, this.lider)
+    if (area && !this.eventosDaMissao.areasVisitadas.includes(area.id)) {
+      this.contarParaAMissao(() => this.eventosDaMissao.areasVisitadas.push(area.id))
+    }
     if (!area || exploracao.conhecidas.has(area.id)) return
     exploracao.conhecidas.add(area.id)
     exploracao.novas.push(area.id)
@@ -1065,6 +1080,10 @@ export default class CenaArena extends Phaser.Scene {
     const { xp = 0, ouro = 0 } = inimigo.config
     this.ganhos.ouro += ouro
     this.ganhos.monstros += 1
+    const tipo = inimigo.ehBoss ? 'guardiao' : (inimigo.tipo ?? 'outro')
+    this.contarParaAMissao(() => {
+      this.eventosDaMissao.abates[tipo] = (this.eventosDaMissao.abates[tipo] ?? 0) + 1
+    })
     if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
     // Boss (TASK-065): o bônus na pontuação (RF49) e a pequena chance do equipamento especial (RF39)
     if (inimigo.ehBoss) {
@@ -1292,6 +1311,8 @@ export default class CenaArena extends Phaser.Scene {
       // nesta partida (o Resumo mostra), sem o que veio da Mochila do Reino
       itens: this.mochila.itens.map((item) => ({ id: item.id, quantidade: item.quantidade })),
       coletados: Object.entries(this.ganhos.coletados).map(([id, quantidade]) => ({ id, quantidade })),
+      // O que conta para a missão ativa (Fase 4): entra no save no fim, como o resto (RF12)
+      eventos: { abates: { ...this.eventosDaMissao.abates }, coletados: { ...this.ganhos.coletados }, areasVisitadas: [...this.eventosDaMissao.areasVisitadas] },
       xpPorClasse: { ...this.ganhos.xpPorClasse },
       // O mapa descoberto (Fase 3): entra no save no fim, em qualquer resultado (RF50)
       descobertas: this.exploracao && {
@@ -1380,6 +1401,19 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // ---------- Barra de teste (comandos do React) ----------
+
+  // Missão ativa (Fase 4, TASK-078): o que conta para ela vai para eventosDaMissao; se o progresso subiu, o HUD avisa
+  eventosParaAMissao() {
+    return { ...this.eventosDaMissao, coletados: this.ganhos.coletados }
+  }
+
+  contarParaAMissao(registrar) {
+    const missao = this.partida.missao
+    const antes = missao ? avancarComEventos(missao, this.eventosParaAMissao()).progresso : 0
+    registrar()
+    const aviso = missao && avisoDaMissao(missao, antes, this.eventosParaAMissao())
+    if (aviso) this.mensagem(aviso, 'bom')
+  }
 
   // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé mais perto da mira (em = 'aliado').
   // A regra (regras/itensNaPartida.js) diz o que muda; quando não dá (desmaiado, vida cheia), nada é gasto.

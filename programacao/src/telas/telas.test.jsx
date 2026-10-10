@@ -571,3 +571,24 @@ describe('árvore de habilidades (Fase 4, TASK-077)', () => {
     expect(html).toContain('no-bloqueada')
   })
 })
+
+describe('Guilda: missões (Fase 4, TASK-078)', () => {
+  it('sem missão ativa, o quadro com o detalhe e Aceitar', () => {
+    const html = desenhar('guilda', 'convidado').replace(/<!-- -->/g, '')
+    expect(html).toContain('Caçar lobos')
+    expect(html).toContain('Matar: 8 lobo')
+    expect(html).toContain('Recompensa: 80 de ouro e 120 XP')
+    expect(html).toContain('Aceitar')
+  })
+
+  it('com missão ativa, o progresso, a recompensa, Entregar e Abandonar; o HUD do Reino mostra a linha', () => {
+    const missaoAtiva = { id: 'pelesParaOCurtidor', tipo: 'entregar', alvo: 'peleDeLobo', quantidade: 4, progresso: 0, recompensa: { ouro: 90, xp: 100 } }
+    const mudancas = { progresso: { ...progresso, missaoAtiva, mochila: [{ id: 'peleDeLobo', quantidade: 2 }] } }
+    const html = desenhar('guilda', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')
+    expect(html).toContain('Missão ativa: Peles para o curtidor')
+    expect(html).toContain('Entregar 4 Pele de lobo (2/4)')
+    expect(html).toContain('Entregar')
+    expect(html).toContain('Abandonar')
+    expect(desenhar('reino', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')).toContain('Entregar 4 Pele de lobo (2/4)')
+  })
+})

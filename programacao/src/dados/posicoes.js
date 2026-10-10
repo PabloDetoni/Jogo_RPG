@@ -98,7 +98,7 @@ export const posicoes = {
   },
   guilda: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 52 },
+    conteudo: { x: 50, y: 57 },
     voltarAoReino: { x: 10, y: 90 },
   },
   mercado: {

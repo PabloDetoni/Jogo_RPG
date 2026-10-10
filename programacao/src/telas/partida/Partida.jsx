@@ -35,7 +35,9 @@ export default function Partida() {
   const descobertas = estado.progresso.mapasDescobertos?.[bioma] ?? null
   // O que foi levado da Mochila do Reino para a mochila da partida (Fase 4, TASK-073)
   const levar = estado.partidaAtual?.levar ?? null
-  const partida = useMemo(() => ({ bioma, pontoPartida, descobertas, levar }), [bioma, pontoPartida, descobertas, levar])
+  // A missão ativa do começo da partida: a partida avisa no HUD quando algo conta para ela (Fase 4, TASK-078)
+  const missao = estado.progresso.missaoAtiva
+  const partida = useMemo(() => ({ bioma, pontoPartida, descobertas, levar, missao }), [bioma, pontoPartida, descobertas, levar, missao])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
   // Fim da partida (retorno, fuga, desmaio ou botão de teste): as contas e o save ficam com o estado do jogo
