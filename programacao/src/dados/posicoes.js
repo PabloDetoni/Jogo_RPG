@@ -117,7 +117,7 @@ export const posicoes = {
   },
   arvores: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 52 },
+    conteudo: { x: 50, y: 30 }, // preso pelo topo (ConteudoComAbas noTopo)
     voltarAoReino: { x: 10, y: 90 },
   },
   salaoGloria: {

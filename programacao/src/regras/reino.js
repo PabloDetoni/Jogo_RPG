@@ -1,3 +1,4 @@
+import { distribuirPontos, usarPergaminho } from './arvores.js'
 import { comprarNaForja, desequipar, equipar, fabricar, venderNaForja } from './forja.js'
 import { comprarNoMercado, trocarNoMercado, venderNoMercado } from './mercado.js'
 import { tirarDaMochila } from './mochila.js'
@@ -32,6 +33,8 @@ export const operacoesDoReino = {
   comprarNaForja,
   venderNaForja,
   fabricar,
+  distribuirPontos,
+  usarPergaminho,
 }
 
 export function aplicarNoReino(progresso, operacao, argumentos = []) {

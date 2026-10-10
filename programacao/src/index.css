@@ -1158,3 +1158,46 @@ body {
 .moldura[data-tema='escuro'] .lista-simples .falta {
   color: #ff9e9e;
 }
+
+/* Árvores de Habilidades (Fase 4): atributos e habilidades de cada personagem */
+.ficha-da-arvore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  min-width: 60cqw;
+  font-size: 0.8em;
+}
+
+.ficha-da-arvore-topo {
+  align-items: center;
+}
+
+.atributos-da-arvore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  min-width: 30cqw;
+}
+
+.atributos-da-arvore p {
+  margin: 0;
+}
+
+.atributos-da-arvore .lista-de-contratos .botao {
+  padding: 0 0.6em;
+}
+
+/* Conteúdo preso pelo topo do ponto (e não centralizado nele) */
+.area-no-topo {
+  transform: translate(-50%, 0);
+}
+
+/* Nas Árvores, o pentágono é um pouco menor (a ficha tem a lista dos atributos ao lado) */
+.ficha-da-arvore .pentagono {
+  width: 17cqw;
+  height: 17cqw;
+}
+
+.ficha-da-arvore .lista-de-contratos {
+  gap: 0.15em;
+}

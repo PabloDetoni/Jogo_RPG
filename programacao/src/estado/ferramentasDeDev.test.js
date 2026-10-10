@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { contratarTodasAsClasses, mudarNivel, quaseSubir, itensDeTeste, ouroDeTeste } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, mudarNivel, quaseSubir, itensDeTeste, ouroDeTeste, pontosDeTeste } from './ferramentasDeDev.js'
 import { itemDoCatalogo } from '../dados/itens.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
@@ -38,5 +38,12 @@ describe('itens de teste (Fase 4, só no npm run dev)', () => {
     expect(depois.mochila.find((item) => item.id === 'peleDeLobo').quantidade).toBe(10)
     expect(depois.mochila.find((item) => item.id === 'espadaCurta').quantidade).toBe(1)
     expect(depois.mochila.every((item) => itemDoCatalogo(item.id))).toBe(true)
+  })
+
+  it('dá pontos livres de atributo e de habilidade a cada permanente', () => {
+    const antes = { ...progressoInicial(), personagens: [novoPersonagem('mago')], lider: 'mago' }
+    const [mago] = itensDeTeste(antes).personagens
+    expect(mago.pontosDeAtributo).toBe(pontosDeTeste.atributo)
+    expect(mago.pontosDeHabilidade).toBe(pontosDeTeste.habilidade)
   })
 })

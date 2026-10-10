@@ -385,7 +385,19 @@ describe('Pentágono, Seleção de classe e HUD do Reino (TASK-071)', () => {
     const html = desenhar('arvores', 'convidado').replace(/<!-- -->/g, '')
     expect(html).toContain('class="pentagono"')
     expect(html).toContain('XP 0 / 100')
-    expect(html).toContain('Pontos livres: 0 de atributo e 0 de habilidade')
+    expect(html).toContain('Pontos livres: <strong>0</strong> de atributo · 0 de habilidade')
+  })
+
+  it('Árvores: atributos com − e +, Aplicar e o pergaminho (TASK-076)', () => {
+    const mago = { ...progresso.personagens[0], pontosDeAtributo: 3 }
+    const html = desenhar('arvores', 'convidado', null, {
+      mudancas: { progresso: { ...progresso, personagens: [mago, progresso.personagens[1]], mochila: [{ id: 'pergaminhoDeRedefinicao', quantidade: 2 }] } },
+    }).replace(/<!-- -->/g, '')
+    expect(html).toContain('Pontos livres: <strong>3</strong>')
+    for (const nome of ['Vitalidade', 'Força', 'Sabedoria', 'Inteligência', 'Agilidade']) expect(html).toContain(nome)
+    expect(html).toContain('Aplicar')
+    expect(html).toContain('Usar pergaminho (tem 2)')
+    expect(html).toContain('só o pergaminho de redefinição')
   })
 })
 
