@@ -5,6 +5,8 @@ import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 import ArenaDaPartida from '../../jogo/ArenaDaPartida.jsx'
 import { criarPonte } from '../../jogo/ponte.js'
+import { tocarMusica } from '../../audio/gerenciador.js'
+import { musicaDaTela } from '../../regras/som.js'
 import { montarGrupoDaPartida } from '../../regras/grupoDaPartida.js'
 import BarraDeTeste from './BarraDeTeste.jsx'
 import HudDaPartida, { AvisosDaPartida } from './HudDaPartida.jsx'
@@ -40,6 +42,9 @@ export default function Partida() {
   const partida = useMemo(() => ({ bioma, pontoPartida, descobertas, levar, missao }), [bioma, pontoPartida, descobertas, levar, missao])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
+  // A música do Boss quando a barra dele aparece (Fase 4, TASK-105)
+  const bossPorPerto = Boolean(situacao?.boss)
+  useEffect(() => tocarMusica(musicaDaTela('partida', { bossPorPerto })), [bossPorPerto])
   // Fim da partida (retorno, fuga, desmaio ou botão de teste): as contas e o save ficam com o estado do jogo
   useEffect(() => ponte.ouvir('fimDaPartida', acoes.encerrarPartida), [ponte, acoes])
   // "Em combate", "retornando" e "fugindo", na hora em que mudam (o Esc e a pausa dependem disso)

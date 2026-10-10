@@ -42,6 +42,8 @@ import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '..
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
+import { tocarEfeito } from '../../audio/gerenciador.js'
+import { efeitoDoAtaque } from '../../regras/som.js'
 import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
@@ -731,6 +733,7 @@ export default class CenaArena extends Phaser.Scene {
     this.velocidadeDaEsquiva = velocidadeDoMovimento(direcao.x, direcao.y, esquiva.distancia / (esquiva.ms / 1000))
     this.ultimaEsquiva = agora
     this.fimDaEsquiva = agora + esquiva.ms
+    tocarEfeito('esquiva')
     this.lider.fimDoEmpurrao = 0 // a esquiva tira o Líder do empurrão
     const deitado = Math.abs(this.velocidadeDaEsquiva.x) >= Math.abs(this.velocidadeDaEsquiva.y)
     this.lider.deformar(deitado ? 1.4 : 0.7, deitado ? 0.7 : 1.4, 60, 160)
@@ -955,6 +958,7 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, membro, angulo))
     if (membro.classe === 'sacerdote') this.adicionarProjetil(new Aura(this, membro, agora))
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
+    if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
   }
 
@@ -1059,6 +1063,8 @@ export default class CenaArena extends Phaser.Scene {
     alvo.vida = vida
     alvo.piscar()
     const numero = String(alvo.mostraDanoCheio ? Math.round(golpe.dano) : danoFeito)
+    // Som (Fase 4): acerto ou crítico, quando é o grupo que acerta
+    if (autor && this.grupo.includes(autor)) tocarEfeito(golpe.critico ? 'critico' : 'acerto')
     if (golpe.critico) {
       numeroFlutuante(this, alvo.x, alvo.y - alvo.tamanho * 0.6, `CRÍTICO ${numero}`, coresDaArena.critico, 26)
       if (autor?.lider) this.mensagem(`Crítico! ${numero} de dano`, 'critico')
@@ -1084,7 +1090,10 @@ export default class CenaArena extends Phaser.Scene {
     this.contarParaAMissao(() => {
       this.eventosDaMissao.abates[tipo] = (this.eventosDaMissao.abates[tipo] ?? 0) + 1
     })
-    if (ouro > 0) numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+    if (ouro > 0) {
+      numeroFlutuante(this, inimigo.x, inimigo.y - inimigo.tamanho * 1.1, `+${ouro} ouro`, coresDaArena.ouro, 20)
+      tocarEfeito('moeda')
+    }
     // Boss (TASK-065): o bônus na pontuação (RF49) e a pequena chance do equipamento especial (RF39)
     if (inimigo.ehBoss) {
       this.ganhos.bonusDeBoss += inimigo.config.bonus
@@ -1128,6 +1137,7 @@ export default class CenaArena extends Phaser.Scene {
       if (nivel <= (this.niveisAvisados[classe] ?? membro.membro.nivel)) continue
       this.niveisAvisados[classe] = nivel
       this.mensagem(`${nomeDaClasse(classe)} subiu para o nível ${nivel}! (vale na próxima partida)`, 'nivel')
+      tocarEfeito('nivel')
       numeroFlutuante(this, membro.x, membro.y - 56, `NÍVEL ${nivel}!`, coresDaArena.nivel, 24)
       particulas(this, membro.x, membro.y, 0xffe14a, 14, 240)
     }
@@ -1197,6 +1207,7 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   mostrarBloqueado(x, y) {
+    tocarEfeito('bloqueio')
     numeroFlutuante(this, x, y - 22, 'BLOQUEADO', coresDaArena.bloqueado, 22)
     particulas(this, x, y, 0xffffff, 6, 160)
   }
@@ -1205,6 +1216,7 @@ export default class CenaArena extends Phaser.Scene {
 
   // Sem vida: desmaia e abre os 30 s. Se era o último de pé, é Derrota na hora.
   desmaiar(membro) {
+    tocarEfeito('desmaio')
     membro.cair()
     membro.caidoDesde = this.agora
     this.houveDesmaio = true
@@ -1248,6 +1260,7 @@ export default class CenaArena extends Phaser.Scene {
   // Volta de pé (pela ajuda: pouca vida e frágil; pela Ressurreição: vida cheia, imune e fortalecido)
   levantar(membro, { vida, fimDaFragilidade = 0, fimDaImunidade = 0, fimDoFortalecimento = 0 }) {
     membro.levantar(vida)
+    tocarEfeito('levantar')
     membro.fimDaFragilidade = fimDaFragilidade
     membro.fimDaImunidade = Math.max(membro.fimDaImunidade, fimDaImunidade)
     membro.fimDoFortalecimento = fimDoFortalecimento
@@ -1266,6 +1279,7 @@ export default class CenaArena extends Phaser.Scene {
     particulas(this, membro.x, membro.y, 0x9fd8ff, 20, 260)
     numeroFlutuante(this, membro.x, membro.y - 50, 'PERDIDO', '#9fd8ff', 24)
     this.mensagem(`${nomeDaClasse(membro.classe)} foi levado pela Pedra de Retorno: perdido`, 'perdido')
+    tocarEfeito('perdido')
     membro.perdido = true
     membro.escudo?.destruir()
     membro.escudo = null
@@ -1379,6 +1393,7 @@ export default class CenaArena extends Phaser.Scene {
     this.fuga = comecarFuga(this.fuga, msDaFuga)
     this.retorno = null
     this.mensagem('A Pedra de Retorno vai levar o grupo ao Reino', 'alerta')
+    tocarEfeito('fuga')
     particulas(this, this.lider.x, this.lider.y, 0x9fd8ff, 16, 240)
     this.avisarAndamento()
   }

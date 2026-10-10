@@ -98,4 +98,10 @@ O aviso do golpe precisa ser fácil de ler (piscar, encolher ou brilhar), como o
 | Efeito | Moeda (ouro ganho) e clique de botão | `moeda.ogg`, `clique.ogg` |
 | Efeito | Fuga começando | `fuga.ogg` |
 
-Até os sons chegarem, o código deixa o sistema de áudio pronto, com Música, Som e o mudo (tecla M) funcionando.
+**Onde pôr os sons (pronto desde a Fase 4, TASK-105):** salve cada arquivo em `programacao/src/assets/audio/`, com o nome desta tabela (`.ogg`, `.mp3` ou `.wav`). O jogo encontra sozinho o que estiver lá, sem mexer em código; os nomes ficam em `programacao/src/dados/sons.js`.
+
+- **Sem arquivo:** cada efeito toca um bipe curto provisório, e a música fica em silêncio.
+- **Música do Boss (opcional):** sem ela, continua a da Floresta.
+- **Configurações:** Música e Som ligam e desligam cada parte, e a tecla M silencia tudo.
+- **Primeiro som:** o áudio começa no primeiro clique ou tecla (os navegadores bloqueiam som automático).
+- **Ataque básico:** na partida, só o do Líder toca som (o dos aliados encheria de barulho).
