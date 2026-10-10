@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { arquivosDeSom } from '../audio/arquivos.js'
 import { classes } from '../dados/classes.js'
@@ -42,7 +41,7 @@ describe('som (Fase 4, TASK-105)', () => {
   })
 
   it('todo arquivo de som da Lista de Arte e Som tem nome em dados/sons.js (para cair no lugar certo sem mexer em código)', () => {
-    const lista = readFileSync(resolve(__dirname, '../../../documentacao/Lista_de_Arte_e_Som.md'), 'utf8')
+    const lista = readFileSync(new URL('../../../documentacao/Lista_de_Arte_e_Som.md', import.meta.url), 'utf8')
     const daLista = [...lista.matchAll(/`([a-z-]+)\.ogg`/g)].map((achado) => achado[1])
     const nomes = new Set([...Object.values(musicas), ...Object.values(efeitos).map((efeito) => efeito.arquivo)])
     // "ataque-guerreiro.ogg e assim por diante (5)": os 5 ataques
