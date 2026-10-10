@@ -1,3 +1,4 @@
+import { comprarNaForja, desequipar, equipar, fabricar, venderNaForja } from './forja.js'
 import { comprarNoMercado, trocarNoMercado, venderNoMercado } from './mercado.js'
 import { tirarDaMochila } from './mochila.js'
 import { nomeDoItem } from './textosDosItens.js'
@@ -21,7 +22,17 @@ export function descartar(progresso, id, quantidade = 1) {
 }
 
 // Todas as operações pelo nome
-export const operacoesDoReino = { descartar, comprarNoMercado, venderNoMercado, trocarNoMercado }
+export const operacoesDoReino = {
+  descartar,
+  comprarNoMercado,
+  venderNoMercado,
+  trocarNoMercado,
+  equipar,
+  desequipar,
+  comprarNaForja,
+  venderNaForja,
+  fabricar,
+}
 
 export function aplicarNoReino(progresso, operacao, argumentos = []) {
   const regra = Object.hasOwn(operacoesDoReino, operacao) ? operacoesDoReino[operacao] : null

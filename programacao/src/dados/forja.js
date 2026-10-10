@@ -38,3 +38,12 @@ export const receitas = [
   { resultado: 'cetroDeErvas', materiais: { ervaMedicinal: 8, madeira: 2 }, ouro: 120 },
   { resultado: 'escudoDeCasca', materiais: { cascaAntiga: 2, madeira: 4 }, ouro: 200 },
 ]
+
+// Equipamento fixo do contrato temporário (RF29: nível e equipamento fixos; não aparece na Forja). Provisório.
+export const equipamentoDosTemporarios = {
+  guerreiro: { arma: 'espadaCurta', peitoral: 'coleteDeCouro' },
+  mago: { arma: 'cajadoDeCarvalho', peitoral: 'coleteDeCouro' },
+  tanque: { arma: 'marteloDeGuerra', escudo: 'escudoDeMadeira', peitoral: 'coleteDeCouro' },
+  sacerdote: { arma: 'cetroDaAurora', peitoral: 'coleteDeCouro' },
+  arqueiro: { arma: 'arcoDeCaca', peitoral: 'coleteDeCouro' },
+}

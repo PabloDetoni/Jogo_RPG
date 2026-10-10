@@ -41,6 +41,7 @@ import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regr
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
+import { reducaoPelaDefesa } from '../../regras/equipamento.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
@@ -964,7 +965,7 @@ export default class CenaArena extends Phaser.Scene {
     }
     membro.mana = gastarMana(membro.mana, habilidade.custoDeMana)
     // Com o Elixir do foco (Fase 4), a recarga fica mais curta: o último uso conta como se fosse um pouco antes
-    const recarga = recargaComEfeitos(habilidade.recargaMs, multiplicadorAtivo(membro.efeitos, 'recarga', agora))
+    const recarga = recargaComEfeitos(habilidade.recargaMs, multiplicadorAtivo(membro.efeitos, 'recarga', agora), membro.reducaoDeRecarga ?? 0)
     membro.ultimoUsoDaHabilidade[indice] = agora - (habilidade.recargaMs - recarga)
     membro.anguloDaMira = mira.angulo
     const ponto = habilidade.id === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
@@ -1143,6 +1144,7 @@ export default class CenaArena extends Phaser.Scene {
     let danoFinal = dano
     if (membro.fragil) danoFinal *= 1 + desmaio.danoExtraFragil
     if (membro.provocando) danoFinal *= 1 - combateDeTeste.habilidades.tanque.reducaoDeDano
+    danoFinal *= 1 - reducaoPelaDefesa(membro.defesa ?? 0) // a defesa do equipamento (Fase 4)
     const { vida, danoFeito } = aplicarDano(membro.vida, danoFinal)
     membro.vida = vida
     membro.piscar()

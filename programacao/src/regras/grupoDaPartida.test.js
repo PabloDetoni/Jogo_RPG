@@ -26,8 +26,19 @@ describe('montarGrupoDaPartida (RF34)', () => {
     expect(grupo.map(({ classe, vidaMaxima, lider, temporario }) => ({ classe, vidaMaxima, lider, temporario }))).toEqual([
       { classe: 'tanque', vidaMaxima: 200, lider: true, temporario: false },
       { classe: 'mago', vidaMaxima: 80, lider: false, temporario: false },
-      { classe: 'arqueiro', vidaMaxima: 60, lider: false, temporario: true },
+      // o temporário vai com o equipamento fixo (RF29, Fase 4): o Colete de couro dá +2 de Vitalidade (60 → 80)
+      { classe: 'arqueiro', vidaMaxima: 80, lider: false, temporario: true },
     ])
+  })
+
+  it('o equipamento entra nos números da partida: atributos, defesa e redução de recarga (Fase 4)', () => {
+    const tanque = { ...novoPersonagem('tanque'), equipamento: { escudo: 'escudoDeMadeira', botas: 'botasDeVento' } }
+    const [membro] = montarGrupoDaPartida({ ...progressoInicial(), personagens: [tanque] }, 'tanque')
+    const [semNada] = montarGrupoDaPartida({ ...progressoInicial(), personagens: [novoPersonagem('tanque')] }, 'tanque')
+    expect(membro.vidaMaxima).toBe(semNada.vidaMaxima + 2 * 10) // Escudo de madeira: Vitalidade +2
+    expect(membro.defesa).toBe(3)
+    expect(membro.reducaoDeRecarga).toBe(0.05)
+    expect(semNada.defesa).toBe(0)
   })
 
   it('a vida vem da Vitalidade do personagem, não da classe', () => {

@@ -1,7 +1,9 @@
 import { combateDeTeste, contratos, critico } from '../dados/balanceamento.js'
 import { atributosIniciaisDaClasse, classes } from '../dados/classes.js'
+import { equipamentoDosTemporarios } from '../dados/forja.js'
 import { nivelInicial } from '../dados/regras.js'
 import { chanceDeCritico } from './combate.js'
+import { atributosComEquipamento, bonusDoEquipamento } from './equipamento.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
 import { capacidadeDaMochila } from './mochila.js'
 
@@ -15,9 +17,14 @@ export function vidaMaximaPelaVitalidade(vitalidade) {
   return Math.max(1, Math.round(vitalidade * combateDeTeste.vidaPorPontoDeVitalidade))
 }
 
-// Vida pela Vitalidade, mana pela Inteligência, a volta da mana pela Sabedoria e o crítico pela Agilidade
-function numerosDoMembro(atributos) {
+// Vida pela Vitalidade, mana pela Inteligência, a volta da mana pela Sabedoria e o crítico pela Agilidade.
+// Com equipamento (Fase 4): os bônus somam aos atributos, e a defesa e a redução de recarga das peças vão junto.
+function numerosDoMembro(atributosSemEquipamento, equipamento = {}) {
+  const atributos = atributosComEquipamento(atributosSemEquipamento, equipamento)
+  const { defesa, reducaoDeRecarga } = bonusDoEquipamento(equipamento)
   return {
+    defesa,
+    reducaoDeRecarga,
     forca: atributos.forca ?? 0, // a capacidade da mochila da partida sai da Força do grupo (RF33)
     vidaMaxima: vidaMaximaPelaVitalidade(atributos.vitalidade),
     manaMaxima: manaMaxima(atributos.inteligencia),
@@ -38,6 +45,7 @@ export function montarGrupoDaPartida(progresso, lider) {
   const permanentes = progresso.personagens.map((personagem) => ({
     classe: personagem.classe,
     atributos: { ...atributosIniciaisDaClasse(personagem.classe), ...personagem.atributos },
+    equipamento: personagem.equipamento ?? {},
     nivel: personagem.nivel ?? nivelInicial,
     xp: personagem.xp ?? 0,
     temporario: false,
@@ -47,6 +55,7 @@ export function montarGrupoDaPartida(progresso, lider) {
     .map((contrato) => ({
       classe: contrato.classe,
       atributos: atributosIniciaisDaClasse(contrato.classe),
+      equipamento: equipamentoDosTemporarios[contrato.classe] ?? {}, // fixo (RF29)
       nivel: contrato.nivel ?? contratos.nivelDoTemporario,
       xp: 0,
       temporario: true,
@@ -55,7 +64,7 @@ export function montarGrupoDaPartida(progresso, lider) {
     classe: membro.classe,
     nivel: membro.nivel,
     xp: membro.xp,
-    ...numerosDoMembro(membro.atributos),
+    ...numerosDoMembro(membro.atributos, membro.equipamento),
     lider: membro.classe === lider,
     temporario: membro.temporario,
   }))

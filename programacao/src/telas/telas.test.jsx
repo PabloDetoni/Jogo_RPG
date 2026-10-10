@@ -320,9 +320,11 @@ describe('Guilda: contratos (TASK-079) e Preparação', () => {
   it('temporário: só as classes que o jogador não tem e sem contrato ativo, com o preço; e os contratos ativos', () => {
     const html = desenharCom(<ContratosTemporarios />)
     // o save tem Mago e Tanque permanentes e o Arqueiro temporário: sobram Guerreiro e Sacerdote
-    expect(html).toContain('<span>Guerreiro</span>')
-    expect(html).toContain('<span>Sacerdote</span>')
-    expect(html).not.toContain('<span>Mago</span>')
+    // cada classe vem com o equipamento fixo do temporário (RF29, Fase 4)
+    expect(html).toContain('<span>Guerreiro<span class="nota"> (vai com 1 Espada curta e 1 Colete de couro)</span></span>')
+    expect(html).toContain('<span>Sacerdote<span class="nota">')
+    expect(html).not.toContain('<span>Mago<span')
+    expect(html).toContain('com equipamento fixo')
     expect(html).toContain('Contratar (200 de ouro)')
     expect(html).toContain('Arqueiro (nível 5)')
     expect(html).toContain('2 partidas restantes')
@@ -518,4 +520,18 @@ describe('Mercado (Fase 4, TASK-074)', () => {
     expect(html).toMatch(/mudam em \d+ partidas?/)
     expect(html).toContain('Comprar 1 (25)')
   })
+})
+
+describe('Forja (Fase 4, TASK-075)', () => {
+  it('a aba Equipar mostra o personagem, os 7 espaços, os atributos com o bônus e o que serve na Mochila', () => {
+    const mago = { ...progresso.personagens[0], equipamento: { arma: 'cajadoDeCarvalho' } }
+    const html = desenhar('forja', 'convidado', null, {
+      mudancas: { progresso: { ...progresso, personagens: [mago, progresso.personagens[1]], mochila: [{ id: 'espadaCurta', quantidade: 1 }] } },
+    }).replace(/<!-- -->/g, '')
+    expect(html).toContain('Mago')
+    for (const espaco of ['Capacete', 'Peitoral', 'Calças', 'Botas', 'Manoplas', 'Arma', 'Escudo']) expect(html).toContain(espaco)
+    expect(html).toContain('Cajado de carvalho')
+    expect(html).toContain('(+3)')
+  })
+
 })

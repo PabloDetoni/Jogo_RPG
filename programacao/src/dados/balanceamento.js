@@ -52,6 +52,11 @@ export const contratos = {
 //   "rotativasAVenda" de cada vez (a regra da rotação é a decisão em aberto da TASK-014).
 export const mercado = { fracaoDaVenda: 0.5, partidasPorRotacao: 3, rotativasAVenda: 3 }
 
+// EQUIPAMENTO NA PARTIDA (Fase 4, TASK-075): os bônus de atributo somam aos do personagem (até o máximo de cada atributo);
+// cada ponto de defesa tira uma parte do dano que o personagem leva, até um teto; a redução de recarga das peças soma,
+// até um teto (regras/equipamento.js). Provisório.
+export const equipamentoNaPartida = { reducaoPorPontoDeDefesa: 0.02, reducaoMaximaPelaDefesa: 0.5, reducaoDeRecargaMaxima: 0.3 }
+
 // MUNDO (Fase 3): a Floresta maior que a tela (layout em dados/mundo/floresta.js). Tudo provisório até o layout do
 // grupo (TASK-013). Distâncias em px do mapa, tempos em ms.
 export const mundo = {
