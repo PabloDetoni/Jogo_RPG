@@ -250,7 +250,7 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
 - Deve acontecer: o grupo de 5 fica no meio da Difícil, cercado por todos os mobs dela; o número de FPS na barra de teste fica perto de 60 no seu computador.
 
 **FL-12 · A arena de teste só no desenvolvimento**
-- Fazer: no `npm run dev`, abra o Mapa; depois, no endereço da Vercel (prévia), abra o Mapa.
+- Fazer: no `npm run dev`, abra o Mapa; depois, no endereço principal (`https://jogo-rpg-six.vercel.app`), abra o Mapa.
 - Deve acontecer: no `npm run dev` existe o botão **Arena de teste** (a arena da Fase 1, para testar o combate); na Vercel, ele não existe.
 
 ## CT. Contas e Salão da Glória (Fase 2)

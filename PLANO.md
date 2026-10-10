@@ -5,10 +5,10 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 ## Onde parei
 
 - **Fase 2 aprovada pelo Pablo em 09/10** e publicada: o `main` é o jogo público em `https://jogo-rpg-six.vercel.app` (as variáveis do Supabase valem em Production e Preview). Relatório do grupo: https://claude.ai/artifact/7Wj2tXqwcjaffBpyusPjrD.
-- **Regra nova de publicação (09/10, no CLAUDE.md):** cada fase num ramo próprio; no fim, push do ramo, `conferir:configuracao` na prévia e o endereço dela junto com os relatórios; o `main` só recebe a fase depois do teste e do ok do Pablo.
-- **Fase 3 terminada (09/10), no ramo `fase-3`:** 3a a 3h feitas (Floresta com câmera, regiões, mobs com território, minimapa e áreas com XP, Ponto de partida, coleta com E, drops e mochila da partida, o Guardião da Floresta e o TEST-005). 660 testes; `testar:navegador` 226 de 226; `testar:floresta` 65 de 65; 60 FPS no pior cenário. Documentação: RF31, RF32, RF35, RF39, RF40, RF42, RF48, RF53, UC28, UC34, UC35, "Alterações do projeto", Balanceamento (seção do mundo), lista de arte, CLAUDE.md e `testes/` (roteiros FL-01 a FL-12).
-- **Parado esperando o Pablo (fim da Fase 3):** os dois relatórios e o endereço da prévia do ramo `fase-3`; o teste dele (roteiros FL-01 a FL-12); só depois do ok o `fase-3` junta no `main`. Depois, a Fase 4 (Reino com dados).
-- **Esperando o Pablo (sem travar a Fase 3):** confirmar a proposta do "Painel do Mestre" para a Fase 4 (seção abaixo).
+- **Regra de publicação (Pablo, 09/10, no CLAUDE.md; troca a das prévias por ramo):** um endereço só, `https://jogo-rpg-six.vercel.app`, que mostra sempre o `main`; a Vercel só publica o `main` (`programacao/vercel.json`). Ramos só locais. No fim de cada fase: todos os testes → com tudo passando, junta no `main` e push → confere o endereço principal (`conferir:configuracao` e `testar:contas:publicado`) → relatórios. Nunca publicar com teste falhando; se quebrar no site, `git revert` na hora e avisar.
+- **Fase 3 terminada (09/10) e publicada no endereço principal (10/10):** 3a a 3h feitas (Floresta com câmera, regiões, mobs com território, minimapa e áreas com XP, Ponto de partida, coleta com E, drops e mochila da partida, o Guardião da Floresta e o TEST-005). 660 testes; `testar:navegador` 226 de 226; `testar:floresta` 65 de 65; 60 FPS no pior cenário. Documentação: RF31, RF32, RF35, RF39, RF40, RF42, RF48, RF53, UC28, UC34, UC35, "Alterações do projeto", Balanceamento (seção do mundo), lista de arte, CLAUDE.md e `testes/` (roteiros FL-01 a FL-12).
+- **Esperando o teste do Pablo na Fase 3** (roteiros FL-01 a FL-12, no endereço principal). Ele liberou começar a Fase 4 num ramo local enquanto isso; **se ele achar problema na Fase 3, a Fase 4 para e a correção vem primeiro.**
+- **Esperando o Pablo:** apagar o padrão antigo das prévias nas Redirect URLs do Supabase (o `conferir:configuracao` acusa); confirmar a proposta do "Painel do Mestre" (seção abaixo). **Não começar a Fase 4 pelo Painel do Mestre.**
 
 ### Plano da Fase 3 (modo contínuo, pedido do Pablo em 09/10)
 
@@ -46,7 +46,7 @@ Conteúdo provisório (TASK-012 e TASK-013 ainda não chegaram): o layout da Flo
 - **3h · TEST-005 e fechamento:**
   - pior cenário (grupo de 5 e o máximo de mobs numa região), com o FPS medido por 2 minutos;
   - roteiro do navegador com as conferências novas; documentação (RF30 a RF41, RF48, RF53 e "Alterações do projeto"); roteiros manuais;
-  - push do ramo `fase-3`, `conferir:configuracao` na prévia e os dois relatórios.
+  - publicação no endereço principal (a regra das prévias por ramo foi trocada em 09/10 por um endereço só) e os dois relatórios.
 
 ### Proposta para a Fase 4: conteúdo por planilha e "Painel do Mestre" (esperando o ok do Pablo)
 
@@ -267,7 +267,7 @@ Legenda: **FEITO** · **FALTA POUCO** (diz o quê) · **A FAZER** · **COM VOCÊ
 TASK-047 (itens na partida: Tab, E e R) fica para a Fase 4. Na Fase 3, o E já pega o item do chão, e o catálogo provisório (parte da TASK-070) existe em `src/dados/itens.js`.
 
 ### EPIC-07 · Mundo da Floresta (etapa 6)
-TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVISÓRIO (layout, mobs, Boss e itens) até a TASK-012 e a TASK-013. Ramo `fase-3`, esperando o teste do Pablo. O TEST-005 deu 60 FPS de média e mínimo de 59 em 2 minutos de pior cenário (grupo de 5 e 20 mobs da Difícil), numa Intel Iris Xe.
+TASK-060 a TASK-065 e TEST-005: **FEITO (09/10) na Fase 3**, com conteúdo PROVISÓRIO (layout, mobs, Boss e itens) até a TASK-012 e a TASK-013. Publicada no endereço principal em 09/10, esperando o teste do Pablo. O TEST-005 deu 60 FPS de média e mínimo de 59 em 2 minutos de pior cenário (grupo de 5 e 20 mobs da Difícil), numa Intel Iris Xe.
 
 ### EPIC-08 · Reino com dados (etapa 7)
 - **TASK-079 (contratos):** FEITO (08/10) na parte 7a: abas de contrato temporário e permanente na Guilda, com o ouro, os preços, as partidas restantes e o motivo quando falta ouro; a Preparação mostra quem vai como temporário. O equipamento fixo do temporário (RF29) espera o catálogo (TASK-070, Fase 4).

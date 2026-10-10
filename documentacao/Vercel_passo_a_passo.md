@@ -1,6 +1,6 @@
 # Vercel: passo a passo para o Pablo
 
-A Vercel publica o jogo na internet a partir do GitHub (decidido pelo Pablo em 08/10/2026; adianta a TASK-130). Cada vez que um ramo do GitHub recebe commits novos, a Vercel monta o jogo de novo sozinha. Escrito em 08/10/2026; os nomes dos menus do site podem mudar um pouco.
+A Vercel publica o jogo na internet a partir do GitHub (decidido pelo Pablo em 08/10/2026; adianta a TASK-130). Cada vez que o `main` do GitHub recebe commits novos, a Vercel monta o jogo de novo sozinha; os outros ramos não são publicados (desde 09/10, um endereço só). Escrito em 08/10/2026; os nomes dos menus do site podem mudar um pouco.
 
 **Endereço do jogo:** `https://jogo-rpg-six.vercel.app` (criado pelo Pablo em 09/10; o `-six` veio da Vercel porque `jogo-rpg.vercel.app` já era de outra pessoa). Para conferir a Vercel e o Supabase de uma vez: `npm run conferir:configuracao`, dentro de `programacao`.
 
@@ -8,7 +8,7 @@ A Vercel publica o jogo na internet a partir do GitHub (decidido pelo Pablo em 0
 
 - O jogo fica na pasta `programacao` do repositório (é a **Root Directory**).
 - É um projeto **Vite**: a Vercel instala com `npm install`, monta com `npm run build` e publica a pasta `dist`.
-- O jogo é uma página só (as telas mudam sem trocar de endereço), então não precisa de `vercel.json`.
+- O jogo é uma página só (as telas mudam sem trocar de endereço). O `programacao/vercel.json` só diz à Vercel para publicar apenas o `main` (`git.deploymentEnabled`: `main` sim, todos os outros ramos não).
 - O endereço e a chave publicável do Supabase entram como **variáveis de ambiente** da Vercel (as mesmas do `.env.local`, que não vai para o GitHub).
 - A barra de teste, o painel `</> DEV`, "Subir nível" e "+300 de ouro" não existem no jogo publicado: só no `npm run dev`. Na partida publicada, a faixa de baixo mostra só as teclas.
 
@@ -39,17 +39,12 @@ A Vercel publica o jogo na internet a partir do GitHub (decidido pelo Pablo em 0
 6. Clique em **Deploy** e espere 1 ou 2 minutos.
 7. Quando aparecer **Congratulations**, clique em **Continue to Dashboard**. O endereço do jogo aparece em **Domains** (por exemplo, `https://jogo-rpg.vercel.app`). Me mande esse endereço.
 
-## 3. Deixar as prévias abertas para o teste em outra máquina
+## 3. Um endereço só (desde 09/10)
 
-A Vercel publica dois tipos de endereço:
+O jogo tem um endereço só: `https://jogo-rpg-six.vercel.app`, que mostra sempre o `main` e é aberto para todos. A Vercel não monta mais prévias de outros ramos (o `vercel.json` desliga), então não é preciso mexer em nada no painel.
 
-- **Produção:** o ramo `main` do GitHub, no endereço principal (`jogo-rpg.vercel.app`). É aberto para todos.
-- **Prévia:** qualquer outro ramo (por exemplo, `fase-2`), num endereço próprio, como `jogo-rpg-git-fase-2-....vercel.app`. Por padrão, só quem está logado na Vercel consegue abrir.
-
-Para o grupo e outra máquina conseguirem abrir a prévia:
-
-1. No projeto, abra **Settings → Deployment Protection**.
-2. Em **Vercel Authentication**, escolha **Disabled** e clique em **Save**.
+- **Deployment Protection:** pode ficar como está. Ela só protegia as prévias; o endereço principal continua aberto.
+- **Prévias antigas** (dos ramos `fase-2` e `fase-3`): continuam na lista de **Deployments**, protegidas pelo login da Vercel. Não atrapalham; se quiser limpar, clique nos três pontinhos de cada uma e em **Delete**.
 
 ## 4. Avisar o Supabase dos endereços da Vercel
 
@@ -59,17 +54,16 @@ Sem isso, os links de confirmação e de senha nova que saem do jogo publicado n
 2. **Site URL:** troque para o endereço principal da Vercel, `https://jogo-rpg-six.vercel.app`, e clique em **Save**.
 3. Em **Redirect URLs**, deixe estes (clique em **Add URL** para cada um que faltar) e clique em **Save URLs**:
    - `http://localhost:5173/**` (o jogo no seu computador);
-   - `https://jogo-rpg-six.vercel.app/**` (o endereço principal);
-   - `https://jogo-rpg-*.vercel.app/**` (as prévias de teste).
+   - `https://jogo-rpg-six.vercel.app/**` (o endereço principal).
+4. Se ainda estiver na lista `https://jogo-rpg-*.vercel.app/**` (das prévias antigas), apague: um padrão com `*` no `vercel.app` aceita o endereço de qualquer projeto da Vercel com esse começo de nome, de qualquer pessoa.
 
-## 5. A publicação de teste da Fase 2
+## 5. Como cada fase é publicada (desde 09/10)
 
-O código da Fase 2 fica nos commits do seu computador até o seu teste visual. Para a Vercel montar a Fase 2 sem mexer no `main`, o caminho é publicar um **ramo de teste**:
-
-1. Com o seu ok, eu mando os commits para um ramo novo no GitHub chamado `fase-2` (o `main` continua como está).
-2. A Vercel monta a prévia sozinha. Em **Deployments**, aparece uma linha com o ramo `fase-2`; clique nela e depois em **Visit** para abrir.
-3. Use esse endereço nos testes (inclusive em outra máquina).
-4. Depois da sua aprovação, os commits vão para o `main`, e o endereço principal passa a ter a Fase 2.
+1. O Claude roda todos os testes (`npm test`, lint, build e os roteiros do navegador). Com algum falhando, nada é publicado.
+2. Com tudo passando, a fase junta no `main` e vai para o GitHub.
+3. A Vercel monta e publica sozinha (1 ou 2 minutos). O `npm run conferir:configuracao` diz se o último `main` já está no ar, e o `npm run testar:contas:publicado` joga as contas e a Floresta no endereço principal.
+4. Você testa no endereço principal.
+5. Se algo quebrar no site, o Claude volta o `main` para a versão anterior na hora (`git revert`, sem apagar histórico) e avisa.
 
 ## 6. Se der errado
 

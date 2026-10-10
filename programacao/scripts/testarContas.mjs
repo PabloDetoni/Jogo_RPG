@@ -6,6 +6,8 @@
 // recusado), histórico, uma conta tentando ler ou alterar a outra, a queda de internet no meio do salvamento, o Supabase
 // fora do ar, o link de e-mail expirado e (enquanto a conta B não tiver save) a passagem do convidado para a conta.
 // Fala com o Supabase de verdade, como um jogador: só com a chave publicável. Prints em testes-do-navegador/contas/.
+// Com `npm run testar:contas:publicado`, roda no jogo publicado (o endereço principal da Vercel), sem ligar o Vite: lá não
+// existe a barra de teste, então a partida termina voltando com Q, e confere também que a Floresta abre no site.
 import { createClient } from '@supabase/supabase-js'
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -23,6 +25,9 @@ const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
 const env = loadEnv('development', process.cwd(), '')
 const URL_DO_SUPABASE = env.VITE_SUPABASE_URL
 const CHAVE = env.VITE_SUPABASE_PUBLISHABLE_KEY
+// Jogo publicado (--publicado): o endereço principal da Vercel, o mesmo do conferir:configuracao
+const PUBLICADO = process.argv.includes('--publicado')
+const ENDERECO_PUBLICADO = (process.env.ENDERECO_DA_VERCEL || env.ENDERECO_DA_VERCEL || 'https://jogo-rpg-six.vercel.app').replace(/\/+$/, '')
 const contaA = { nome: 'A', email: env.TESTE_CONTA_A_EMAIL, senha: env.TESTE_CONTA_A_SENHA, apelido: 'TesteA' }
 const contaB = { nome: 'B', email: env.TESTE_CONTA_B_EMAIL, senha: env.TESTE_CONTA_B_SENHA, apelido: 'TesteB' }
 if (!URL_DO_SUPABASE || !CHAVE || !contaA.email || !contaA.senha || !contaB.email || !contaB.senha) {
@@ -99,9 +104,9 @@ async function portaLivre() {
   })
 }
 
-const servidor = await createServer({ server: { port: 5198, strictPort: false }, logLevel: 'error' })
-await servidor.listen()
-const SITE = servidor.resolvedUrls.local[0]
+const servidor = PUBLICADO ? null : await createServer({ server: { port: 5198, strictPort: false }, logLevel: 'error' })
+await servidor?.listen()
+const SITE = PUBLICADO ? `${ENDERECO_PUBLICADO}/` : servidor.resolvedUrls.local[0]
 const processos = []
 
 async function desligar(codigo) {
@@ -115,7 +120,7 @@ async function desligar(codigo) {
       // o navegador às vezes demora a soltar os arquivos do perfil temporário
     }
   }
-  await servidor.close()
+  await servidor?.close()
   process.exit(codigo)
 }
 
@@ -276,6 +281,8 @@ function criarAba(cdp, nome, fecharAlvo) {
       cdp.enviar('Network.emulateNetworkConditions', { offline: sim, latency: 0, downloadThroughput: -1, uploadThroughput: -1 }),
     // Supabase fora do ar: os pedidos para ele falham, o resto da página funciona
     bloquear: (padroes) => cdp.enviar('Network.setBlockedURLs', { urls: padroes }),
+    // Põe a aba na frente: o relógio da partida para com a aba escondida (a contagem do Q também)
+    aFrente: () => cdp.enviar('Page.bringToFront'),
     fechar: fecharAlvo,
   }
   return aba
@@ -325,15 +332,38 @@ async function entrar(aba, conta, comoEntrar = 'senha') {
   return aba.titulo()
 }
 
-async function irAteAPartida(aba) {
+// Do Reino até a partida na Floresta. noMapa (opcional) roda com o Mapa aberto.
+async function irAteAPartida(aba, noMapa) {
+  await aba.aFrente()
   await aba.clicar('Jogar')
+  if (noMapa) await noMapa()
   await aba.clicar('Floresta')
-  await aba.clicar('Início do bioma')
+  // A tela Ponto de partida só aparece quando a conta já descobriu outra região da Floresta (Fase 3)
+  await aba.esperar(
+    `document.querySelector('.tela .titulo')?.textContent === 'Preparação' || [...document.querySelectorAll('button')].some(b => b.textContent.trim() === 'Início do bioma')`,
+    'o Ponto de partida ou a Preparação',
+  )
+  if ((await aba.titulo()) !== 'Preparação') await aba.clicar('Início do bioma')
   await aba.esperarTela('Preparação')
   await aba.clicar('Começar partida')
 }
+// A partida aberta: o desenho do Phaser e o HUD com a região, que só aparece quando a cena já manda a situação
+// (no npm run dev, confere também o Líder dentro do jogo)
 const esperarArena = (aba) =>
-  aba.esperar(`!!document.querySelector('.arena canvas') && !!window.__jogoDaPartida?.scene?.getScene('arena')?.lider`, 'a arena', 20000)
+  aba.esperar(
+    `!!document.querySelector('.arena canvas') && !(document.querySelector('.hud-regiao')?.textContent ?? 'Região: —').endsWith('—') && (!window.__jogoDaPartida || !!window.__jogoDaPartida.scene?.getScene('arena')?.lider)`,
+    'a partida',
+    20000,
+  )
+
+// Termina a partida voltando ao Reino. No npm run dev, pelo botão "Vitória" da barra de teste; no jogo publicado (sem a
+// barra), com Q: o grupo nasce na zona segura, sem mob perto, e depois da contagem de 15 s vem o Resumo (Vitória)
+async function terminarComVitoria(aba) {
+  if (!PUBLICADO) return aba.clicar('Vitória')
+  await aba.aFrente()
+  await aba.avaliar(`(window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', code: 'KeyQ', bubbles: true })), true)`)
+  await aba.esperarTela('Resumo', 30000)
+}
 
 async function abrirConfiguracoes(aba) {
   await aba.clicar('Configurações')
@@ -429,8 +459,24 @@ try {
 
   console.log('4. Save no banco nos momentos de salvamento (RF10, TASK-096)')
   const versaoAntes = (await saveNoBanco(a.cliente))?.versao ?? 0
-  await irAteAPartida(aba1)
+  await irAteAPartida(aba1, async () =>
+    conferir(
+      PUBLICADO ? 'no jogo publicado, o Mapa não tem a "Arena de teste" (só no npm run dev)' : 'no npm run dev, o Mapa tem a "Arena de teste"',
+      (await aba1.temBotao('Arena de teste')) === !PUBLICADO,
+    ),
+  )
   await esperarArena(aba1)
+  if (PUBLICADO) {
+    await pausa(1500)
+    const hud = await aba1.avaliar(`({
+      regiao: document.querySelector('.hud-regiao')?.textContent ?? '',
+      minimapa: !!document.querySelector('.hud-minimapa-ativo canvas.minimapa'),
+      barraDeTeste: [...document.querySelectorAll('button')].some(b => ['Vitória', 'Encher grupo', 'Encher mochila'].includes(b.textContent.trim())),
+    })`)
+    conferir('no jogo publicado, a Floresta abre: desenho, minimapa e "Região: Zona segura" no HUD', hud.minimapa && hud.regiao.includes('Zona segura'), hud)
+    conferir('no jogo publicado, a partida não tem a barra de teste', !hud.barraDeTeste)
+    await aba1.print('04a-floresta-publicada')
+  }
   const depoisDeComecar = await esperarNoBanco(() => saveNoBanco(a.cliente), (save) => (save?.versao ?? 0) > versaoAntes, 'o save subir')
   conferir('começar a partida envia o save ao banco, com versão maior', (depoisDeComecar?.versao ?? 0) > versaoAntes, { antes: versaoAntes, depois: depoisDeComecar?.versao })
   const local = await copiaLocal(aba1, a.id)
@@ -439,7 +485,7 @@ try {
     banco: depoisDeComecar?.versao,
   })
   const partidasAntes = await partidasNoBanco(a.cliente)
-  await aba1.clicar('Vitória')
+  await terminarComVitoria(aba1)
   await aba1.esperarTela('Resumo')
   const partidasDepois = await esperarNoBanco(() => partidasNoBanco(a.cliente), (n) => n === partidasAntes + 1, 'a partida ser registrada')
   conferir('o fim da partida vai para o histórico (TASK-100)', partidasDepois === partidasAntes + 1, { antes: partidasAntes, depois: partidasDepois })
@@ -463,22 +509,22 @@ try {
   await aba1.print('05-ranking-com-conta')
 
   console.log('6. Save antigo recusado (RF10, RNF06)')
-  const antigo = await aba1.avaliar(`(async () => {
-    const sessao = sessionStorage.getItem('jogo-rpg:sessao-da-aba')
-    const { data: save } = await __supabase.from('saves').select('versao, progresso').maybeSingle()
-    const { data, error } = await __supabase.rpc('salvar_progresso', { p_sessao: sessao, p_versao: 1, p_formato: 1, p_progresso: save.progresso })
-    return { resposta: data, erro: error?.message ?? null, guardada: save.versao }
-  })()`)
+  // Os pedidos saem pelo Node, com a mesma conta A e a sessão desta aba (o jogo publicado não expõe o cliente do Supabase)
+  const sessaoDaAba = await aba1.avaliar(`sessionStorage.getItem('jogo-rpg:sessao-da-aba')`)
+  const guardado = await saveNoBanco(a.cliente)
+  const recusa = await a.cliente.rpc('salvar_progresso', { p_sessao: sessaoDaAba, p_versao: 1, p_formato: 1, p_progresso: guardado.progresso })
+  const antigo = { resposta: recusa.data, erro: recusa.error?.message ?? null, guardada: guardado.versao }
   conferir('uma versão antiga é recusada pelo banco (motivo: versão)', antigo.resposta?.aceito === false && antigo.resposta?.motivo === 'versao', antigo)
   // Outro lugar gravou uma versão mais nova (simulado com a sessão desta aba): o próximo salvamento do jogo é recusado,
   // e o jogo carrega o progresso mais novo do banco, com aviso, em vez de passar por cima
-  const maisNova = await aba1.avaliar(`(async () => {
-    const sessao = sessionStorage.getItem('jogo-rpg:sessao-da-aba')
-    const { data: save } = await __supabase.from('saves').select('versao, progresso').maybeSingle()
-    const versao = save.versao + 5
-    const { data } = await __supabase.rpc('salvar_progresso', { p_sessao: sessao, p_versao: versao, p_formato: 1, p_progresso: { ...save.progresso, ouro: 4242 } })
-    return { aceito: data?.aceito, versao }
-  })()`)
+  const versaoMaisNova = guardado.versao + 5
+  const gravouMaisNova = await a.cliente.rpc('salvar_progresso', {
+    p_sessao: sessaoDaAba,
+    p_versao: versaoMaisNova,
+    p_formato: 1,
+    p_progresso: { ...guardado.progresso, ouro: 4242 },
+  })
+  const maisNova = { aceito: gravouMaisNova.data?.aceito, versao: versaoMaisNova }
   conferir('(preparação) o banco aceitou uma versão mais nova vinda de "outro lugar"', maisNova.aceito === true, maisNova)
   await aba1.clicar('Voltar')
   await aba1.esperarTela('Resumo')
@@ -497,27 +543,29 @@ try {
 
   console.log('7. Uma conta não lê nem altera o que é da outra (RLS)')
   const versaoDaBAgora = (await saveNoBanco(b.cliente))?.versao ?? null
-  const invasao = await aba1.avaliar(`(async () => {
-    const B = ${JSON.stringify(b.id)}
+  // Logado como A (como o jogo, só com a chave publicável), tentando ler e mexer no que é da B
+  const invasao = await (async (cliente, B) => {
     const contar = (r) => (r.data ?? []).length
-    const saves = await __supabase.from('saves').select('conta')
-    const perfis = await __supabase.from('perfis').select('id')
-    const partidas = await __supabase.from('partidas').select('conta')
+    const saves = await cliente.from('saves').select('conta')
+    const perfis = await cliente.from('perfis').select('id')
+    const partidas = await cliente.from('partidas').select('conta')
     return {
-      saves: (saves.data ?? []).map(l => l.conta),
-      perfis: (perfis.data ?? []).map(l => l.id),
-      partidas: [...new Set((partidas.data ?? []).map(l => l.conta))],
-      saveDaB: contar(await __supabase.from('saves').select('conta').eq('conta', B)),
-      sessoes: contar(await __supabase.from('sessoes').select('*')),
-      inserirPartidaNaB: (await __supabase.from('partidas').insert({ conta: B, bioma: 'floresta', resultado: 'vitoria', pontuacao: 999999, ouro: 0, monstros: 0, tempo_ativo: 0, tempo_total: 0 })).error?.code ?? 'passou',
-      inserirSaveNaB: (await __supabase.from('saves').insert({ conta: B, versao: 999999, formato: 1, progresso: {} })).error?.code ?? 'passou',
-      alterarSaveDaB: contar(await __supabase.from('saves').update({ versao: 999999 }).eq('conta', B).select()),
-      alterarMeuSave: contar(await __supabase.from('saves').update({ versao: 999999 }).eq('conta', ${JSON.stringify(a.id)}).select()),
-      apagarPartidasDaB: contar(await __supabase.from('partidas').delete().eq('conta', B).select()),
-      mudarApelidoDaB: contar(await __supabase.from('perfis').update({ apelido: 'Invasor' }).eq('id', B).select()),
-      apagarSessaoDaB: contar(await __supabase.from('sessoes').delete().eq('conta', B).select()),
+      saves: (saves.data ?? []).map((l) => l.conta),
+      perfis: (perfis.data ?? []).map((l) => l.id),
+      partidas: [...new Set((partidas.data ?? []).map((l) => l.conta))],
+      saveDaB: contar(await cliente.from('saves').select('conta').eq('conta', B)),
+      sessoes: contar(await cliente.from('sessoes').select('*')),
+      inserirPartidaNaB:
+        (await cliente.from('partidas').insert({ conta: B, bioma: 'floresta', resultado: 'vitoria', pontuacao: 999999, ouro: 0, monstros: 0, tempo_ativo: 0, tempo_total: 0 })).error
+          ?.code ?? 'passou',
+      inserirSaveNaB: (await cliente.from('saves').insert({ conta: B, versao: 999999, formato: 1, progresso: {} })).error?.code ?? 'passou',
+      alterarSaveDaB: contar(await cliente.from('saves').update({ versao: 999999 }).eq('conta', B).select()),
+      alterarMeuSave: contar(await cliente.from('saves').update({ versao: 999999 }).eq('conta', a.id).select()),
+      apagarPartidasDaB: contar(await cliente.from('partidas').delete().eq('conta', B).select()),
+      mudarApelidoDaB: contar(await cliente.from('perfis').update({ apelido: 'Invasor' }).eq('id', B).select()),
+      apagarSessaoDaB: contar(await cliente.from('sessoes').delete().eq('conta', B).select()),
     }
-  })()`)
+  })(a.cliente, b.id)
   conferir('A lê só o próprio save, o próprio perfil e as próprias partidas', invasao.saves.every((c) => c === a.id) && invasao.perfis.every((c) => c === a.id) && invasao.partidas.every((c) => c === a.id) && invasao.saveDaB === 0, invasao)
   conferir('A não vê nenhuma sessão (só as funções mexem nela)', invasao.sessoes === 0)
   conferir('A não registra partida nem cria save no nome da B', invasao.inserirPartidaNaB !== 'passou' && invasao.inserirSaveNaB !== 'passou', invasao)
@@ -532,7 +580,7 @@ try {
   await irAteAPartida(aba1)
   await esperarArena(aba1)
   conferir('sem internet, a partida começa normal', (await aba1.titulo()) !== 'Reino')
-  await aba1.clicar('Vitória')
+  await terminarComVitoria(aba1)
   await aba1.esperarTela('Resumo')
   conferir('sem internet, o fim da partida mostra o Resumo normal', true)
   await aba1.clicar('Voltar ao Reino')

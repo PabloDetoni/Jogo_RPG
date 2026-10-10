@@ -63,13 +63,19 @@ try {
   await aba.print('01-floresta-inicio')
 
   console.log('2. Câmera segue o Líder (TASK-060)')
-  await colocarLider(1800, 1800)
+  // A faixa y = 1900, de x = 1600 a 2600, não tem árvore nem pedra (o ponto 1800, 1800 caía dentro de uma árvore). Os mobs
+  // da Fácil que estiverem passeando nela saem antes (um cervo parado na frente segura o Líder, como deve ser)
+  const noCaminho = await cena(`c.inimigos.filter((i) => i.x > 1650 && i.x < 2700 && Math.abs(i.y - 1900) < 160).map((i) => (c.matarInimigo(i), i.tipo))`)
+  await colocarLider(1800, 1900)
   await pausa(300)
   const antes = await cena(`({ scrollX: c.cameras.main.scrollX, x: c.lider.x })`)
-  await aba.segurar(['d'], 1500)
+  // Segura D até o Líder andar uns 200 px (um aliado no caminho ou um quadro lento do navegador escondido não derrubam a
+  // conferência, que é sobre a câmera ir junto, não sobre a velocidade)
+  for (let vez = 0; vez < 8 && (await cena(`c.lider.x`)) - antes.x < 200; vez++) await aba.segurar(['d'], 400)
   await pausa(600)
   const depois = await cena(`({ scrollX: c.cameras.main.scrollX, x: c.lider.x, meio: c.cameras.main.worldView.centerX })`)
-  conferir('andando para a direita, a câmera vai junto', depois.scrollX - antes.scrollX > 150 && depois.x - antes.x > 150, { antes, depois })
+  const andou = { lider: depois.x - antes.x, camera: depois.scrollX - antes.scrollX }
+  conferir('andando para a direita, a câmera vai junto', andou.lider > 150 && Math.abs(andou.camera - andou.lider) < 40, { antes, depois, tiradosDoCaminho: noCaminho })
   conferir('o Líder fica perto do meio da tela', Math.abs(depois.meio - depois.x) < 60, depois)
   const vista = await cena(`({ y: c.cameras.main.y, altura: c.cameras.main.height })`)
   conferir('o mapa aparece só entre a faixa do HUD e a de baixo (ninguém fica escondido embaixo delas)', vista.y === 96 && vista.altura === 900 - 96 - 112, vista)
@@ -81,9 +87,14 @@ try {
   const alvo = await naTela(2700, 1700)
   await aba.moverMouse(alvo.x, alvo.y)
   await pausa(150)
-  const miraParado = await cena(`({ angulo: c.anguloDaMira, mouse: c.mouseNoMundo })`)
-  const esperadoParado = Math.atan2(1700 - 1800, 2700 - 2400)
-  conferir('com a câmera parada, a mira aponta para onde o mouse está', Math.abs(miraParado.angulo - esperadoParado) < 0.05, { miraParado, esperadoParado })
+  // O ângulo esperado sai de onde o Líder está de verdade (um aliado pode tê-lo empurrado uns pixels depois de colocado)
+  const miraParado = await cena(`({ angulo: c.anguloDaMira, mouse: c.mouseNoMundo, lider: { x: c.lider.x, y: c.lider.y } })`)
+  const esperadoParado = Math.atan2(1700 - miraParado.lider.y, 2700 - miraParado.lider.x)
+  conferir(
+    'com a câmera parada, a mira aponta para onde o mouse está',
+    Math.hypot(miraParado.mouse.x - 2700, miraParado.mouse.y - 1700) < 3 && Math.abs(miraParado.angulo - esperadoParado) < 0.05,
+    { miraParado, esperadoParado },
+  )
   await aba.segurar(['s'], 900) // a câmera desce; o mouse fica parado na tela
   await pausa(500)
   const miraAndando = await cena(`(() => {
@@ -92,12 +103,16 @@ try {
     return { angulo: c.anguloDaMira, esperado: Math.atan2(ponto.y - c.lider.y, ponto.x - c.lider.x), mouse: c.mouseNoMundo, ponto: { x: ponto.x, y: ponto.y } }
   })()`)
   conferir('com a câmera andando e o mouse parado, a mira segue o ponto embaixo do mouse', Math.abs(miraAndando.angulo - miraAndando.esperado) < 0.05 && Math.abs(miraAndando.mouse.y - miraAndando.ponto.y) < 2, miraAndando)
-  // Um tiro sai na direção da mira
-  const flechas = await cena(`c.projeteis.length`)
-  await aba.clicarNaTela(alvo.x, alvo.y)
-  await pausa(120)
-  const tiro = await cena(`(() => { const f = c.projeteis.at(-1); return f ? { angulo: Math.atan2(f.vy ?? f.velocidade?.y ?? 0, f.vx ?? f.velocidade?.x ?? 0), total: c.projeteis.length } : null })()`)
-  conferir('o clique ataca na direção da mira', (tiro?.total ?? 0) > flechas, tiro)
+  // Um tiro sai na direção da mira. Conta só o tiro novo do Líder: os aliados também atiram, e as flechas deles somem
+  // no meio (contar o total dava falso). Se o clique cair na recarga do ataque, clica de novo.
+  await cena(`(c.projeteis.forEach((p) => { p.__antes = true }), true)`)
+  const tiroNovo = `${CENA}.projeteis.some((p) => p.dono === ${CENA}.lider && !p.__antes)`
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    await aba.clicarNaTela(alvo.x, alvo.y)
+    if (await aba.esperar(tiroNovo, 'o tiro do Líder', 700).then(() => true, () => false)) break
+  }
+  const tiro = await cena(`(() => { const f = c.projeteis.find((p) => p.dono === c.lider && !p.__antes); return f ? { angulo: Math.round(Math.atan2(f.y - c.lider.y, f.x - c.lider.x) * 100) / 100, mira: Math.round(c.anguloDaMira * 100) / 100 } : null })()`)
+  conferir('o clique ataca na direção da mira', Boolean(tiro), tiro)
 
   console.log('4. Bordas e mata fechada: ninguém atravessa')
   await colocarLider(60, 1800)
@@ -112,12 +127,17 @@ try {
   await aba.segurar(['s'], 900)
   const baixo = await cena(`c.lider.y`)
   conferir('...e a de baixo também', baixo <= 2100 - 19, Math.round(baixo))
+  // O fundo é o domínio do Boss: sozinho e sem o Invencível, o Líder às vezes caía antes da conferência, e Líder sozinho
+  // caído é Derrota (a partida acabava no meio do roteiro)
+  await cena(`(c.invencivel = true, true)`)
   await colocarLider(7150, 1800)
   await aba.segurar(['d'], 900)
   await pausa(600)
   const direita = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX, limite: c.mapa.tamanho.largura - c.cameras.main.width })`)
   conferir('no fundo da Floresta, o Líder não sai do mapa e a câmera para no limite', direita.x <= 7200 - 19 && Math.abs(direita.scrollX - direita.limite) < 2, direita)
   await aba.print('03-fundo-da-floresta')
+  await colocarLider(400, 1800)
+  await cena(`(c.lider.vida = c.lider.vidaMaxima, c.invencivel = false, true)`)
 
   console.log('5. O grupo atravessa a Floresta junto')
   await cena(`(c.encherGrupo(), true)`)
@@ -170,7 +190,9 @@ try {
 
   console.log('8. Fugir de um lobo até ele desistir (território)')
   await cena(`(c.invencivel = true, true)`)
-  const lobo = await cena(`(() => { const l = c.inimigos.find((i) => i.tipo === 'lobo' && i.regiao === 'facil'); l.__teste = true; return { x: Math.round(l.x), y: Math.round(l.y), casa: l.casaFixa, territorio: l.config.raioDoTerritorio } })()`)
+  // Vida de sobra para o lobo do teste: os aliados atacam quem persegue o Líder e, com a vida normal, às vezes o matavam
+  // antes da conferência (o lobo sumia da lista e a conferência dava erro)
+  const lobo = await cena(`(() => { const l = c.inimigos.find((i) => i.tipo === 'lobo' && i.regiao === 'facil'); l.__teste = true; l.vida = l.vidaMaxima = 1e6; return { x: Math.round(l.x), y: Math.round(l.y), casa: l.casaFixa, territorio: l.config.raioDoTerritorio } })()`)
   // Só o lobo do teste por perto (os outros mobs atacariam no meio)
   await cena(`(c.inimigos.filter((i) => !i.__teste && Math.hypot(i.x - ${lobo.x}, i.y - ${lobo.y}) < 2200).forEach((i) => c.matarInimigo(i)), true)`)
   await colocarLider(lobo.x - 220, lobo.y)
@@ -186,6 +208,8 @@ try {
   conferir('...e volta para perto de casa', voltou < lobo.territorio * 0.6, voltou)
   await aba.esperar(`!${CENA}.emCombate`, 'sair de combate', 8000).catch(() => {})
   conferir('5 s depois de o lobo desistir, o grupo sai de combate (RF37)', !(await cena(`c.emCombate`)))
+  // O lobo do teste (com vida de sobra) sai do jogo, para não perseguir o grupo nos testes seguintes
+  await cena(`(c.inimigos.filter((i) => i.__teste).forEach((i) => c.matarInimigo(i)), true)`)
 
   console.log('9. Passar por um mob não hostil (o cervo)')
   const cervo = await cena(`(() => { const v = c.inimigos.find((i) => i.tipo === 'cervo' && !i.morto); v.__cervo = true; return { x: Math.round(v.x), y: Math.round(v.y) } })()`)
@@ -230,7 +254,7 @@ try {
   await aba.print('07-minimapa')
   // Volta ao Reino com Q (num lugar sem mobs, fora de combate; a contagem é adiantada)
   await colocarLider(400, 1800)
-  await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - 400, i.y - 1800) < 1500).forEach((i) => c.matarInimigo(i)), c.ultimoDano = -999999, true)`)
+  await cena(`(c.inimigos.filter((i) => i.perseguindo || Math.hypot(i.x - 400, i.y - 1800) < 1500).forEach((i) => c.matarInimigo(i)), c.ultimoDano = -999999, true)`)
   await aba.esperar(`!${CENA}.emCombate`, 'sair de combate', 9000)
   await aba.apertar('q')
   await cena(`(c.retorno.msRestantes = 300, true)`)
