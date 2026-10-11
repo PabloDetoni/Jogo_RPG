@@ -109,6 +109,24 @@ Qualquer outra tela também pode ter fundo: `fundo-` seguido do nome da tela no 
 - **Habilidades:** um por habilidade, `habilidade-<id>.png` (nas Árvores e nas teclas 1 a 3 do HUD). As 20 do beta provisório (até a TASK-010) são `giro`, `golpePesado`, `furia`, `peleGrossa`, `meteoro`, `descargaEletrica`, `explosaoDeFogo`, `menteClara`, `provocacao`, `golpeDeEscudo`, `muralha`, `peleDeFerro`, `ressurreicao`, `curaEmArea`, `bencao`, `fe`, `tiroPerfurante`, `chuvaDeFlechas`, `flechaCerteira` e `olhoDeAguia` (por exemplo, `habilidade-meteoro.png`).
 - **Itens:** um por item do catálogo. O jogo já tem 48 (provisórios, `src/dados/itens.js`; a lista completa, com o tipo e a raridade, está no Balanceamento, seção "Reino com dados"): recursos (cogumelo, erva medicinal, madeira, trigo, peixe), partes de monstros e materiais (pele de lobo, teia de aranha, presa de javali, chifre de cervo, casca antiga, minério de ferro, cristal, pérola do lago), poções e aceleradores (vida, vida grande, mana, tônico ligeiro, elixir do foco), o pergaminho de redefinição, uma arma por classe em duas versões, dois escudos, duas linhas de armadura (couro e ferro), a Coroa de raízes (especial do Boss) e o equipamento de teste. Tamanho sugerido: 32 × 32 (o mesmo desenho serve para o item no chão, a Mochila, o Mercado, a Forja, a Preparação e a mochila da partida). O nome é `item-<id>.png`, com o id do catálogo: `cogumelo`, `ervaMedicinal`, `madeira`, `trigo`, `peixe`, `cristal`, `perolaDoLago`, `peleDeLobo`, `teiaDeAranha`, `presaDeJavali`, `chifreDeCervo`, `cascaAntiga`, `minerioDeFerro`, `pocaoDeVida`, `pocaoGrandeDeVida`, `pocaoDeMana`, `tonicoLigeiro`, `elixirDoFoco`, `pergaminhoDeRedefinicao`, `espadaCurta`, `laminaDePresa`, `arcoDeCaca`, `arcoDeTeia`, `cajadoDeCarvalho`, `cajadoDeChifre`, `marteloDeGuerra`, `cetroDaAurora`, `cetroDeErvas`, `escudoDeMadeira`, `escudoDeCasca`, `capuzDeCouro`, `coleteDeCouro`, `calcasDeCouro`, `botasDeCouro`, `luvasDeCouro`, `elmoDeFerro`, `peitoralDeFerro`, `grevasDeFerro`, `botasDeVento`, `manoplasDeFerro` e `coroaDeRaizes` (por exemplo, `item-pocaoDeVida.png`). O equipamento de teste não precisa de ícone.
 
+## 5b. Interface (Fase 4.5)
+
+As molduras, os botões, os quadradinhos dos itens, as barras e os selos já existem em formas simples; cada imagem abaixo, quando chegar, entra no lugar sozinha (o padrão está no [Guia de Interface](Guia_de_Interface.md)). As molduras são "9 pedaços": os cantos ficam do tamanho certo e o meio estica, então o desenho precisa ter a borda dentro do tamanho do canto.
+
+| Peça | Arquivo | Tamanho sugerido |
+|---|---|---|
+| Moldura dos painéis | `moldura-painel.png` | 36 × 36 (cantos de 12) |
+| Botão | `botao.png` | 24 × 24 (cantos de 8) |
+| Selo (etiqueta) | `selo.png` | 18 × 18 (cantos de 6) |
+| Cartaz de missão (papel) | `cartaz.png` | 36 × 36 (cantos de 12) |
+| Carta de contrato | `carta.png` | 36 × 36 (cantos de 12) |
+| Quadradinho do item | `slot.png` e `slot-escolhido.png` | 32 × 32 |
+| Barra (peso, progresso) | `barra-fundo.png` e `barra-cheia.png` | 32 × 8 e 8 × 8 |
+| Boneco da Forja | `silhueta-boneco.png` | 48 × 96 |
+| Símbolo de cada ação | `acao-comprar.png`, `acao-vender.png`, `acao-trocar.png`, `acao-fabricar.png`, `acao-equipar.png`, `acao-tirar.png`, `acao-contratar.png`, `acao-aceitar.png`, `acao-entregar.png`, `acao-perder.png`, `acao-usar.png`, `acao-levar.png`, `acao-aplicar.png` | 16 × 16 |
+| Tipo de missão | `tipo-matar.png`, `tipo-coletar.png`, `tipo-entregar.png`, `tipo-explorar.png` | 16 × 16 |
+| Lugar do Reino | `lugar-guilda.png`, `lugar-mercado.png`, `lugar-forja.png`, `lugar-mochila.png`, `lugar-arvores.png`, `lugar-jogar.png` | 16 × 16 |
+
 ## Passo a passo para gerar no PixelLab
 
 O jogo já está pronto para receber a arte: é só gerar, salvar com o nome certo na pasta e conferir. A ordem sugerida é a do que mais aparece na tela.
@@ -118,7 +136,7 @@ O jogo já está pronto para receber a arte: é só gerar, salvar com o nome cer
 3. **Baixar:** baixe cada animação como uma faixa de quadros numa linha só (ou os quadros soltos).
 4. **Salvar:** salve em `programacao/src/assets/arte/` com o nome da tabela, com a classe na frente: `guerreiro-andando-baixo.png` ou, em inglês, `guerreiro-walk-south.png`.
 5. **Conferir:** rode `npm run conferir:arte` na pasta `programacao` e veja o que foi achado e o que falta; depois, `npm run dev` para ver no jogo.
-6. **Depois:** os monstros e o Boss (seção 2), os tiles e as árvores da Floresta (seção 3), os ícones dos itens (seção 5), os retratos e os fundos de tela (seções 1 e 4).
+6. **Depois:** os monstros e o Boss (seção 2), os tiles e as árvores da Floresta (seção 3), os ícones dos itens (seção 5), a interface (seção 5b), os retratos e os fundos de tela (seções 1 e 4).
 
 Não precisa entregar tudo de uma vez: o que faltar continua como hoje.
 

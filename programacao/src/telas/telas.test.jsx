@@ -318,25 +318,31 @@ describe('Guilda: contratos (TASK-079) e Preparação', () => {
     return renderToString(<ContextoJogo value={{ estado, acoes, salvador }}>{componente}</ContextoJogo>).replace(/<!-- -->/g, '')
   }
 
-  it('temporário: só as classes que o jogador não tem e sem contrato ativo, com o preço; e os contratos ativos', () => {
+  it('temporário: uma carta por classe que o jogador não tem e sem contrato ativo, com o selo, o equipamento fixo e o preço; e os ativos', () => {
     const html = desenharCom(<ContratosTemporarios />)
     // o save tem Mago e Tanque permanentes e o Arqueiro temporário: sobram Guerreiro e Sacerdote
-    // cada classe vem com o equipamento fixo do temporário (RF29, Fase 4)
-    expect(html).toContain('<span>Guerreiro<span class="nota"> (vai com 1 Espada curta e 1 Colete de couro)</span></span>')
-    expect(html).toContain('<span>Sacerdote<span class="nota">')
-    expect(html).not.toContain('<span>Mago<span')
+    expect(html).toContain('aria-label="Guerreiro: Contrato temporário"')
+    expect(html).toContain('aria-label="Sacerdote: Contrato temporário"')
+    expect(html).not.toContain('aria-label="Mago: Contrato temporário"')
+    expect(html).not.toContain('aria-label="Arqueiro: Contrato temporário"')
+    expect(html).toContain('3 partidas · nível 5 · não ganha XP')
+    // o equipamento fixo do temporário (RF29, Fase 4), em quadradinhos
+    expect(html).toContain('aria-label="Espada curta"')
+    expect(html).toContain('aria-label="Colete de couro"')
     expect(html).toContain('com equipamento fixo')
-    expect(html).toContain('Contratar (200 de ouro)')
-    expect(html).toContain('Arqueiro (nível 5)')
+    expect(html).toContain('200 de ouro')
+    expect(html).toContain('Contratar')
+    expect(html).toContain('<strong>Arqueiro</strong> nível 5')
     expect(html).toContain('2 partidas restantes')
-    expect(html).toContain('Ouro: <strong>120</strong>')
   })
 
-  it('permanente: o Arqueiro aparece avisando que encerra o temporário', () => {
+  it('permanente: carta "para sempre"; o Arqueiro aparece avisando que encerra o temporário', () => {
     const html = desenharCom(<ContratosPermanentes />)
-    expect(html).toContain('Contratar (1000 de ouro)')
-    expect(html).toContain('(encerra o contrato temporário)')
-    expect(html).not.toContain('<span>Tanque')
+    expect(html).toContain('para sempre · começa no nível 1')
+    expect(html).toContain('1000 de ouro')
+    expect(html).toContain('aria-label="Arqueiro: Contrato permanente"')
+    expect(html).toContain('encerra o contrato temporário')
+    expect(html).not.toContain('aria-label="Tanque: Contrato permanente"')
   })
 
   it('Preparação: o temporário vai junto, mas não aparece como opção de Líder (critério do card)', () => {
@@ -454,14 +460,14 @@ describe('Floresta no HUD e no Resumo (Fase 3)', () => {
 describe('Mochila do Reino (Fase 4, TASK-072)', () => {
   const comMochila = (mochila) => desenhar('mochila', 'convidado', null, { mudancas: { progresso: { ...progresso, mochila } } }).replace(/<!-- -->/g, '')
 
-  it('lista os itens com a quantidade e mostra função, descrição e peso do primeiro (consumíveis primeiro)', () => {
+  it('a grade mostra os itens com a quantidade e o detalhe do primeiro: função, descrição e peso (consumíveis primeiro)', () => {
     const html = comMochila([
       { id: 'peleDeLobo', quantidade: 5 },
       { id: 'pocaoDeVida', quantidade: 3 },
     ])
-    expect(html).toContain('Pele de lobo')
-    expect(html).toContain('×5')
+    expect(html).toContain('aria-label="Pele de lobo ×5"')
     expect(html.indexOf('Poção de vida')).toBeLessThan(html.indexOf('Pele de lobo'))
+    expect(html).toContain('Consumíveis')
     expect(html).toContain('Recupera 40% da vida')
     expect(html).toContain('Peso 1')
     expect(html).toContain('Descartar 1')
@@ -470,13 +476,13 @@ describe('Mochila do Reino (Fase 4, TASK-072)', () => {
   })
 
   it('vazia, explica de onde vêm os itens; item fora do catálogo aparece pelo id', () => {
-    expect(comMochila([])).toContain('A Mochila está vazia')
+    expect(comMochila([])).toContain('Sua mochila está vazia')
     expect(comMochila([{ id: 'itemVelho', quantidade: 1 }])).toContain('não existe mais no catálogo')
   })
 })
 
 describe('Preparação: mochila da partida (Fase 4, TASK-073)', () => {
-  it('mostra o peso, a capacidade e as poções da Mochila com − e +; o que não é usável não aparece', () => {
+  it('mostra a barra de peso e as duas grades (o que dá para levar → o que vai); o que não é usável não aparece', () => {
     const html = desenhar('preparacao', 'convidado', null, {
       mudancas: {
         progresso: { ...progresso, mochila: [{ id: 'pocaoDeVida', quantidade: 3 }, { id: 'peleDeLobo', quantidade: 2 }] },
@@ -484,10 +490,9 @@ describe('Preparação: mochila da partida (Fase 4, TASK-073)', () => {
       },
     }).replace(/<!-- -->/g, '')
     expect(html).toContain('Mochila da partida')
-    expect(html).toMatch(/Peso <strong>2<\/strong> de <strong>\d+<\/strong>/)
-    expect(html).toContain('Poção de vida')
-    expect(html).toContain('(tem 3, peso 1)')
-    expect(html).toContain('aria-label="Levando 2"')
+    expect(html).toMatch(/Peso 2 de \d+/)
+    expect(html).toContain('Poção de vida: tem 1 (clique para levar 1)')
+    expect(html).toContain('Poção de vida: levando 2 (clique para devolver 1)')
     expect(html).not.toContain('Pele de lobo')
   })
 
@@ -514,7 +519,7 @@ describe('mochila da partida com Tab (Fase 4, TASK-047)', () => {
   it('sem item escolhido (o escolhido acabou), pede para escolher e não deixa usar', () => {
     const html = desenharMochila(null)
     expect(html).toContain('Escolha um item')
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Usar no Líder/)
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>(<span[^>]*><\/span>)?Usar no Líder/)
   })
 
   it('vazia, explica como pegar itens do chão', () => {
@@ -526,12 +531,12 @@ describe('mochila da partida com Tab (Fase 4, TASK-047)', () => {
 describe('Mercado (Fase 4, TASK-074)', () => {
   it('a aba Comprar mostra o ouro, as ofertas com preço (rotativas com ★) e quando elas mudam', () => {
     const html = desenhar('mercado', 'convidado').replace(/<!-- -->/g, '')
-    expect(html).toContain('Ouro: <strong>120</strong>')
-    expect(html).toContain('Poção de vida')
-    expect(html).toContain('25 de ouro')
+    expect(html).toContain('Seu ouro: 120')
+    expect(html).toContain('aria-label="Poção de vida: 25 de ouro"')
     expect(html).toContain('★')
     expect(html).toMatch(/mudam em \d+ partidas?/)
-    expect(html).toContain('Comprar 1 (25)')
+    expect(html).toContain('Comprar por 25 de ouro')
+    expect(html).toMatch(/Seu ouro:<\/span> <span class="mudanca-antes">120<\/span> → <span class="mudanca-depois">95/)
   })
 })
 
@@ -542,9 +547,14 @@ describe('Forja (Fase 4, TASK-075)', () => {
       mudancas: { progresso: { ...progresso, personagens: [mago, progresso.personagens[1]], mochila: [{ id: 'espadaCurta', quantidade: 1 }] } },
     }).replace(/<!-- -->/g, '')
     expect(html).toContain('Mago')
-    for (const espaco of ['Capacete', 'Peitoral', 'Calças', 'Botas', 'Manoplas', 'Arma', 'Escudo']) expect(html).toContain(espaco)
-    expect(html).toContain('Cajado de carvalho')
+    for (const espaco of ['Capacete', 'Peitoral', 'Calças', 'Botas', 'Manoplas', 'Escudo']) expect(html).toContain(`aria-label="${espaco}: vazio"`)
+    expect(html).toContain('aria-label="Arma: Cajado de carvalho"')
     expect(html).toContain('(+3)')
+    expect(html).toContain('Para o espaço Arma')
+    // a espada (só do Guerreiro) aparece apagada, com o motivo; o cajado equipado pode ser tirado, com o antes e depois
+    expect(html).toContain('Espada curta (Espada curta é só para Guerreiro.)')
+    expect(html).toContain('Tirar Cajado de carvalho')
+    expect(html).toMatch(/Inteligência<\/span> <span class="mudanca-antes">\d+<\/span>/)
   })
 
 })
@@ -573,11 +583,13 @@ describe('árvore de habilidades (Fase 4, TASK-077)', () => {
 })
 
 describe('Guilda: missões (Fase 4, TASK-078)', () => {
-  it('sem missão ativa, o quadro com o detalhe e Aceitar', () => {
+  it('sem missão ativa, o quadro com um cartaz por missão: tipo, objetivo, recompensa e Aceitar', () => {
     const html = desenhar('guilda', 'convidado').replace(/<!-- -->/g, '')
-    expect(html).toContain('Caçar lobos')
-    expect(html).toContain('Matar: 8 lobo')
-    expect(html).toContain('Recompensa: 80 de ouro e 120 XP')
+    expect(html).toContain('aria-label="Caçar lobos"')
+    expect(html).toContain('Matar')
+    expect(html).toContain('Derrotar 8 lobo')
+    expect(html).toContain('+80 de ouro')
+    expect(html).toContain('+120 XP')
     expect(html).toContain('Aceitar')
   })
 
@@ -585,10 +597,12 @@ describe('Guilda: missões (Fase 4, TASK-078)', () => {
     const missaoAtiva = { id: 'pelesParaOCurtidor', tipo: 'entregar', alvo: 'peleDeLobo', quantidade: 4, progresso: 0, recompensa: { ouro: 90, xp: 100 } }
     const mudancas = { progresso: { ...progresso, missaoAtiva, mochila: [{ id: 'peleDeLobo', quantidade: 2 }] } }
     const html = desenhar('guilda', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')
-    expect(html).toContain('Missão ativa: Peles para o curtidor')
+    expect(html).toContain('Sua missão: Peles para o curtidor')
     expect(html).toContain('Entregar 4 Pele de lobo (2/4)')
-    expect(html).toContain('Entregar')
-    expect(html).toContain('Abandonar')
+    expect(html).toContain('2 de 4')
+    expect(html).toContain('Entregar: +90 de ouro e +100 XP')
+    expect(html).toContain('ainda não foi cumprida')
+    expect(html).toContain('Abandonar (multa de 9)')
     expect(desenhar('reino', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')).toContain('Entregar 4 Pele de lobo (2/4)')
   })
 })

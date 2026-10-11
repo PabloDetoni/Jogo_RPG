@@ -93,6 +93,12 @@ function criarArteDeTeste() {
   salvar('fundo-reino.png', placa(640, 360, 0x6a8a4a, { borda: 0, xadrez: 40 }))
   salvar('derrota-1.png', placa(640, 360, 0x401010, { borda: 0, xadrez: 40 }))
   salvar('derrota-2.png', placa(640, 360, 0x102040, { borda: 0, xadrez: 40 }))
+  // Interface (Fase 4.5): moldura de 9 pedaços (36 × 36, cantos de 12), quadradinho, barra e o símbolo de comprar
+  salvar('moldura-painel.png', placa(36, 36, 0x7a5c3a, { borda: 6 }))
+  salvar('slot.png', placa(32, 32, 0x5c4a36, { borda: 3 }))
+  salvar('barra-fundo.png', placa(32, 8, 0x303030, { borda: 1 }))
+  salvar('barra-cheia.png', placa(8, 8, 0x40c057, { borda: 0 }))
+  salvar('acao-comprar.png', placa(16, 16, 0xf2c230, { borda: 2 }))
 }
 
 // ---------- O roteiro ----------
@@ -155,10 +161,32 @@ try {
   await passo('Itens de teste', true)
   await pausa(300)
   await passo('Mochila')
-  conferir('a Mochila mostra o ícone dos itens que têm imagem', (await icones('.lista-com-detalhe-itens')) >= 1, await icones('.lista-com-detalhe-itens'))
-  await passo('Poção de vida', true)
-  conferir('o detalhe do item mostra o ícone', (await icones('.detalhe-do-item h3')) === 1)
+  const iconesNaGrade = await aba.avaliar(`document.querySelectorAll('.balcao-grade .slot img.slot-icone').length`)
+  conferir('a Mochila mostra o ícone (em tamanho inteiro) nos quadradinhos dos itens que têm imagem', iconesNaGrade >= 3, iconesNaGrade)
+  conferir(
+    'o ícone do quadradinho tem 64 px (32 × 2) e fica nítido',
+    await aba.avaliar(`(() => { const i = document.querySelector('.balcao-grade .slot img.slot-icone'); return i.getBoundingClientRect().width === 64 && getComputedStyle(i).imageRendering === 'pixelated' })()`),
+  )
+  await aba.avaliar(`(() => { [...document.querySelectorAll('button.slot')].find((b) => b.getAttribute('aria-label').startsWith('Poção de vida')).click(); return true })()`)
+  await pausa(200)
+  conferir('o detalhe do item mostra o ícone', (await aba.avaliar(`document.querySelectorAll('.detalhe-do-item .slot img.slot-icone').length`)) === 1)
+  // A arte da interface: a moldura dos painéis e o fundo dos quadradinhos vêm das imagens de teste
+  const interfaceComArte = await aba.avaliar(`(() => {
+    const raiz = document.querySelector('.moldura')
+    const painel = getComputedStyle(document.querySelector('.painel'))
+    const slot = getComputedStyle(document.querySelector('.slot'))
+    return { classes: raiz.className, moldura: painel.borderImageSource, slot: slot.backgroundImage }
+  })()`)
+  conferir(
+    'interface: a moldura dos painéis e o fundo dos quadradinhos usam as imagens (moldura-painel, slot)',
+    interfaceComArte.classes.includes('com-arte-moldura-painel') && interfaceComArte.moldura.includes('moldura-painel') && interfaceComArte.slot.includes('slot.png'),
+    interfaceComArte,
+  )
   await aba.print('03-mochila')
+  await passo('Voltar ao Reino')
+  await passo('Mercado')
+  conferir('interface: o botão Comprar usa o símbolo da imagem (acao-comprar)', await aba.avaliar(`!!document.querySelector('.botao-de-acao img.simbolo-com-arte')`))
+  await aba.print('03b-mercado')
   await passo('Voltar ao Reino')
   await passo('Árvores', true)
   conferir('Árvores: o ícone da Força ao lado do nome', (await icones('.atributos-da-arvore')) === 1)
@@ -170,7 +198,12 @@ try {
   await passo('Jogar')
   await passo('Floresta')
   await aba.esperarTela('Preparação')
-  conferir('Preparação: o retrato no botão do Líder e o ícone da poção', (await icones('.tela')) >= 2)
+  conferir(
+    'Preparação: o retrato no botão do Líder e o ícone da poção no quadradinho; a barra de peso usa as imagens',
+    (await icones('.tela')) >= 1 &&
+      (await aba.avaliar(`document.querySelectorAll('.mochila-da-preparacao .slot img.slot-icone').length`)) >= 1 &&
+      (await aba.avaliar(`getComputedStyle(document.querySelector('.barra')).backgroundImage.includes('barra-fundo')`)),
+  )
   await passo('Começar partida')
   await aba.esperar(`!!${CENA}?.lider`, 'a partida', 20000)
   await pausa(1200)
@@ -271,7 +304,8 @@ try {
   await pausa(400)
   conferir('o aviso "E: pegar" mostra o ícone do item', (await icones('.avisos-da-partida')) === 1)
   await cena(`([...c.inimigos].forEach((i) => c.matarInimigo(i)), c.ultimoDano = null, true)`)
-  await pausa(300)
+  // Um tiro inimigo ainda no ar pode acertar e deixar o grupo em combate (aí o Q não começa): espera sair
+  await aba.esperar(`!${CENA}.emCombate`, 'o grupo sair de combate', 9000).catch(() => {})
   await aba.apertar('q')
   await pausa(400)
   conferir('o retorno com Q mostra a Pedra de Retorno', (await aba.avaliar(`!!document.querySelector('.avisos-da-partida img.icone')`)) && (await aba.texto()).includes('Voltando ao Reino'))

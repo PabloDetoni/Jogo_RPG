@@ -74,14 +74,22 @@ export function RankingDaAba({ aba }) {
             </tr>
           </thead>
           <tbody>
-            {resposta.linhas.map((linha) => (
-              <tr key={linha.apelido} className={linha.apelido.toLowerCase() === meuApelido ? 'linha-minha' : undefined}>
-                <td>{linha.posicao}º</td>
-                <td>{linha.apelido}</td>
-                <td>{formatar(linha.valor)}</td>
-                {colunas.desempate && <td>{linha.desempate}</td>}
-              </tr>
-            ))}
+            {resposta.linhas.map((linha) => {
+              // Fase 4.5: os 3 primeiros com medalha e a linha do jogador em destaque
+              const minha = linha.apelido.toLowerCase() === meuApelido
+              const classes = [minha && 'linha-minha', linha.posicao <= 3 && `linha-podio linha-podio-${linha.posicao}`].filter(Boolean).join(' ')
+              return (
+                <tr key={linha.apelido} className={classes || undefined}>
+                  <td>{linha.posicao <= 3 ? <span className={`medalha medalha-${linha.posicao}`}>{linha.posicao}º</span> : `${linha.posicao}º`}</td>
+                  <td>
+                    {linha.apelido}
+                    {minha && <span className="selo selo-forte selo-voce">você</span>}
+                  </td>
+                  <td>{formatar(linha.valor)}</td>
+                  {colunas.desempate && <td>{linha.desempate}</td>}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

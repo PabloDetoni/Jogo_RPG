@@ -1,4 +1,5 @@
 import { chavesDaArte, urlDaArte } from '../arte/indice.js'
+import { ajudaDasTelas } from '../dados/ajuda.js'
 import { posicoes } from '../dados/posicoes.js'
 import { telas } from '../dados/telas.js'
 import { useJogo } from '../estado/contexto.js'
@@ -25,6 +26,20 @@ export default function Tela({ className = '', semTitulo = false, configuracoesE
       )}
 
       {children}
+
+      {/* O "?" (Fase 4.5): como esta tela funciona (dados/ajuda.js) */}
+      {!semTitulo && ajudaDasTelas[estado.tela] && (
+        <button
+          type="button"
+          className="botao botao-ajuda posicionado"
+          style={estiloPosicao(posicoes.cantos.ajuda)}
+          onClick={() => acoes.abrirJanela('ajuda')}
+          aria-label="Como funciona esta tela"
+          title="Como funciona esta tela"
+        >
+          ?
+        </button>
+      )}
 
       {!tela.soConfiguracoes && (
         <Botao em={posicoes.cantos.salaoGloria} onClick={() => acoes.irPara('salaoGloria')}>

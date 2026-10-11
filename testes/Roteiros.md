@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 10/10/2026, na parte da arte (antes das imagens). A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 11/10/2026, na Fase 4.5 (interface intuitiva). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -189,6 +189,76 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 **NV-02 · O Guerreiro avançado não espera o Tanque**
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
+
+## UI. Interface intuitiva (Fase 4.5)
+
+O padrão está no [Guia de Interface](../documentacao/Guia_de_Interface.md). Em cada tela, a pergunta é: dá para entender o que ela faz só de olhar, sem ler o código? Para ter itens e ouro: no `npm run dev`, painel `</> DEV` → **Itens de teste** (no site, jogue e compre).
+
+**UI-01 · Mochila do Reino**
+- Fazer: Reino → Mochila. Clique nos filtros (Consumíveis, Materiais, Equipamentos, Especiais) e num item.
+- Deve acontecer: uma grade de quadradinhos, com a quantidade no canto e a borda na cor da raridade (cinza, verde, azul, laranja). O filtro deixa só o tipo dele. À direita aparecem o item grande, os selos (raridade, tipo, para quem serve), a função, a descrição e o peso. Descartar pede confirmação.
+
+**UI-02 · Mercado, Comprar**
+- Fazer: Mercado → Comprar. Escolha uma oferta barata e depois o Pergaminho (300) com pouco ouro.
+- Deve acontecer: o ouro sempre à vista, o preço embaixo de cada item e o selo "ofertas ★ mudam em N partidas". Com ouro, aparece "Seu ouro: X → Y" e o botão "Comprar por 25 de ouro". Sem ouro, o item fica apagado e o botão diz "Ouro insuficiente…".
+
+**UI-03 · Mercado, Vender**
+- Fazer: Mercado → Vender → um item.
+- Deve acontecer: a sua Mochila em grade, com "+12" (quanto o Mercado paga) embaixo de cada item. O ouro antes e depois aparece em verde, nos botões "Vender 1 por 12" e "Vender todos (6) por 72". Equipamento não aparece (vende na Forja).
+
+**UI-04 · Mercado, Trocar**
+- Fazer: Mercado → Trocar.
+- Deve acontecer: cada troca numa linha: "Você dá" (o número no canto é quanto pede; embaixo, "tem N", em vermelho se falta) ⇄ "Você recebe". Quando falta item, o botão Trocar fica apagado e diz o que falta.
+
+**UI-05 · Catálogo**
+- Fazer: com um convidado novo, Mercado (ou Forja) → Catálogo. Depois jogue, pegue itens e volte.
+- Deve acontecer: tudo o que existe no beta, em grade. O que você nunca teve aparece tracejado com "?", e o detalhe diz "Vem de:" (Mercado, Forja, um monstro, o chão, um minijogo). Os itens que você pegou passam a aparecer normais e continuam assim depois de vender.
+
+**UI-06 · Forja, Equipar**
+- Fazer: Forja → Equipar. Clique no espaço Arma do boneco, numa arma de outra classe e depois numa da sua classe.
+- Deve acontecer: o boneco no meio, com os 7 espaços em volta (vazios tracejados). Ao lado, a grade do que serve naquele espaço, com a de outra classe apagada. Escolhida uma peça, a lista "antes → depois" mostra o que sobe (verde ▲) e o que desce (vermelho ▼). O botão "Equipar …" fica apagado com "… é só para Guerreiro." quando não serve. Com algo equipado, aparece "Tirar …".
+
+**UI-07 · Forja, Fabricar**
+- Fazer: Forja → Fabricar. Escolha uma receita sem os materiais e outra com tudo.
+- Deve acontecer: a receita desenhada: os materiais (com "tem N" embaixo, em vermelho o que falta), o ouro, uma seta e o resultado. As receitas que não fecham ficam apagadas na grade. O botão "Fabricar …" só acende com tudo; apagado, diz o que falta.
+
+**UI-08 · Guilda, Missões**
+- Fazer: Guilda → Missões. Aceite uma missão. Depois clique em Abandonar….
+- Deve acontecer: um quadro de cortiça com um cartaz por missão (o símbolo e a cor do tipo, o objetivo e a recompensa em ouro e XP). A missão aceita aparece em destaque em cima, com a barra de progresso. O botão "Entregar: +80 de ouro e +120 XP" fica apagado até cumprir. Abandonar mostra a multa e o ouro antes e depois antes de confirmar.
+
+**UI-09 · Guilda, Contratos**
+- Fazer: Guilda → Contrato temporário → Contratar → Assinar o contrato. Depois Contrato permanente.
+- Deve acontecer: uma carta por classe, com retrato (a cor da classe até a arte), papel, pentágono pequeno e preço. O temporário tem borda tracejada azul e o selo "3 partidas · nível 5 · não ganha XP"; o permanente, borda dupla vinho e "para sempre · começa no nível 1". Contratar abre o contrato para assinar, com o ouro antes e depois. Os ativos aparecem embaixo, com as partidas restantes.
+
+**UI-10 · Preparação**
+- Fazer: Jogar → Floresta. Clique nas poções da esquerda até encher a mochila.
+- Deve acontecer: duas grades com uma seta no meio: à esquerda "Mochila do Reino" ("tem N"), à direita "Vai na partida" ("leva N"). A barra de peso enche e fica vermelha no limite. Quando não cabe, aparece o motivo. Clicar à direita devolve 1.
+
+**UI-11 · Mochila da partida (Tab)**
+- Fazer: na partida, aperte Tab.
+- Deve acontecer: a janela à direita, com a barra de peso e a grade pequena (ícone de 32 px). Os itens que não se usam na partida ficam apagados. Os botões "Usar no Líder (E)" e "Usar no aliado (R)" são cor-de-rosa.
+
+**UI-12 · Salão da Glória**
+- Fazer: Salão da Glória → Melhores pontuações (com uma conta que esteja no ranking).
+- Deve acontecer: os 3 primeiros com medalha (ouro, prata e bronze) e fundo colorido; a sua linha com contorno laranja e o selo "você".
+
+**UI-13 · Reino**
+- Fazer: olhe o Reino.
+- Deve acontecer: cada lugar com o seu símbolo e uma linha embaixo dizendo o que ele é ("missões e contratos", "comprar, vender e trocar"…). As posições continuam as mesmas.
+
+**UI-14 · O "?" de cada tela**
+- Fazer: em cada tela do Reino, na Preparação, no Mapa e nos minijogos, clique no "?" ao lado de Configurações; depois aperte Esc.
+- Deve acontecer: a janela "Como funciona: …" explica a tela em poucas frases; Esc (ou Entendi) fecha.
+
+**UI-15 · Tema escuro e 1366 × 768**
+- Fazer: Configurações → Tema: escuro; passe por todas as telas acima numa tela de 1366 × 768.
+- Deve acontecer: tudo legível e nada cortado ou por cima de outra coisa; os cartazes de missão continuam papel claro.
+
+**UI-16 · Aviso de conquista**
+- Fazer: conclua uma conquista (por exemplo, a primeira partida).
+- Deve acontecer: o aviso aparece no canto de cima, à direita, com ★, sem tapar as abas, e some sozinho depois de alguns segundos (ou no OK).
+
+---
 
 ## AR. Arte (o jogo pronto para receber as imagens)
 

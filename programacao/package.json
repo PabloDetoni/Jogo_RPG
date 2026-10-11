@@ -14,6 +14,7 @@
     "testar:reino": "node scripts/testarReino.mjs",
     "testar:arte": "node scripts/testarArte.mjs",
     "conferir:arte": "node scripts/conferirArte.mjs",
+    "prints": "node scripts/printsDasTelas.mjs",
     "testar:contas": "node scripts/testarContas.mjs",
     "testar:contas:publicado": "node scripts/testarContas.mjs --publicado",
     "testar:floresta": "node scripts/testarFloresta.mjs",

@@ -14,6 +14,7 @@
 
 import { atributos, classes } from './classes.js'
 import { arvoreDaClasse } from './arvores.js'
+import { acoes, arteDaAcao, arteDaInterface, arteDoLugar, arteDoTipoDeMissao, lugaresDoReino, tiposDeMissaoNaTela } from './interface.js'
 import { itens } from './itens.js'
 
 export const direcoes = ['baixo', 'cima', 'esquerda', 'direita']
@@ -149,6 +150,12 @@ export function arteEsperada() {
     grupo: 'Ícones: habilidades do beta',
     tipo: 'icone',
     nomes: classes.flatMap((classe) => arvoreDaClasse(classe.id).filter((habilidade) => habilidade.noBeta).map((habilidade) => iconeDaHabilidade(habilidade.id))),
+  })
+  grupos.push({ grupo: 'Interface: molduras, botões, quadradinhos, barras e selos (Fase 4.5)', tipo: 'interface', nomes: Object.values(arteDaInterface).map((parte) => parte.nome) })
+  grupos.push({
+    grupo: 'Interface: símbolos das ações, dos tipos de missão e dos lugares do Reino',
+    tipo: 'icone',
+    nomes: [...Object.keys(acoes).map(arteDaAcao), ...Object.keys(tiposDeMissaoNaTela).map(arteDoTipoDeMissao), ...Object.keys(lugaresDoReino).map(arteDoLugar)],
   })
   grupos.push({
     grupo: 'Ícones: itens',

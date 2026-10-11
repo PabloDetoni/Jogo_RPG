@@ -27,6 +27,7 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | Fase 3 publicada no endereço principal (regra nova: um endereço só) e correção do quadro do minimapa | 10/10 | 660 passando | ok | arena 226 de 226; `testar:floresta` 3 rodadas seguidas com 65 de 65 antes de publicar e 68 de 68 com a correção do quadro (3 conferências novas: zona segura, domínio do Boss e as telas de 1280×720 e 1920×1080); `testar:contas` 52 de 52 no `npm run dev` e **54 de 54 no endereço principal** (`testar:contas:publicado`); `conferir:configuracao` ok, menos o padrão antigo das prévias no Supabase (com o Pablo) | **Pablo aprovou a Fase 3 (10/10)** no endereço principal | `0f6f062` (Fase 3) e as duas correções do quadro (`e7bbd59` e `f9df987`) |
 | Fase 4 publicada no endereço principal | 10/10 | 792 passando | ok | a Vercel publicou o `17f14d9` (deploy "success"); `conferir:configuracao`: tudo certo, com 1 aviso (a senha mínima de 8 no painel do Supabase, com o Pablo), e o endereço principal com o último `main`; `testar:contas:publicado`: **54 de 54** (a Floresta abre no site, sem barra de teste) | o teste à mão do Pablo é em paralelo (RE-01 a RE-16) | `17f14d9` |
 | Arte: o jogo pronto para receber as imagens (A1 a A5) | 10/10 | 814 passando (22 novos) | ok (no build, a arte e o som saem como arquivos separados, conferido com uma imagem de teste) | `testar:arte` (novo) 36 de 36, com imagens de teste; arena 227 de 227; `testar:floresta` 68 de 68 (60 FPS no pior cenário); `testar:reino` 30 de 30; `conferir:arte` (novo): 0 de 221 imagens da lista (nenhuma arte ainda) | roteiros AR-01 a AR-05, quando o Pablo quiser (ou quando a arte chegar) | ramo local `arte` |
+| Fase 4.5: interface intuitiva (Mochila, Mercado, Forja, Guilda, Preparação, mochila da partida, Salão, Reino, o "?") | 11/10 | 828 passando (14 novos, de `regras/interface.js`; 9 testes de tela atualizados para as telas novas) | ok | `testar:reino` 41 de 41 (11 conferências novas da interface: filtros, trocas, Catálogo, o "?", o aviso de conquista, a comparação da Forja, a receita, a Preparação); `testar:arte` 39 de 39 (3 novas: moldura e quadradinho de teste, o ícone em 64 px nítido, o símbolo de comprar); arena 227 de 227; `testar:floresta` 68 de 68 (60 FPS); prints de antes e depois em `testes-do-navegador/telas/` (claro e escuro) | roteiros UI-01 a UI-16 | ramo local `interface` |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -124,6 +125,19 @@ O que o TEST-007 conferiu: ranking sem login (6 abas), dois navegadores na mesma
 | "Com o grupo fora do território, o lobo desiste" falhou (e as duas conferências seguintes): o lobo sorteado tinha nascido perto da beira esquerda da região Fácil, e o roteiro punha o Líder no máximo em x = 1050, ainda dentro do território dele. | `testar:floresta` (intermitente, depende do sorteio dos mobs; não tem relação com a arte) | O roteiro escolhe o lado (esquerda, direita, cima ou baixo) cujo lugar livre fica de verdade fora do território. |
 | No build, o Vite embute no código as imagens menores que 4 KB: com mais de 200 ícones, o código que abre o jogo ficaria uns 300 KB maior. | Revisão antes de rodar | `vite.config.js`: tudo o que vem de `src/assets/` sai como arquivo separado (conferido com uma imagem de teste: saiu como `.png` à parte, nada embutido). |
 
+## 2i. Fase 4.5 (interface): o que foi achado e o que foi feito
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| O aviso de conquista ("Cofre cheio") ficava por cima das abas das telas até alguém clicar em OK. | Prints de antes | O aviso de conquista vai para o canto de cima, à direita, e some sozinho em 6 s. |
+| As cartas de contrato ficaram altas e subiam por cima das abas e desciam até o "Voltar ao Reino". | Prints de depois (primeira versão) | O conteúdo da Guilda fica preso logo abaixo das abas, e as cartas ficaram mais baixas. |
+| No "Antes e depois" da Forja, o botão Equipar ficava cortado embaixo. | Prints de depois | O item ali aparece compacto (nome, selos e função). |
+| Os botões "Usar no Líder" e "Usar no aliado" saíam da janela da mochila da partida. | Prints de depois | Os botões quebram linha. |
+| Na Floresta, o símbolo da Guilda (⚜) aparecia como emoji colorido. | Prints de depois | Trocado por ♜. |
+| "Todos contornam a pedra e chegam perto do Líder" falhou uma vez (um aliado a 164 px; o limite é 160) e passou na rodada seguinte. Movimento não mudou nesta parte. | `testar:navegador` | A conferência espera até 6 s os aliados chegarem (antes media num instante fixo de 3,5 s). |
+| "O retorno com Q mostra a Pedra de Retorno" falhou uma vez: um tiro inimigo ainda no ar deixava o grupo em combate, e o Q não começava. | `testar:arte` | O roteiro espera o grupo sair de combate antes de apertar Q, como o da arena. |
+| Os testes do save comparavam o objeto inteiro e não esperavam o campo novo `itensVistos`. | `npm test` | O progresso inicial tem `itensVistos: []`, e o estado só marca os vistos quando a ação mudou o progresso. |
+
 ## 3. Testes à mão
 
 Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data, quem testou, **passou** ou **falhou**, e o que viu. As partes 5a, 5b e 5b.1 já foram aprovadas pelo Pablo no teste visual de cada uma; vale testar de novo de vez em quando, porque partes novas podem quebrar coisas antigas.
@@ -151,6 +165,22 @@ Marque aqui cada situação dos [Roteiros](Roteiros.md) que você testar: a data
 | AR-03 | Conferir o que chegou | | | | |
 | AR-04 | Um boneco animado | | | | |
 | AR-05 | Ícone de um item | | | | |
+| UI-01 | Mochila do Reino | | | | |
+| UI-02 | Mercado, Comprar | | | | |
+| UI-03 | Mercado, Vender | | | | |
+| UI-04 | Mercado, Trocar | | | | |
+| UI-05 | Catálogo | | | | |
+| UI-06 | Forja, Equipar | | | | |
+| UI-07 | Forja, Fabricar | | | | |
+| UI-08 | Guilda, Missões | | | | |
+| UI-09 | Guilda, Contratos | | | | |
+| UI-10 | Preparação | | | | |
+| UI-11 | Mochila da partida (Tab) | | | | |
+| UI-12 | Salão da Glória | | | | |
+| UI-13 | Reino | | | | |
+| UI-14 | O "?" de cada tela | | | | |
+| UI-15 | Tema escuro e 1366 × 768 | | | | |
+| UI-16 | Aviso de conquista | | | | |
 | FL-01 | Andar até a borda | | | | |
 | FL-02 | Câmera e mira | | | | |
 | FL-03 | Descobrir regiões e ver o minimapa | | | | |

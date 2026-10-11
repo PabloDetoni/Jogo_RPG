@@ -19,7 +19,7 @@ export default function Guilda() {
 
   return (
     <Tela>
-      <ConteudoComAbas pos={pos} abas={abas} />
+      <ConteudoComAbas pos={pos} abas={abas} noTopo />
       <Botao em={pos.voltarAoReino} onClick={() => acoes.irPara('reino')}>
         Voltar ao Reino
       </Botao>

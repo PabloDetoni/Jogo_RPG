@@ -11,7 +11,9 @@ import {
   nivelMaximoDaHabilidade,
 } from '../dados/regras.js'
 import { arvoreDaClasse, raizDaClasse } from '../dados/arvores.js'
+import { itemDoCatalogo } from '../dados/itens.js'
 import { habilidadesIniciais } from '../regras/habilidadesDaArvore.js'
+import { registrarItensVistos } from '../regras/interface.js'
 import { juntarItens } from '../regras/mochila.js'
 import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
 
@@ -32,6 +34,7 @@ export function progressoInicial() {
     // bioma → { nevoa, areas }: o minimapa já revelado (texto hexadecimal, regras/mundo.js) e as áreas que já deram
     // o XP da primeira descoberta (RF40). Fase 3.
     mapasDescobertos: {},
+    itensVistos: [], // itens que o jogador já teve (Fase 4.5, o Catálogo da Forja e do Mercado; regras/interface.js)
     conquistas: {}, // conquistas concluídas: { id: true } (Fase 4, regras/conquistas.js); o progresso sai das estatísticas
     // Para o Resumo, o ranking e as conquistas. bossesDerrotados, grandesVitorias e missoesEntregues entraram na Fase 4.
     estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0, bossesDerrotados: 0, grandesVitorias: 0, missoesEntregues: 0 },
@@ -185,6 +188,13 @@ export function normalizarProgresso(dados) {
   }
 
   const estatisticas = ehObjeto(dados.estatisticas) ? dados.estatisticas : {}
+  // Itens que o jogador já teve (Fase 4.5, o Catálogo): só ids do catálogo, sem repetir, mais o que está na Mochila e
+  // equipado agora (um save antigo já começa com o que tem)
+  const itensVistos = registrarItensVistos({
+    itensVistos: [...new Set((Array.isArray(dados.itensVistos) ? dados.itensVistos : []).filter((id) => itemDoCatalogo(id)))],
+    mochila,
+    personagens,
+  }).itensVistos
 
   return {
     personagens,
@@ -195,6 +205,7 @@ export function normalizarProgresso(dados) {
     missaoAtiva: normalizarMissao(dados.missaoAtiva),
     regioesDescobertas,
     mapasDescobertos,
+    itensVistos,
     // Só conquistas que existem, marcadas como concluídas
     conquistas: Object.fromEntries(listaDeConquistas.filter((conquista) => ehObjeto(dados.conquistas) && dados.conquistas[conquista.id] === true).map((conquista) => [conquista.id, true])),
     estatisticas: {
