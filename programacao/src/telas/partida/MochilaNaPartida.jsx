@@ -1,5 +1,7 @@
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Janela from '../../componentes/Janela.jsx'
+import { iconeDoItem } from '../../dados/arte.js'
 import { funcaoDoItem, usavelNaPartida } from '../../dados/itens.js'
 import { itensDaJanela } from '../../regras/itensNaPartida.js'
 
@@ -27,7 +29,10 @@ export default function MochilaNaPartida({ mochila, escolhido, aoEscolher, aoUsa
               aria-pressed={item.id === escolhido}
               onClick={() => aoEscolher(item.id)}
             >
-              <span className="lista-com-detalhe-nome">{item.dado.nome}</span>
+              <span className="lista-com-detalhe-nome">
+                <Icone nome={iconeDoItem(item.id)} />
+                {item.dado.nome}
+              </span>
               <span className="lista-com-detalhe-direita">×{item.quantidade}</span>
             </button>
           </li>

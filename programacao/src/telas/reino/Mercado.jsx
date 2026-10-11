@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import ListaComDetalhe from '../../componentes/ListaComDetalhe.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { iconeDoItem, iconeDoOuro } from '../../dados/arte.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { trocas } from '../../dados/mercado.js'
 import { posicoes } from '../../dados/posicoes.js'
@@ -38,6 +40,7 @@ export default function Mercado() {
 function Ouro({ progresso }) {
   return (
     <span>
+      <Icone nome={iconeDoOuro} tamanho="1.1em" />
       Ouro: <strong>{progresso.ouro}</strong>
     </span>
   )
@@ -64,6 +67,7 @@ function Comprar() {
       }
       itens={ofertas.map((oferta) => ({
         chave: oferta.id,
+        icone: iconeDoItem(oferta.id),
         titulo: `${nomeDoItem(oferta.id)}${oferta.rotativa ? ' ★' : ''}`,
         direita: `${itemDoCatalogo(oferta.id).preco} de ouro`,
       }))}
@@ -105,7 +109,7 @@ function Vender() {
           <span className="nota">O Mercado paga metade do preço. Equipamento se vende na Forja.</span>
         </>
       }
-      itens={vendaveis.map((item) => ({ chave: item.id, titulo: `${nomeDoItem(item.id)} ×${item.quantidade}`, direita: `${precoDeVenda(item.id)} cada` }))}
+      itens={vendaveis.map((item) => ({ chave: item.id, icone: iconeDoItem(item.id), titulo: `${nomeDoItem(item.id)} ×${item.quantidade}`, direita: `${precoDeVenda(item.id)} cada` }))}
       escolhido={atual?.id}
       aoEscolher={(id) => {
         setEscolhido(id)

@@ -1,4 +1,5 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
+import { msDoAtaqueNaTela } from '../../dados/arte.js'
 import { combateDeTeste } from '../../dados/balanceamento.js'
 import { podeUsar, velocidadeDoMovimento } from '../../regras/combate.js'
 import TiroInimigo from '../ataques/tiroInimigo.js'
@@ -11,6 +12,7 @@ export default class Atirador extends Inimigo {
   constructor(cena, x, y, config = combateDeTeste.atirador, cor = coresDaArena.atirador) {
     super(cena, x, y, config, cor)
     this.ultimoTiro = null
+    this.usarArte(config.tipo ?? 'atirador') // na Floresta, a aranha
   }
 
   atualizar(agora) {
@@ -59,9 +61,17 @@ export default class Atirador extends Inimigo {
     if (this.estado === 'mirando') this.estado = 'perseguindo'
   }
 
+  // Na arte: mirando (o aviso) e o tiro, olhando para o alvo
+  animacaoDoMomento(agora, andando) {
+    const paraOAlvo = this.alvo ? { x: this.alvo.x - this.x, y: this.alvo.y - this.y } : null
+    if (this.estado === 'mirando') return { animacao: 'aviso', olharPara: paraOAlvo }
+    if (this.ultimoTiro !== null && agora - this.ultimoTiro < msDoAtaqueNaTela) return { animacao: 'atacando', olharPara: paraOAlvo, desde: this.ultimoTiro }
+    return super.animacaoDoMomento(agora, andando)
+  }
+
   atualizarDesenho(agora, delta) {
-    if (this.estado === 'mirando') this.quadrado.setFillStyle(Math.floor(agora / 70) % 2 ? 0xffffff : this.cor)
-    else if (!this.fimDoPiscar) this.quadrado.setFillStyle(this.cor)
+    if (this.estado === 'mirando') this.destacar(Math.floor(agora / 70) % 2 ? 0xffffff : null)
+    else if (!this.fimDoPiscar) this.destacar(null)
     super.atualizarDesenho(agora, delta)
   }
 }

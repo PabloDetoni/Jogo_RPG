@@ -3,6 +3,7 @@ import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import ListaComDetalhe from '../../componentes/ListaComDetalhe.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { iconeDoItem } from '../../dados/arte.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
@@ -62,7 +63,7 @@ export function ConteudoDaMochila() {
           {itens.length} {itens.length === 1 ? 'item' : 'itens'} · peso total {pesoTotal} (a Mochila do Reino não tem limite)
         </span>
       }
-      itens={itens.map((item) => ({ chave: item.id, titulo: nomeDoItem(item.id), direita: `×${item.quantidade}` }))}
+      itens={itens.map((item) => ({ chave: item.id, icone: iconeDoItem(item.id), titulo: nomeDoItem(item.id), direita: `×${item.quantidade}` }))}
       escolhido={atual?.id}
       aoEscolher={escolher}
       vazio="A Mochila está vazia. Os itens coletados nas partidas e os comprados no Mercado aparecem aqui."

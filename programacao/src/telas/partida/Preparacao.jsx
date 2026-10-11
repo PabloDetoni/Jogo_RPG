@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { iconeDoItem, retratoDaClasse } from '../../dados/arte.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import { itemDoCatalogo, usavelNaPartida } from '../../dados/itens.js'
 import { posicoes } from '../../dados/posicoes.js'
@@ -25,6 +27,7 @@ export default function Preparacao() {
       <Area em={pos.lideres} className="lista">
         {permanentes.map((p) => (
           <Botao key={p.classe} selecionado={lider === p.classe} onClick={() => acoes.escolherLider(p.classe)}>
+            <Icone nome={retratoDaClasse(p.classe)} />
             {nomeDaClasse(p.classe)}
           </Botao>
         ))}
@@ -90,6 +93,7 @@ function MochilaDaPartida() {
           return (
             <li key={item.id}>
               <span>
+                <Icone nome={iconeDoItem(item.id)} />
                 {dado.nome} <span className="nota">(tem {item.quantidade}, peso {dado.peso})</span>
               </span>
               <span className="botoes-em-linha">

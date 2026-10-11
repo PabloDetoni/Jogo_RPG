@@ -229,9 +229,16 @@ try {
   await colocarLider(lobo.x - 220, lobo.y)
   await aba.esperar(`${CENA}.inimigos.find((i) => i.__teste)?.perseguindo`, 'o lobo perseguir', 4000).catch(() => {})
   conferir('chegando perto, o lobo persegue (aparece o "!")', await cena(`c.inimigos.find((i) => i.__teste).perseguindo`))
-  // O Líder corre para fora do território (o lobo fica dentro dele)
-  const fora = { x: lobo.casa.x - lobo.territorio - 350, y: lobo.casa.y }
-  await colocarLider(Math.max(1050, fora.x), fora.y)
+  // O Líder corre para fora do território (o lobo fica dentro dele): para o lado em que o lugar livre fica mesmo fora
+  // (o lobo sorteado pode ter nascido perto da beira da região, e aí um dos lados não cabe)
+  const fora = await cena(`(() => {
+    const casa = c.inimigos.find((i) => i.__teste).casaFixa
+    const longe = ${lobo.territorio} + 350
+    const lados = [{ x: casa.x - longe, y: casa.y }, { x: casa.x + longe, y: casa.y }, { x: casa.x, y: casa.y - longe }, { x: casa.x, y: casa.y + longe }]
+    const livres = lados.map((ponto) => c.lugarLivre(40, ponto))
+    return livres.find((ponto) => Math.hypot(ponto.x - casa.x, ponto.y - casa.y) > ${lobo.territorio} + 150) ?? livres[0]
+  })()`)
+  await colocarLider(fora.x, fora.y)
   await aba.esperar(`!${CENA}.inimigos.find((i) => i.__teste)?.perseguindo`, 'o lobo desistir', 6000).catch(() => {})
   conferir('com o grupo fora do território, o lobo desiste (aparece o "?")', !(await cena(`c.inimigos.find((i) => i.__teste).perseguindo`)))
   await pausa(3500)

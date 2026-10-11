@@ -1,3 +1,5 @@
+import Icone from '../../componentes/Icone.jsx'
+import { iconeDoItem } from '../../dados/arte.js'
 import { funcaoDoItem, itemDoCatalogo, nomesDasRaridades } from '../../dados/itens.js'
 
 // Função, descrição, peso e raridade de um item (RF20), para a Mochila, o Mercado e a Forja.
@@ -16,6 +18,7 @@ export default function DetalheDoItem({ id, quantidade, children }) {
   return (
     <div className="detalhe-do-item">
       <h3>
+        <Icone nome={iconeDoItem(item.id)} tamanho="2em" />
         {item.nome}
         {quantidade !== undefined && <span className="nota"> ×{quantidade}</span>}
       </h3>

@@ -1,6 +1,8 @@
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { iconeDoOuro } from '../../dados/arte.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import { missaoEmUmaLinha } from '../../regras/missoes.js'
 import { posicoes } from '../../dados/posicoes.js'
@@ -21,7 +23,8 @@ export default function Reino() {
     <Tela>
       {/* HUD do Reino: apelido, Líder, ouro e missão ativa (RF19) */}
       <Area em={pos.hud}>
-        {apelido} · Líder: {lider} · Ouro: {progresso.ouro} · Missão: {missao}
+        {apelido} · Líder: {lider} · <Icone nome={iconeDoOuro} tamanho="1.1em" />
+        Ouro: {progresso.ouro} · Missão: {missao}
       </Area>
       <Botao em={pos.guilda} onClick={() => acoes.irPara('guilda')}>
         Guilda

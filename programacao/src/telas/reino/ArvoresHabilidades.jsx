@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Botao from '../../componentes/Botao.jsx'
 import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Pentagono from '../../componentes/Pentagono.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { atributoMaximo } from '../../dados/balanceamento.js'
+import { iconeDoAtributo } from '../../dados/arte.js'
 import { atributos as listaDeAtributos, classes, corDaClasseCss } from '../../dados/classes.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
@@ -99,6 +101,7 @@ function Atributos({ personagem }) {
           {listaDeAtributos.map(({ id, nome }) => (
             <li key={id}>
               <span>
+                <Icone nome={iconeDoAtributo(id)} />
                 {nome} <strong>{valores[id]}</strong>
                 {pendente[id] ? <span className="nota"> (+{pendente[id]})</span> : null}
               </span>

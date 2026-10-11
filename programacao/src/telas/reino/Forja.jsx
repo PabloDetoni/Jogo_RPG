@@ -3,6 +3,7 @@ import Botao from '../../componentes/Botao.jsx'
 import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import ListaComDetalhe from '../../componentes/ListaComDetalhe.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { iconeDoItem } from '../../dados/arte.js'
 import { atributos as listaDeAtributos, nomeDaClasse } from '../../dados/classes.js'
 import { aVendaNaForja, receitas } from '../../dados/forja.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
@@ -92,7 +93,7 @@ function Equipar() {
           <ResumoDoPersonagem personagem={personagem} />
         </>
       }
-      itens={espacos.map((um) => ({ chave: um.id, titulo: um.nome, direita: um.item ? nomeDoItem(um.item) : '—', nota: !um.item }))}
+      itens={espacos.map((um) => ({ chave: um.id, icone: um.item ? iconeDoItem(um.item) : null, titulo: um.nome, direita: um.item ? nomeDoItem(um.item) : '—', nota: !um.item }))}
       escolhido={espaco.id}
       aoEscolher={comMensagemLimpa(setEspacoEscolhido, setMensagem)}
       mensagem={mensagem}
@@ -147,7 +148,7 @@ function Comprar() {
           Ouro: <strong>{progresso.ouro}</strong> <span className="nota">· o equipamento melhor sai das receitas (aba Fabricar)</span>
         </span>
       }
-      itens={aVendaNaForja.map((id) => ({ chave: id, titulo: nomeDoItem(id), direita: `${itemDoCatalogo(id).preco} de ouro` }))}
+      itens={aVendaNaForja.map((id) => ({ chave: id, icone: iconeDoItem(id), titulo: nomeDoItem(id), direita: `${itemDoCatalogo(id).preco} de ouro` }))}
       escolhido={atual}
       aoEscolher={comMensagemLimpa(setEscolhido, setMensagem)}
       mensagem={mensagem}
@@ -177,7 +178,7 @@ function Vender() {
           Ouro: <strong>{progresso.ouro}</strong> <span className="nota">· a Forja paga metade do preço; o equipado precisa ser tirado antes</span>
         </span>
       }
-      itens={equipamentos.map((item) => ({ chave: item.id, titulo: `${nomeDoItem(item.id)} ×${item.quantidade}`, direita: `${precoDeVenda(item.id)} cada` }))}
+      itens={equipamentos.map((item) => ({ chave: item.id, icone: iconeDoItem(item.id), titulo: `${nomeDoItem(item.id)} ×${item.quantidade}`, direita: `${precoDeVenda(item.id)} cada` }))}
       escolhido={atual?.id}
       aoEscolher={comMensagemLimpa(setEscolhido, setMensagem)}
       vazio="Nenhum equipamento na Mochila."
@@ -210,7 +211,7 @@ function Fabricar() {
           Ouro: <strong>{progresso.ouro}</strong> <span className="nota">· em cinza, as receitas que ainda não dá para fazer</span>
         </span>
       }
-      itens={receitas.map((receita) => ({ chave: receita.resultado, titulo: nomeDoItem(receita.resultado), direita: `${receita.ouro} de ouro`, nota: !temTudo(receita) }))}
+      itens={receitas.map((receita) => ({ chave: receita.resultado, icone: iconeDoItem(receita.resultado), titulo: nomeDoItem(receita.resultado), direita: `${receita.ouro} de ouro`, nota: !temTudo(receita) }))}
       escolhido={atual.resultado}
       aoEscolher={comMensagemLimpa(setEscolhido, setMensagem)}
       mensagem={mensagem}

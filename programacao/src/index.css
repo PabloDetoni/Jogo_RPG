@@ -1436,3 +1436,39 @@ body {
 .boia-assustado {
   opacity: 0.6;
 }
+
+/* Arte (TASK-110 a TASK-116): as imagens chegam pela pasta src/assets/arte/ (dados/arte.js). Sem a imagem, nada disto
+   aparece e a tela fica como antes. */
+.icone {
+  display: inline-block;
+  flex: none;
+  margin-right: 0.3em;
+  vertical-align: middle;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.tela-com-fundo {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.tela-com-fundo > .titulo {
+  color: #fff;
+  text-shadow:
+    0 0 0.3em rgb(0 0 0 / 0.85),
+    0 0.06em 0.08em rgb(0 0 0 / 0.9);
+}
+
+.hud-cor.com-retrato {
+  width: 1.6em;
+  height: 1.6em;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.retrato-da-classe {
+  display: block;
+  margin-bottom: 0.3em;
+}

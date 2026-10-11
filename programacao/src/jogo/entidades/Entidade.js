@@ -1,9 +1,12 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
+import { direcaoDoVetor } from '../../regras/arte.js'
+import { DesenhoDoBoneco } from '../arte.js'
 import { camadas } from '../efeitos.js'
 
 // Base de tudo que tem corpo na arena: Líder, aliados, mobs e boneco.
 // A hitbox (uma zona de física, invisível) é separada do desenho (o quadrado, a sombra, a barra),
-// como pede o CLAUDE.md: dá para trocar a arte sem mexer no acerto.
+// como pede o CLAUDE.md: dá para trocar a arte sem mexer no acerto. Com a arte (usarArte), o quadrado dá lugar à
+// imagem animada do boneco (jogo/arte.js); sem ela, continua o quadrado.
 export default class Entidade {
   constructor(cena, { x, y, tamanho, cor, estatico = false }) {
     this.cena = cena
@@ -22,6 +25,9 @@ export default class Entidade {
     this.quadrado = cena.add.rectangle(0, 0, tamanho, tamanho, cor).setStrokeStyle(2, coresDaArena.contorno)
     this.visual = cena.add.container(x, y, [this.quadrado])
 
+    this.boneco = null // a imagem animada (jogo/arte.js), quando a arte existe
+    this.idDaArte = null
+    this.ladoDoDesenho = 'baixo' // para onde o boneco olha
     this.escalaExtra = { x: 1, y: 1 } // deformações rápidas (esquiva, bote, aviso)
     this.balanco = 0 // fase do esticar e achatar ao andar
     this.fimDoPiscar = 0
@@ -75,14 +81,30 @@ export default class Entidade {
     this.manobra = null
   }
 
+  // Troca o quadrado pela imagem do boneco (classe, mob ou Boss; dados/arte.js), se ela existir
+  usarArte(id) {
+    if (this.idDaArte === id) return
+    this.idDaArte = id
+    this.boneco?.sprite.destroy()
+    this.boneco = DesenhoDoBoneco.criar(this.cena, id)
+    if (this.boneco) this.visual.add(this.boneco.sprite)
+    this.quadrado.setVisible(!this.boneco)
+  }
+
   definirCor(cor) {
     this.cor = cor
     if (!this.fimDoPiscar) this.quadrado.setFillStyle(cor)
   }
 
+  // O desenho inteiro de uma cor (piscar, aviso do golpe); null volta ao normal
+  destacar(cor) {
+    this.quadrado.setFillStyle(cor ?? this.cor)
+    this.boneco?.preencher(cor)
+  }
+
   // Pisca branco por um instante ao levar um golpe
   piscar() {
-    this.quadrado.setFillStyle(0xffffff)
+    this.destacar(0xffffff)
     this.fimDoPiscar = this.cena.agora + 80
   }
 
@@ -110,17 +132,34 @@ export default class Entidade {
     })
   }
 
-  // Põe o desenho onde está a hitbox, com o balanço de quem anda
+  // O que o boneco está fazendo agora (a animação da arte) e para onde olha: cada tipo de entidade completa
+  // ({ animacao, olharPara?: vetor, desde?: quando o golpe começou, para reiniciar a animação })
+  animacaoDoMomento(agora, andando) {
+    return { animacao: andando ? 'andando' : 'parado' }
+  }
+
+  atualizarBoneco(agora, andando, velocidade) {
+    const { animacao, olharPara, desde } = this.animacaoDoMomento(agora, andando)
+    const vetor = olharPara ?? (andando ? velocidade : null)
+    if (vetor) this.ladoDoDesenho = direcaoDoVetor(vetor.x, vetor.y, this.ladoDoDesenho)
+    const reiniciar = desde !== undefined && desde !== this.golpeMostrado
+    this.golpeMostrado = desde
+    this.boneco.mostrar(animacao, this.ladoDoDesenho, reiniciar)
+  }
+
+  // Põe o desenho onde está a hitbox, com o balanço de quem anda (o quadrado; a imagem tem a própria animação)
   atualizarDesenho(agora, delta) {
     if (this.fimDoPiscar && agora >= this.fimDoPiscar) {
       this.fimDoPiscar = 0
-      this.quadrado.setFillStyle(this.cor)
+      this.destacar(null)
     }
     const velocidade = this.corpo.body?.velocity
     const andando = velocidade && Math.hypot(velocidade.x, velocidade.y) > 20
-    this.balanco = andando ? this.balanco + delta * 0.024 : 0
-    const onda = andando ? Math.sin(this.balanco) * 0.08 : 0
-    const pulinho = andando ? Math.abs(Math.sin(this.balanco)) * 3 : 0
+    const balancar = andando && !this.boneco
+    this.balanco = balancar ? this.balanco + delta * 0.024 : 0
+    const onda = balancar ? Math.sin(this.balanco) * 0.08 : 0
+    const pulinho = balancar ? Math.abs(Math.sin(this.balanco)) * 3 : 0
+    if (this.boneco) this.atualizarBoneco(agora, andando, velocidade)
 
     this.visual.setPosition(this.x, this.y - pulinho)
     this.visual.setScale((1 + onda) * this.escalaExtra.x, (1 - onda) * this.escalaExtra.y)

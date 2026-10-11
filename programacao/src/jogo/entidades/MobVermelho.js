@@ -14,6 +14,7 @@ export default class MobVermelho extends Inimigo {
   constructor(cena, x, y, config = combateDeTeste.mobVermelho, cor = coresDaArena.mobVermelho) {
     super(cena, x, y, config, cor)
     this.ultimoBote = null
+    this.usarArte(config.tipo ?? 'mobVermelho') // na Floresta, o lobo, o javali ou o cervo
   }
 
   atualizar(agora) {
@@ -102,10 +103,17 @@ export default class MobVermelho extends Inimigo {
     }
   }
 
+  // Na arte: o aviso olhando para o alvo e o bote
+  animacaoDoMomento(agora, andando) {
+    if (this.estado === 'avisando') return { animacao: 'aviso', olharPara: this.alvo ? { x: this.alvo.x - this.x, y: this.alvo.y - this.y } : null }
+    if (this.estado === 'bote') return { animacao: 'atacando', desde: this.ultimoBote }
+    return super.animacaoDoMomento(agora, andando)
+  }
+
   atualizarDesenho(agora, delta) {
     // Durante o aviso, pisca branco e vermelho
-    if (this.estado === 'avisando') this.quadrado.setFillStyle(Math.floor(agora / 80) % 2 ? 0xffffff : this.cor)
-    else if (!this.fimDoPiscar) this.quadrado.setFillStyle(this.cor)
+    if (this.estado === 'avisando') this.destacar(Math.floor(agora / 80) % 2 ? 0xffffff : null)
+    else if (!this.fimDoPiscar) this.destacar(null)
     super.atualizarDesenho(agora, delta)
   }
 }

@@ -63,8 +63,15 @@ export function tremerTela(cena, ms = 140, intensidade = 0.006) {
   cena.cameras.main.shake(ms, intensidade)
 }
 
-// Rastro da esquiva: uma cópia apagada do quadrado que some no lugar de onde ele saiu
-export function rastro(cena, x, y, tamanho, cor) {
-  const copia = cena.add.rectangle(x, y, tamanho, tamanho, cor, 0.45).setDepth(y - 1)
-  cena.tweens.add({ targets: copia, alpha: 0, scale: 0.8, duration: 220, onComplete: () => copia.destroy() })
+// Rastro da esquiva: uma cópia apagada do quadrado (ou da imagem do boneco, com a arte) que some no lugar de onde ele saiu
+export function rastro(cena, x, y, tamanho, cor, desenho = null) {
+  const copia = desenho
+    ? cena.add
+        .image(x, y, desenho.texture.key, desenho.frame.name)
+        .setScale(desenho.scaleX, desenho.scaleY)
+        .setFlipX(desenho.flipX)
+        .setAlpha(0.45)
+        .setDepth(y - 1)
+    : cena.add.rectangle(x, y, tamanho, tamanho, cor, 0.45).setDepth(y - 1)
+  cena.tweens.add({ targets: copia, alpha: 0, scaleX: copia.scaleX * 0.8, scaleY: copia.scaleY * 0.8, duration: 220, onComplete: () => copia.destroy() })
 }

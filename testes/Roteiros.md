@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 09/10/2026, na Fase 3 (Floresta). A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 10/10/2026, na parte da arte (antes das imagens). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -189,6 +189,32 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 **NV-02 · O Guerreiro avançado não espera o Tanque**
 - Fazer: Guerreiro avançado (nível 70+) e Tanque básico (nível 1); entre em combate várias vezes.
 - Deve acontecer: quando o Tanque básico erra e fica com o grupo, o Guerreiro não fica parado ao lado do lugar vazio do Tanque: vai no mob mais perto do Líder. Com o Tanque na frente, fica ao lado dele.
+
+## AR. Arte (o jogo pronto para receber as imagens)
+
+As imagens vão em `programacao/src/assets/arte/` com o nome da [Lista de Arte e Som](../documentacao/Lista_de_Arte_e_Som.md). Depois de pôr ou tirar uma imagem, recarregue a página do `npm run dev` (F5). Para estes testes serve qualquer PNG (até um print renomeado).
+
+**AR-01 · Sem arte, nada muda**
+- Fazer: sem nenhuma imagem na pasta, jogue uma partida na Floresta e passe pelo Reino, pela Mochila e pelas Árvores.
+- Deve acontecer: tudo igual a antes (quadrados coloridos, telas cinza, losangos no chão).
+
+**AR-02 · Fundo de uma tela**
+- Fazer: salve um PNG como `fundo-reino.png` na pasta e abra o Reino; depois apague o arquivo.
+- Deve acontecer: o Reino mostra a imagem de fundo, com os botões por cima e o título com sombra; sem o arquivo, volta o cinza.
+
+**AR-03 · Conferir o que chegou**
+- Fazer: com uma ou duas imagens na pasta (uma com o nome errado, como `guerrero-andando-baixo.png`), rode `npm run conferir:arte` na pasta `programacao`.
+- Deve acontecer: aparece cada arquivo achado e para que serve; o de nome errado aparece com "o jogo não conhece este nome"; no fim, quanto da lista já chegou e o que falta.
+
+**AR-04 · Um boneco animado**
+- Fazer: salve uma faixa (por exemplo, 192 × 48 = 4 quadros) como `arqueiro-andando-baixo.png` e outra como `arqueiro-andando-direita.png`. Jogue de Arqueiro e ande para baixo, para a direita e para a esquerda.
+- Deve acontecer: o quadrado do Arqueiro vira a imagem, mudando de quadro enquanto anda; para a esquerda, a da direita aparece espelhada; o Líder tem um anel branco no chão. Os outros continuam quadrados.
+
+**AR-05 · Ícone de um item**
+- Fazer: salve um PNG quadrado como `item-pocaoDeVida.png` e abra a Mochila, o Mercado e a Preparação; na partida, abra a mochila com Tab.
+- Deve acontecer: a Poção de vida aparece com o ícone em todas essas listas e no detalhe; os outros itens continuam só com o nome.
+
+---
 
 ## RE. Reino com dados (Fase 4)
 
