@@ -11,6 +11,7 @@ import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
 import { contratarTodasAsClasses, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
+import { registrarItensVistos } from '../regras/interface.js'
 
 // Estado global do jogo. Só "progresso" vai para o salvamento (do convidado ou da conta);
 // as preferências são salvas à parte (salvamento/preferenciasLocais.js); o resto vive só na memória.
@@ -77,10 +78,11 @@ const avisoSalvamentoEstragado =
 const avisoVersaoMaisNova =
   'Este progresso foi salvo por uma versão mais nova do jogo. Para não estragá-lo, nada será salvo nesta aba.'
 
-function comAviso(estado, texto) {
+// tipo 'conquista' (Fase 4.5): aparece no canto e some sozinho (componentes/Avisos.jsx)
+function comAviso(estado, texto, tipo = 'aviso') {
   return {
     ...estado,
-    avisos: [...estado.avisos, { id: estado.proximoIdDeAviso, texto }],
+    avisos: [...estado.avisos, { id: estado.proximoIdDeAviso, texto, tipo }],
     proximoIdDeAviso: estado.proximoIdDeAviso + 1,
   }
 }
@@ -195,14 +197,22 @@ function ferramentaDeDev(estado, acao) {
 // Conquistas (Fase 4, TASK-103): depois de cada ação, fora da partida, as que acabaram de ser cumpridas ficam marcadas,
 // a recompensa entra uma vez só e aparece um aviso. Durante a partida o progresso não muda (RF12): elas vêm no fim.
 export function atualizarEstado(estado, acao) {
-  return conferirConquistas(atualizarSemConquistas(estado, acao))
+  return conferirConquistas(registrarVistos(estado, atualizarSemConquistas(estado, acao)))
+}
+
+// Catálogo (Fase 4.5): o que entrou na Mochila ou foi equipado fica marcado como visto (regras/interface.js). Só quando a
+// ação mudou o progresso, junto com ela (que já pediu o salvamento).
+function registrarVistos(antes, estado) {
+  if (estado.partidaAtual || !estado.progresso || estado.progresso === antes.progresso) return estado
+  const progresso = registrarItensVistos(estado.progresso)
+  return progresso === estado.progresso ? estado : { ...estado, progresso }
 }
 
 function conferirConquistas(estado) {
   if (estado.partidaAtual || estado.tipoJogador === 'nenhum' || !estado.progresso) return estado
   const { progresso, novas } = aplicarConquistas(estado.progresso)
   if (novas.length === 0) return estado
-  const comAvisos = novas.reduce((atual, conquista) => comAviso(atual, avisoDaConquista(conquista)), { ...estado, progresso })
+  const comAvisos = novas.reduce((atual, conquista) => comAviso(atual, avisoDaConquista(conquista), 'conquista'), { ...estado, progresso })
   return pedirSalvamento(comAvisos)
 }
 

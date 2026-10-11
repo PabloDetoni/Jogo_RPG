@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 # Prints do roteiro de testes no navegador (npm run testar:navegador)
 testes-do-navegador
+# Imagens de teste do npm run testar:arte (criadas e apagadas pelo roteiro)
+src/assets/arte-de-teste
 dist
 dist-ssr
 *.local

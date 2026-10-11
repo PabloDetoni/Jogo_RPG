@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import Barra from '../../componentes/ui/Barra.jsx'
+import GradeDeItens from '../../componentes/ui/GradeDeItens.jsx'
+import Painel from '../../componentes/ui/Painel.jsx'
+import Simbolo from '../../componentes/ui/Simbolo.jsx'
+import { retratoDaClasse } from '../../dados/arte.js'
+import { acoes as acoesDaInterface, arteDaAcao } from '../../dados/interface.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import { itemDoCatalogo, usavelNaPartida } from '../../dados/itens.js'
 import { posicoes } from '../../dados/posicoes.js'
@@ -25,6 +32,7 @@ export default function Preparacao() {
       <Area em={pos.lideres} className="lista">
         {permanentes.map((p) => (
           <Botao key={p.classe} selecionado={lider === p.classe} onClick={() => acoes.escolherLider(p.classe)}>
+            <Icone nome={retratoDaClasse(p.classe)} />
             {nomeDaClasse(p.classe)}
           </Botao>
         ))}
@@ -55,8 +63,10 @@ export default function Preparacao() {
   )
 }
 
-// Mochila da partida (TASK-073, RF33): o que vai junto da Mochila do Reino, até a capacidade (a Força de todo o grupo).
-// Só poções e aceleradores (o que se usa na partida com Tab, E e R). O motivo aparece quando algo não cabe.
+// Mochila da partida (TASK-073, RF33; Fase 4.5): duas grades lado a lado, com uma seta: à esquerda o que dá para levar da
+// Mochila do Reino (só poções e aceleradores, o que se usa na partida), à direita o que vai. Clicar à esquerda leva 1;
+// clicar à direita devolve 1. A barra mostra o peso até a capacidade (a Força de todo o grupo); o motivo aparece quando
+// algo não cabe.
 function MochilaDaPartida() {
   const { estado, acoes } = useJogo()
   const { progresso } = estado
@@ -64,6 +74,8 @@ function MochilaDaPartida() {
   const capacidade = capacidadeDaPartida(progresso, progresso.lider)
   const [motivo, setMotivo] = useState(null)
   const usaveis = progresso.mochila.filter((item) => usavelNaPartida(itemDoCatalogo(item.id)))
+  const peso = pesoDeLevar(levar)
+  const indo = Object.entries(levar).filter(([, quantidade]) => quantidade > 0)
 
   function mais(id) {
     const resultado = levarNaPartida(levar, progresso.mochila, id, 1, capacidade)
@@ -78,36 +90,35 @@ function MochilaDaPartida() {
   return (
     <div className="mochila-da-preparacao">
       <h2>Mochila da partida</h2>
-      <p>
-        Peso <strong>{pesoDeLevar(levar)}</strong> de <strong>{capacidade}</strong>
-        <span className="nota"> (a capacidade vem da Força de quem vai; o que for coletado também ocupa)</span>
-      </p>
-      <p className="nota">Só vai o que se usa na partida: poções e aceleradores. Na partida, Tab abre a mochila.</p>
-      <ul className="lista-de-contratos">
-        {usaveis.map((item) => {
-          const dado = itemDoCatalogo(item.id)
-          const vai = levar[item.id] ?? 0
-          return (
-            <li key={item.id}>
-              <span>
-                {dado.nome} <span className="nota">(tem {item.quantidade}, peso {dado.peso})</span>
-              </span>
-              <span className="botoes-em-linha">
-                <Botao desativado={vai === 0} onClick={() => menos(item.id)}>
-                  −
-                </Botao>
-                <span className="quantidade-que-vai" aria-label={`Levando ${vai}`}>
-                  {vai}
-                </span>
-                <Botao desativado={vai >= item.quantidade} onClick={() => mais(item.id)}>
-                  +
-                </Botao>
-              </span>
-            </li>
-          )
-        })}
-        {usaveis.length === 0 && <li className="nota">Nenhuma poção nem acelerador na Mochila. Dá para comprar no Mercado.</li>}
-      </ul>
+      <Barra fracao={peso / Math.max(1, capacidade)} texto={`Peso ${peso} de ${capacidade}`} alerta={peso >= capacidade} rotulo="Peso da mochila da partida" />
+      <p className="nota">A capacidade vem da Força de quem vai; o que for coletado na partida também ocupa. Na partida, Tab abre a mochila.</p>
+      <div className="duas-grades">
+        <Painel titulo="Mochila do Reino" className="grade-da-preparacao">
+          <GradeDeItens
+            comFiltros={false}
+            tamanho="medio"
+            rotulo="O que dá para levar"
+            itens={usaveis.map((item) => {
+              const sobra = item.quantidade - (levar[item.id] ?? 0)
+              return { id: item.id, rotulo: `tem ${sobra}`, apagado: sobra === 0, titulo: `${itemDoCatalogo(item.id).nome}: tem ${sobra} (clique para levar 1)` }
+            })}
+            aoEscolher={mais}
+            vazio="Nenhuma poção nem acelerador na Mochila. Dá para comprar no Mercado."
+          />
+        </Painel>
+        <Simbolo simbolo={acoesDaInterface.levar.simbolo} cor={acoesDaInterface.levar.cor} arte={arteDaAcao('levar')} grande />
+        <Painel titulo="Vai na partida" className="grade-da-preparacao">
+          <GradeDeItens
+            comFiltros={false}
+            tamanho="medio"
+            rotulo="O que vai na partida"
+            itens={indo.map(([id, quantidade]) => ({ id, rotulo: `leva ${quantidade}`, titulo: `${itemDoCatalogo(id)?.nome ?? id}: levando ${quantidade} (clique para devolver 1)` }))}
+            aoEscolher={menos}
+            vazio="Nada ainda: clique num item à esquerda para levar."
+          />
+        </Painel>
+      </div>
+      <p className="nota">Os itens só saem da Mochila do Reino no fim da partida, e só o que foi usado.</p>
       {motivo && (
         <p className="mensagem-do-reino mensagem-do-reino-erro" role="status">
           {motivo}

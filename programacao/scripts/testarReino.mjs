@@ -45,6 +45,33 @@ const clicarDentro = async (seletor, texto) => {
   await pausa(220)
 }
 const mensagem = () => aba.avaliar(`document.querySelector('.mensagem-do-reino')?.textContent ?? ''`)
+// Fase 4.5: os itens são quadradinhos (o nome fica no aria-label) e os botões apagados dizem o motivo embaixo
+const clicarItem = async (nome, seletor = '') => {
+  const achou = await aba.avaliar(`(() => {
+    const alvo = [...document.querySelectorAll(${JSON.stringify(`${seletor} button.slot`)})].find((b) => (b.getAttribute('aria-label') ?? '').startsWith(${JSON.stringify(nome)}))
+    if (!alvo) return false
+    alvo.click()
+    return true
+  })()`)
+  if (!achou) throw new Error(`não achei o item "${nome}"`)
+  await pausa(220)
+}
+const motivo = (seletor = '') => aba.avaliar(`document.querySelector(${JSON.stringify(`${seletor} .motivo-do-botao`)})?.textContent ?? ''`)
+const desativado = (texto) =>
+  aba.avaliar(`(() => { const b = [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith(${JSON.stringify(texto)})); return b ? b.disabled : null })()`)
+// Contratar pela carta da classe e assinar o contrato
+const contratar = async (classe) => {
+  const achou = await aba.avaliar(`(() => { const b = document.querySelector('[aria-label^=${JSON.stringify(`${classe}:`)}] .botao-de-acao'); if (!b || b.disabled) return false; b.click(); return true })()`)
+  if (!achou) throw new Error(`não achei o Contratar de ${classe}`)
+  await pausa(220)
+  await passo('Assinar o contrato')
+}
+// Aceitar a missão pelo cartaz dela no quadro
+const aceitarMissao = async (titulo) => {
+  const achou = await aba.avaliar(`(() => { const b = document.querySelector('[aria-label=${JSON.stringify(titulo)}] .botao-de-acao'); if (!b || b.disabled) return false; b.click(); return true })()`)
+  if (!achou) throw new Error(`não achei o Aceitar da missão "${titulo}"`)
+  await pausa(250)
+}
 const salvo = () => aba.avaliar(`JSON.parse(localStorage.getItem('jogo-rpg:convidado') ?? 'null')?.progresso ?? null`)
 const quantos = (progresso, id) => (progresso?.mochila ?? []).filter((item) => item.id === id).reduce((soma, item) => soma + item.quantidade, 0)
 const irAoReino = async () => {
@@ -72,9 +99,17 @@ try {
 
   console.log('2. TEST-006, caso 1: comprar sem ouro')
   await passo('Mercado')
-  await passo('Pergaminho de redefinição', true)
-  await passo('Comprar 1', true)
-  conferir('comprar sem ouro: a compra não acontece e aparece o motivo', (await mensagem()).startsWith('Ouro insuficiente: custa 300 e você tem 0'), await mensagem())
+  await clicarItem('Pergaminho de redefinição')
+  conferir(
+    'comprar sem ouro: o botão fica apagado e diz o motivo (nada é comprado)',
+    (await desativado('Comprar por 300')) === true && (await motivo()).startsWith('Ouro insuficiente: custa 300 e você tem 0'),
+    await motivo(),
+  )
+  conferir('na grade, a oferta que o ouro não paga fica apagada', await aba.avaliar(`!!document.querySelector('button.slot.slot-apagado[aria-label^="Pergaminho de redefinição"]')`))
+  // Catálogo de quem acabou de começar: tudo do beta, quase tudo ainda em silhueta (nunca encontrado)
+  await passo('Catálogo')
+  const catalogoNovo = await aba.avaliar(`({ total: document.querySelectorAll('.balcao-grade button.slot').length, silhuetas: document.querySelectorAll('.balcao-grade button.slot-silhueta').length })`)
+  conferir('Catálogo no começo: tudo do beta, e o que nunca foi encontrado em silhueta', catalogoNovo.total >= 40 && catalogoNovo.silhuetas === catalogoNovo.total, catalogoNovo)
   await irAoReino()
   await passo('Itens de teste', true)
   await passo('Itens de teste', true) // duas vezes: ouro para os contratos
@@ -85,12 +120,14 @@ try {
   console.log('3. TEST-006, caso 6: contrato permanente com o temporário da mesma classe ativo')
   await passo('Guilda')
   await passo('Contrato temporário')
-  await aba.avaliar(`(() => { const li = [...document.querySelectorAll('.lista-de-contratos li')].find((l) => l.textContent.startsWith('Guerreiro')); li.querySelector('button').click(); return true })()`)
-  await pausa(250)
+  await contratar('Guerreiro')
   await passo('Contrato permanente')
-  conferir('o Guerreiro aparece avisando que encerra o temporário', (await aba.texto()).includes('(encerra o contrato temporário)'))
-  await aba.avaliar(`(() => { const li = [...document.querySelectorAll('.lista-de-contratos li')].find((l) => l.textContent.startsWith('Guerreiro')); li.querySelector('button').click(); return true })()`)
-  await pausa(300)
+  conferir(
+    'a carta do Guerreiro avisa que encerra o temporário',
+    (await aba.avaliar(`document.querySelector('[aria-label="Guerreiro: Contrato permanente"]')?.textContent ?? ''`)).includes('encerra o contrato temporário'),
+  )
+  await contratar('Guerreiro')
+  await pausa(150)
   const contratado = await salvo()
   conferir('o permanente entra e o temporário da mesma classe vai embora', contratado.personagens.some((p) => p.classe === 'guerreiro') && !contratado.contratosTemporarios.some((c) => c.classe === 'guerreiro'), {
     personagens: contratado.personagens.map((p) => p.classe),
@@ -101,16 +138,16 @@ try {
   await irAoReino()
   await passo('Mercado')
   await passo('Vender')
-  await passo('Poção de vida', true)
+  await clicarItem('Poção de vida')
   const antesDeVender = await salvo()
-  await passo('Vender 1', true)
+  await passo('Vender 1 por', true)
   const vendeu = await salvo()
   conferir('vender soma metade do preço ao ouro e tira 1 da Mochila', vendeu.ouro === antesDeVender.ouro + 12 && quantos(vendeu, 'pocaoDeVida') === quantos(antesDeVender, 'pocaoDeVida') - 1, {
     ouro: [antesDeVender.ouro, vendeu.ouro],
   })
   await passo('Comprar')
-  await passo('Poção de vida', true)
-  await passo('Comprar 1', true)
+  await clicarItem('Poção de vida')
+  await passo('Comprar por 25', true)
   const recomprou = await salvo()
   conferir('recomprar desconta o preço cheio e a poção volta', recomprou.ouro === vendeu.ouro - 25 && quantos(recomprou, 'pocaoDeVida') === quantos(antesDeVender, 'pocaoDeVida'), { ouro: recomprou.ouro })
   await aba.print('01-mercado')
@@ -119,24 +156,26 @@ try {
   await irAoReino()
   await passo('Guilda')
   await passo('Missões')
-  await passo('Peles para o curtidor', true)
-  await passo('Aceitar')
+  await aceitarMissao('Peles para o curtidor')
   conferir('aceitou a missão de entrega e ela já conta as peles da Mochila', (await aba.texto()).includes('Entregar 4 Pele de lobo (4/4)'))
   await irAoReino()
   await passo('Mercado')
   await passo('Vender')
-  await passo('Pele de lobo', true)
+  await clicarItem('Pele de lobo')
   await passo('Vender todos', true)
   await irAoReino()
   await passo('Guilda')
   conferir('vendidas as peles, a entrega fica incompleta de novo', (await aba.texto()).includes('Entregar 4 Pele de lobo (0/4)'))
-  await passo('Entregar')
-  conferir('entregar sem os itens não dá a recompensa e explica', (await mensagem()).includes('ainda não foi cumprida'), await mensagem())
+  conferir(
+    'entregar sem os itens: o botão fica apagado e explica (a recompensa não entra)',
+    (await desativado('Entregar:')) === true && (await motivo('.missao-ativa')).includes('ainda não foi cumprida'),
+    await motivo('.missao-ativa'),
+  )
 
   console.log('6. Mochila: descartar com confirmação')
   await irAoReino()
   await passo('Mochila')
-  await passo('Tônico ligeiro', true)
+  await clicarItem('Tônico ligeiro')
   await passo('Descartar 1')
   conferir('descartar pede confirmação antes', (await aba.texto()).includes('Não dá para desfazer'))
   const antesDeDescartar = quantos(await salvo(), 'tonicoLigeiro')
@@ -147,21 +186,34 @@ try {
   await irAoReino()
   await passo('Forja')
   const arcosAntes = quantos(await salvo(), 'arcoDeCaca')
-  await passo('Arma', true)
-  await aba.avaliar(`(() => { const li = [...document.querySelectorAll('.detalhe-do-item li')].find((l) => l.textContent.startsWith('Espada curta')); li.querySelector('button').click(); return true })()`)
+  await aba.avaliar(`(() => { document.querySelector('button[aria-label^="Arma:"]').click(); return true })()`)
   await pausa(200)
-  conferir('equipar arma de outra classe: a Forja não deixa e explica', (await mensagem()) === 'Espada curta é só para Guerreiro.', await mensagem())
-  await aba.avaliar(`(() => { const li = [...document.querySelectorAll('.detalhe-do-item li')].find((l) => l.textContent.startsWith('Arco de caça')); li.querySelector('button').click(); return true })()`)
-  await pausa(250)
+  conferir('o boneco mostra os 7 espaços em volta', (await aba.avaliar(`document.querySelectorAll('.boneco-da-forja .espaco-do-boneco').length`)) === 7)
+  await clicarItem('Espada curta', '.forja-equipar')
+  conferir(
+    'equipar arma de outra classe: apagada na grade, e o botão apagado explica',
+    (await desativado('Equipar Espada curta')) === true && (await motivo('.forja-equipar')) === 'Espada curta é só para Guerreiro.',
+    await motivo('.forja-equipar'),
+  )
+  await clicarItem('Arco de caça', '.forja-equipar')
+  conferir(
+    'antes de equipar, a comparação mostra a Agilidade subindo (em verde)',
+    await aba.avaliar(`[...document.querySelectorAll('.comparacao .mudanca-boa')].some((m) => m.textContent.startsWith('Agilidade'))`),
+  )
+  await passo('Equipar Arco de caça')
   const equipou = await salvo()
   conferir('a arma da própria classe é equipada e sai da Mochila', equipou.personagens.find((p) => p.classe === 'arqueiro').equipamento.arma === 'arcoDeCaca' && quantos(equipou, 'arcoDeCaca') === arcosAntes - 1)
   await passo('Fabricar')
   // As peles foram vendidas no caso 3: o Elmo de ferro (que pede 1) diz o que falta; as Manoplas de ferro saem
-  await passo('Elmo de ferro', true)
-  await clicarDentro('.detalhe-do-item', 'Fabricar')
-  conferir('fabricar sem os materiais diz o que falta e não gasta nada', (await mensagem()) === 'Falta 1 Pele de lobo.' && (await salvo()).ouro === equipou.ouro, await mensagem())
-  await passo('Manoplas de ferro', true)
-  await clicarDentro('.detalhe-do-item', 'Fabricar')
+  await clicarItem('Elmo de ferro', '.balcao')
+  conferir(
+    'fabricar sem os materiais: o botão fica apagado, diz o que falta e nada é gasto',
+    (await desativado('Fabricar Elmo de ferro')) === true && (await motivo('.balcao')) === 'Falta 1 Pele de lobo.' && (await salvo()).ouro === equipou.ouro,
+    await motivo('.balcao'),
+  )
+  conferir('a receita mostra os materiais com o que tem (em vermelho o que falta)', await aba.avaliar(`!!document.querySelector('.receita .troca-item-falta')`))
+  await clicarItem('Manoplas de ferro', '.balcao')
+  await passo('Fabricar Manoplas de ferro')
   const fabricou = await salvo()
   conferir(
     'com os materiais, fabricar consome materiais e ouro e o equipamento aparece',
@@ -195,16 +247,20 @@ try {
   console.log('9. Mochila da partida: Preparação, Tab e E; missão de matar; conquista')
   await irAoReino()
   await passo('Guilda')
-  await passo('Abandonar…')
+  await passo('Abandonar', true)
   await passo('Sim, abandonar')
-  await passo('Caçar lobos', true)
-  await passo('Aceitar')
+  await aceitarMissao('Caçar lobos')
   await irAoReino()
   await passo('Jogar')
   await passo('Floresta')
   await aba.esperarTela('Preparação')
-  await aba.avaliar(`(() => { const li = [...document.querySelectorAll('.mochila-da-preparacao li')].find((l) => l.textContent.startsWith('Poção de vida')); const mais = [...li.querySelectorAll('button')].at(-1); mais.click(); mais.click(); return true })()`)
-  await pausa(200)
+  await clicarItem('Poção de vida', '.mochila-da-preparacao')
+  await clicarItem('Poção de vida', '.mochila-da-preparacao')
+  conferir(
+    'Preparação: clicar à esquerda leva para a mochila da partida, e a barra mostra o peso',
+    (await aba.avaliar(`!!document.querySelector('.mochila-da-preparacao button.slot[aria-label^="Poção de vida: levando 2"]')`)) &&
+      (await aba.avaliar(`document.querySelector('.mochila-da-preparacao .barra-texto')?.textContent ?? ''`)).startsWith('Peso 2 de'),
+  )
   const pocoesAntes = quantos(await salvo(), 'pocaoDeVida')
   await passo('Começar partida')
   await aba.esperar(`!!${CENA}?.lider`, 'a partida', 20000)
@@ -258,23 +314,59 @@ try {
   await passo('Voltar ao Reino')
   await aba.esperarTela('Reino')
   await passo('Guilda')
-  await passo('Abandonar…')
+  await passo('Abandonar', true)
   await passo('Sim, abandonar')
-  await passo('O Guardião da Floresta', true)
-  await passo('Aceitar')
+  await aceitarMissao('O Guardião da Floresta')
   await irAoReino()
   await passo('Mercado')
-  await passo('Poção de vida', true)
-  for (let i = 0; i < 400 && (await salvo()).ouro >= 25; i++) await clicar('Comprar 1', true)
+  await clicarItem('Poção de vida')
+  for (let i = 0; i < 400 && (await salvo()).ouro >= 25; i++) await clicar('Comprar por 25', true)
   await pausa(300)
   const pobre = await salvo()
   await irAoReino()
   await passo('Guilda')
-  await passo('Abandonar…')
+  await passo('Abandonar', true)
   conferir('o aviso mostra a multa e que o ouro vai ficar em zero', (await aba.texto()).includes('o ouro vai ficar em zero'), pobre.ouro)
   await passo('Sim, abandonar')
   const abandonou = await salvo()
   conferir('com ouro abaixo da multa, o ouro fica em zero e a missão sai', abandonou.ouro === 0 && abandonou.missaoAtiva === null, { antes: pobre.ouro, depois: abandonou.ouro })
+
+  console.log('11b. Interface (Fase 4.5): filtros, trocas, Catálogo, o "?" e o aviso de conquista')
+  await irAoReino()
+  await passo('Mochila')
+  const todos = await aba.avaliar(`document.querySelectorAll('.balcao-grade button.slot').length`)
+  await passo('Consumíveis', true)
+  const consumiveis = await aba.avaliar(`[...document.querySelectorAll('.balcao-grade button.slot')].map((b) => b.getAttribute('aria-label'))`)
+  conferir(
+    'Mochila: o filtro Consumíveis deixa só poções e aceleradores',
+    consumiveis.length > 0 && consumiveis.length < todos && consumiveis.every((nome) => /^(Poção|Tônico|Elixir)/.test(nome)),
+    { todos, consumiveis },
+  )
+  await irAoReino()
+  await passo('Mercado')
+  await passo('Trocar')
+  conferir(
+    'Trocar: cada troca mostra "você dá" ⇄ "você recebe", e a que falta item fica com o botão apagado e o motivo',
+    (await aba.avaliar(`document.querySelectorAll('.troca').length`)) >= 3 && (await aba.avaliar(`!!document.querySelector('.troca .motivo-do-botao')`)),
+  )
+  await passo('Catálogo')
+  const catalogo = await aba.avaliar(`({ total: document.querySelectorAll('.balcao-grade button.slot').length, silhuetas: document.querySelectorAll('.balcao-grade button.slot-silhueta').length, texto: document.querySelector('.balcao-grade .nota')?.textContent ?? '' })`)
+  conferir('Catálogo depois dos itens de teste: tudo encontrado, nada em silhueta (os vistos ficam no save)', catalogo.total >= 40 && catalogo.silhuetas === 0 && catalogo.texto.includes(`Você já encontrou ${catalogo.total} de ${catalogo.total}`), catalogo)
+  await aba.print('06-catalogo')
+  await passo('?')
+  conferir('o "?" abre a explicação da tela', (await aba.avaliar(`document.querySelector('[role=dialog]')?.getAttribute('aria-label') ?? ''`)) === 'Como funciona: Mercado')
+  await aba.apertar('esc')
+  conferir('Esc fecha a explicação', !(await aba.avaliar(`!!document.querySelector('[role=dialog]')`)))
+  await irAoReino()
+  await passo('Mochila')
+  await aba.avaliar(`(() => { [...document.querySelectorAll('.avisos .aviso button')].forEach((b) => b.click()); return true })()`)
+  await passo('Itens de teste', true) // +1000 de ouro: pode concluir a conquista "Cofre cheio"
+  await pausa(300)
+  const conquista = await aba.avaliar(`!!document.querySelector('.avisos-de-conquista .aviso-de-conquista')`)
+  if (conquista) {
+    await pausa(6500)
+    conferir('o aviso de conquista fica no canto e some sozinho', !(await aba.avaliar(`!!document.querySelector('.avisos-de-conquista .aviso-de-conquista')`)))
+  }
 
   console.log('12. TEST-006, caso 7: recarregar a página e conferir que tudo persistiu')
   const antesDeRecarregar = await salvo()

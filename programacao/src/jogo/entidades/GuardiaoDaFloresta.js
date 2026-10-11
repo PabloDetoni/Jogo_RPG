@@ -1,7 +1,9 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
+import { arteDaFloresta, msDoAtaqueNaTela } from '../../dados/arte.js'
 import { mundo } from '../../dados/balanceamento.js'
 import { circuloTocaRetangulo, podeUsar, velocidadeDoMovimento } from '../../regras/combate.js'
 import TiroInimigo from '../ataques/tiroInimigo.js'
+import { imagemDaArte } from '../arte.js'
 import { camadas, particulas, tremerTela } from '../efeitos.js'
 import Inimigo from './Inimigo.js'
 
@@ -24,6 +26,24 @@ export default class GuardiaoDaFloresta extends Inimigo {
     // A coroa de raízes em cima (só desenho)
     this.coroa = cena.add.rectangle(0, -config.tamanho * 0.42, config.tamanho * 0.7, 10, 0x4f8f3a).setStrokeStyle(2, coresDaArena.contorno)
     this.visual.add(this.coroa)
+    this.usarArte('guardiao')
+    this.coroa.setVisible(!this.boneco)
+  }
+
+  // Na arte: o aviso e o golpe, olhando para onde o ataque vai
+  animacaoDoMomento(agora, andando) {
+    const naMira = { x: Math.cos(this.direcao ?? 0), y: Math.sin(this.direcao ?? 0) }
+    if (this.estado === 'avisando') return { animacao: 'aviso', olharPara: naMira }
+    const golpeRecente = this.ultimoAtaque !== null && agora - this.ultimoAtaque < msDoAtaqueNaTela
+    if (this.estado === 'atacando' || golpeRecente) return { animacao: 'atacando', olharPara: naMira, desde: this.ultimoAtaque }
+    return super.animacaoDoMomento(agora, andando)
+  }
+
+  // A marca do aviso no chão: a imagem da lista (aviso-circulo, aviso-faixa, aviso-linha), esticada, ou a forma vermelha
+  marcaDoAviso(tipo, x, y, largura, altura, angulo, forma) {
+    const imagem = imagemDaArte(this.cena, arteDaFloresta.avisos[tipo])
+    if (!imagem) return forma()
+    return this.cena.add.image(x, y, imagem.textura).setDisplaySize(largura, altura).setRotation(angulo).setAlpha(0.6).setDepth(camadas.aura)
   }
 
   // Empurrões quase não o tiram do lugar
@@ -75,24 +95,28 @@ export default class GuardiaoDaFloresta extends Inimigo {
     this.apagarAviso()
     const vermelho = 0xff3b3b
     if (tipo === 'pisao') {
-      this.aviso = this.cena.add.circle(this.x, this.y, ficha.raio, vermelho, 0.18).setStrokeStyle(3, vermelho, 0.9).setDepth(camadas.aura)
+      this.aviso = this.marcaDoAviso('pisao', this.x, this.y, ficha.raio * 2, ficha.raio * 2, 0, () =>
+        this.cena.add.circle(this.x, this.y, ficha.raio, vermelho, 0.18).setStrokeStyle(3, vermelho, 0.9).setDepth(camadas.aura),
+      )
     } else if (tipo === 'investida') {
       const centro = { x: this.x + (Math.cos(this.direcao) * ficha.comprimento) / 2, y: this.y + (Math.sin(this.direcao) * ficha.comprimento) / 2 }
-      this.aviso = this.cena.add
-        .rectangle(centro.x, centro.y, ficha.comprimento, ficha.largura, vermelho, 0.18)
-        .setStrokeStyle(3, vermelho, 0.9)
-        .setRotation(this.direcao)
-        .setDepth(camadas.aura)
+      this.aviso = this.marcaDoAviso('investida', centro.x, centro.y, ficha.comprimento, ficha.largura, this.direcao, () =>
+        this.cena.add
+          .rectangle(centro.x, centro.y, ficha.comprimento, ficha.largura, vermelho, 0.18)
+          .setStrokeStyle(3, vermelho, 0.9)
+          .setRotation(this.direcao)
+          .setDepth(camadas.aura),
+      )
     } else {
       const linhas = []
       for (let i = 0; i < ficha.quantos; i++) {
         const angulo = this.direcao + (i - (ficha.quantos - 1) / 2) * (ficha.abertura / Math.max(1, ficha.quantos - 1))
         const comprimento = ficha.alcanceDoTiro * 0.6
+        const centro = { x: this.x + (Math.cos(angulo) * comprimento) / 2, y: this.y + (Math.sin(angulo) * comprimento) / 2 }
         linhas.push(
-          this.cena.add
-            .rectangle(this.x + (Math.cos(angulo) * comprimento) / 2, this.y + (Math.sin(angulo) * comprimento) / 2, comprimento, 6, vermelho, 0.45)
-            .setRotation(angulo)
-            .setDepth(camadas.aura),
+          this.marcaDoAviso('espinhos', centro.x, centro.y, comprimento, 12, angulo, () =>
+            this.cena.add.rectangle(centro.x, centro.y, comprimento, 6, vermelho, 0.45).setRotation(angulo).setDepth(camadas.aura),
+          ),
         )
       }
       this.aviso = { linhas, destroy: () => linhas.forEach((linha) => linha.destroy()) }
@@ -105,7 +129,8 @@ export default class GuardiaoDaFloresta extends Inimigo {
   atualizarAviso(agora) {
     if (!this.aviso || this.aviso.linhas) return
     const fracao = Math.min(1, (agora - this.inicioDoAviso) / (this.fimDoAviso - this.inicioDoAviso))
-    this.aviso.setFillStyle(0xff3b3b, 0.15 + fracao * 0.35)
+    if (this.aviso.setFillStyle) this.aviso.setFillStyle(0xff3b3b, 0.15 + fracao * 0.35)
+    else this.aviso.setAlpha(0.45 + fracao * 0.5)
   }
 
   apagarAviso() {
@@ -170,8 +195,8 @@ export default class GuardiaoDaFloresta extends Inimigo {
   }
 
   atualizarDesenho(agora, delta) {
-    if (this.estado === 'avisando') this.quadrado.setFillStyle(Math.floor(agora / 100) % 2 ? 0xffd0c0 : this.cor)
-    else if (!this.fimDoPiscar) this.quadrado.setFillStyle(this.cor)
+    if (this.estado === 'avisando') this.destacar(Math.floor(agora / 100) % 2 ? 0xffd0c0 : null)
+    else if (!this.fimDoPiscar) this.destacar(null)
     super.atualizarDesenho(agora, delta)
   }
 

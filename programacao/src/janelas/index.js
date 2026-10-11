@@ -1,3 +1,4 @@
+import Ajuda from './Ajuda.jsx'
 import ComoJogar from './ComoJogar.jsx'
 import ConfirmarFuga from './ConfirmarFuga.jsx'
 import Configuracoes from './Configuracoes.jsx'
@@ -14,4 +15,5 @@ export const componentesDasJanelas = {
   comoJogar: ComoJogar,
   confirmarFuga: ConfirmarFuga,
   mochilaDaPartida: desenhadaPelaPartida,
+  ajuda: Ajuda, // o "?" de cada tela (Fase 4.5)
 }

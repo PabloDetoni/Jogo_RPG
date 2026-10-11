@@ -10,8 +10,10 @@ export const posicoes = {
   cantos: {
     salaoGloria: { x: 9, y: 11 },
     configuracoes: { x: 93, y: 11 },
+    ajuda: { x: 83.6, y: 11 }, // o "?" (Fase 4.5): como a tela funciona
   },
   avisos: { x: 50, y: 30 }, // mensagens por cima da tela (partida descartada, aba ocupada...)
+  avisosDeConquista: { x: 86, y: 22 }, // conquista nova (Fase 4.5): no canto, some sozinha, não tapa as abas
 
   // ---------- Acesso ----------
   telaInicial: {
@@ -98,7 +100,7 @@ export const posicoes = {
   },
   guilda: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 57 },
+    conteudo: { x: 50, y: 29.5 }, // preso pelo topo (ConteudoComAbas noTopo): as cartas e o quadro não sobem nas abas
     voltarAoReino: { x: 10, y: 90 },
   },
   mercado: {

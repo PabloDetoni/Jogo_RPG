@@ -378,16 +378,17 @@ const CABE_NO_HUD = `(() => {
   const p = r(hud.querySelector('.hud-principal')), n = r(hud.querySelector('.hud-numeros')), m = r(hud.querySelector('.hud-minimapa')), c = r(config)
   return { estouradas, emOrdem: p.right <= n.left + 1 && n.right <= m.left + 1 && m.right <= c.left + 1, altura: hud.scrollHeight <= hud.clientHeight + 1 }
 })()`
-// Clica no botão da linha de uma lista (por exemplo, "Contratar" na linha do Arqueiro, na Guilda)
-async function clicarNaLinha(textoDaLinha, textoDoBotao) {
+// Contrata pela carta da classe na Guilda e assina o contrato (Fase 4.5: cada classe é uma carta)
+async function contratarPelaCarta(classe) {
   const ok = await avaliar(`(() => {
-    const linha = [...document.querySelectorAll('li')].find(l => l.textContent.startsWith(${JSON.stringify(textoDaLinha)}))
-    const botao = linha && [...linha.querySelectorAll('button')].find(b => b.textContent.trim().startsWith(${JSON.stringify(textoDoBotao)}))
-    if (!botao) return false
+    const botao = document.querySelector('[aria-label^=${JSON.stringify(`${classe}:`)}] .botao-de-acao')
+    if (!botao || botao.disabled) return false
     botao.click()
     return true
   })()`)
-  if (!ok) throw new Error(`não achei "${textoDoBotao}" na linha "${textoDaLinha}"`)
+  if (!ok) throw new Error(`não achei o Contratar da carta "${classe}"`)
+  await pausa(150)
+  await clicar('Assinar o contrato')
   await pausa(150)
 }
 // IA do aliado de uma classe, como a partida decide (pelo nível dele, sem o seletor da barra de teste)
@@ -712,9 +713,12 @@ try {
 
   await colocarLider(1120, 560)
   await cena(`(c.aliados.forEach((a, i) => a.colocarEm(860, 470 + i * 45)), true)`)
-  for (let i = 0; i < 14; i++) {
+  // Espera até 6 s (no mínimo 3,5 s) os aliados chegarem: a medida num instante fixo pegava, às vezes, um aliado ainda a
+  // caminho num computador mais lento (164 px numa rodada, 227 de 227 na seguinte)
+  for (let i = 0; i < 24; i++) {
     await colocarLider(1120, 560)
     await pausa(250)
+    if (i >= 13 && (await distanciasAoLider()).every((d) => d <= 160)) break
   }
   conferir('todos contornam a pedra e chegam perto do Líder (≤ 160 px)', (await distanciasAoLider()).every((d) => d <= 160), await distanciasAoLider())
 
@@ -1230,7 +1234,7 @@ try {
   await clicar('Guilda')
   await clicar('Contrato temporário')
   const antesDoContrato = await salvo()
-  await clicarNaLinha('Arqueiro', 'Contratar')
+  await contratarPelaCarta('Arqueiro')
   const depoisDoTemporario = await salvo()
   conferir(
     'contrato temporário: o Arqueiro entra com 3 partidas e nível 5, e o ouro cai 200',
@@ -1238,11 +1242,12 @@ try {
       depoisDoTemporario.ouro === antesDoContrato.ouro - 200,
     { contratos: depoisDoTemporario.contratosTemporarios, ouro: [antesDoContrato.ouro, depoisDoTemporario.ouro] },
   )
-  const abaTemporaria = await textoDe('.contratos')
-  conferir('a aba mostra o contrato ativo com as partidas restantes, e o Arqueiro sai da lista', abaTemporaria.includes('3 partidas restantes') && !/^Arqueiro\s*Contratar/m.test(abaTemporaria), abaTemporaria.split('\n').slice(0, 8))
+  const abaTemporaria = await textoDe('.contratos-novos')
+  const cartaDoArqueiro = await avaliar(`!!document.querySelector('[aria-label="Arqueiro: Contrato temporário"]')`)
+  conferir('a aba mostra o contrato ativo com as partidas restantes, e a carta do Arqueiro sai', abaTemporaria.includes('3 partidas restantes') && !cartaDoArqueiro, abaTemporaria.split('\n').slice(0, 8))
   await print('48-guilda-temporario')
   await clicar('Contrato permanente')
-  await clicarNaLinha('Guerreiro', 'Contratar')
+  await contratarPelaCarta('Guerreiro')
   const depoisDoPermanente = await salvo()
   conferir(
     'contrato permanente: o Guerreiro entra no nível 1 e o ouro cai 1000',
@@ -1250,8 +1255,8 @@ try {
     { personagens: depoisDoPermanente.personagens.map((p) => p.classe), ouro: depoisDoPermanente.ouro },
   )
   if (depoisDoPermanente.ouro < 1000) {
-    await clicarNaLinha('Tanque', 'Contratar')
-    conferir('sem ouro: aparece "Ouro insuficiente" e nada muda', (await textoDe('.contratos')).includes('Ouro insuficiente') && (await salvo()).ouro === depoisDoPermanente.ouro)
+    const cartaDoTanque = await avaliar(`(() => { const carta = document.querySelector('[aria-label="Tanque: Contrato permanente"]'); return { apagado: carta?.querySelector('.botao-de-acao')?.disabled, motivo: carta?.querySelector('.motivo-do-botao')?.textContent ?? '' } })()`)
+    conferir('sem ouro: o Contratar do Tanque fica apagado, diz "Ouro insuficiente" e nada muda', cartaDoTanque.apagado && cartaDoTanque.motivo.includes('Ouro insuficiente') && (await salvo()).ouro === depoisDoPermanente.ouro, cartaDoTanque)
   }
   await print('49-guilda-permanente')
   await clicar('Voltar ao Reino')
@@ -1269,7 +1274,7 @@ try {
   await clicar('Voltar ao Reino')
   await clicar('Guilda')
   await clicar('Contrato temporário')
-  conferir('depois de uma partida, o Arqueiro temporário fica com 2 partidas (critério do card)', (await textoDe('.contratos')).includes('2 partidas restantes'))
+  conferir('depois de uma partida, o Arqueiro temporário fica com 2 partidas (critério do card)', (await textoDe('.contratos-novos')).includes('2 partidas restantes'))
   await clicar('Voltar ao Reino')
 
   console.log('25. Vitória: um aliado perdido paga a taxa pela distância de onde caiu (TEST-004)')

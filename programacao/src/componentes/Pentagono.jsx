@@ -3,7 +3,8 @@ import { atributos } from '../dados/classes.js'
 // Pentágono dos 5 atributos (RF07, TASK-071): uma ponta por atributo, na ordem de dados/classes.js (Vitalidade em
 // cima, depois no sentido do relógio). Cada ponta vai do centro até valor ÷ maximo; a grade marca 25%, 50%, 75% e 100%.
 // Desenhado em SVG, muda de forma com os valores. Usado na Seleção de classe e nas Árvores de Habilidades.
-export default function Pentagono({ valores, maximo, cor = '#3d7bff', rotulo }) {
+// compacto (Fase 4.5, as cartas de contrato da Guilda): menor, só com as siglas, em letra maior para dar para ler
+export default function Pentagono({ valores, maximo, cor = '#3d7bff', rotulo, compacto = false }) {
   const tamanho = 240
   const centro = tamanho / 2
   const raio = tamanho * 0.3
@@ -17,7 +18,7 @@ export default function Pentagono({ valores, maximo, cor = '#3d7bff', rotulo }) 
   const descricao = rotulo ?? `Atributos: ${atributos.map((atributo) => `${atributo.nome} ${valores[atributo.id] ?? 0}`).join(', ')}`
 
   return (
-    <svg className="pentagono" viewBox={`0 0 ${tamanho} ${tamanho}`} role="img" aria-label={descricao}>
+    <svg className={`pentagono${compacto ? ' pentagono-compacto' : ''}`} viewBox={`0 0 ${tamanho} ${tamanho}`} role="img" aria-label={descricao}>
       {[0.25, 0.5, 0.75, 1].map((fracao) => (
         <polygon key={fracao} points={contorno(fracao)} className="pentagono-grade" />
       ))}
@@ -31,9 +32,11 @@ export default function Pentagono({ valores, maximo, cor = '#3d7bff', rotulo }) 
         return (
           <text key={atributo.id} x={x} y={y} className="pentagono-rotulo" textAnchor="middle" dominantBaseline="middle">
             <tspan>{atributo.sigla}</tspan>
-            <tspan x={x} dy="1.1em" className="pentagono-valor">
-              {valores[atributo.id] ?? 0}
-            </tspan>
+            {!compacto && (
+              <tspan x={x} dy="1.1em" className="pentagono-valor">
+                {valores[atributo.id] ?? 0}
+              </tspan>
+            )}
           </text>
         )
       })}

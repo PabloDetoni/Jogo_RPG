@@ -5,6 +5,7 @@ import PainelDev from './componentes/PainelDev.jsx'
 import { useJogo } from './estado/contexto.js'
 import ProvedorDoJogo from './estado/ProvedorDoJogo.jsx'
 import { componentesDasJanelas } from './janelas/index.js'
+import { arteDaInterfaceNaRaiz } from './componentes/ui/arteDaInterface.js'
 import { componentesDasTelas } from './telas/index.js'
 import { musicaDaTela } from './regras/som.js'
 
@@ -16,6 +17,9 @@ export default function App() {
     </ProvedorDoJogo>
   )
 }
+
+// A arte da interface que já chegou (Fase 4.5): molduras, botões e quadradinhos de pixel art, por variáveis de CSS
+const arteDaInterface = arteDaInterfaceNaRaiz()
 
 function Jogo() {
   const { estado } = useJogo()
@@ -30,7 +34,7 @@ function Jogo() {
   return (
     <>
       {/* Caixa 16:9 que cabe na janela; o tema muda as cores dela */}
-      <div className="moldura" data-tema={estado.preferencias.tema}>
+      <div className={`moldura ${arteDaInterface.classes}`} style={arteDaInterface.estilo} data-tema={estado.preferencias.tema}>
         <TelaAtual key={estado.tela} />
         {estado.janelas.map((id) => {
           const JanelaAberta = componentesDasJanelas[id]

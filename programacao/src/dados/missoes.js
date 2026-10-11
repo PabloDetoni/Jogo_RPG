@@ -40,6 +40,12 @@ export function nomeDoAlvo(missao) {
 
 const verbos = { matar: 'Derrotar', coletar: 'Coletar', entregar: 'Entregar', explorar: 'Explorar' }
 
+// O objetivo de uma missão, sem a conta (o cartaz do quadro, Fase 4.5): "Derrotar 8 lobo", "Explorar Riacho Seco"
+export function objetivoDaMissao(missao) {
+  if (missao.tipo === 'explorar') return `Explorar ${nomeDoAlvo(missao)}`
+  return `${verbos[missao.tipo]} ${missao.quantidade} ${nomeDoAlvo(missao)}`
+}
+
 // Missão ativa em uma linha, para o HUD do Reino: "Derrotar 10 lobo (4/10)". null = nenhuma.
 // Na de entrega, "progresso" é quanto há na Mochila agora (quem chama passa; sem ele, não mostra a conta).
 export function descreverMissao(missao, progresso = missao?.progresso) {

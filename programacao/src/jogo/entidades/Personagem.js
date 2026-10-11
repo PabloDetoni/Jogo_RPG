@@ -1,5 +1,6 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { combateDeTeste } from '../../dados/balanceamento.js'
+import { msDoAtaqueNaTela } from '../../dados/arte.js'
 import { corDaClasse } from '../../dados/classes.js'
 import { habilidadesNasTeclas } from '../../regras/habilidadesDaArvore.js'
 import { camadas } from '../efeitos.js'
@@ -18,7 +19,8 @@ const marcas = [
 
 // Líder ou aliado: quadrado da cor da classe, com barra de vida e de mana. Só o Líder tem o contorno branco
 // grosso e a mira (o triângulo que gira para o mouse). Quem desmaia tomba, fica cinza e mostra a contagem
-// dos 30 s e o anel da ajuda (TASK-044).
+// dos 30 s e o anel da ajuda (TASK-044). Com a arte da classe (dados/arte.js), a imagem animada fica no lugar do
+// quadrado, e o Líder ganha um anel branco no chão em vez do contorno.
 export default class Personagem extends Entidade {
   constructor(cena, membro, x, y) {
     super(cena, { x, y, tamanho, cor: corDaClasse(membro.classe) })
@@ -28,6 +30,8 @@ export default class Personagem extends Entidade {
     this.visual.addAt(this.contornoEscuro, 0)
     this.visual.addAt(this.marca, 0)
     this.visual.add(this.contornoDoLider)
+    this.anelDoLider = cena.add.ellipse(0, tamanho * 0.45, tamanho * 1.15, tamanho * 0.45).setStrokeStyle(3, 0xffffff, 0.95).setVisible(false)
+    this.visual.addAt(this.anelDoLider, 0)
     this.mira = cena.add.triangle(0, 0, 0, -8, 16, 0, 0, 8, 0xffffff).setStrokeStyle(2, coresDaArena.contorno)
     this.barra = new BarraDeVida(cena, tamanho + 8)
     this.barraDeMana = new BarraDeVida(cena, tamanho + 8, 0x5ab4ff, 2)
@@ -65,6 +69,7 @@ export default class Personagem extends Entidade {
     }
     this.membro = membro
     this.classe = membro.classe
+    this.usarArte(membro.classe)
     this.nivel = membro.nivel ?? 1 // decide a IA quando é aliado
     this.chanceDeCritico = membro.chanceDeCritico ?? 0 // pela Agilidade (regras/combate.js)
     this.defesa = membro.defesa ?? 0 // do equipamento (Fase 4): tira uma parte do dano recebido
@@ -82,9 +87,19 @@ export default class Personagem extends Entidade {
     this.peso = membro.lider ? combateDeTeste.separacao.pesoDoLider : 1
     this.andaSozinho = !membro.lider
     if (!this.caido) this.definirCor(corDaClasse(membro.classe))
-    this.contornoEscuro.setVisible(this.lider)
-    this.contornoDoLider.setVisible(this.lider)
+    this.contornoEscuro.setVisible(this.lider && !this.boneco)
+    this.contornoDoLider.setVisible(this.lider && !this.boneco)
+    this.anelDoLider.setVisible(this.lider && Boolean(this.boneco))
     this.mira.setVisible(this.lider && !this.caido)
+  }
+
+  // Na arte: caído, desmaiado; logo depois de atacar ou usar uma habilidade, o ataque, olhando para a mira
+  animacaoDoMomento(agora, andando) {
+    if (this.caido) return { animacao: 'desmaiado' }
+    if (this.inicioDoGolpe !== undefined && agora - this.inicioDoGolpe < msDoAtaqueNaTela) {
+      return { animacao: 'atacando', olharPara: { x: Math.cos(this.anguloDaMira), y: Math.sin(this.anguloDaMira) }, desde: this.inicioDoGolpe }
+    }
+    return super.animacaoDoMomento(agora, andando)
   }
 
   get provocando() {
@@ -154,7 +169,10 @@ export default class Personagem extends Entidade {
     this.corpo.body.setImmovable(true)
     this.definirCor(0x777777)
     this.mira.setVisible(false)
-    this.cena.tweens.add({ targets: this.visual, angle: 90, duration: 400, ease: 'Bounce.Out' })
+    // Com a imagem de desmaiado, ela já mostra o personagem caído; sem ela, o desenho tomba e escurece
+    const comImagemDeDesmaiado = this.boneco?.tem('desmaiado')
+    this.boneco?.escurecer(comImagemDeDesmaiado ? null : 0x8a8a8a)
+    if (!comImagemDeDesmaiado) this.cena.tweens.add({ targets: this.visual, angle: 90, duration: 400, ease: 'Bounce.Out' })
   }
 
   // Levantado (pela ajuda ou pela Ressurreição): volta de pé, com a vida dada
@@ -164,6 +182,7 @@ export default class Personagem extends Entidade {
     this.progressoDaAjuda = 0
     this.corpo.body.setImmovable(false)
     this.definirCor(corDaClasse(this.classe))
+    this.boneco?.escurecer(null)
     this.mira.setVisible(this.lider)
     this.textoDoDesmaio.setVisible(false)
     this.anelDaAjuda.clear()

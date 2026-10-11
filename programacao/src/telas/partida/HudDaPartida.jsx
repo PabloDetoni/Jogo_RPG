@@ -1,6 +1,9 @@
 import Minimapa from './Minimapa.jsx'
+import CorDaClasse from '../../componentes/CorDaClasse.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import { emCqw, faixas } from '../../dados/arenaDeTeste.js'
-import { corDaClasseCss, nomeDaClasse } from '../../dados/classes.js'
+import { iconeDaHabilidade, iconeDaPedraDeRetorno, iconeDoItem } from '../../dados/arte.js'
+import { nomeDaClasse } from '../../dados/classes.js'
 import { nomeDoNivelDaIA } from '../../regras/nivelDaIA.js'
 import { relogio } from './formato.js'
 
@@ -24,7 +27,7 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
       <div className="hud-principal">
         <div className="hud-linha">
           <div className="hud-classe">
-            <span className="hud-cor" style={{ background: corDaClasseCss(situacao.classe) }} />
+            <CorDaClasse classe={situacao.classe} />
             Líder: {nomeDaClasse(situacao.classe)}
           </div>
           <Medidor nome="Vida" fracao={situacao.vida / situacao.vidaMaxima} texto={`${situacao.vida} / ${situacao.vidaMaxima}`} tipo="vida" />
@@ -35,6 +38,7 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
             <Espaco
               key={indice}
               tecla={String(indice + 1)}
+              icone={habilidade ? iconeDaHabilidade(habilidade.id) : null}
               nome={habilidade?.nome ?? 'vazio'}
               custo={habilidade?.custo}
               recarga={habilidade ? habilidade.recarga : null}
@@ -50,7 +54,7 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
           ))}
           {situacao.perdidos.map((classe, indice) => (
             <span key={`perdido-${indice}`} className="hud-aliado hud-perdido">
-              <span className="hud-cor" style={{ background: corDaClasseCss(classe) }} />
+              <CorDaClasse classe={classe} />
               {nomeDaClasse(classe)}: perdido
             </span>
           ))}
@@ -110,9 +114,15 @@ export function AvisosDaPartida({ situacao, mensagens }) {
           </div>
         </div>
       )}
-      {situacao?.fuga && <div className="faixa-da-partida faixa-fuga">Fugindo com a Pedra de Retorno em {situacao.fuga.segundos} s</div>}
+      {situacao?.fuga && (
+        <div className="faixa-da-partida faixa-fuga">
+          <Icone nome={iconeDaPedraDeRetorno} />
+          Fugindo com a Pedra de Retorno em {situacao.fuga.segundos} s
+        </div>
+      )}
       {situacao?.retorno && (
         <div className={`faixa-da-partida${situacao.retorno.interrompido ? ' faixa-alerta' : ''}`}>
+          <Icone nome={iconeDaPedraDeRetorno} />
           {situacao.retorno.interrompido
             ? `Em combate: o retorno espera (${situacao.retorno.segundos} s)`
             : `Voltando ao Reino em ${situacao.retorno.segundos} s`}{' '}
@@ -121,6 +131,7 @@ export function AvisosDaPartida({ situacao, mensagens }) {
       )}
       {situacao?.itemPerto && (
         <div className={`faixa-da-partida${situacao.itemPerto.cabe ? '' : ' faixa-alerta'}`}>
+          <Icone nome={iconeDoItem(situacao.itemPerto.id)} />
           {situacao.itemPerto.cabe
             ? `E: pegar ${situacao.itemPerto.nome}${situacao.itemPerto.quantidade > 1 ? ` ×${situacao.itemPerto.quantidade}` : ''}`
             : `Mochila cheia: não cabe ${situacao.itemPerto.nome}`}
@@ -165,13 +176,14 @@ function Barra({ fracao }) {
 }
 
 // Um espaço de ação: tecla, nome, custo de mana e a barra da recarga (cheia = pronta). recarga null = vazio.
-function Espaco({ tecla, nome, custo, recarga, semMana }) {
+function Espaco({ tecla, icone, nome, custo, recarga, semMana }) {
   const vazio = recarga === null
   const classes = ['hud-espaco', vazio && 'hud-espaco-vazio', semMana && 'hud-espaco-sem-mana', recarga >= 1 && 'hud-espaco-pronto']
   return (
     <div className={classes.filter(Boolean).join(' ')}>
       <span className="hud-espaco-nome">
-        <span className="hud-tecla">{tecla}</span> {nome}
+        <span className="hud-tecla">{tecla}</span> <Icone nome={icone} tamanho="1.2em" />
+        {nome}
         {custo !== undefined && <span className="hud-custo"> {custo}</span>}
       </span>
       {!vazio && <Barra fracao={recarga} />}
@@ -184,7 +196,7 @@ function Aliado({ aliado }) {
   const estado = aliado.caido ? `caído: ${aliado.segundosParaLevantar} s` : aliado.fragil ? 'frágil' : null
   return (
     <span className={`hud-aliado${aliado.caido ? ' hud-aliado-caido' : ''}`}>
-      <span className="hud-cor" style={{ background: corDaClasseCss(aliado.classe) }} />
+      <CorDaClasse classe={aliado.classe} />
       <span className="hud-aliado-texto">
         <span>
           {nomeDaClasse(aliado.classe)}

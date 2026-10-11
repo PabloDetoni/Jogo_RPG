@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Pentagono from '../../componentes/Pentagono.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { retratoDaClasse } from '../../dados/arte.js'
 import { classes, corDaClasseCss } from '../../dados/classes.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
@@ -29,6 +31,7 @@ export default function SelecaoClasse() {
       <Area em={pos.detalhe} className="detalhe-da-classe">
         <Pentagono valores={classe.atributosIniciais} maximo={escala} cor={corDaClasseCss(classe.id)} />
         <div className="texto-da-classe">
+          <Icone nome={retratoDaClasse(classe.id)} tamanho="5em" className="retrato-da-classe" />
           <h2>{classe.nome}</h2>
           <p className="papel-da-classe">{classe.papel}</p>
           <p>{classe.descricao}</p>

@@ -1,12 +1,34 @@
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { estiloPosicao } from '../../componentes/posicao.js'
+import Simbolo from '../../componentes/ui/Simbolo.jsx'
+import { iconeDoOuro } from '../../dados/arte.js'
 import { nomeDaClasse } from '../../dados/classes.js'
-import { missaoEmUmaLinha } from '../../regras/missoes.js'
+import { arteDoLugar, lugaresDoReino } from '../../dados/interface.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
+import { missaoEmUmaLinha } from '../../regras/missoes.js'
 
 const pos = posicoes.reino
+
+// Um lugar do Reino (Fase 4.5): o botão com o símbolo do lugar e, logo embaixo, uma linha dizendo o que ele é. As posições
+// continuam as de dados/posicoes.js (dependem da arte do Reino, que ainda vai chegar).
+function Lugar({ id, em, aoAbrir, abaixo = em.grande ? 6.6 : 5.4, children }) {
+  const lugar = lugaresDoReino[id]
+  return (
+    <>
+      <Botao em={em} onClick={aoAbrir}>
+        <Simbolo simbolo={lugar.simbolo} cor="var(--texto)" arte={arteDoLugar(id)} />
+        {children}
+      </Botao>
+      <span className="legenda-do-lugar posicionado" style={estiloPosicao({ x: em.x, y: em.y + abaixo })}>
+        {lugar.legenda}
+      </span>
+    </>
+  )
+}
 
 // Hub do jogo (RF19). Salão da Glória e Configurações vêm dos cantos de <Tela>.
 export default function Reino() {
@@ -20,29 +42,30 @@ export default function Reino() {
   return (
     <Tela>
       {/* HUD do Reino: apelido, Líder, ouro e missão ativa (RF19) */}
-      <Area em={pos.hud}>
-        {apelido} · Líder: {lider} · Ouro: {progresso.ouro} · Missão: {missao}
+      <Area em={pos.hud} className="hud-do-reino">
+        {apelido} · Líder: {lider} · <Icone nome={iconeDoOuro} tamanho="1.1em" />
+        Ouro: {progresso.ouro} · Missão: {missao}
       </Area>
-      <Botao em={pos.guilda} onClick={() => acoes.irPara('guilda')}>
+      <Lugar id="guilda" em={pos.guilda} aoAbrir={() => acoes.irPara('guilda')}>
         Guilda
-      </Botao>
-      <Botao em={pos.mercado} onClick={() => acoes.irPara('mercado')}>
+      </Lugar>
+      <Lugar id="mercado" em={pos.mercado} aoAbrir={() => acoes.irPara('mercado')}>
         Mercado
-      </Botao>
-      <Botao em={pos.forja} onClick={() => acoes.irPara('forja')}>
+      </Lugar>
+      <Lugar id="forja" em={pos.forja} aoAbrir={() => acoes.irPara('forja')}>
         Forja
-      </Botao>
-      <Botao em={pos.mochila} onClick={() => acoes.irPara('mochila')}>
+      </Lugar>
+      <Lugar id="mochila" em={pos.mochila} aoAbrir={() => acoes.irPara('mochila')}>
         Mochila
-      </Botao>
-      <Botao em={pos.jogar} onClick={() => acoes.irPara('mapa')}>
+      </Lugar>
+      <Lugar id="jogar" em={pos.jogar} aoAbrir={() => acoes.irPara('mapa')}>
         Jogar
-      </Botao>
-      <Botao em={pos.arvores} onClick={() => acoes.irPara('arvores')}>
+      </Lugar>
+      <Lugar id="arvores" em={pos.arvores} aoAbrir={() => acoes.irPara('arvores')} abaixo={7.6}>
         Árvores de
         <br />
         Habilidades
-      </Botao>
+      </Lugar>
     </Tela>
   )
 }

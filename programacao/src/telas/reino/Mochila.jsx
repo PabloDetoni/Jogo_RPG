@@ -1,26 +1,24 @@
 import { useState } from 'react'
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
-import ListaComDetalhe from '../../componentes/ListaComDetalhe.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
+import GradeDeItens from '../../componentes/ui/GradeDeItens.jsx'
+import Painel from '../../componentes/ui/Painel.jsx'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
+import { ordenarItens } from '../../regras/interface.js'
 import { nomeDoItem } from '../../regras/reino.js'
 import DetalheDoItem from './DetalheDoItem.jsx'
+import { MensagemDoReino } from './MensagemDoReino.jsx'
 import { useNoReino } from './useNoReino.js'
 
 const pos = posicoes.mochila
 
-// Ordem da lista: o que se usa primeiro, depois equipamento, materiais e recursos
-const ordemDosTipos = ['consumivel', 'utilitario', 'equipamento', 'material', 'recurso']
-const posicaoDoTipo = (id) => {
-  const indice = ordemDosTipos.indexOf(itemDoCatalogo(id)?.tipo)
-  return indice < 0 ? ordemDosTipos.length : indice
-}
-
-// Mochila do Reino (TASK-072, RF20, UC15): tudo o que o jogador tem, com quantidade; o detalhe mostra função,
-// descrição e peso, e dá para descartar (com confirmação). A equipada fica nos personagens (Forja).
+// Mochila do Reino (TASK-072, RF20, UC15; Fase 4.5): a grade com tudo o que o jogador tem (ícone, quantidade no canto,
+// borda da raridade), filtros por tipo e o detalhe ao lado; descartar pede confirmação. A equipada fica nos
+// personagens (Forja).
 export default function Mochila() {
   const { acoes } = useJogo()
   return (
@@ -35,9 +33,9 @@ export default function Mochila() {
   )
 }
 
-export function ConteudoDaMochila() {
+function ConteudoDaMochila() {
   const { progresso, mensagem, setMensagem, fazer } = useNoReino()
-  const itens = [...progresso.mochila].sort((a, b) => posicaoDoTipo(a.id) - posicaoDoTipo(b.id) || nomeDoItem(a.id).localeCompare(nomeDoItem(b.id)))
+  const itens = ordenarItens(progresso.mochila)
   const [escolhido, setEscolhido] = useState(null)
   const [confirmando, setConfirmando] = useState(null) // quantos descartar, esperando o "Sim"
   const atual = itens.find((item) => item.id === escolhido) ?? itens[0]
@@ -55,40 +53,57 @@ export function ConteudoDaMochila() {
   }
 
   return (
-    <ListaComDetalhe
-      rotulo="Itens da Mochila"
-      topo={
-        <span>
-          {itens.length} {itens.length === 1 ? 'item' : 'itens'} · peso total {pesoTotal} (a Mochila do Reino não tem limite)
-        </span>
-      }
-      itens={itens.map((item) => ({ chave: item.id, titulo: nomeDoItem(item.id), direita: `×${item.quantidade}` }))}
-      escolhido={atual?.id}
-      aoEscolher={escolher}
-      vazio="A Mochila está vazia. Os itens coletados nas partidas e os comprados no Mercado aparecem aqui."
-      mensagem={mensagem}
-      detalhe={
-        atual ? (
-          <DetalheDoItem id={atual.id} quantidade={atual.quantidade}>
-            {confirmando ? (
-              <div className="confirmacao">
-                <p>
-                  Descartar {confirmando} {nomeDoItem(atual.id)}? Não dá para desfazer.
-                </p>
-                <div className="botoes-em-linha">
-                  <Botao onClick={() => descartar(confirmando)}>Sim, descartar</Botao>
-                  <Botao onClick={() => setConfirmando(null)}>Cancelar</Botao>
+    <div className="balcao-com-mensagem">
+      <div className="balcao">
+        <Painel titulo="Seus itens" className="balcao-grade">
+          <p className="nota">
+            {itens.length} {itens.length === 1 ? 'tipo de item' : 'tipos de item'} · peso total {pesoTotal} (a Mochila do Reino não tem limite)
+          </p>
+          <GradeDeItens
+            rotulo="Itens da Mochila"
+            itens={itens.map((item) => ({ id: item.id, quantidade: item.quantidade }))}
+            escolhido={atual?.id}
+            aoEscolher={escolher}
+            vazio="Sua mochila está vazia. Itens vêm das partidas (aperte E perto deles), dos minijogos e do Mercado."
+          />
+        </Painel>
+        <Painel titulo="Detalhe" className="balcao-detalhe">
+          {atual ? (
+            <DetalheDoItem id={atual.id} quantidade={atual.quantidade}>
+              {confirmando ? (
+                <div className="confirmacao">
+                  <p>
+                    Descartar {confirmando} {nomeDoItem(atual.id)}? Não dá para desfazer.
+                  </p>
+                  <div className="botoes-em-linha">
+                    <BotaoDeAcao acao="perder" onClick={() => descartar(confirmando)}>
+                      Sim, descartar
+                    </BotaoDeAcao>
+                    <Botao onClick={() => setConfirmando(null)}>Cancelar</Botao>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="botoes-em-linha">
-                <Botao onClick={() => setConfirmando(1)}>Descartar 1</Botao>
-                {atual.quantidade > 1 && <Botao onClick={() => setConfirmando(atual.quantidade)}>Descartar todos ({atual.quantidade})</Botao>}
-              </div>
-            )}
-          </DetalheDoItem>
-        ) : null
-      }
-    />
+              ) : (
+                <>
+                  <div className="botoes-em-linha">
+                    <BotaoDeAcao acao="perder" onClick={() => setConfirmando(1)}>
+                      Descartar 1
+                    </BotaoDeAcao>
+                    {atual.quantidade > 1 && (
+                      <BotaoDeAcao acao="perder" onClick={() => setConfirmando(atual.quantidade)}>
+                        Descartar todos ({atual.quantidade})
+                      </BotaoDeAcao>
+                    )}
+                  </div>
+                  <p className="nota">Descartar tira o item para sempre. Para ganhar ouro com ele, venda no Mercado (ou, se for equipamento, na Forja).</p>
+                </>
+              )}
+            </DetalheDoItem>
+          ) : (
+            <p className="vazio">Escolha um item na grade para ver o que ele faz.</p>
+          )}
+        </Painel>
+      </div>
+      <MensagemDoReino mensagem={mensagem} />
+    </div>
   )
 }

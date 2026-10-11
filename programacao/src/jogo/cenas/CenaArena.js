@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
 import { coresDaArena, faixas, tamanhoDaArena } from '../../dados/arenaDeTeste.js'
+import { arteDaFloresta } from '../../dados/arte.js'
 import { combateDeTeste, critico, mundo } from '../../dados/balanceamento.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import {
@@ -41,6 +42,7 @@ import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regr
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
+import { escolherPedra } from '../../regras/arte.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
 import { tocarEfeito } from '../../audio/gerenciador.js'
 import { efeitoDoAtaque } from '../../regras/som.js'
@@ -74,6 +76,7 @@ import ItemNoChao from '../entidades/ItemNoChao.js'
 import Inimigo from '../entidades/Inimigo.js'
 import MobVermelho from '../entidades/MobVermelho.js'
 import Personagem from '../entidades/Personagem.js'
+import { carregarArte, prepararArte, texturaDaArte } from '../arte.js'
 import { efeitosDasHabilidades, temAlvoParaAHabilidade } from '../habilidades/index.js'
 import { pensarAliados } from '../iaDosAliados.js'
 import { desenharFloresta } from '../mapas.js'
@@ -123,9 +126,15 @@ export default class CenaArena extends Phaser.Scene {
     return this.relogio
   }
 
+  // A arte que já chegou (src/assets/arte/, dados/arte.js): sem ela, tudo continua em quadrados
+  preload() {
+    carregarArte(this)
+  }
+
   create() {
     this.relogio = 0
     criarTexturas(this)
+    prepararArte(this)
     // O mapa: a Floresta ou a arena de teste (só no npm run dev)
     this.mapa = mapaDoBioma(this.partida.bioma)
     const { area } = this.mapa
@@ -280,7 +289,10 @@ export default class CenaArena extends Phaser.Scene {
   // jogo/mapas.js, junto com o chão)
   criarObstaculos() {
     for (const pedra of this.mapa.obstaculos) {
-      if (!this.mapa.comCamera) {
+      const imagemDaPedra = this.mapa.comCamera ? null : escolherPedra(this.arte.disponiveis, pedra.largura)
+      if (imagemDaPedra) {
+        this.add.image(pedra.x, pedra.y, texturaDaArte(imagemDaPedra)).setDisplaySize(pedra.largura * arteDaFloresta.folgaDaPedra, pedra.altura * arteDaFloresta.folgaDaPedra).setDepth(pedra.y)
+      } else if (!this.mapa.comCamera) {
         this.add.rectangle(pedra.x + 6, pedra.y + 8, pedra.largura, pedra.altura, coresDaArena.sombra, 0.22).setDepth(camadas.sombras)
         this.add
           .rectangle(pedra.x, pedra.y, pedra.largura, pedra.altura, coresDaArena.pedra)
@@ -533,6 +545,19 @@ export default class CenaArena extends Phaser.Scene {
 
     for (const entidade of this.desenhaveis()) entidade.atualizarDesenho(agora, delta)
     if (this.mapa.comCamera) this.esconderForaDaTela()
+    this.atualizarCopas()
+  }
+
+  // Com a arte das árvores, a copa na frente do Líder fica transparente: ninguém some atrás dela (jogo/mapas.js)
+  atualizarCopas() {
+    if (!this.copas?.length) return
+    const { x, y } = this.lider
+    for (const copa of this.copas) {
+      const atras = x > copa.x0 && x < copa.x1 && y < copa.base && y > copa.topo
+      if (atras === copa.atras) continue
+      copa.atras = atras
+      copa.imagem.setAlpha(atras ? copa.transparencia : 1)
+    }
   }
 
   // Exploração (RF40): a névoa do minimapa, as áreas já descobertas (do save) e o que esta partida descobriu.
@@ -714,7 +739,7 @@ export default class CenaArena extends Phaser.Scene {
       lider.andar(this.velocidadeDaEsquiva)
       if (agora - this.ultimoRastro > 35) {
         this.ultimoRastro = agora
-        rastro(this, lider.x, lider.y, lider.tamanho, lider.cor)
+        rastro(this, lider.x, lider.y, lider.tamanho, lider.cor, lider.boneco?.sprite)
       }
       return
     }
@@ -951,6 +976,7 @@ export default class CenaArena extends Phaser.Scene {
     const agora = this.agora
     if (!podeUsar(agora, membro.ultimoAtaque, ataques[membro.classe].recargaMs)) return false
     membro.ultimoAtaque = agora
+    membro.inicioDoGolpe = agora // a animação de ataque, na arte
     membro.anguloDaMira = angulo
     this.contagemDeTiros.disparados[membro.classe] = (this.contagemDeTiros.disparados[membro.classe] ?? 0) + 1
     if (membro.classe === 'guerreiro') golpeDeEspada(this, membro, angulo)
@@ -987,6 +1013,7 @@ export default class CenaArena extends Phaser.Scene {
     const recarga = recargaComEfeitos(habilidade.recargaMs, multiplicadorAtivo(membro.efeitos, 'recarga', agora), membro.reducaoDeRecarga ?? 0)
     membro.ultimoUsoDaHabilidade[indice] = agora - (habilidade.recargaMs - recarga)
     membro.anguloDaMira = mira.angulo
+    membro.inicioDoGolpe = agora
     const ponto = habilidade.efeito === 'meteoro' ? this.pontoDoMeteoro(membro, mira.ponto, habilidade.alcance) : mira.ponto
     efeitosDasHabilidades[habilidade.efeito](this, membro, { ...mira, ponto }, habilidade)
     return true
@@ -1680,6 +1707,7 @@ export default class CenaArena extends Phaser.Scene {
       const habilidade = membro.habilidades[indice]
       if (!habilidade) return null
       return {
+        id: habilidade.id,
         nome: habilidade.nome,
         custo: habilidade.custoDeMana,
         recarga: fracaoDaRecarga(agora, membro.ultimoUsoDaHabilidade[indice], habilidade.recargaMs),
@@ -1745,7 +1773,7 @@ export default class CenaArena extends Phaser.Scene {
         const perto = this.mochilaAberta ? null : this.itemPerto()
         if (!perto) return null
         const cabe = pesoTotal(this.mochila.itens) + perto.item.peso <= this.mochila.capacidade
-        return { nome: perto.item.nome, quantidade: perto.quantidade, cabe }
+        return { id: perto.item.id, nome: perto.item.nome, quantidade: perto.quantidade, cabe }
       })(),
       // A região atual (HUD, RF53)
       regiao: this.mapa.comCamera

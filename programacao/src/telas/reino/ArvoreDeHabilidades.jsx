@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import Botao from '../../componentes/Botao.jsx'
+import Icone from '../../componentes/Icone.jsx'
+import { iconeDaHabilidade } from '../../dados/arte.js'
 import { arvoreDaClasse } from '../../dados/arvores.js'
 import { evolucaoDasHabilidades } from '../../dados/balanceamento.js'
 import { habilidadesAtivasNoMaximo, nivelMaximoDaHabilidade } from '../../dados/regras.js'
@@ -42,7 +44,10 @@ function No({ habilidade, personagem, arvore, escolhida, aoEscolher }) {
       onClick={() => aoEscolher(habilidade.id)}
       title={nomesDosEstados[estadoDoNo]}
     >
-      <span className="no-da-arvore-nome">{habilidade.nome}</span>
+      <span className="no-da-arvore-nome">
+        <Icone nome={iconeDaHabilidade(habilidade.id)} />
+        {habilidade.nome}
+      </span>
       <span className="no-da-arvore-nivel">
         {habilidade.tipo === 'passiva' ? 'passiva' : 'ativa'} · {habilidade.noBeta ? `${nivelDoNo}/${nivelMaximoDaHabilidade}` : 'fora do beta'}
       </span>
