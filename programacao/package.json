@@ -17,6 +17,7 @@
     "prints": "node scripts/printsDasTelas.mjs",
     "testar:contas": "node scripts/testarContas.mjs",
     "testar:contas:publicado": "node scripts/testarContas.mjs --publicado",
+    "conferir:site": "node scripts/conferirSiteComoConvidado.mjs",
     "testar:floresta": "node scripts/testarFloresta.mjs",
     "conferir:configuracao": "node scripts/conferirConfiguracao.mjs",
     "balanceamento": "node scripts/gerarBalanceamento.js"
