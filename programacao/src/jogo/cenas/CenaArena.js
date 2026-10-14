@@ -43,16 +43,7 @@ import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, ite
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
-import {
-  acompanharTravamento,
-  desfazerSobreposicoes,
-  escorregar,
-  linhaLivre,
-  manobraParaDestravar,
-  pontoLivreMaisProximo,
-  separacao,
-  tirarDasParedes,
-} from '../../regras/movimento.js'
+import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, saltoMaximoPorQuadro, separacao, tirarDasParedes } from '../../regras/movimento.js'
 import { criarIndice, retangulosEntre, retangulosNaCaixa, retangulosPerto } from '../../regras/vizinhanca.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
@@ -819,14 +810,15 @@ export default class CenaArena extends Phaser.Scene {
       const encostados = entidade.lider ? andantes.filter((outro) => !this.grupo.includes(outro)) : andantes
       const outros = this.corposEncostados(entidade, [entidade, ...encostados], agora)
       const paredes = this.paredesPerto(entidade)
-      // Quem anda sozinho escorrega em tudo; o Líder escorrega nos corpos e, nas pedras, só no afastamento
-      // (contra uma pedra, quem manda é o jogador)
+      // Quem anda sozinho escorrega em tudo (ao longo da parede, mais devagar). O Líder (ajustes da partida, 14/10)
+      // para na parede, na borda e nos corpos sem nunca deslizar para o lado: ao longo da parede, só o que o jogador já
+      // empurra para o lado, e para nas quinas. Andar para cima encostado na parede não vira deslizar para o lado.
       // (o "segundos" faz cada um olhar à frente o tanto que vai andar neste quadro)
       const final = entidade.andaSozinho
         ? escorregar(somar(base, afastamentos[i]), entidade, [...paredes, ...outros], this.area, 4, segundos)
         : somar(
-            escorregar(base, entidade, outros, this.semBorda, 4, segundos),
-            escorregar(afastamentos[i], entidade, [...paredes, ...outros], this.area, 4, segundos),
+            escorregar(base, entidade, [...paredes, ...outros], this.area, 4, segundos, { deslizar: false }),
+            escorregar(afastamentos[i], entidade, [...paredes, ...outros], this.area, 4, segundos, { deslizar: false }),
           )
       corpo.setVelocity(final.x, final.y)
     })
@@ -943,6 +935,8 @@ export default class CenaArena extends Phaser.Scene {
 
   // Último caso: desliza depressa (sem teletransporte) até o lugar livre mais próximo, com folga em volta
   deslizarParaPontoLivre(entidade) {
+    // O Líder nunca é reposicionado (ajustes da partida, 14/10): quem manda nele é o jogador
+    if (entidade.lider) return
     entidade.travamento = null
     entidade.manobra = null
     const ponto = this.lugarLivre(entidade.tamanho, entidade, entidade, travamento.folgaDoPontoLivre)
@@ -965,8 +959,9 @@ export default class CenaArena extends Phaser.Scene {
       targets: caminho,
       x: ponto.x,
       y: ponto.y,
-      duration: travamento.msDoDeslize,
-      ease: 'Quad.Out',
+      // Na velocidade do deslize, em linha reta (ajustes de 14/10): nunca um pulo, sempre um movimento que se vê
+      duration: Math.max(travamento.msDoDeslize, (Math.hypot(ponto.x - entidade.x, ponto.y - entidade.y) / combateDeTeste.movimento.velocidadeDoDeslize) * 1000),
+      ease: 'Linear',
       onUpdate: () => {
         if (!entidade.morto) entidade.corpo.body.reset(caminho.x, caminho.y)
       },
@@ -1001,6 +996,11 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
     if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
+  }
+
+  // O máximo que um corpo pode andar num quadro (regras/movimento.js): o monitor dos roteiros usa (ajustes de 14/10)
+  saltoMaximoPorQuadro(ms) {
+    return saltoMaximoPorQuadro(ms)
   }
 
   // ---------- Arco que carrega (Arqueiro; ajustes de 14/10, jogo/arco.js) ----------

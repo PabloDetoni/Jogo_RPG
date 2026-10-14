@@ -373,6 +373,12 @@ export const combateDeTeste = {
     multiplicadorDaVelocidadePuxando: 0.55,
     ia: { folgaDoAlcance: 1.1, erroDaMedia: 0.15, chanceDePoucoDaBasica: 0.5, poucoDaBasica: [0.3, 0.75], msDemaisDaBasica: [250, 700] },
   },
+  // Ninguém é teletransportado (ajustes da partida, 14/10): num quadro, um corpo anda no máximo velocidadeMaxima × o
+  // tempo do quadro (a coisa mais rápida do jogo: a esquiva, a investida do Boss, o maior empurrão), mais
+  // correcaoMaximaPorQuadro px de correção (sair de dentro da parede ou de outro corpo). Quem anda sozinho escorrega
+  // ao longo da parede a fatorDoEscorregar da velocidade; o deslize do anti-travamento anda a velocidadeDoDeslize.
+  // PROVISÓRIO.
+  movimento: { velocidadeMaxima: 1200, correcaoMaximaPorQuadro: 8, fatorDoEscorregar: 0.7, velocidadeDoDeslize: 330 },
   // Corpo que colide (ajustes de 14/10, pedido do Pablo: os personagens se esbarravam demais): bem menor que o desenho,
   // no meio dele. Meio lado = fracaoDoTamanho × tamanho do desenho (40 → 12,8 px, um quadrado de 25,6 px). A área que
   // recebe golpes continua do tamanho do desenho (Entidade.retangulo). PROVISÓRIO.
