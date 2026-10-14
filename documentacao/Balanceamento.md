@@ -219,12 +219,13 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 | Mago | 80 | Bola mágica: explode em área | 30 | 1,5 s | cresce de 10 a 26; explosão de raio 90 |
 | Tanque | 180 | Escudo: bloqueia; o clique empurra | 8 | 0,6 s | escudo de 70 px; empurrão até 90 |
 | Sacerdote | 80 | Aura: cura quem está dentro | cura 5 por pulso | 3 s | raio 150; pulso a cada 0,5 s por 3 s |
-| Arqueiro | 60 | Flecha: rápida, um alvo só | 18 | 0,35 s | 900 px/s, até 700 |
+| Arqueiro | 60 | Arco que carrega: segura e solta (ver abaixo) | 30% a 100% de 26 + 1,2 × Força | 60% da carga cheia | 450 a 1.000 px/s, até 245 a 700 px |
 
 - Andar: **220 px/s**, igual na diagonal.
 - Esquiva (Espaço): avança **160 px** em 0,15 s, sem levar dano; recarga de **0,8 s**.
 - Depois de levar um golpe, **0,5 s** de imunidade (RF36).
-- Separação: cada corpo tem uma zona de **1 px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **320 px/s** quando um está em cima do outro. O Líder pesa **4** (os aliados saem da frente dele) e os inimigos, **1,5**.
+- Corpo que colide (ajustes de 14/10): um quadrado no meio do desenho, com lado de **32%** do desenho (um personagem de 40 px colide com 25,6 px); a área que recebe golpes continua do tamanho do desenho.
+- Separação: cada corpo (o que colide) tem uma zona de **1 px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **320 px/s** quando um está em cima do outro. O Líder pesa **4** (os aliados saem da frente dele) e os inimigos, **1,5**.
 - Travamento: quem anda sozinho e, em **0,6 s**, anda menos de **25%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível 4, desliza em **0,15 s** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **20 px**.
 
 | Inimigo | Vida | Dano | Velocidade | Persegue a | Desiste a | Recarga | Detalhe |
@@ -233,6 +234,20 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 | Atirador | 40 | 8 | 110 px/s | 600 px | 800 px | 1,8 s | fica entre 300 e 450 px; tiro de 220 px/s |
 
 Boneco de treino: **300** de vida, recupera tudo depois de **3 s** sem apanhar.
+
+### Arco que carrega (Arqueiro; ajustes de 14/10)
+
+Segurar o clique puxa; soltar atira. Tempo da carga cheia = 0,45 s + (1,1 s − 0,45 s) × (1 − Agilidade/100), nunca abaixo de **0,45 s**. Recarga depois de soltar: **60%** desse tempo. Puxando, anda a **55%** da velocidade. A carga parcial arredonda o dano para baixo (a cheia, para o mais perto).
+
+| Agilidade | Carga cheia | Recarga | Força 10: dano rápido / cheio | Dano por segundo (rápido / cheio) |
+| --- | --- | --- | --- | --- |
+| 5 | 1,07 s | 0,64 s | 11 / 38 | 17,2 / 22,2 |
+| 22 | 0,96 s | 0,57 s | 11 / 38 | 19,2 / 24,8 |
+| 50 | 0,78 s | 0,47 s | 11 / 38 | 23,7 / 30,6 |
+| 75 | 0,61 s | 0,37 s | 11 / 38 | 29,9 / 38,8 |
+| 100 | 0,45 s | 0,27 s | 11 / 38 | 40,7 / 52,8 |
+
+Arqueiro aliado: a avançada carrega o bastante para a distância (com **10%** de folga); a média erra até **15%** da carga para mais ou para menos; a básica, metade das vezes, carrega de 30% a 75% do que precisa e, na outra metade, segura de 0,25 s a 0,7 s além da carga cheia.
 
 ## Partida: mana, habilidades, IA e desmaio (Fase 1, parte 5b, provisório)
 
@@ -309,7 +324,7 @@ Chance = **5% + 0,5% por ponto de Agilidade**; o golpe crítico causa **1,5×** 
 
 ### HUD e botões de teste
 
-- Mensagens curtas do HUD (crítico, nível, desmaio, perdido, retorno...): ficam **2,5 s**, no máximo **4** juntas.
+- Mensagens curtas do HUD (crítico, nível, desmaio, perdido, retorno...): ficam **2,5 s**, no máximo **3** juntas.
 - Botão "+300 de ouro" (só no npm run dev): soma ao ouro ganho na partida, para chegar à Grande Vitória (pontuação base acima de 1.000) sem jogar horas.
 - Botão "Testar foco": IA avançada para todos, Líder com **25%** da vida por **20 s** e **3 mobs** a 300 px.
 
@@ -346,7 +361,7 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 
 ### Coleta, minimapa e outros
 
-- Coleta com E até **80 px** do Líder. O drop de um mob fica no chão por **60 s**; o que não coube na mochila, por **30 s** (os dois piscam nos últimos 5 s). Os recursos do chão ficam até alguém pegar e voltam a cada partida.
+- Coleta com E até **80 px** do Líder. Item natural (os recursos do mapa): fica até alguém pegar e volta a cada partida. Item dropado (drop de mob e o que o jogador descarta): some **30 s** depois de cair, com um anel do tempo, piscando nos últimos **5 s**; descartado de novo, cai com o tempo novo. O que não coube na mochila fica como estava.
 - Minimapa: células de **200 px**; o grupo revela tudo a até **450 px** do Líder.
 - Mobs nascem a pelo menos **700 px** do início de cada região (o grupo nunca nasce com mob perto), a **140 px** uns dos outros e com **24 px** livres em volta.
 - Mob que desiste volta para casa sem olhar para o grupo por **4 s**; atacado, persegue mesmo fora do território por **5 s**.
@@ -508,7 +523,7 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 
 ### Minijogos do Planalto (TASK-080 e TASK-081)
 
-Rodada de **30 s**, no máximo 60 pontos. Cada ponto dá 1 do recurso e o XP do lugar (dividido entre todos os permanentes); o raro vem com a chance de cada ponto. Não é partida (sem taxa, ranking ou histórico).
+Rodada de **30 s**, no máximo 60 pontos; **3 rodadas por dia** em cada minijogo, renovando à meia-noite de Brasília (ajustes de 14/10). Cada ponto dá 1 do recurso e o XP do lugar (dividido entre todos os permanentes); o raro vem com a chance de cada ponto. Não é partida (sem taxa, ranking ou histórico).
 
 | Lugar | Como joga | Recurso | Raro (chance por ponto) | XP por ponto |
 | --- | --- | --- | --- | --- |

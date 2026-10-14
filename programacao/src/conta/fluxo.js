@@ -1,4 +1,5 @@
 import { normalizarProgresso } from '../estado/progresso.js'
+import { definirHoraDoServidor, definirHoraPeloToken, esquecerHoraDoServidor } from './horaDoServidor.js'
 import { emailValido, escolherProgressoNoLogin, mensagemDoErro, tamanhoMinimoDaSenha, validarCadastro } from '../regras/contas.js'
 import { chaves } from '../salvamento/chaves.js'
 import { formatoAtual } from '../salvamento/formato.js'
@@ -62,6 +63,7 @@ export function criarFluxoDaConta({
   async function largarEntrada() {
     trava?.soltar()
     trava = null
+    esquecerHoraDoServidor()
   }
 
   // ---------- Entrar ----------
@@ -115,6 +117,7 @@ export function criarFluxoDaConta({
     if (escolha.de !== 'novo') salvador.comecarCom({ progresso: escolha.progresso, versao: escolha.versao, versaoNoBanco: escolha.versaoNoBanco })
     versaoAceita = escolha.versaoNoBanco
     despachar({ tipo: 'entrarNaConta', conta: { id: usuario.id, email: usuario.email, apelido }, escolha })
+    medirHora()
 
     if (escolha.enviar) {
       const envio = await enviarAoBanco()
@@ -199,7 +202,15 @@ export function criarFluxoDaConta({
 
   // ---------- Sessão única (RF05) ----------
 
+  // A hora do servidor para as rodadas diárias dos minijogos (ajustes de 14/10): ao entrar e a cada sinal
+  async function medirHora() {
+    const antes = Date.now()
+    const resposta = await servico.horaDoServidor?.()
+    if (resposta?.ok) definirHoraDoServidor(resposta.hora, antes, Date.now())
+  }
+
   async function sinal() {
+    medirHora()
     const resposta = await servico.sinalDaSessao(sessaoDaAba())
     if (resposta.ok && resposta.situacao === 'perdida') await perdeuASessao()
     return resposta
@@ -249,6 +260,7 @@ export function criarFluxoDaConta({
       if (!emailValido(email) || !senha) return { ok: false, codigo: 'campo', mensagem: 'Escreva o e-mail e a senha da conta.' }
       const resposta = await servico.entrar({ email, senha })
       if (!resposta.ok) return resposta
+      definirHoraPeloToken(resposta.iat)
       return concluirEntrada(resposta.usuario)
     },
 

@@ -15,6 +15,7 @@ import {
   distanciaAteABorda,
   minimoDaGrandeVitoria,
   pesosDaPontuacao,
+  mundo,
 } from './balanceamento.js'
 import { boneco as lugarDoBoneco, inicio, inimigosIniciais, tamanhoDaArena } from './arenaDeTeste.js'
 import { biomas } from './biomas.js'
@@ -157,6 +158,12 @@ describe('limites do combate de teste (Fase 1, parte 5a)', () => {
     const parteDoAliado = separacao.pesoDoLider / (separacao.pesoDoLider + 1)
     expect(separacao.forca * parteDoAliado).toBeGreaterThan(personagem.velocidade)
     expect(separacao.forca).toBeLessThanOrEqual(personagem.velocidade * 2) // afasta sem tranco
+  })
+
+  it('hitbox menor (ajustes de 14/10): o corpo que colide fica entre 20% e 40% do desenho, e a passagem mínima da Floresta cabe 2 corpos', () => {
+    expect(combateDeTeste.corpo.fracaoDoTamanho).toBeGreaterThan(0.2)
+    expect(combateDeTeste.corpo.fracaoDoTamanho).toBeLessThanOrEqual(0.4)
+    expect(mundo.obstaculos.passagemMinima).toBeGreaterThan(4 * combateDeTeste.corpo.fracaoDoTamanho * personagem.tamanho)
   })
 
   it('travamento: percebe em menos de 1 s e manda ao ponto livre em até 3 s', () => {

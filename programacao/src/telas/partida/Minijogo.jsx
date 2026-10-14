@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
+import { useAgora } from '../../componentes/useAgora.js'
+import { horaDoJogo } from '../../conta/horaDoServidor.js'
 import { minijogos } from '../../dados/balanceamento.js'
 import { dadosDosMinijogos } from '../../dados/minijogos.js'
 import { posicoes } from '../../dados/posicoes.js'
@@ -17,6 +20,7 @@ import {
   puxarNoLago,
   sortearRaros,
 } from '../../regras/minijogos.js'
+import { podeJogarRodada, textoDasRodadas } from '../../regras/rodadasDoDia.js'
 import { useNoReino } from '../reino/useNoReino.js'
 
 const pos = posicoes.minijogo
@@ -25,7 +29,8 @@ const duracao = minijogos.segundos * 1000
 
 // Minijogos do Planalto (TASK-080 e TASK-081; RF54): Fazenda, Mina e Lago, com a mesma base. Uma rodada de 30 s; no
 // fim, os recursos vão para a Mochila do Reino e o XP é dividido entre os permanentes (regras/minijogos.js). Não é
-// partida: sem taxa, ranking ou histórico. Sair no meio da rodada não dá nada. Ao sair, volta ao Mapa (decisão de
+// partida: sem taxa, ranking ou histórico. Sair no meio da rodada não dá nada. Ajustes de 14/10 (RF54): 3 rodadas por
+// dia em cada minijogo (renovam à meia-noite de Brasília); a rodada conta ao começar, e sem rodadas o botão apaga. Ao sair, volta ao Mapa (decisão de
 // 04/10/2026; o diagrama de Partida ainda diz "Voltar ao Reino").
 export default function Minijogo() {
   const { estado, acoes } = useJogo()
@@ -43,7 +48,10 @@ export default function Minijogo() {
 }
 
 function Rodada({ jogo, dados }) {
-  const { fazer, mensagem } = useNoReino()
+  const { fazer, mensagem, progresso } = useNoReino()
+  const agoraDoDia = useAgora()
+  const pode = podeJogarRodada(progresso.minijogosDoDia, jogo, agoraDoDia)
+  const rodadas = textoDasRodadas(progresso.minijogosDoDia, jogo, agoraDoDia)
   const [fase, setFase] = useState('antes') // 'antes' | 'jogando' | 'fim'
   const [agora, setAgora] = useState(0)
   const [pontos, setPontos] = useState(0)
@@ -51,6 +59,8 @@ function Rodada({ jogo, dados }) {
   const inicio = useRef(0)
 
   function comecar() {
+    // A rodada conta já ao começar (no dia de Brasília, pela hora do jogo); sem rodadas, nada começa
+    if (!fazer('comecarRodadaDoMinijogo', jogo, horaDoJogo())) return
     const zero = performance.now()
     inicio.current = zero
     setAgora(0)
@@ -91,7 +101,10 @@ function Rodada({ jogo, dados }) {
         </h2>
         <p>{dados.regra}</p>
         <p className="nota">Rodada de {minijogos.segundos} s. Não conta como partida (sem taxa, sem ranking).</p>
-        <Botao onClick={comecar}>Começar</Botao>
+        <p className="rodadas-do-dia">{rodadas}</p>
+        <BotaoDeAcao acao="jogar" desativado={!pode.ok} motivo={pode.motivo} onClick={comecar}>
+          Começar rodada ({minijogos.segundos} s)
+        </BotaoDeAcao>
       </div>
     )
   }
@@ -101,14 +114,18 @@ function Rodada({ jogo, dados }) {
       <div className="minijogo">
         <h2>Fim da rodada: {pontos} ponto{pontos === 1 ? '' : 's'}</h2>
         {mensagem && <p className={mensagem.erro ? 'mensagem-do-reino mensagem-do-reino-erro' : 'mensagem-do-reino'}>{mensagem.texto}</p>}
-        <Botao
+        <p className="rodadas-do-dia">{rodadas}</p>
+        <BotaoDeAcao
+          acao="jogar"
+          desativado={!pode.ok}
+          motivo={pode.motivo}
           onClick={() => {
             aplicado.current = false
             comecar()
           }}
         >
           Jogar de novo
-        </Botao>
+        </BotaoDeAcao>
       </div>
     )
   }

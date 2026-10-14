@@ -37,7 +37,7 @@ export function comprarNoMercado(progresso, id, quantidade = 1) {
   return {
     ok: true,
     progresso: { ...progresso, ouro: progresso.ouro - custo, mochila: porNaMochila(progresso.mochila, { [id]: quantidade }) },
-    mensagem: `Comprou ${quantidade} ${nomeDoItem(id)} por ${custo} de ouro.`,
+    mensagem: `Você comprou ${quantidade} ${nomeDoItem(id)} · −${custo} de ouro`,
   }
 }
 
@@ -53,7 +53,7 @@ export function venderNoMercado(progresso, id, quantidade = 1) {
   return {
     ok: true,
     progresso: { ...progresso, ouro: progresso.ouro + ganho, mochila: tirou.mochila },
-    mensagem: `Vendeu ${quantidade} ${item.nome} por ${ganho} de ouro.`,
+    mensagem: `Você vendeu ${quantidade} ${item.nome} · +${ganho} de ouro`,
   }
 }
 
@@ -71,7 +71,7 @@ export function trocarNoMercado(progresso, idDaTroca) {
   return {
     ok: true,
     progresso: { ...progresso, mochila: porNaMochila(mochila, troca.receber) },
-    mensagem: `Trocou ${listarItens(troca.dar)} por ${listarItens(troca.receber)}.`,
+    mensagem: `Você trocou ${listarItens(troca.dar)} · recebeu ${listarItens(troca.receber)}`,
   }
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Abas from './Abas.jsx'
 import Area from './Area.jsx'
+import { useAbaNaTrilha } from './trilha.js'
 
 // Abas + o conteúdo da aba escolhida. Cada aba pode trazer o seu "conteudo" (um componente React já montado);
 // sem ele, aparece o aviso de que ela ainda está vazia.
@@ -12,6 +13,7 @@ export default function ConteudoComAbas({ pos, abas, semAbas = 'Nada para mostra
   const disponiveis = abas.filter((aba) => !aba.desativada)
   const ativa = disponiveis.find((aba) => aba.id === escolhida) ?? disponiveis[0]
   const conteudo = ativa ? (ativa.conteudo ?? `Aba ${ativa.nome} (vazia por enquanto)`) : semAbas
+  useAbaNaTrilha(ativa?.nome)
 
   return (
     <>

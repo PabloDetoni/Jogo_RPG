@@ -1,6 +1,35 @@
 // O "?" de cada tela (Fase 4.5): uma explicação curta de como ela funciona. A tela sem texto aqui não mostra o "?".
 // Os números (preços, partidas, multa) aparecem na própria tela; aqui fica só o jeito de usar.
 
+// A dica da primeira visita (ajustes de 14/10): uma frase que diz para que a tela serve. Aparece na primeira vez em cada
+// tela (neste navegador) e fecha com "Entendi" ou Esc; o "?" reabre. "Como funciona" abre o texto completo de baixo.
+export const dicasDasTelas = {
+  telaInicial: 'Bem-vindo! Clique em Iniciar jogo para entrar com a sua conta ou como convidado. Como jogar explica os controles.',
+  login: 'Entre com e-mail e senha para aparecer no ranking, ou jogue como convidado (o progresso fica só neste navegador).',
+  criarConta: 'Crie a conta com e-mail e senha (8 ou mais). Depois, confirme o e-mail pelo link que chega na caixa de entrada.',
+  confirmeEmail: 'Abra o e-mail que enviamos e clique no link. Depois volte ao Login e entre.',
+  esqueciSenha: 'Digite o e-mail da conta: chega um link para criar uma senha nova.',
+  novaSenha: 'Escolha a senha nova (8 ou mais) e confirme. Depois é só entrar.',
+  escolherApelido: 'O apelido é o seu nome no ranking: 3 a 16 letras, números ou _. Não dá para trocar depois.',
+  narrativaInicial: 'A história do começo. Clique em Continuar para escolher a sua primeira classe.',
+  selecaoClasse: 'Clique numa classe para ver o que ela faz. A escolhida vira o seu primeiro personagem e o Líder.',
+  reino: 'O Reino é a sua base entre as partidas. Clique num lugar para entrar; Jogar abre o mapa.',
+  mochila: 'Tudo o que você tem no Reino. Clique num item para ver o que ele faz ou para descartar.',
+  mercado: 'Compre, venda e troque itens. Antes de cada compra, a tela mostra quanto ouro sobra.',
+  forja: 'Equipe os personagens e fabrique equipamento. Antes de equipar, a tela mostra o que muda nos atributos.',
+  guilda: 'Aceite uma missão no quadro ou contrate personagens para o seu grupo.',
+  arvores: 'Distribua os pontos de atributo e aprenda habilidades de cada personagem.',
+  salaoGloria: 'O ranking dos jogadores com conta, o seu histórico de partidas e as conquistas.',
+  mapa: 'Escolha um bioma para jogar (no beta, a Floresta) ou um minijogo do Planalto.',
+  fazenda: 'Minijogo: clique nas plantas maduras antes que murchem.',
+  mina: 'Minijogo: clique 3 vezes em cada pedra para quebrar.',
+  lago: 'Minijogo: quando a boia afundar, clique rápido.',
+  pontoPartida: 'Escolha onde o grupo começa. Mais longe é mais difícil, e a fuga custa mais.',
+  preparacao: 'Escolha o Líder e o que levar na mochila. Depois, Começar partida.',
+  partida: 'WASD anda, o mouse mira e o clique ataca (o Arqueiro segura o clique para carregar). Q volta ao Reino; F foge.',
+  resumo: 'Como foi a partida e o que você ganhou. Só o ouro paga taxa; o XP nunca.',
+}
+
 export const ajudaDasTelas = {
   reino: [
     'O Reino é a sua base entre as partidas. Cada lugar faz uma coisa:',

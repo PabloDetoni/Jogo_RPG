@@ -33,6 +33,19 @@ const passo = async (texto, comeco = false) => {
   if (!(await clicar(texto, comeco))) throw new Error(`não achei o botão "${texto}"`)
   await pausa(220)
 }
+// Clique de verdade (mouse do navegador, não o click() do JavaScript): a tela cheia só entra assim
+const clicarDeVerdade = async (seletorOuTexto) => {
+  const centro = await aba.avaliar(`(() => {
+    const alvo = document.querySelector(${JSON.stringify(seletorOuTexto)}) ?? [...document.querySelectorAll('button')].find((b) => !b.disabled && b.textContent.trim().startsWith(${JSON.stringify(seletorOuTexto)}))
+    if (!alvo) return null
+    const r = alvo.getBoundingClientRect()
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+  })()`).catch(() => null)
+  if (!centro) throw new Error(`não achei "${seletorOuTexto}" para clicar de verdade`)
+  await aba.clicarNaTela(centro.x, centro.y)
+  await pausa(500)
+}
+const emTelaCheia = () => aba.avaliar(`!!document.fullscreenElement`)
 // Clica num botão de dentro de uma parte da tela (quando o mesmo texto aparece também numa aba)
 const clicarDentro = async (seletor, texto) => {
   const achou = await aba.avaliar(`(() => {
@@ -150,6 +163,7 @@ try {
   await passo('Comprar por 25', true)
   const recomprou = await salvo()
   conferir('recomprar desconta o preço cheio e a poção volta', recomprou.ouro === vendeu.ouro - 25 && quantos(recomprou, 'pocaoDeVida') === quantos(antesDeVender, 'pocaoDeVida'), { ouro: recomprou.ouro })
+  conferir('a compra confirma o que aconteceu ("Você comprou 1 Poção de vida · −25 de ouro")', await mensagem().then((texto) => texto.includes('Você comprou 1 Poção de vida · −25 de ouro')), await mensagem())
   await aba.print('01-mercado')
 
   console.log('5. TEST-006, caso 3: missão de entrega depois de vender os itens')
@@ -176,15 +190,22 @@ try {
   await irAoReino()
   await passo('Mochila')
   await clicarItem('Tônico ligeiro')
-  await passo('Descartar 1')
-  conferir('descartar pede confirmação antes', (await aba.texto()).includes('Não dá para desfazer'))
+  await passo('Descartar…')
+  conferir('descartar pede a quantidade e confirma o item, quantos e o que acontece', (await aba.texto()).includes('Quantos?') && (await aba.avaliar(`document.querySelector('.descartar-confirmacao')?.textContent ?? ''`)).includes('Descartar 1 Tônico ligeiro? Ele some para sempre'))
   const antesDeDescartar = quantos(await salvo(), 'tonicoLigeiro')
-  await passo('Sim, descartar')
-  conferir('confirmado, o item sai da Mochila', quantos(await salvo(), 'tonicoLigeiro') === antesDeDescartar - 1)
+  await passo('Sim, descartar 1')
+  conferir('confirmado, o item sai da Mochila, com a confirmação do que aconteceu', quantos(await salvo(), 'tonicoLigeiro') === antesDeDescartar - 1 && (await mensagem()).startsWith('Você descartou 1 Tônico ligeiro'))
 
   console.log('7. TEST-006, caso 5: arma de outra classe; Forja comprar e fabricar')
   await irAoReino()
   await passo('Forja')
+  conferir('no alto, a trilha mostra onde se está ("Reino › Forja › Equipar")', (await aba.avaliar(`document.querySelector('.trilha')?.innerText.split(String.fromCharCode(10)).map((parte) => parte.trim()).filter(Boolean).join(' ') ?? ''`)) === 'Reino › Forja › Equipar', await aba.avaliar(`document.querySelector('.trilha')?.innerText ?? ''`))
+  conferir('na primeira visita, a dica curta da tela aparece', await aba.avaliar(`!!document.querySelector('.dica-da-tela')`))
+  await aba.apertar('esc')
+  conferir('Esc fecha a dica e fica na Forja', !(await aba.avaliar(`!!document.querySelector('.dica-da-tela')`)) && (await aba.titulo()) === 'Forja')
+  await passo('?')
+  conferir('o "?" reabre a dica', await aba.avaliar(`!!document.querySelector('.dica-da-tela')`))
+  await passo('Entendi')
   const arcosAntes = quantos(await salvo(), 'arcoDeCaca')
   await aba.avaliar(`(() => { document.querySelector('button[aria-label^="Arma:"]').click(); return true })()`)
   await pausa(200)
@@ -224,6 +245,9 @@ try {
     { mensagem: await mensagem() },
   )
   await aba.print('02-forja')
+  await aba.apertar('esc')
+  await pausa(200)
+  conferir('Esc faz o mesmo que o Voltar: da Forja ao Reino', (await aba.titulo()) === 'Reino')
 
   console.log('8. Árvores: atributos e habilidades')
   await irAoReino()
@@ -262,10 +286,32 @@ try {
       (await aba.avaliar(`document.querySelector('.mochila-da-preparacao .barra-texto')?.textContent ?? ''`)).startsWith('Peso 2 de'),
   )
   const pocoesAntes = quantos(await salvo(), 'pocaoDeVida')
-  await passo('Começar partida')
+  await clicarDeVerdade('Começar partida')
   await aba.esperar(`!!${CENA}?.lider`, 'a partida', 20000)
   await pausa(800)
   conferir('a partida começa com as 2 poções na mochila da partida', await cena(`c.mochila.itens.some((i) => i.id === 'pocaoDeVida' && i.quantidade === 2)`))
+  // Tela cheia (ajustes de 14/10): entra no clique de Começar partida, com o X discreto no canto
+  conferir('o clique em Começar partida entra em tela cheia, com o X para sair', (await emTelaCheia()) && (await aba.avaliar(`!!document.querySelector('.sair-da-tela-cheia')`)))
+  // (no início do bioma não há mob por perto: fora de combate, o Esc pausa)
+  await aba.esperar(`!${CENA}.emCombate`, 'estar fora de combate', 9000)
+  await aba.avaliar(`(document.exitFullscreen(), true)`)
+  await pausa(600)
+  conferir('saiu da tela cheia sem pedir (o Esc do navegador): vale como Esc, pausa e aparece "Voltar à tela cheia"', (await aba.texto()).includes('Continuar') && (await aba.avaliar(`!!document.querySelector('[aria-label="Pausa"]')`)) && (await aba.avaliar(`!!document.querySelector('.voltar-a-tela-cheia')`)))
+  await passo('Continuar')
+  await clicarDeVerdade('.voltar-a-tela-cheia')
+  conferir('"Voltar à tela cheia" volta', await emTelaCheia())
+  // De 1366×768 a 1920×1080: o jogo ocupa a tela inteira, sem cortar, e a mira cai no ponto certo
+  await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
+  await pausa(700)
+  const grande = await aba.avaliar(`(() => { const m = document.querySelector('.moldura').getBoundingClientRect(); const t = document.querySelector('.arena canvas').getBoundingClientRect(); return { moldura: [Math.round(m.width), Math.round(m.height)], canvas: [Math.round(t.left), Math.round(t.top), Math.round(t.width), Math.round(t.height)] } })()`)
+  await aba.moverMouse(grande.canvas[0] + (400 / 1600) * grande.canvas[2], grande.canvas[1] + (300 / 900) * grande.canvas[3])
+  await pausa(200)
+  const ponteiro = await cena(`({ x: Math.round(c.input.activePointer.x), y: Math.round(c.input.activePointer.y) })`)
+  conferir('em 1920×1080 o jogo ocupa a tela inteira e a mira cai no ponto certo', grande.moldura[0] === 1920 && grande.moldura[1] === 1080 && grande.canvas[2] === 1920 && Math.abs(ponteiro.x - 400) <= 2 && Math.abs(ponteiro.y - 300) <= 2, { ...grande, ponteiro })
+  await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
+  await pausa(500)
+  await clicarDeVerdade('.sair-da-tela-cheia')
+  conferir('o X sai da tela cheia (sem pausar e sem o "Voltar à tela cheia")', !(await emTelaCheia()) && !(await aba.avaliar(`!!document.querySelector('.voltar-a-tela-cheia, [aria-label="Pausa"]')`)))
   await cena(`(c.lider.vida = 10, true)`)
   await aba.apertar('tab')
   await pausa(300)
@@ -274,6 +320,16 @@ try {
   await pausa(300)
   const usou = await cena(`({ vida: c.lider.vida, pocoes: c.mochila.itens.find((i) => i.id === 'pocaoDeVida')?.quantidade ?? 0 })`)
   conferir('E usa a poção no Líder: a vida sobe e sobra 1', usou.vida > 10 && usou.pocoes === 1, usou)
+  // Descartar na partida (ajustes de 14/10): DADO 3 poções QUANDO descarto 2 ENTÃO fica 1 e 2 caem no chão com 30 s
+  await cena(`(() => { c.mochila.itens.find((i) => i.id === 'pocaoDeVida').quantidade += 2; return true })()`)
+  await pausa(400)
+  await passo('Descartar…')
+  await passo('+')
+  conferir('na partida, a confirmação diz que as 2 poções caem no chão', (await aba.avaliar(`document.querySelector('.descartar-confirmacao')?.textContent ?? ''`)).includes('Descartar 2 Poção de vida? Caem no chão perto do Líder'))
+  await passo('Sim, descartar 2')
+  await pausa(300)
+  const descartou = await cena(`({ naMochila: c.mochila.itens.find((i) => i.id === 'pocaoDeVida')?.quantidade ?? 0, noChao: c.itensNoChao.filter((i) => i.item.id === 'pocaoDeVida').map((i) => ({ q: i.quantidade, falta: i.expiraEm - c.agora, perto: Math.hypot(i.x - c.lider.x, i.y - c.lider.y) < 80 })) })`)
+  conferir('descartadas 2 de 3: fica 1 na mochila e 2 caem perto do Líder, com o tempo de 30 s', descartou.naMochila === 1 && descartou.noChao.length === 1 && descartou.noChao[0].q === 2 && descartou.noChao[0].falta > 28000 && descartou.noChao[0].falta <= 30000 && descartou.noChao[0].perto, descartou)
   await aba.apertar('esc')
   await pausa(300)
   conferir('Esc fecha a mochila (sem pausar)', !(await aba.avaliar(`!!document.querySelector('[aria-label="Mochila da partida"]')`)))
@@ -292,7 +348,7 @@ try {
   console.log('10. Minijogo do Lago (uma rodada de 30 s)')
   await passo('Jogar novamente')
   await passo('Lago')
-  await passo('Começar')
+  await passo('Começar rodada', true)
   const pescou = await aba.avaliar(`(async () => {
     const fim = Date.now() + 31500
     while (Date.now() < fim) {
@@ -308,9 +364,24 @@ try {
     peixes: quantos(aposLago, 'peixe'),
   })
   await aba.print('05-lago')
+  // Minijogos diários (ajustes de 14/10): 3 rodadas por dia; a rodada conta ao começar, mesmo saindo no meio
+  conferir('a rodada contou no dia de Brasília, e a tela mostra "Rodadas hoje: 2 de 3 · renova em ..."', aposLago.minijogosDoDia?.rodadas?.lago === 1 && /Rodadas hoje: 2 de 3 · renova em \d\d:\d\d/.test(await aba.texto()), aposLago.minijogosDoDia)
+  for (let i = 0; i < 2; i++) {
+    await passo(i === 0 ? 'Jogar de novo' : 'Começar rodada', i > 0)
+    await pausa(300)
+    await clicar('Entendi') // a dica da primeira visita, se ainda estiver aberta (o Esc fecharia ela primeiro)
+    await aba.apertar('esc')
+    await aba.esperarTela('Mapa')
+    if (i === 0) await passo('Lago')
+  }
+  const semRodadas = await aba.avaliar(`(() => { const caixa = [...document.querySelectorAll('.minijogo-no-mapa')].find((c) => c.textContent.startsWith('Lago')); return { apagado: caixa?.querySelector('button')?.disabled ?? null, texto: caixa?.querySelector('.rodadas-do-dia')?.textContent ?? '' } })()`)
+  conferir('sair no meio também gasta; depois das 3 do dia, o Lago fica apagado no Mapa ("0 de 3"), e a Mina continua com 3', semRodadas.apagado === true && semRodadas.texto.startsWith('Rodadas hoje: 0 de 3') && (await aba.texto()).includes('Rodadas hoje: 3 de 3'), semRodadas)
+  await passo('Voltar ao Reino')
+  await aba.esperarTela('Reino')
+  await passo('Jogar')
+  await aba.esperarTela('Mapa')
 
   console.log('11. TEST-006, caso 4: abandonar com ouro abaixo da multa')
-  await passo('Voltar ao Mapa')
   await passo('Voltar ao Reino')
   await aba.esperarTela('Reino')
   await passo('Guilda')
@@ -383,6 +454,37 @@ try {
     conquistas: p.conquistas,
   })
   conferir('depois de recarregar, ouro, Mochila, personagens, missão e conquistas continuam iguais', JSON.stringify(resumo(antesDeRecarregar)) === JSON.stringify(resumo(depoisDeRecarregar)))
+
+  console.log('14. Carregamento da partida (ajustes de 14/10): progresso, falha com "Tentar de novo" e o fade')
+  // A página recarregou: o Phaser ainda não foi baixado nesta página. Bloqueado, o carregamento falha com uma mensagem clara
+  await aba.cdp.enviar('Network.enable')
+  await aba.cdp.enviar('Network.setCacheDisabled', { cacheDisabled: true })
+  await aba.cdp.enviar('Network.setBlockedURLs', { urls: ['*phaser*', '*criarJogo*'] })
+  await passo('Jogar')
+  await passo('Floresta')
+  await aba.esperarTela('Preparação')
+  await passo('Começar partida')
+  await aba.esperar(`!!document.querySelector('.carregando-a-partida')`, 'a tela de carregamento', 5000)
+  conferir('ao começar, aparece a tela de carregamento com a barra, a etapa e uma dica', await aba.avaliar(`(() => { const t = document.querySelector('.carregando-a-partida')?.innerText ?? ''; return t.includes('Dica:') || t.includes('Tentar de novo') })()`))
+  await aba.esperar(`(document.querySelector('.carregando-a-partida')?.innerText ?? '').includes('Tentar de novo')`, 'a mensagem de falha', 15000)
+  conferir('sem o motor do jogo, a falha vira uma mensagem clara com "Tentar de novo" (nunca tela branca)', (await aba.texto()).includes('Não deu para carregar a partida'))
+  await aba.print('09-carregamento-falhou')
+  await aba.cdp.enviar('Network.setBlockedURLs', { urls: [] })
+  // O navegador guarda a falha do motor: "Tentar de novo" recarrega a página, e a partida começa de novo pelo caminho normal
+  await passo('Tentar de novo')
+  await aba.esperar(`document.readyState === 'complete' && !!document.querySelector('.moldura') && !document.querySelector('.carregando-a-partida')`, 'a página recarregar', 20000)
+  await aba.esperarTela('Tela inicial', 15000)
+  await passo('Iniciar jogo')
+  await passo('Jogar como convidado')
+  await aba.esperarTela('Reino', 15000)
+  conferir('"Tentar de novo" recarrega a página sem perder nada: o Reino volta com o ouro de antes', (await salvo()).ouro === depoisDeRecarregar.ouro, { antes: depoisDeRecarregar.ouro, agora: (await salvo()).ouro })
+  await passo('Jogar')
+  await passo('Floresta')
+  await aba.esperarTela('Preparação')
+  await passo('Começar partida')
+  await aba.esperar(`!!${CENA}?.lider`, 'a partida depois de recarregar', 25000)
+  await aba.esperar(`!document.querySelector('.carregando-a-partida')`, 'a tela de carregamento sumir', 5000)
+  conferir('com a internet de volta, a partida carrega e a tela de carregamento some', !(await aba.avaliar(`!!document.querySelector('.carregando-a-partida')`)))
 
   const erros = await aba.avaliar(`window.__erros ?? []`)
   conferir('nenhum erro no console', erros.length === 0, erros.slice(0, 5))

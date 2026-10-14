@@ -20,6 +20,7 @@ export function navegar(estado, destino) {
     tela: destino,
     anteriores,
     janelas: [],
+    dicaReaberta: null,
     controleDaPartida: naPartida ? estado.controleDaPartida : controleInicialDaPartida(),
     partidaAtual: naPartida ? estado.partidaAtual : null,
   }

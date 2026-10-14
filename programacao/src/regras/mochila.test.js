@@ -13,6 +13,8 @@ import {
   porNaMochila,
   quantidadeNaMochila,
   tirarDaMochila,
+  descartarDaMochilaDaPartida,
+  quantidadeParaDescartar,
 } from './mochila.js'
 
 vi.mock('../dados/balanceamento.js', async (importarOriginal) => ({
@@ -150,5 +152,28 @@ describe('mochila da partida na Preparação (Fase 4, TASK-073)', () => {
   it('o que vai vira itens da mochila da partida, com o peso de cada um', () => {
     expect(itensLevados({ pocaoDeVida: 2, itemVelho: 1 })).toEqual([{ id: 'pocaoDeVida', peso: 1, quantidade: 2 }])
     expect(itensLevados(null)).toEqual([])
+  })
+})
+
+describe('descartar (ajustes de 14/10)', () => {
+  it('quantidade: 1, várias ou todas, sempre entre 1 e o que se tem', () => {
+    expect(quantidadeParaDescartar(1, 3)).toBe(1)
+    expect(quantidadeParaDescartar(2, 3)).toBe(2)
+    expect(quantidadeParaDescartar(99, 3)).toBe(3)
+    expect(quantidadeParaDescartar(0, 3)).toBe(1)
+    expect(quantidadeParaDescartar(2.7, 3)).toBe(2)
+    expect(quantidadeParaDescartar('x', 3)).toBe(1)
+    expect(quantidadeParaDescartar(1, 0)).toBe(0)
+  })
+
+  it('descartar 2 de 3 deixa 1 na mochila da partida', () => {
+    const resultado = descartarDaMochilaDaPartida([{ id: 'pocaoDeVida', quantidade: 3 }], 'pocaoDeVida', 2)
+    expect([resultado.ok, resultado.quantidade, resultado.itens]).toEqual([true, 2, [{ id: 'pocaoDeVida', quantidade: 1 }]])
+  })
+
+  it('descartar todas tira a pilha da mochila; um item que não está nela não muda nada', () => {
+    const itens = [{ id: 'pocaoDeVida', quantidade: 3 }]
+    expect(descartarDaMochilaDaPartida(itens, 'pocaoDeVida', 3).itens).toEqual([])
+    expect(descartarDaMochilaDaPartida(itens, 'madeira', 1).ok).toBe(false)
   })
 })

@@ -24,7 +24,7 @@ describe('Mochila: descartar (TASK-072)', () => {
     const resultado = descartar(antes, 'pocaoDeVida', 1)
     expect(resultado.ok).toBe(true)
     expect(resultado.progresso.mochila).toEqual([{ id: 'pocaoDeVida', quantidade: 2 }])
-    expect(resultado.mensagem).toBe('1 Poção de vida descartado.')
+    expect(resultado.mensagem).toBe('Você descartou 1 Poção de vida · sumiu da Mochila')
     expect(antes.mochila).toEqual([{ id: 'pocaoDeVida', quantidade: 3 }]) // não muda o que recebeu
   })
 

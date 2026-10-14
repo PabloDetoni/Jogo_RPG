@@ -78,7 +78,7 @@ try {
   conferir('andando para a direita, a câmera vai junto', andou.lider > 150 && Math.abs(andou.camera - andou.lider) < 40, { antes, depois, tiradosDoCaminho: noCaminho })
   conferir('o Líder fica perto do meio da tela', Math.abs(depois.meio - depois.x) < 60, depois)
   const vista = await cena(`({ y: c.cameras.main.y, altura: c.cameras.main.height })`)
-  conferir('o mapa aparece só entre a faixa do HUD e a de baixo (ninguém fica escondido embaixo delas)', vista.y === 96 && vista.altura === 900 - 96 - 112, vista)
+  conferir('o mapa aparece desde o alto da tela (o HUD é translúcido, por cima) até a barra de teste', vista.y === 0 && vista.altura === 900 - 112, vista)
   await aba.print('02-camera')
 
   console.log('3. A mira continua certa com a câmera andando (mouse parado)')
@@ -115,18 +115,20 @@ try {
   conferir('o clique ataca na direção da mira', Boolean(tiro), tiro)
 
   console.log('4. Bordas e mata fechada: ninguém atravessa')
+  // O corpo que colide é menor que o desenho (ajustes de 14/10): o limite é o raio dele
+  const raioDoLider = await cena(`c.lider.raio`)
   await colocarLider(60, 1800)
   await aba.segurar(['a'], 900)
   const esquerda = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX })`)
-  conferir('na beira esquerda do mapa, o Líder não passa e a câmera para no limite', esquerda.x >= 19 && esquerda.scrollX === 0, esquerda)
+  conferir('na beira esquerda do mapa, o Líder não passa e a câmera para no limite', esquerda.x >= raioDoLider - 1 && esquerda.scrollX === 0, esquerda)
   await colocarLider(500, 1540)
   await aba.segurar(['w'], 900)
   const cima = await cena(`c.lider.y`)
-  conferir('na zona segura, a mata fechada de cima é parede', cima >= 1500 + 19, Math.round(cima))
+  conferir('na zona segura, a mata fechada de cima é parede', cima >= 1500 + raioDoLider - 1, Math.round(cima))
   await colocarLider(500, 2060)
   await aba.segurar(['s'], 900)
   const baixo = await cena(`c.lider.y`)
-  conferir('...e a de baixo também', baixo <= 2100 - 19, Math.round(baixo))
+  conferir('...e a de baixo também', baixo <= 2100 - raioDoLider + 1, Math.round(baixo))
   // O fundo é o domínio do Boss: sozinho e sem o Invencível, o Líder às vezes caía antes da conferência, e Líder sozinho
   // caído é Derrota (a partida acabava no meio do roteiro)
   await cena(`(c.invencivel = true, true)`)
@@ -134,7 +136,7 @@ try {
   await aba.segurar(['d'], 900)
   await pausa(600)
   const direita = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX, limite: c.mapa.tamanho.largura - c.cameras.main.width })`)
-  conferir('no fundo da Floresta, o Líder não sai do mapa e a câmera para no limite', direita.x <= 7200 - 19 && Math.abs(direita.scrollX - direita.limite) < 2, direita)
+  conferir('no fundo da Floresta, o Líder não sai do mapa e a câmera para no limite', direita.x <= 7200 - raioDoLider + 1 && Math.abs(direita.scrollX - direita.limite) < 2, direita)
   await aba.print('03-fundo-da-floresta')
   await colocarLider(400, 1800)
   await cena(`(c.lider.vida = c.lider.vidaMaxima, c.invencivel = false, true)`)
@@ -149,6 +151,38 @@ try {
   const grupo = await cena(`c.aliados.map((a) => ({ classe: a.classe, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)) }))`)
   conferir('depois de 6 s andando pela Floresta, os 4 aliados continuam perto do Líder', grupo.length === 4 && grupo.every((um) => um.distancia < 400), grupo)
   await aba.print('04-grupo-andando')
+  // Corredor estreito (ajustes de 14/10, hitbox menor): o vão mais apertado entre dois obstáculos (árvore ou pedra), um ao
+  // lado do outro, longe da mata fechada, com o grupo de um lado e o Líder indo para o outro; todos passam sem travar
+  const corredor = await cena(`(() => {
+    const obs = c.mapa.obstaculos.filter((o) => o.tipo !== 'mata' && o.x > 1100 && o.x < 6200)
+    const livre = (x, y) => !c.mapa.obstaculos.some((o) => Math.abs(o.x - x) < o.largura / 2 + 40 && Math.abs(o.y - y) < o.altura / 2 + 40)
+    let melhor = null
+    for (const a of obs) for (const b of obs) {
+      if (b.x <= a.x) continue
+      const vao = (b.x - b.largura / 2) - (a.x + a.largura / 2)
+      const encaram = Math.min(a.y + a.altura / 2, b.y + b.altura / 2) - Math.max(a.y - a.altura / 2, b.y - b.altura / 2)
+      if (vao < 60 || vao > 240 || encaram < 30) continue
+      const meio = (a.x + a.largura / 2 + b.x - b.largura / 2) / 2
+      const topo = Math.min(a.y - a.altura / 2, b.y - b.altura / 2)
+      const base = Math.max(a.y + a.altura / 2, b.y + b.altura / 2)
+      if (!livre(meio, topo - 170) || !livre(meio, base + 130)) continue
+      if (!melhor || vao < melhor.vao) melhor = { vao: Math.round(vao), x: (a.x + a.largura / 2 + b.x - b.largura / 2) / 2, topo: Math.min(a.y - a.altura / 2, b.y - b.altura / 2), base: Math.max(a.y + a.altura / 2, b.y + b.altura / 2) }
+    }
+    return melhor
+  })()`)
+  if (corredor) {
+    await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${corredor.x}, i.y - ${corredor.topo}) < 1200).forEach((i) => c.matarInimigo(i)), true)`)
+    await colocarLider(corredor.x, corredor.topo - 90)
+    for (const membro of [0, 1, 2, 3]) await cena(`(c.aliados[${membro}]?.colocarEm(${corredor.x} + (${membro} - 1.5) * 34, ${corredor.topo} - 150 - (${membro} % 2) * 30), true)`)
+    await pausa(300)
+    await colocarLider(corredor.x, corredor.base + 120)
+    await pausa(5000)
+    const passaram = await cena(`c.aliados.map((a) => ({ classe: a.classe, passou: a.y > ${corredor.base}, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)), deslizou: !!a.deslizando }))`)
+    conferir(`corredor estreito (${corredor.vao} px entre dois obstáculos): o grupo inteiro passa para o outro lado sem travar`, passaram.length === 4 && passaram.every((um) => um.passou && um.distancia < 260), { vao: corredor.vao, passaram })
+    await aba.print('04b-corredor')
+  } else {
+    conferir('achou um corredor estreito na Fácil para o teste', false)
+  }
 
   console.log('6. Regiões: o HUD mostra a região, e a taxa conta do ponto inicial até a borda real (TASK-061)')
   // O que está no quadro do minimapa (o mapa, a região e a mochila) fica inteiro dentro dele, e o quadro dentro da faixa
@@ -204,15 +238,16 @@ try {
   await aba.print('05-dominio-do-boss')
 
   console.log('7. Mobs por região (TASK-062)')
-  // Onde cada um nasceu (a casa): depois de nascer, eles andam e perseguem
+  // Onde cada um nasceu (a casa): depois de nascer, eles andam e perseguem. Dentro e encostado medem pelo corpo que
+  // colide (ajustes de 14/10: menor que o desenho)
   const mobs = await cena(`c.inimigos.map((i) => ({ tipo: i.tipo, regiao: i.regiao, x: Math.round(i.casaFixa.x), y: Math.round(i.casaFixa.y), tamanho: i.tamanho, hostil: i.config.hostil }))`)
   conferir('cada região nasce com os seus mobs (a zona segura, nenhum)', !nasceram.zonaSegura && nasceram.facil >= 10 && nasceram.media >= 15 && nasceram.dificil >= 18, nasceram)
   const inicios = await cena(`c.mapa.regioes.map((r) => r.inicio)`)
   const pertoDeInicio = mobs.filter((mob) => inicios.some((inicio) => Math.hypot(inicio.x - mob.x, inicio.y - mob.y) < 600))
   conferir('nenhum mob nasce perto do início de uma região (o grupo nunca nasce com mob perto)', pertoDeInicio.length === 0, pertoDeInicio.slice(0, 3))
-  const dentroDeObstaculo = await cena(`c.inimigos.filter((i) => c.paredesPerto(i, 100).some((p) => Math.abs(i.x - p.x) * 2 < p.largura + i.tamanho - 4 && Math.abs(i.y - p.y) * 2 < p.altura + i.tamanho - 4)).length`)
+  const dentroDeObstaculo = await cena(`c.inimigos.filter((i) => c.paredesPerto(i, 100).some((p) => Math.abs(i.x - p.x) * 2 < p.largura + 2 * i.raio - 4 && Math.abs(i.y - p.y) * 2 < p.altura + 2 * i.raio - 4)).length`)
   conferir('nenhum mob dentro de árvore, pedra ou mata', dentroDeObstaculo === 0, dentroDeObstaculo)
-  const encostados = await cena(`(() => { const l = c.inimigos; let n = 0; for (let a = 0; a < l.length; a++) for (let b = a + 1; b < l.length; b++) { const m = (l[a].tamanho + l[b].tamanho) / 2 - 1; if (Math.abs(l[a].x - l[b].x) < m && Math.abs(l[a].y - l[b].y) < m) n++ } return n })()`)
+  const encostados = await cena(`(() => { const l = c.inimigos; let n = 0; for (let a = 0; a < l.length; a++) for (let b = a + 1; b < l.length; b++) { const m = l[a].raio + l[b].raio - 1; if (Math.abs(l[a].x - l[b].x) < m && Math.abs(l[a].y - l[b].y) < m) n++ } return n })()`)
   conferir('nenhum mob em cima de outro', encostados === 0, encostados)
   await colocarLider(400, 1800)
   await pausa(400)
@@ -328,8 +363,8 @@ try {
 
   console.log('13. Coleta com E, drops e mochila da partida (TASK-064)')
   await cena(`(c.invencivel = true, true)`)
-  const recursos = await cena(`c.itensNoChao.filter((i) => i.expiraEm === null).length`)
-  conferir('a Floresta tem recursos no chão (cogumelo, erva, madeira)', recursos > 20, recursos)
+  const recursos = await cena(`c.itensNoChao.filter((i) => i.tipo === 'natural' && i.expiraEm === null && !i.anel).length`)
+  conferir('a Floresta tem recursos no chão (cogumelo, erva, madeira), naturais: sem tempo e sem anel', recursos > 20, recursos)
   // Um cogumelo, longe dos mobs
   const cogumelo = await cena(`(() => { const i = c.itensNoChao.find((um) => um.item.id === 'cogumelo' && um.expiraEm === null); return { x: i.x, y: i.y } })()`)
   await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${cogumelo.x}, i.y - ${cogumelo.y}) < 1500).forEach((i) => c.matarInimigo(i)), true)`)
@@ -343,8 +378,8 @@ try {
   // Drop: um lobo com a chance forçada em 100%
   await cena(`(() => { c.chanceDeDropForcada = 1; const l = c.criarMobDoMundo('lobo', 'media', { x: c.lider.x + 200, y: c.lider.y }); l.__drop = true; return true })()`)
   await pausa(200)
-  const drop = await cena(`(() => { const l = c.inimigos.find((i) => i.__drop); const ponto = { x: l.x, y: l.y }; const antes = c.itensNoChao.length; c.acertar(l, 99999, c.lider, 0, c.lider); const novo = c.itensNoChao.slice(antes)[0]; return novo ? { id: novo.item.id, quantidade: novo.quantidade, some: Math.round((novo.expiraEm - c.agora) / 1000), x: novo.x, y: novo.y, longe: Math.round(Math.hypot(novo.x - ponto.x, novo.y - ponto.y)) } : null })()`)
-  conferir('o lobo derrotado deixa a pele no chão, que some se ninguém pegar', drop?.id === 'peleDeLobo' && drop.some > 50 && drop.longe < 80, drop)
+  const drop = await cena(`(() => { const l = c.inimigos.find((i) => i.__drop); const ponto = { x: l.x, y: l.y }; const antes = c.itensNoChao.length; c.acertar(l, 99999, c.lider, 0, c.lider); const novo = c.itensNoChao.slice(antes)[0]; return novo ? { id: novo.item.id, tipo: novo.tipo, anel: !!novo.anel, quantidade: novo.quantidade, some: Math.round((novo.expiraEm - c.agora) / 1000), x: novo.x, y: novo.y, longe: Math.round(Math.hypot(novo.x - ponto.x, novo.y - ponto.y)) } : null })()`)
+  conferir('o lobo derrotado deixa a pele no chão como dropado: anel do tempo e some em 30 s', drop?.id === 'peleDeLobo' && drop.tipo === 'dropado' && drop.anel && drop.some > 27 && drop.some <= 30 && drop.longe < 80, drop)
   await cena(`(c.chanceDeDropForcada = undefined, true)`)
   await aba.print('09-drop-no-chao')
   // Mochila cheia: o item fica no chão, com aviso, e some depois
@@ -357,8 +392,24 @@ try {
   await aba.apertar('e')
   await pausa(300)
   const cheia = await cena(`(() => { const i = c.itensNoChao.find((um) => um.item.id === 'peleDeLobo'); return i ? { quantidade: i.quantidade, some: Math.round((i.expiraEm - c.agora) / 1000) } : null })()`)
-  conferir('E com a mochila cheia: o item continua no chão e passa a sumir em até 30 s', cheia && cheia.some <= 30, cheia)
+  conferir('E com a mochila cheia: o dropado continua no chão com o tempo que tinha (até 30 s)', cheia && cheia.some <= 30 && cheia.some > 20, cheia)
   await aba.print('10-mochila-cheia')
+  // Natural com a mochila cheia: continua natural (nunca some sozinho)
+  const natural = await cena(`(() => { const i = c.itensNoChao.find((um) => um.tipo === 'natural'); return { x: i.x, y: i.y, id: i.item.id } })()`)
+  await colocarLider(natural.x - 40, natural.y)
+  await pausa(300)
+  await aba.apertar('e')
+  await pausa(300)
+  const naturalCheia = await cena(`(() => { const i = c.itensNoChao.find((um) => um.x === ${natural.x} && um.y === ${natural.y}); return i ? { tipo: i.tipo, expiraEm: i.expiraEm } : null })()`)
+  conferir('o natural que não coube continua natural, sem tempo', naturalCheia?.tipo === 'natural' && naturalCheia.expiraEm === null, naturalCheia)
+  // Nos últimos 5 s o dropado pisca
+  await cena(`(c.itensNoChao.filter((i) => i.item.id === 'peleDeLobo').forEach((i) => { i.expiraEm = c.agora + 3500 }), true)`)
+  const alfas = []
+  for (let i = 0; i < 8; i++) {
+    alfas.push(await cena(`c.itensNoChao.find((i) => i.item.id === 'peleDeLobo')?.desenho.alpha ?? -1`))
+    await pausa(90)
+  }
+  conferir('nos últimos 5 s o dropado pisca', alfas.some((a) => a < 0.5) && alfas.some((a) => a === 1), alfas)
   await cena(`(c.itensNoChao.filter((i) => i.item.id === 'peleDeLobo').forEach((i) => { i.expiraEm = c.agora + 300 }), true)`)
   await pausa(800)
   conferir('quando o tempo acaba, o item some do chão', !(await cena(`c.itensNoChao.some((i) => i.item.id === 'peleDeLobo')`)))
@@ -401,6 +452,22 @@ try {
   await aba.esperar(`${CENA}.boss.estado !== 'avisando'`, 'o golpe', 4000)
   await pausa(150)
   conferir('quem sai da marca antes do golpe não leva dano', await cena(`c.lider.vida === c.lider.vidaMaxima`))
+  // Tanque (ajustes de 14/10): o escudo segura golpes e tiros de frente, mas o pisão é em área e atinge mesmo de frente
+  await aba.clicar('Tanque')
+  await pausa(300)
+  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0; c.boss.ultimoAtaque = null; c.lider.colocarEm(c.boss.x - 140, c.boss.y); return true })()`)
+  // Mira no Boss: o escudo fica virado para ele
+  const mira = await naTela(await cena(`c.boss.x`), await cena(`c.boss.y`))
+  await aba.moverMouse(mira.x, mira.y)
+  await pausa(300)
+  const deFrente = await cena(`c.lider.escudo?.ativo === true && c.lider.escudo.bloqueiaGolpe(c.boss)`)
+  await cena(`(c.boss.alvo = c.lider, c.boss.estado = 'perseguindo', c.boss.comecarAtaque('pisao', c.agora), c.lider.colocarEm(c.boss.x - 140, c.boss.y), true)`)
+  await aba.esperar(`${CENA}.boss.estado !== 'avisando'`, 'o pisão', 4000)
+  await pausa(150)
+  const tanque = await cena(`({ vida: c.lider.vida, maxima: c.lider.vidaMaxima })`)
+  conferir('o Tanque virado para o Boss (escudo de frente) leva o pisão em área', deFrente && tanque.vida < tanque.maxima, { deFrente, ...tanque })
+  await aba.clicar('Arqueiro')
+  await pausa(300)
   // Derrota do Boss, com o drop especial forçado em 100% (barra de teste, só no npm run dev)
   await aba.clicar('Drop especial do Boss', false)
   await cena(`(c.invencivel = true, c.acertar(c.boss, 999999, c.lider, 0, c.lider), true)`)

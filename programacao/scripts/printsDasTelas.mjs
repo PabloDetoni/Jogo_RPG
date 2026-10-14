@@ -2,7 +2,8 @@
 // Uso: npm run prints -- [pasta] [escuro]
 //   pasta: subpasta de testes-do-navegador/telas/ (padrão: "atual"); escuro: tira os prints no tema escuro.
 // Liga o Vite e um Edge escondido (1366 × 768), joga como convidado com os itens de teste do painel DEV e passa por
-// cada tela e aba do Reino, pela Preparação e pela mochila da partida (Tab). O painel DEV some nos prints.
+// cada tela e aba: a Tela inicial e o acesso, o Reino, o Mapa, os minijogos, o Ponto de partida, a Preparação, a partida
+// (HUD e mochila com Tab) e o Resumo. O painel DEV some nos prints.
 // As abas que não existirem (numa versão mais antiga) são puladas.
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -46,10 +47,12 @@ const irPara = async (tela) => {
   })()`)
   await pausa(350)
 }
-async function print(nome) {
+async function print(nome, { manterDica = false } = {}) {
   numero += 1
   const arquivo = `${String(numero).padStart(2, '0')}-${nome}`
-  // Sem o painel DEV e sem os avisos (conquistas), para o print mostrar só a tela
+  // Sem o painel DEV, sem os avisos (conquistas) e sem a dica da primeira visita (ajustes de 14/10; a não ser no print
+  // que mostra a dica), para o print mostrar só a tela
+  if (!manterDica) await aba.avaliar(`(() => { [...document.querySelectorAll('.dica-da-tela button')].find((b) => b.textContent.trim() === 'Entendi')?.click(); return true })()`)
   await aba.avaliar(`(() => { document.querySelectorAll('.avisos .aviso button').forEach((b) => b.click()); const p = document.querySelector('.painel-dev, .painel-dev-mini'); if (p) p.style.visibility = 'hidden'; return true })()`)
   await pausa(120)
   await aba.print(arquivo)
@@ -65,18 +68,27 @@ try {
   navegador = await abrirNavegador('prints', PASTA)
   aba = await navegador.novaAba('aba1')
   await aba.abrir(vite.site)
-  await passo('Iniciar jogo')
-  await passo('Jogar como convidado')
-  await aba.esperarTela('Narrativa inicial')
-  await passo('Continuar')
-  await passo('Arqueiro')
-  await passo('Escolher Arqueiro')
-  await aba.esperarTela('Reino')
   if (tema === 'escuro') {
     await passo('Configurações')
     await passo('Tema', true)
     await aba.apertar('esc')
   }
+  await print('tela-inicial')
+  if (await clicar('Como jogar')) {
+    await pausa(250)
+    await print('como-jogar')
+    await aba.apertar('esc')
+  }
+  await passo('Iniciar jogo')
+  await print('login')
+  await passo('Jogar como convidado')
+  await aba.esperarTela('Narrativa inicial')
+  await print('narrativa')
+  await passo('Continuar')
+  await passo('Arqueiro')
+  await print('selecao-de-classe')
+  await passo('Escolher Arqueiro')
+  await aba.esperarTela('Reino')
   // O Catálogo de quem acabou de começar: quase tudo ainda apagado (silhueta)
   await irPara('mercado')
   if (await abaChamada('Catálogo')) await print('catalogo-no-comeco')
@@ -99,6 +111,7 @@ try {
   }
 
   await irPara('forja')
+  await print('forja-dica-da-primeira-visita', { manterDica: true })
   // Na aba Equipar, uma peça escolhida (para o print mostrar o antes e depois)
   await abaChamada('Equipar')
   await aba.avaliar(`(() => { document.querySelector('.balcao-grade .slot:not(.slot-apagado)')?.click(); return true })()`)
@@ -132,6 +145,18 @@ try {
 
   await irPara('reino')
   await passo('Jogar')
+  await aba.esperarTela('Mapa')
+  await print('mapa')
+  for (const lugar of ['Fazenda', 'Mina', 'Lago']) {
+    if (await clicar(lugar, true)) {
+      await pausa(400)
+      await print(`minijogo-${lugar.toLowerCase()}`)
+      await irPara('mapa')
+    }
+  }
+  await irPara('pontoPartida')
+  await print('ponto-de-partida')
+  await irPara('mapa')
   await passo('Floresta')
   await aba.esperarTela('Preparação')
   // Duas poções na mochila da partida (a grade da direita e a da partida, com Tab)
@@ -146,6 +171,15 @@ try {
   await aba.apertar('tab')
   await pausa(400)
   await print('mochila-da-partida')
+  await aba.apertar('tab')
+  await pausa(300)
+  await print('partida')
+  // O Resumo: a barra de teste termina a partida com Vitória
+  if (await clicar('Vitória')) {
+    await aba.esperarTela('Resumo', 15000).catch(() => {})
+    await pausa(600)
+    await print('resumo')
+  }
   console.log(`${tirados.length} prints em ${PASTA}`)
 } catch (erro) {
   console.log(`ERRO ${erro.message} (depois de ${tirados.length} prints)`)

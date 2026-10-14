@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { coresDaArena, faixas, tamanhoDaArena } from '../../dados/arenaDeTeste.js'
+import { coresDaArena, faixaDeBaixo, faixas, tamanhoDaArena } from '../../dados/arenaDeTeste.js'
 import { arteDaFloresta } from '../../dados/arte.js'
 import { combateDeTeste, critico, mundo } from '../../dados/balanceamento.js'
 import { nomeDaClasse } from '../../dados/classes.js'
@@ -25,22 +25,13 @@ import {
   somarXpDoAbate,
   xpParaOProximoNivel,
 } from '../../regras/andamentoDaPartida.js'
-import {
-  aplicarDano,
-  circuloTocaRetangulo,
-  fracaoDaRecarga,
-  podeUsar,
-  retangulosSeTocam,
-  rolarCritico,
-  vagaNaFormacao,
-  velocidadeDoMovimento,
-  vetorDeEmpurrao,
-} from '../../regras/combate.js'
+import { aplicarDano, circuloTocaRetangulo, escudoBloqueia, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
 import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
+import { contaAoPegar, itemDescartado, itemDropado, itemNatural, tempoRestante } from '../../regras/itensNoChao.js'
 import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { escolherPedra } from '../../regras/arte.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
@@ -48,7 +39,7 @@ import { tocarEfeito } from '../../audio/gerenciador.js'
 import { efeitoDoAtaque } from '../../regras/som.js'
 import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
-import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
+import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
@@ -68,6 +59,7 @@ import BolaMagica from '../ataques/bolaMagica.js'
 import Escudo from '../ataques/escudo.js'
 import { golpeDeEspada } from '../ataques/espada.js'
 import Flecha from '../ataques/flecha.js'
+import { DesenhoDoArco, cargaAtual, comecarAPuxar, flechaAgora, horaDeSoltar, msDeRecargaDoAtaque, multiplicadorDaVelocidade, podePuxar, puxarParaADistancia, usaArco } from '../arco.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
 import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
@@ -127,11 +119,14 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // A arte que já chegou (src/assets/arte/, dados/arte.js): sem ela, tudo continua em quadrados
+  // Ajustes de 14/10: o andamento vai para a tela de carregamento (Partida.jsx), pela ponte
   preload() {
+    this.load.on('progress', (fracao) => this.ponte?.avisar('carregamento', { etapa: 'arte', fracao }))
     carregarArte(this)
   }
 
   create() {
+    this.ponte?.avisar('carregamento', { etapa: 'arte', fracao: 1 })
     this.relogio = 0
     criarTexturas(this)
     prepararArte(this)
@@ -248,9 +243,19 @@ export default class CenaArena extends Phaser.Scene {
       habilidade3: 'THREE',
       interagir: 'E',
     })
+    // Clique: o ataque da classe. O Arqueiro (ajustes de 14/10) puxa o arco enquanto segura e atira ao soltar
     this.input.on('pointerdown', (ponteiro) => {
-      if (ponteiro.leftButtonDown() && !this.lider.caido) this.usarAtaque(this.lider, this.anguloDaMira)
+      if (!ponteiro.leftButtonDown() || this.lider.caido) return
+      if (usaArco(this.lider)) {
+        if (podePuxar(this.lider, this.agora)) comecarAPuxar(this.lider, this.agora)
+      } else this.usarAtaque(this.lider, this.anguloDaMira)
     })
+    const soltarDoLider = () => {
+      if (this.lider.puxando && this.lider.puxando.msParaSoltar === null) this.soltarFlecha(this.lider, this.anguloDaMira)
+    }
+    this.input.on('pointerup', soltarDoLider)
+    this.input.on('pointerupoutside', soltarDoLider)
+    this.desenhoDoArco = new DesenhoDoArco(this)
 
     const pararDeOuvir = [
       this.ponte.ouvir('comando', (comando) => this.executarComando(comando)),
@@ -304,13 +309,14 @@ export default class CenaArena extends Phaser.Scene {
     }
   }
 
-  // Na Floresta, a câmera segue o Líder e para nos limites do mapa. Ela mostra o mundo só entre a faixa do HUD e a
-  // de baixo: ninguém fica escondido embaixo delas. Na arena, a câmera fica parada (a arena cabe na tela).
+  // Na Floresta, a câmera segue o Líder e para nos limites do mapa. Ela mostra o mundo desde o alto da tela (o HUD é
+  // translúcido, por cima, ajustes de 14/10) até a faixa de baixo (a barra de teste, só no npm run dev). Na arena, a
+  // câmera fica parada (a arena cabe na tela).
   prepararCamera() {
     if (!this.mapa.comCamera) return
     const { largura, altura } = tamanhoDaArena
     const camera = this.cameras.main
-    camera.setViewport(0, faixas.hud, largura, altura - faixas.hud - faixas.barraDeTeste)
+    camera.setViewport(0, 0, largura, altura - faixaDeBaixo)
     camera.setBounds(0, 0, this.mapa.tamanho.largura, this.mapa.tamanho.altura)
     camera.setBackgroundColor(this.mapa.cores.mata)
     camera.startFollow(this.lider.corpo, true, mundo.camera.suavidade, mundo.camera.suavidade)
@@ -387,15 +393,16 @@ export default class CenaArena extends Phaser.Scene {
       const item = itemDoCatalogo(ponto.tipo)
       if (!item) continue
       const lugar = this.lugarLivre(24, ponto, null, 4, false)
-      this.itensNoChao.push(new ItemNoChao(this, lugar.x, lugar.y, item, 1))
+      this.itensNoChao.push(new ItemNoChao(this, lugar.x, lugar.y, item, 1, itemNatural()))
     }
   }
 
-  // Um item cai no chão (drop de mob, ou o que não coube na mochila), um pouco espalhado, e some depois de um tempo
-  soltarItem(item, quantidade, ponto, msNoChao) {
+  // Um item cai no chão como dropado (drop de mob ou descartado; regras/itensNoChao.js), um pouco espalhado, e some 30 s
+  // depois. estado: itemDropado (padrão) ou itemDescartado.
+  soltarItem(item, quantidade, ponto, estado = itemDropado(this.agora)) {
     const angulo = Math.random() * Math.PI * 2
     const lugar = this.lugarLivre(20, { x: ponto.x + Math.cos(angulo) * 26, y: ponto.y + Math.sin(angulo) * 26 }, null, 2, false)
-    const noChao = new ItemNoChao(this, lugar.x, lugar.y, item, quantidade, this.agora + msNoChao)
+    const noChao = new ItemNoChao(this, lugar.x, lugar.y, item, quantidade, estado)
     this.itensNoChao.push(noChao)
     return noChao
   }
@@ -415,7 +422,7 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // Tecla E (RF35, TASK-064): pega o item mais perto, se couber na mochila (regras/mochila.js). O que não couber fica no
-  // chão, com aviso, e some depois de um tempo.
+  // chão como estava (ajustes de 14/10): o natural continua natural; o dropado, com o tempo que tinha.
   coletar(agora) {
     const noChao = this.itemPerto()
     if (!noChao || this.lider.caido) return
@@ -424,10 +431,13 @@ export default class CenaArena extends Phaser.Scene {
     const pegou = noChao.quantidade - (sobra?.quantidade ?? 0)
     this.mochila.itens = itens
     if (pegou > 0) {
-      if (item.tipo === 'recurso') this.ganhos.recursos += pegou
-      this.contarParaAMissao(() => {
-        this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
-      })
+      // O que foi descartado e pego de novo não conta outra vez (ajustes de 14/10)
+      if (contaAoPegar(noChao)) {
+        if (item.tipo === 'recurso') this.ganhos.recursos += pegou
+        this.contarParaAMissao(() => {
+          this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
+        })
+      }
       numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
     }
     if (!sobra) {
@@ -436,8 +446,8 @@ export default class CenaArena extends Phaser.Scene {
       return
     }
     noChao.quantidade = sobra.quantidade
-    if (noChao.expiraEm === null || noChao.expiraEm - agora > mundo.coleta.msQuandoNaoCabe) noChao.expiraEm = agora + mundo.coleta.msQuandoNaoCabe
-    this.mensagem(`Mochila cheia: ${sobra.quantidade} ${item.nome} ficou no chão (some em ${Math.round((noChao.expiraEm - agora) / 1000)} s)`, 'alerta')
+    const falta = noChao.dropado ? ` (some em ${Math.ceil(tempoRestante(noChao, agora) / 1000)} s)` : ''
+    this.mensagem(`Mochila cheia: ${sobra.quantidade} ${item.nome} ficou no chão${falta}`, 'alerta')
   }
 
   // Itens no chão: sobem e descem e somem quando o tempo acaba
@@ -527,6 +537,7 @@ export default class CenaArena extends Phaser.Scene {
     this.acordarOuDormir()
     for (const inimigo of [...this.inimigos]) if (!inimigo.dormindo) inimigo.atualizar(agora)
     this.boneco?.atualizar(agora)
+    this.atualizarArcos(agora)
     this.moverTodos(agora, segundos)
 
     this.projeteis = this.projeteis.filter((projetil) => {
@@ -798,7 +809,7 @@ export default class CenaArena extends Phaser.Scene {
       const empurrado = entidade.estaSendoEmpurrado(agora)
       let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
       // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
-      const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora)
+      const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora) * multiplicadorDaVelocidade(entidade) // puxando o arco, mais devagar
       if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
@@ -887,7 +898,7 @@ export default class CenaArena extends Phaser.Scene {
 
   // Quem já saiu do bolo do "Juntar todos" (ninguém mais em cima dele) volta a ter a batida dura
   encerrarSeparacaoSuave(andantes, agora) {
-    const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < ((a.tamanho + b.tamanho) / 2) * 0.6
+    const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < (a.raio + b.raio) * 0.94
     for (const entidade of andantes) {
       if (entidade.separandoAte > agora && !andantes.some((outro) => outro !== entidade && emCima(entidade, outro))) {
         entidade.separandoAte = 0
@@ -902,7 +913,7 @@ export default class CenaArena extends Phaser.Scene {
     if (a.deslizando || b.deslizando) return false
     const agora = this.agora
     if (a.separandoAte <= agora && b.separandoAte <= agora) return true
-    return Math.hypot(a.x - b.x, a.y - b.y) > ((a.tamanho + b.tamanho) / 2) * 0.6
+    return Math.hypot(a.x - b.x, a.y - b.y) > (a.raio + b.raio) * 0.94
   }
 
   // Quase não saiu do lugar tentando andar: escorrega para um lado, depois para o outro, dá a volta e,
@@ -974,18 +985,63 @@ export default class CenaArena extends Phaser.Scene {
   usarAtaque(membro, angulo) {
     if (membro.caido || this.terminou) return false
     const agora = this.agora
-    if (!podeUsar(agora, membro.ultimoAtaque, ataques[membro.classe].recargaMs)) return false
+    if (!podeUsar(agora, membro.ultimoAtaque, msDeRecargaDoAtaque(membro, ataques[membro.classe].recargaMs))) return false
     membro.ultimoAtaque = agora
     membro.inicioDoGolpe = agora // a animação de ataque, na arte
     membro.anguloDaMira = angulo
     this.contagemDeTiros.disparados[membro.classe] = (this.contagemDeTiros.disparados[membro.classe] ?? 0) + 1
     if (membro.classe === 'guerreiro') golpeDeEspada(this, membro, angulo)
-    if (membro.classe === 'arqueiro') this.adicionarProjetil(new Flecha(this, membro, angulo))
+    // Sem puxar (um clique sem segurar), a flecha sai com a carga mínima
+    if (membro.classe === 'arqueiro') {
+      this.adicionarProjetil(new Flecha(this, membro, angulo, flechaAgora(membro, agora)))
+      membro.puxando = null
+    }
     if (membro.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, membro, angulo))
     if (membro.classe === 'sacerdote') this.adicionarProjetil(new Aura(this, membro, agora))
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
     if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
+  }
+
+  // ---------- Arco que carrega (Arqueiro; ajustes de 14/10, jogo/arco.js) ----------
+
+  // Solta a flecha com a carga de agora (o Líder ao largar o clique; o aliado quando puxou o que queria)
+  soltarFlecha(membro, angulo) {
+    if (!membro.puxando || membro.caido || this.terminou) {
+      membro.puxando = null
+      return
+    }
+    const agora = this.agora
+    const flecha = flechaAgora(membro, agora)
+    membro.ultimaCarga = cargaAtual(membro, agora) // para os roteiros e a depuração: com quanto soltou
+    membro.puxando = null
+    membro.ultimoAtaque = agora
+    membro.inicioDoGolpe = agora
+    membro.anguloDaMira = angulo
+    this.contagemDeTiros.disparados[membro.classe] = (this.contagemDeTiros.disparados[membro.classe] ?? 0) + 1
+    this.adicionarProjetil(new Flecha(this, membro, angulo, flecha))
+    if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe))
+  }
+
+  // O Arqueiro aliado começa a puxar o bastante para a distância do alvo, pelo nível da IA dele
+  puxarArcoDoAliado(aliado, distancia) {
+    if (!podePuxar(aliado, this.agora)) return
+    puxarParaADistancia(aliado, this.agora, distancia, this.perfilDaIA(aliado).id)
+  }
+
+  // A cada quadro: quem caiu para de puxar; o aliado solta na hora; o Líder solta se o clique já não está apertado
+  // (largou fora da tela ou com uma janela por cima); sem inimigo vivo, o aliado desiste. E o desenho da carga.
+  atualizarArcos(agora) {
+    const temInimigo = this.inimigos.some((inimigo) => !inimigo.morto)
+    for (const membro of this.grupo) {
+      if (!membro.puxando) continue
+      if (membro.caido) membro.puxando = null
+      else if (membro.lider) {
+        if (membro.puxando.msParaSoltar === null && !this.input.activePointer.leftButtonDown()) this.soltarFlecha(membro, this.anguloDaMira)
+      } else if (!temInimigo) membro.puxando = null
+      else if (horaDeSoltar(membro, agora)) this.soltarFlecha(membro, membro.anguloDaMira)
+    }
+    this.desenhoDoArco.atualizar(this.grupo, this.lider, this.anguloDaMira, agora)
   }
 
   // A habilidade dá para usar agora? (para a IA decidir; não avisa nada)
@@ -1128,7 +1184,7 @@ export default class CenaArena extends Phaser.Scene {
       const { especial } = inimigo.config
       const item = itemDoCatalogo(especial.item)
       if (item && Math.random() < (this.chanceDoEspecialForcada ?? especial.chance)) {
-        this.soltarItem(item, 1, inimigo, mundo.coleta.msDoDrop)
+        this.soltarItem(item, 1, inimigo)
         this.mensagem(`O ${inimigo.config.nome} deixou: ${item.nome}!`, 'nivel')
       }
     }
@@ -1137,7 +1193,7 @@ export default class CenaArena extends Phaser.Scene {
       const item = itemDoCatalogo(drop.item)
       const [minimo, maximo] = drop.quantidade ?? [1, 1]
       if (!item || Math.random() >= (this.chanceDeDropForcada ?? drop.chance)) continue
-      this.soltarItem(item, minimo + Math.floor(Math.random() * (maximo - minimo + 1)), inimigo, mundo.coleta.msDoDrop)
+      this.soltarItem(item, minimo + Math.floor(Math.random() * (maximo - minimo + 1)), inimigo)
     }
     this.matarInimigo(inimigo)
     this.dividirXp(xp)
@@ -1193,8 +1249,10 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // Golpe corpo a corpo: o escudo do Tanque bloqueia o que vem da frente
-  inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao) {
-    if (membro.escudo?.bloqueiaGolpe(inimigo)) {
+  // tipo (ajustes de 14/10): 'golpe' (corpo a corpo: o escudo do Tanque segura se vier pela frente) ou 'area' (o pisão
+  // do Boss, explosões: atinge o Tanque normalmente; regras/combate.js, escudoBloqueia)
+  inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao, tipo = 'golpe') {
+    if (membro.escudo && escudoBloqueia({ escudoAtivo: membro.escudo.ativo, tipo, naFrente: membro.escudo.bloqueiaGolpe(inimigo) })) {
       const { x, y } = membro.escudo.retangulo()
       this.mostrarBloqueado(x, y)
       inimigo.empurrar(vetorDeEmpurrao(membro, inimigo, forcaDoEmpurrao), 220)
@@ -1483,6 +1541,17 @@ export default class CenaArena extends Phaser.Scene {
     this.mensagem(`${item.nome} em ${alvo === this.lider ? 'você' : nomeDaClasse(alvo.classe)}: ${resultado.texto}`, 'aviso')
   }
 
+  // Descartar da mochila da partida (ajustes de 14/10): a quantidade sai da mochila e cai no chão perto do Líder como item
+  // dropado (some em 30 s). Pegar de novo não conta outra vez para a missão nem para os recursos.
+  descartarItem(id, quantidade) {
+    const item = itemDoCatalogo(id)
+    const resultado = descartarDaMochilaDaPartida(this.mochila.itens, id, quantidade)
+    if (!item || !resultado.ok) return
+    this.mochila.itens = resultado.itens
+    this.soltarItem(item, resultado.quantidade, this.lider, itemDescartado(this.agora))
+    this.mensagem(`Você descartou ${resultado.quantidade} ${item.nome} · no chão por ${Math.round(mundo.coleta.msDoItemDropado / 1000)} s`, 'aviso')
+  }
+
   executarComando(comando) {
     if (this.terminou) return
     // Teclas e pedidos do jogo (não são de teste): Q, Voltar ao Reino da pausa e a fuga confirmada
@@ -1492,6 +1561,7 @@ export default class CenaArena extends Phaser.Scene {
     // Mochila da partida (Fase 4, TASK-047): Tab abre sem pausar; E usa no Líder e R no aliado mais perto da mira
     if (comando.tipo === 'mochilaAberta') this.mochilaAberta = Boolean(comando.aberta)
     if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
+    if (comando.tipo === 'descartarItem') this.descartarItem(comando.id, comando.quantidade)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)
     if (import.meta.env.DEV) this.comandoDeTeste(comando)
     if (this.terminou) return
@@ -1722,7 +1792,8 @@ export default class CenaArena extends Phaser.Scene {
       manaMaxima: lider.manaMaxima,
       caido: lider.caido,
       segundosParaLevantar: lider.caido ? segundosRestantes(lider.caidoDesde, agora, prazoParaLevantar) : null,
-      recargaDoAtaque: fracaoDaRecarga(agora, lider.ultimoAtaque, ataques[lider.classe].recargaMs),
+      recargaDoAtaque: fracaoDaRecarga(agora, lider.ultimoAtaque, msDeRecargaDoAtaque(lider, ataques[lider.classe].recargaMs)),
+      cargaDoArco: lider.puxando ? cargaAtual(lider, agora) : null, // o arco do Arqueiro puxando (ajustes de 14/10)
       recargaDaEsquiva: fracaoDaRecarga(agora, this.ultimaEsquiva, esquiva.recargaMs),
       habilidades: lider.habilidades.map((_, indice) => recargaDe(lider, indice)),
       aliados: this.aliados.map((aliado) => ({

@@ -17,6 +17,7 @@ import {
   velocidadeDoMovimento,
   velocidadeParaSeguir,
   vetorDeEmpurrao,
+  escudoBloqueia,
 } from './combate.js'
 
 const perto = (valor, esperado) => expect(valor).toBeCloseTo(esperado, 6)
@@ -225,5 +226,22 @@ describe('crítico pela Agilidade (Conceito §6; aprovado em 07/10)', () => {
     expect(rolarCritico(20, 0.16, 1.5, () => 0.1)).toEqual({ dano: 30, critico: true })
     expect(rolarCritico(20, 0.16, 1.5, () => 0.16)).toEqual({ dano: 20, critico: false })
     expect(rolarCritico(20, 0, 1.5, () => 0)).toEqual({ dano: 20, critico: false }) // chance 0: nunca
+  })
+})
+
+describe('escudo do Tanque (ajustes de 14/10)', () => {
+  it('segura golpes e projéteis que vêm pela frente', () => {
+    expect(escudoBloqueia({ tipo: 'golpe', naFrente: true })).toBe(true)
+    expect(escudoBloqueia({ tipo: 'projetil', naFrente: true })).toBe(true)
+  })
+
+  it('não segura o que vem de lado ou de trás, nem com o escudo desativado', () => {
+    expect(escudoBloqueia({ tipo: 'golpe', naFrente: false })).toBe(false)
+    expect(escudoBloqueia({ escudoAtivo: false, tipo: 'golpe', naFrente: true })).toBe(false)
+  })
+
+  it('ataque em área (o pisão do Boss, explosões) atinge o Tanque mesmo de frente', () => {
+    expect(escudoBloqueia({ tipo: 'area', naFrente: true })).toBe(false)
+    expect(escudoBloqueia({ tipo: 'area', naFrente: false })).toBe(false)
   })
 })

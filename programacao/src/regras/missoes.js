@@ -28,7 +28,7 @@ export function aceitarMissaoDoQuadro(progresso, id) {
   if (!missao) return { ok: false, motivo: 'Esta missão não está no quadro.' }
   const { id: idDaMissao, tipo, alvo, quantidade, recompensa } = missao // o save guarda só isso (o título vem do quadro)
   const resultado = aceitarMissao(progresso, { id: idDaMissao, tipo, alvo, quantidade, recompensa })
-  return resultado.ok ? { ...resultado, mensagem: `Missão aceita: ${missao.titulo}. O progresso conta a partir de agora.` } : resultado
+  return resultado.ok ? { ...resultado, mensagem: `Você aceitou a missão ${missao.titulo} · o progresso conta a partir de agora` } : resultado
 }
 
 export function entregarMissaoNaGuilda(progresso) {
@@ -40,14 +40,14 @@ export function entregarMissaoNaGuilda(progresso) {
   return {
     ok: true,
     progresso: { ...resultado.progresso, estatisticas: { ...estatisticas, missoesEntregues: (estatisticas.missoesEntregues ?? 0) + 1 } },
-    mensagem: `Missão entregue: +${missao.recompensa.ouro} de ouro e ${missao.recompensa.xp} XP divididos entre os personagens${subiram ? ` (${subiram} subiu de nível)` : ''}.`,
+    mensagem: `Você entregou a missão · +${missao.recompensa.ouro} de ouro · +${missao.recompensa.xp} XP divididos entre os personagens${subiram ? ` · ${subiram} subiu de nível` : ''}`,
   }
 }
 
 export function abandonarMissaoNaGuilda(progresso) {
   const resultado = abandonarMissao(progresso)
   if (!resultado.ok) return resultado
-  return { ok: true, progresso: resultado.progresso, mensagem: `Missão abandonada. Multa: ${resultado.multa} de ouro.` }
+  return { ok: true, progresso: resultado.progresso, mensagem: `Você abandonou a missão · −${resultado.multa} de ouro de multa` }
 }
 
 export { multaDaMissao }

@@ -8,10 +8,11 @@ import { aplicarNoReino } from '../regras/reino.js'
 import { capacidadeDaPartida } from '../regras/grupoDaPartida.js'
 import { ajustarLevar, deixarNoReino, levarNaPartida } from '../regras/mochila.js'
 import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
-import { contratarTodasAsClasses, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, definirAtributo, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
-import { registrarItensVistos } from '../regras/interface.js'
+import { dicasDasTelas } from '../dados/ajuda.js'
+import { dicaVisivel, registrarItensVistos, telaDeCima } from '../regras/interface.js'
 
 // Estado global do jogo. Só "progresso" vai para o salvamento (do convidado ou da conta);
 // as preferências são salvas à parte (salvamento/preferenciasLocais.js); o resto vive só na memória.
@@ -21,6 +22,7 @@ export function criarEstadoInicial(preferencias) {
     tela: 'telaInicial',
     anteriores: [], // caminho de telas até aqui, usado pelo Voltar
     janelas: [], // janelas abertas por cima da tela; a última fica no topo
+    dicaReaberta: null, // a tela cuja dica o "?" reabriu (ajustes de 14/10); some ao trocar de tela
     avisos: [], // mensagens para o jogador: { id, texto }
     proximoIdDeAviso: 1,
 
@@ -189,6 +191,7 @@ function ferramentaDeDev(estado, acao) {
     devContratarTodas: (progresso) => contratarTodasAsClasses(progresso),
     devMudarNivel: (progresso) => mudarNivel(progresso, acao.classe, acao.quantos),
     devQuaseSubir: (progresso) => quaseSubir(progresso, acao.classe),
+    devDefinirAtributo: (progresso) => definirAtributo(progresso, acao.classe, acao.atributo, acao.valor),
     devItensDeTeste: (progresso) => itensDeTeste(progresso),
   }
   return pedirSalvamento({ ...estado, progresso: ferramentas[acao.tipo](estado.progresso) })
@@ -206,6 +209,12 @@ function registrarVistos(antes, estado) {
   if (estado.partidaAtual || !estado.progresso || estado.progresso === antes.progresso) return estado
   const progresso = registrarItensVistos(estado.progresso)
   return progresso === estado.progresso ? estado : { ...estado, progresso }
+}
+
+function fecharDica(estado) {
+  const vistas = estado.preferencias?.dicasVistas ?? []
+  const dicasVistas = vistas.includes(estado.tela) ? vistas : [...vistas, estado.tela]
+  return { ...estado, dicaReaberta: null, preferencias: { ...estado.preferencias, dicasVistas } }
 }
 
 function conferirConquistas(estado) {
@@ -234,15 +243,28 @@ function atualizarSemConquistas(estado, acao) {
 
     // Esc fecha a janela de cima (inclusive o aviso da fuga, que assim é cancelada); na Partida, sem janela
     // aberta, pausa (RF35). Em combate não pausa: a Partida mostra "Você não pode pausar agora" (RF44).
+    // Fora da partida (ajustes de 14/10): sem janela, o Esc fecha a dica da primeira visita, se estiver aberta; senão, faz
+    // o mesmo que o Voltar da tela (a tela de cima da trilha, regras/interface.js). Sem tela de cima, nada.
     case 'esc': {
       if (estado.janelas.length > 0) return { ...estado, janelas: estado.janelas.slice(0, -1) }
-      if (estado.tela !== 'partida') return estado
+      if (estado.tela !== 'partida') {
+        if (dicaVisivel(estado.tela, estado.preferencias?.dicasVistas, estado.dicaReaberta, Boolean(dicasDasTelas[estado.tela]))) return fecharDica(estado)
+        const destino = telaDeCima(estado.tela, estado.anteriores)
+        return destino && estado.tela !== 'cutsceneDerrota' ? navegar(estado, destino) : estado
+      }
       const controle = estado.controleDaPartida
       if (controle.andamento.emCombate) {
         return { ...estado, controleDaPartida: { ...controle, recusasDePausa: controle.recusasDePausa + 1 } }
       }
       return { ...estado, janelas: ['pausa'] }
     }
+
+    // A dica da primeira visita (ajustes de 14/10): "Entendi" fecha e lembra neste navegador; o "?" reabre
+    case 'fecharDica':
+      return fecharDica(estado)
+
+    case 'reabrirDica':
+      return { ...estado, dicaReaberta: estado.tela }
 
     case 'mostrarAviso':
       return comAviso(estado, acao.texto)
@@ -396,12 +418,16 @@ function atualizarSemConquistas(estado, acao) {
     case 'noReino': {
       if (estado.partidaAtual) return estado
       const resultado = aplicarNoReino(estado.progresso, acao.operacao, acao.argumentos)
-      return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
+      if (!resultado.ok) return estado
+      const salvo = pedirSalvamento({ ...estado, progresso: resultado.progresso })
+      // A rodada do minijogo vai já para o banco (ajustes de 14/10): o contador do dia vale em qualquer navegador
+      return acao.operacao === 'comecarRodadaDoMinijogo' ? pedirEnvioAoBanco(salvo) : salvo
     }
 
     case 'devContratarTodas':
     case 'devMudarNivel':
     case 'devQuaseSubir':
+    case 'devDefinirAtributo':
     case 'devItensDeTeste':
       return ferramentaDeDev(estado, acao)
 

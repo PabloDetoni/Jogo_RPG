@@ -276,15 +276,28 @@ async function atacarEm(x, y) {
   await clicarNaTela(p.x, p.y)
 }
 
+// Segura o clique por "ms" mirando num ponto da arena e solta (o arco do Arqueiro carrega enquanto segura; ajustes de 14/10)
+async function atirarCarregado(x, y, ms) {
+  const p = await naTela(x, y)
+  await moverMouse(p.x, p.y)
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', x: p.x, y: p.y, button: 'left', buttons: 1, clickCount: 1 })
+  await pausa(ms)
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', x: p.x, y: p.y, button: 'left', buttons: 0, clickCount: 1 })
+  await pausa(60)
+}
+// A última flecha que saiu: dano, alcance e velocidade
+const ultimaFlecha = () => cena(`(() => { const f = c.projeteis.filter((p) => p.constructor.name === 'Flecha').at(-1); return f ? { dano: f.dano, alcance: f.alcance, velocidade: Math.round(Math.hypot(f.vx, f.vy)) } : null })()`)
+
 const textoDe = (seletor) => avaliar(`document.querySelector(${JSON.stringify(seletor)})?.innerText ?? ''`)
 
-// Quem está em cima de quem: pares de corpos (Líder, aliados, inimigos) que entram mais de "folga" px um no outro
+// Quem está em cima de quem: pares de corpos (Líder, aliados, inimigos) que entram mais de "folga" px um no outro. Desde
+// os ajustes de 14/10, pelo corpo que colide (menor que o desenho: os desenhos podem se cobrir um pouco, os corpos não)
 const SOBREPOSTOS = `(folga => {
   const corpos = [...c.grupo.filter(p => !p.perdido), ...c.inimigos.filter(i => !i.morto)]
   const pares = []
   for (let i = 0; i < corpos.length; i++) for (let j = i + 1; j < corpos.length; j++) {
-    const a = corpos[i], b = corpos[j], meio = (a.tamanho + b.tamanho) / 2 - folga
-    if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.classe ?? a.constructor.name, b.classe ?? b.constructor.name, Math.round(a.x), Math.round(a.y), (a.deslizando || b.deslizando) ? 'deslizando' : '', Math.round(((a.tamanho + b.tamanho) / 2 - Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))) * 10) / 10])
+    const a = corpos[i], b = corpos[j], meio = a.raio + b.raio - folga
+    if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.classe ?? a.constructor.name, b.classe ?? b.constructor.name, Math.round(a.x), Math.round(a.y), (a.deslizando || b.deslizando) ? 'deslizando' : '', Math.round((a.raio + b.raio - Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))) * 10) / 10])
   }
   return pares
 })`
@@ -296,7 +309,7 @@ const dentroDePedra = () =>
     const pedras = ${JSON.stringify(PEDRAS)}
     const area = ${JSON.stringify(AREA)}
     return [...c.grupo.filter(p => !p.perdido), ...c.inimigos.filter(i => !i.morto)].filter(e => {
-      const m = e.tamanho / 2 - 2
+      const m = e.raio - 2 // o corpo que colide (ajustes de 14/10: menor que o desenho)
       const naPedra = pedras.some(p => Math.abs(e.x - p.x) < p.largura / 2 + m && Math.abs(e.y - p.y) < p.altura / 2 + m)
       const fora = e.x < area.esquerda + m || e.x > area.direita - m || e.y < area.topo + m || e.y > area.base - m
       return naPedra || fora
@@ -369,14 +382,22 @@ async function botaoDoPersonagem(nome, texto, vezes = 1) {
     await pausa(60)
   }
 }
-// O HUD cabe? Nenhuma linha estoura, os blocos não se encostam e nada fica embaixo do botão Configurações
+// O HUD cabe? (ajustes de 14/10: grupos translúcidos nos cantos) Nenhuma linha estoura, os grupos não se encostam, o
+// botão Configurações não cobre nenhum deles, e tudo fica dentro da tela e acima da barra de teste
 const CABE_NO_HUD = `(() => {
   const hud = document.querySelector('.hud')
   const r = (el) => el.getBoundingClientRect()
-  const estouradas = [...hud.querySelectorAll('.hud-linha')].filter(l => l.scrollWidth > l.clientWidth + 1).length
+  const tela = r(document.querySelector('.moldura'))
+  const estouradas = [...hud.querySelectorAll('.hud-linha, .medidor, .hud-aliado')].filter(l => l.scrollWidth > l.clientWidth + 1).length
   const config = [...document.querySelectorAll('.tela-partida > .botao')].find(b => b.textContent === 'Configurações')
-  const p = r(hud.querySelector('.hud-principal')), n = r(hud.querySelector('.hud-numeros')), m = r(hud.querySelector('.hud-minimapa')), c = r(config)
-  return { estouradas, emOrdem: p.right <= n.left + 1 && n.right <= m.left + 1 && m.right <= c.left + 1, altura: hud.scrollHeight <= hud.clientHeight + 1 }
+  const grupos = ['.hud-principal', '.hud-numeros', '.hud-minimapa', '.hud-acoes'].map((s) => r(hud.querySelector(s)))
+  const tocam = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+  let encostados = 0
+  for (let i = 0; i < grupos.length; i++) for (let j = i + 1; j < grupos.length; j++) if (tocam(grupos[i], grupos[j])) encostados++
+  const cobertos = grupos.filter((g) => tocam(g, r(config))).length
+  const barra = document.querySelector('.barra-de-teste')
+  const fora = grupos.filter((g) => g.left < tela.left - 1 || g.right > tela.right + 1 || g.top < tela.top - 1 || g.bottom > (barra ? r(barra).top : tela.bottom) + 1).length
+  return { estouradas, emOrdem: encostados === 0 && cobertos === 0, altura: fora === 0 }
 })()`
 // Contrata pela carta da classe na Guilda e assina o contrato (Fase 4.5: cada classe é uma carta)
 async function contratarPelaCarta(classe) {
@@ -469,16 +490,25 @@ try {
     const escala = canvas.height / 900
     return { topo: canvas.top + ${AREA.topo} * escala, base: canvas.top + ${AREA.base} * escala, hud: hud.bottom, barra: barra.top, config: config.bottom }
   })()`)
-  conferir('o HUD acaba onde começa a área jogável', faixas.hud <= faixas.topo + 1, faixas)
+  // HUD translúcido (ajustes de 14/10): grupos nos cantos, sobre o mapa, com fundo transparente; o meio da tela fica livre
+  const translucido = await avaliar(`(() => {
+    const alfa = (el) => Number((getComputedStyle(el).backgroundColor.match(/[\\d.]+/g) ?? [])[3] ?? 1)
+    const grupos = [...document.querySelectorAll('.hud-grupo-do-canto, .hud-barra-de-acoes')]
+    const hud = getComputedStyle(document.querySelector('.hud')).backgroundColor
+    return { grupos: grupos.length, alfas: grupos.map(alfa), hudSemFundo: hud === 'rgba(0, 0, 0, 0)' || hud === 'transparent' }
+  })()`)
+  conferir('o HUD é translúcido: 4 grupos com fundo transparente, e nenhuma faixa escura', translucido.grupos === 4 && translucido.alfas.every((a) => a > 0 && a < 0.7) && translucido.hudSemFundo, translucido)
   conferir('a barra de teste começa onde acaba a área jogável', faixas.barra >= faixas.base - 1, faixas)
-  conferir('o botão Configurações fica dentro da faixa do HUD', faixas.config <= faixas.topo + 1, faixas)
-  conferir('o conteúdo do HUD cabe na faixa', await avaliar(`(() => { const h = document.querySelector('.hud'); return h.scrollHeight <= h.clientHeight + 1 })()`))
+  const cabeNoComeco = await avaliar(CABE_NO_HUD)
+  conferir('os grupos do HUD não se encostam, cabem na tela e o Configurações não cobre nenhum', cabeNoComeco.estouradas === 0 && cabeNoComeco.emOrdem && cabeNoComeco.altura, cabeNoComeco)
+  const acoes = await avaliar(`(() => { const a = document.querySelector('.hud-acoes').getBoundingClientRect(); const m = document.querySelector('.moldura').getBoundingClientRect(); return { meio: Math.abs((a.left + a.right) / 2 - (m.left + m.right) / 2), base: a.bottom, barra: document.querySelector('.barra-de-teste').getBoundingClientRect().top } })()`)
+  conferir('a barra de ações fica embaixo, no meio, logo acima da barra de teste', acoes.meio <= 2 && acoes.base <= acoes.barra && acoes.barra - acoes.base < 40, acoes)
   await colocarLider(300, AREA.topo + 60)
   await segurar(['w'], 600)
-  conferir('o Líder não entra embaixo do HUD', (await cena(`c.lider.y`)) >= AREA.topo + 19, await cena(`Math.round(c.lider.y)`))
+  conferir('o Líder não entra na faixa de cima da arena', (await cena(`c.lider.y - c.lider.raio`)) >= AREA.topo - 1, await cena(`Math.round(c.lider.y)`))
   await colocarLider(300, AREA.base - 40)
   await segurar(['s'], 600)
-  conferir('o Líder não entra embaixo da barra de teste', (await cena(`c.lider.y`)) <= AREA.base - 19, await cena(`Math.round(c.lider.y)`))
+  conferir('o Líder não entra embaixo da barra de teste', (await cena(`c.lider.y + c.lider.raio`)) <= AREA.base + 1, await cena(`Math.round(c.lider.y)`))
 
   console.log('3. Movimento (WASD), diagonal e esquiva')
   await colocarLider(300, 430)
@@ -537,11 +567,34 @@ try {
   await clicar('Arqueiro')
   await pausa(3200)
   await colocarLider(420, 650)
+  // Arco que carrega (ajustes de 14/10): o boneco está a 360 px; o clique rápido não chega, a flecha carregada chega
   await atacarEm(420, 290)
+  const rapida = await ultimaFlecha()
+  await pausa(900)
+  conferir('Arco: o clique rápido solta uma flecha curta (uns 35% do alcance), que não chega ao boneco a 360 px', rapida && rapida.alcance >= 245 && rapida.alcance <= 280 && (await vidaDoBoneco()) === 300, { rapida, boneco: await vidaDoBoneco() })
+  await atirarCarregado(420, 290, 1600)
+  const cheia = await ultimaFlecha()
   await pausa(40)
   await print('04-arqueiro-flecha')
-  await pausa(500)
-  conferir('Arqueiro: a flecha acerta o boneco', (await vidaDoBoneco()) < 300, await vidaDoBoneco())
+  await pausa(600)
+  conferir('Arco: carregada cheia, a flecha vai até o alcance máximo, mais rápida, e acerta o boneco', cheia && cheia.alcance === 700 && cheia.velocidade > rapida.velocidade && (await vidaDoBoneco()) < 300, { cheia, boneco: await vidaDoBoneco() })
+  conferir('Arco: a carga mínima dá uns 30% do dano da cheia', rapida && cheia && rapida.dano / cheia.dano >= 0.25 && rapida.dano / cheia.dano <= 0.35, { rapida: rapida?.dano, cheia: cheia?.dano })
+  // Puxando, o HUD mostra a carga e o Arqueiro anda mais devagar
+  await colocarLider(300, 430)
+  await pausa(700)
+  await moverMouse(...Object.values(await naTela(700, 430)))
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', ...(await naTela(700, 430)), button: 'left', buttons: 1, clickCount: 1 })
+  await pausa(300)
+  conferir('Arco: puxando, o HUD enche o ícone do ataque com a carga', await avaliar(`!!document.querySelector('.hud-espaco-carregando')`))
+  const antesPuxando = await cena(`c.lider.x`)
+  await segurar(['d'], 500)
+  const andouPuxando = (await cena(`c.lider.x`)) - antesPuxando
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', ...(await naTela(700, 430)), button: 'left', buttons: 0, clickCount: 1 })
+  await pausa(700)
+  const antesNormal = await cena(`c.lider.x`)
+  await segurar(['d'], 500)
+  const andouNormal = (await cena(`c.lider.x`)) - antesNormal
+  conferir('Arco: puxando, o Arqueiro anda mais devagar (uns 55% da velocidade)', andouPuxando > 0 && andouPuxando < andouNormal * 0.75, { puxando: Math.round(andouPuxando), normal: Math.round(andouNormal) })
   await clicar('Sacerdote')
   await cena(`(c.lider.vida = 30, true)`)
   await colocarLider(300, 430)
@@ -785,6 +838,21 @@ try {
   conferir('depois de 1,5 s, ninguém está em cima de ninguém', (await sobrepostos()).length === 0, await sobrepostos())
   conferir('e ninguém foi parar numa pedra ou fora da área', (await dentroDePedra()).length === 0, await dentroDePedra())
   await print('18-separados')
+
+  console.log('10b. Hitbox menor (ajustes de 14/10): o corpo que colide é bem menor que o desenho')
+  const corpos = await cena(`({ desenho: c.lider.tamanho, corpo: c.lider.raio * 2, fisica: Math.round(c.lider.corpo.body.width), golpe: c.lider.retangulo().largura })`)
+  conferir('o corpo que colide é bem menor que o desenho, e a área do golpe continua do tamanho do desenho', corpos.corpo <= corpos.desenho * 0.7 && corpos.fisica === Math.round(corpos.corpo) && corpos.golpe === corpos.desenho, corpos)
+  await tirarInimigos()
+  // O grupo parado na frente do Líder: ele passa pelo meio sem grudar
+  await colocarLider(700, 420)
+  await cena(`(c.aliados.forEach((a, i) => a.colocarEm(760 + (i % 2) * 34, 380 + i * 26)), true)`)
+  await pausa(150)
+  const antesDeAtravessar = await cena(`c.lider.x`)
+  await segurar(['d'], 1000)
+  const atravessou = (await cena(`c.lider.x`)) - antesDeAtravessar
+  conferir('o Líder passa pelo meio do grupo parado sem grudar (anda pelo menos 70% do normal em 1 s)', atravessou >= 0.7 * 220, Math.round(atravessou))
+  await pausa(800)
+  conferir('depois de passar, ninguém fica em cima de ninguém', (await sobrepostos(1)).length === 0, await sobrepostos(1))
   await tirarInimigos()
 
   console.log('11. Aliados lutando (TASK-043), na IA avançada (5b.1)')
@@ -815,8 +883,10 @@ try {
   let arqueiroLonge = 0
   let amostras = 0
   let comSobreposicao = 0
+  let arqueiroPuxou = false
   for (let i = 0; i < 30; i++) {
     await colocarLider(420, 450)
+    arqueiroPuxou ||= await cena(`(() => { const a = ${membro('arqueiro')}; return !!a && (!!a.puxando || a.ultimaCarga !== undefined) })()`)
     const amostra = await cena(`(() => {
       const tanque = ${membro('tanque')}, arqueiro = ${membro('arqueiro')}
       const vivos = c.inimigos.filter(i => !i.morto)
@@ -837,6 +907,7 @@ try {
     await pausa(200)
   }
   conferir('os mobs miram o Tanque na maior parte do tempo', perseguindo > 0 && noTanque / perseguindo >= 0.5, { noTanque, perseguindo })
+  conferir('o Arqueiro aliado também puxa o arco antes de atirar (ajustes de 14/10)', arqueiroPuxou)
   conferir('o Arqueiro não encosta nos mobs (≥ 90% do tempo a mais de 70 px)', amostras === 0 || arqueiroLonge / amostras >= 0.9, { arqueiroLonge, amostras })
   conferir('os aliados lutam: os mobs perdem vida', (await vidaDosMobs()) < vidaInicialDosMobs, { antes: vidaInicialDosMobs, depois: await vidaDosMobs() })
   conferir('lutando, quase nunca alguém fica em cima de alguém (≤ 10% das amostras)', comSobreposicao <= 3, comSobreposicao)
@@ -1155,7 +1226,8 @@ try {
   await clicar('Invencível: não') // o Líder não leva dano nestes testes (o mob perseguindo já é combate)
   await cena(`(c.criarInimigo('mobVermelho', { x: c.lider.x + 200, y: c.lider.y }), true)`)
   await esperar(`${CENA}.emCombate`, 'o grupo entrar em combate', 4000)
-  await pausa(250)
+  // O HUD chega 8 vezes por segundo: espera ele mostrar (antes, uma pausa fixa às vezes media no quadro antigo)
+  await esperar(`(document.querySelector('.hud')?.innerText ?? '').includes('Em combate')`, 'o HUD mostrar "Em combate"', 2000).catch(() => {})
   conferir('com um mob perseguindo, o HUD mostra "Em combate"', (await textoDe('.hud')).includes('Em combate'))
   await apertar('esc')
   await pausa(150)
@@ -1178,7 +1250,7 @@ try {
   // A 1 s do fim, um mob aparece perto e vem atrás do grupo
   await cena(`(c.retorno.msRestantes = 1000, c.criarInimigo('mobVermelho', { x: c.lider.x + 180, y: c.lider.y }), true)`)
   await esperar(`${CENA}.retorno?.interrompido`, 'o combate interromper o retorno', 3000)
-  await pausa(200)
+  await esperar(`(document.querySelector('.avisos-da-partida')?.innerText ?? '').includes('Em combate: o retorno espera')`, 'o aviso do retorno esperando', 2000).catch(() => {})
   const retornoInterrompido = await cena(`({ ms: c.retorno.msRestantes, terminou: c.terminou })`)
   conferir('o combate a 1 s do fim faz o retorno voltar a 15 s e esperar (a partida não acaba)', retornoInterrompido.ms === 15000 && !retornoInterrompido.terminou, retornoInterrompido)
   const avisoDoRetorno = await textoDe('.avisos-da-partida')
@@ -1554,7 +1626,7 @@ try {
     let travou = 0
     const inicioDoDesvio = Date.now()
     while (Date.now() - inicioDoDesvio < 3500) {
-      const amostra = await cena(`(() => { const s = ${membro('sacerdote')}, g = ${membro('guerreiro')}; return { folga: Math.max(Math.abs(s.x - g.x), Math.abs(s.y - g.y)) - (s.tamanho + g.tamanho) / 2, travou: s.travamento?.nivel ?? 0, aura: ${auraAtiva} } })()`)
+      const amostra = await cena(`(() => { const s = ${membro('sacerdote')}, g = ${membro('guerreiro')}; return { folga: Math.max(Math.abs(s.x - g.x), Math.abs(s.y - g.y)) - (s.raio + g.raio), travou: s.travamento?.nivel ?? 0, aura: ${auraAtiva} } })()`)
       menorFolga = Math.min(menorFolga, amostra.folga)
       travou = Math.max(travou, amostra.travou)
       if (amostra.aura) break

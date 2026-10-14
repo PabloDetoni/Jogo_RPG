@@ -2,7 +2,7 @@ import { distribuirPontos, usarPergaminho } from './arvores.js'
 import { comprarNaForja, desequipar, equipar, fabricar, venderNaForja } from './forja.js'
 import { evoluirHabilidade, porNaTecla, tirarDaTecla, trocarNaTecla } from './habilidadesDaArvore.js'
 import { comprarNoMercado, trocarNoMercado, venderNoMercado } from './mercado.js'
-import { aplicarMinijogo } from './minijogos.js'
+import { aplicarMinijogo, comecarRodadaDoMinijogo } from './minijogos.js'
 import { abandonarMissaoNaGuilda, aceitarMissaoDoQuadro, entregarMissaoNaGuilda } from './missoes.js'
 import { tirarDaMochila } from './mochila.js'
 import { nomeDoItem } from './textosDosItens.js'
@@ -22,7 +22,7 @@ export function descartar(progresso, id, quantidade = 1) {
   if (!quantidadeValida(quantidade)) return { ok: false, motivo: 'Quantidade inválida.' }
   const tirou = tirarDaMochila(progresso.mochila, { [id]: quantidade })
   if (!tirou.ok) return { ok: false, motivo: `Você não tem ${quantidade} ${nomeDoItem(id)} na Mochila.` }
-  return { ok: true, progresso: { ...progresso, mochila: tirou.mochila }, mensagem: `${quantidade} ${nomeDoItem(id)} descartado${quantidade > 1 ? 's' : ''}.` }
+  return { ok: true, progresso: { ...progresso, mochila: tirou.mochila }, mensagem: `Você descartou ${quantidade} ${nomeDoItem(id)} · ${quantidade > 1 ? 'sumiram' : 'sumiu'} da Mochila` }
 }
 
 // Todas as operações pelo nome
@@ -46,6 +46,7 @@ export const operacoesDoReino = {
   entregarMissaoNaGuilda,
   abandonarMissaoNaGuilda,
   aplicarMinijogo,
+  comecarRodadaDoMinijogo,
 }
 
 export function aplicarNoReino(progresso, operacao, argumentos = []) {

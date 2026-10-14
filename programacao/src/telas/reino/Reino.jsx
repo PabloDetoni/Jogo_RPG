@@ -2,6 +2,7 @@ import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { pedirTelaCheia } from '../../componentes/telaCheia.js'
 import { estiloPosicao } from '../../componentes/posicao.js'
 import Simbolo from '../../componentes/ui/Simbolo.jsx'
 import { iconeDoOuro } from '../../dados/arte.js'
@@ -58,7 +59,10 @@ export default function Reino() {
       <Lugar id="mochila" em={pos.mochila} aoAbrir={() => acoes.irPara('mochila')}>
         Mochila
       </Lugar>
-      <Lugar id="jogar" em={pos.jogar} aoAbrir={() => acoes.irPara('mapa')}>
+      <Lugar id="jogar" em={pos.jogar} aoAbrir={() => {
+          pedirTelaCheia(estado.preferencias.telaCheia)
+          acoes.irPara('mapa')
+        }}>
         Jogar
       </Lugar>
       <Lugar id="arvores" em={pos.arvores} aoAbrir={() => acoes.irPara('arvores')} abaixo={7.6}>

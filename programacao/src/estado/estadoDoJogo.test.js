@@ -265,6 +265,27 @@ describe('navegação, janelas e preferências', () => {
     expect(e.tela).toBe('telaInicial')
   })
 
+  it('fora da partida, o Esc fecha a dica da primeira visita e depois faz o mesmo que o Voltar (ajustes de 14/10)', () => {
+    let e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'forja' })
+    expect(e.preferencias.dicasVistas).not.toContain('forja')
+    e = fazer(e, { tipo: 'esc' })
+    expect(e.tela).toBe('forja')
+    expect(e.preferencias.dicasVistas).toContain('forja')
+    e = fazer(e, { tipo: 'esc' })
+    expect(e.tela).toBe('reino')
+    // O "?" reabre; Esc fecha de novo sem sair
+    e = fazer(e, { tipo: 'irPara', destino: 'forja' }, { tipo: 'reabrirDica' })
+    expect(e.dicaReaberta).toBe('forja')
+    e = fazer(e, { tipo: 'esc' })
+    expect([e.tela, e.dicaReaberta]).toEqual(['forja', null])
+    // Com janela aberta, o Esc fecha só a janela
+    e = fazer(e, { tipo: 'abrirJanela', janela: 'configuracoes' }, { tipo: 'esc' })
+    expect([e.tela, e.janelas]).toEqual(['forja', []])
+    // No Reino (sem tela de cima), o Esc não sai
+    e = fazer(e, { tipo: 'irPara', destino: 'reino' }, { tipo: 'fecharDica' }, { tipo: 'esc' })
+    expect(e.tela).toBe('reino')
+  })
+
   it('Esc fecha a janela de cima; na Partida sem janela, pausa', () => {
     let e = fazer(convidadoComMago(), ...irAtePreparacao, comecar, { tipo: 'abrirJanela', janela: 'configuracoes' })
     e = fazer(e, { tipo: 'esc' })
@@ -275,12 +296,12 @@ describe('navegação, janelas e preferências', () => {
 
   it('música, som e tema alternam', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'tema' }, { tipo: 'alternarPreferencia', chave: 'musica' })
-    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro' })
+    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro', telaCheia: true, dicasVistas: [] })
   })
 
   it('o mudo (tecla M) alterna sem mexer na música nem no som (RF18)', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'mudo' })
-    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro' })
+    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro', telaCheia: true, dicasVistas: [] })
     expect(fazer(e, { tipo: 'alternarPreferencia', chave: 'mudo' }).preferencias.mudo).toBe(false)
   })
 })

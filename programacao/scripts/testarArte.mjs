@@ -302,7 +302,7 @@ try {
     return false
   })()`)
   await pausa(400)
-  conferir('o aviso "E: pegar" mostra o ícone do item', (await icones('.avisos-da-partida')) === 1)
+  conferir('o aviso "E: pegar" mostra o ícone do item', (await icones('.hud-item-perto')) === 1) // em cima da barra de ações (ajustes de 14/10)
   await cena(`([...c.inimigos].forEach((i) => c.matarInimigo(i)), c.ultimoDano = null, true)`)
   // Um tiro inimigo ainda no ar pode acertar e deixar o grupo em combate (aí o Q não começa): espera sair
   await aba.esperar(`!${CENA}.emCombate`, 'o grupo sair de combate', 9000).catch(() => {})

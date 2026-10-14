@@ -32,7 +32,7 @@ export function equipar(progresso, classe, id) {
       mochila,
       personagens: trocarPersonagem(progresso, classe, (um) => ({ ...um, equipamento: { ...um.equipamento, [item.espaco]: id } })),
     },
-    mensagem: `${nomeDaClasse(classe)} equipou ${item.nome}${antigo ? ` (${nomeDoItem(antigo)} voltou para a Mochila)` : ''}.`,
+    mensagem: `${nomeDaClasse(classe)} equipou ${item.nome}${antigo ? ` · ${nomeDoItem(antigo)} voltou para a Mochila` : ''}`,
   }
 }
 
@@ -49,7 +49,7 @@ export function desequipar(progresso, classe, espaco) {
       mochila: porNaMochila(progresso.mochila, { [id]: 1 }),
       personagens: trocarPersonagem(progresso, classe, (um) => ({ ...um, equipamento })),
     },
-    mensagem: `${nomeDoItem(id)} voltou para a Mochila.`,
+    mensagem: `Você tirou ${nomeDoItem(id)} · voltou para a Mochila`,
   }
 }
 
@@ -60,7 +60,7 @@ export function comprarNaForja(progresso, id) {
   return {
     ok: true,
     progresso: { ...progresso, ouro: progresso.ouro - preco, mochila: porNaMochila(progresso.mochila, { [id]: 1 }) },
-    mensagem: `Comprou ${nome} por ${preco} de ouro. Está na Mochila: equipe na aba Equipar.`,
+    mensagem: `Você comprou 1 ${nome} · −${preco} de ouro · está na Mochila (equipe na aba Equipar)`,
   }
 }
 
@@ -74,7 +74,7 @@ export function venderNaForja(progresso, id, quantidade = 1) {
   return {
     ok: true,
     progresso: { ...progresso, ouro: progresso.ouro + ganho, mochila: tirou.mochila },
-    mensagem: `Vendeu ${quantidade} ${item.nome} por ${ganho} de ouro.`,
+    mensagem: `Você vendeu ${quantidade} ${item.nome} · +${ganho} de ouro`,
   }
 }
 
@@ -93,7 +93,7 @@ export function fabricar(progresso, resultado) {
   return {
     ok: true,
     progresso: { ...progresso, ouro: progresso.ouro - receita.ouro, mochila: porNaMochila(mochila, { [resultado]: 1 }) },
-    mensagem: `Fabricou ${nomeDoItem(resultado)}. Está na Mochila: equipe na aba Equipar.`,
+    mensagem: `Você fabricou 1 ${nomeDoItem(resultado)}${receita.ouro ? ` · −${receita.ouro} de ouro` : ''} · está na Mochila (equipe na aba Equipar)`,
   }
 }
 

@@ -7,6 +7,8 @@
 export const posicoes = {
   // Valem para todas as telas
   titulo: { x: 50, y: 11 },
+  trilha: { x: 50, y: 3.6 }, // "Reino › Forja › Equipar" (ajustes de 14/10)
+  dica: { x: 50, y: 22 }, // a dica da primeira visita, logo abaixo do título
   cantos: {
     salaoGloria: { x: 9, y: 11 },
     configuracoes: { x: 93, y: 11 },
@@ -130,11 +132,12 @@ export const posicoes = {
 
   // ---------- Mapa e partida ----------
   mapa: {
-    voltarAoReino: { x: 50, y: 45 },
-    planalto: { x: 50, y: 53 },
-    fazenda: { x: 38, y: 45 },
-    lago: { x: 50, y: 37 },
-    mina: { x: 62, y: 45 },
+    voltarAoReino: { x: 50, y: 47 },
+    planalto: { x: 50, y: 54 },
+    // Os minijogos com as rodadas de hoje embaixo (ajustes de 14/10)
+    fazenda: { x: 33, y: 48 },
+    lago: { x: 50, y: 36 },
+    mina: { x: 67, y: 48 },
     tundra: { x: 20, y: 27 },
     vulcanico: { x: 75, y: 27 },
     floresta: { x: 26, y: 70 },
@@ -167,7 +170,8 @@ export const posicoes = {
   // Configurações fica dentro da faixa do HUD, no canto direito (menor que nas outras telas), para não cobrir a área
   // jogável. As contagens do Q e da fuga e as mensagens ficam logo abaixo do HUD (HudDaPartida.jsx).
   partida: {
-    configuracoes: { x: 94.8, y: 5.3 },
+    configuracoes: { x: 92.4, y: 3.2 }, // em cima à direita, logo acima do minimapa (ajustes de 14/10)
+    dica: { x: 50, y: 68 }, // a dica da primeira partida, em cima da barra de ações
   },
   cutsceneDerrota: {
     mensagem: { x: 50, y: 45 },

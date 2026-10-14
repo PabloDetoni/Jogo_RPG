@@ -79,6 +79,13 @@ export function noArco(centro, anguloMira, alcance, aberturaGraus, ponto) {
   return Math.abs(diferencaDeAngulo(anguloEntre(centro, ponto), anguloMira)) <= grausParaRadianos(aberturaGraus) / 2
 }
 
+// O escudo do Tanque segura o golpe? (ajustes de 14/10, RF36) Só golpes e projéteis que vêm pela frente (dentro da
+// abertura do bloqueio). Ataque em área (o pisão do Boss, explosões, a área dos mobs) atinge o Tanque normalmente.
+// tipo: 'golpe' | 'projetil' | 'area'. naFrente: quem atacou (ou o projétil) está na frente do escudo.
+export function escudoBloqueia({ escudoAtivo = true, tipo, naFrente }) {
+  return Boolean(escudoAtivo && naFrente && tipo !== 'area')
+}
+
 // A bola do Mago cresce enquanto voa: do raio inicial (saindo) ao final (no alcance máximo)
 export function raioDaBolaMagica(percorrido, alcance, raioInicial, raioFinal) {
   const fracao = alcance > 0 ? limitar(percorrido / alcance, 0, 1) : 1

@@ -62,8 +62,11 @@ export const equipamentoNaPartida = { reducaoPorPontoDeDefesa: 0.02, reducaoMaxi
 // é a chance de cada ponto trazer também o item raro. "pontosNoMaximo" barra números absurdos numa rodada.
 // Tempos em ms: Fazenda (a planta cresce, fica madura um tempo e murcha), Mina (cliques por pedra) e Lago (espera da
 // boia e a janela para fisgar).
+// rodadasPorDia (ajustes de 14/10, RF54): rodadas de cada minijogo por dia, renovando à meia-noite de Brasília
+// (regras/rodadasDoDia.js). PROVISÓRIO.
 export const minijogos = {
   segundos: 30,
+  rodadasPorDia: 3,
   pontosNoMaximo: 60,
   fazenda: { xpPorPonto: 4, chanceDoRaro: 0.25, canteiros: 9, msCrescendo: [1500, 5000], msMadura: 1600, msMurcha: 900 },
   mina: { xpPorPonto: 5, chanceDoRaro: 0.15, cliquesPorPedra: 3 },
@@ -233,10 +236,11 @@ export const mundo = {
   msVoltandoParaCasa: 3500,
   // Atacado, o mob persegue mesmo fora do território por este tempo (um tiro de longe não fica sem resposta)
   msProvocado: 5000,
-  // Coleta (TASK-064): E pega o item mais perto a até "alcance" px do Líder. O drop de um mob fica no chão por
-  // msDoDrop; o que não coube na mochila, por msQuandoNaoCabe (os dois piscam nos últimos 5 s e somem). Os recursos do
-  // chão (cogumelo, erva, madeira) ficam até alguém pegar.
-  coleta: { alcance: 80, msDoDrop: 60000, msQuandoNaoCabe: 30000 },
+  // Coleta (TASK-064; ajustes de 14/10, regras/itensNoChao.js): E pega o item mais perto a até "alcance" px do Líder.
+  // O item natural (os recursos do mapa: cogumelo, erva, madeira) fica até alguém pegar. O dropado (drop de mob e o que o
+  // jogador descarta) some msDoItemDropado depois de cair, piscando nos últimos msPiscando (troca a cada msDoPisca).
+  // PROVISÓRIO. Troca os 60 s do drop e os 30 s do que não coube: todos os dropados passam a 30 s.
+  coleta: { alcance: 80, msDoItemDropado: 30000, msPiscando: 5000, msDoPisca: 150 },
   // Minimapa (RF40): o mapa é dividido em células de "celula" px; o grupo revela tudo a até "raioRevelado" px do Líder
   minimapa: { celula: 200, raioRevelado: 450 },
   // XP da primeira descoberta de cada área (RF40), pela dificuldade da região; dividido como o dos monstros (RF50)
@@ -255,7 +259,8 @@ export const combateDeTeste = {
   // distância dele (px da arena; o canto mais longe da arena fica a ~1400 px). Muda na etapa 6, com o mapa de verdade.
   distanciaAteABorda: 1400,
   // HUD (5c): quanto tempo cada mensagem curta fica na tela e quantas aparecem juntas
-  hud: { msDaMensagem: 2500, mensagensNoMaximo: 4 },
+  // Ajustes de 14/10: no máximo 3 mensagens; as do mesmo tipo que chegam a menos de msParaJuntar ms viram uma linha só
+  hud: { msDaMensagem: 2500, mensagensNoMaximo: 3, msParaJuntar: 300 },
   // Botões de teste (5c). "+ouro" soma ao ouro ganho na partida (para chegar à Grande Vitória sem jogar horas).
   // Teste do foco: o Líder fica com esta fração da vida (abaixo do limite do foco) por msPreso, com mobs perto.
   testes: { ouroDoBotao: 300, foco: { vidaDoLider: 0.25, msPreso: 20000, mobs: 3, distancia: 300 } },
@@ -346,8 +351,34 @@ export const combateDeTeste = {
   },
   // Grupo: distância das vagas em volta do Líder
   raioDaFormacao: 80,
-  // Zona em volta de cada corpo (ninguém fica em cima de ninguém). A zona de dois corpos vai até a soma das
-  // metades + folga; dentro dela, os dois se afastam aos poucos, até "forca" px/s quando um está em cima do outro.
+  // ARCO QUE CARREGA (Arqueiro; ajustes de 14/10, regras/arco.js). PROVISÓRIO. Segurar o clique puxa; soltar atira.
+  // - Agilidade → tempo da carga cheia: msMinimoParaCarregar + (msParaCarregarSemAgilidade − mínimo) × (1 − agi/100)^curva
+  //   (linear e suave, nunca abaixo do mínimo); a recarga depois de soltar é fracaoDaRecarga desse tempo;
+  // - Força → dano da carga cheia: danoBase + danoPorForca × Força; carga zero dá fracaoMinimaDoDano dele;
+  // - alcance de fracaoMinimaDoAlcance × alcanceMaximo (carga zero) até alcanceMaximo; velocidade de mínima a máxima;
+  // - puxando, quem atira anda com multiplicadorDaVelocidadePuxando da velocidade;
+  // - ia: o Arqueiro aliado (folga no alcance, erro da média, a básica às vezes pouco e às vezes demais).
+  arco: {
+    msParaCarregarSemAgilidade: 1100,
+    msMinimoParaCarregar: 450,
+    curvaDaAgilidade: 1, // 1 = linha reta: cada ponto tira o mesmo tanto (6,5 ms), até o mínimo no 100
+    fracaoDaRecarga: 0.6,
+    danoBase: 26,
+    danoPorForca: 1.2,
+    fracaoMinimaDoDano: 0.3,
+    alcanceMaximo: 700,
+    fracaoMinimaDoAlcance: 0.35,
+    velocidadeMinima: 450,
+    velocidadeMaxima: 1000,
+    multiplicadorDaVelocidadePuxando: 0.55,
+    ia: { folgaDoAlcance: 1.1, erroDaMedia: 0.15, chanceDePoucoDaBasica: 0.5, poucoDaBasica: [0.3, 0.75], msDemaisDaBasica: [250, 700] },
+  },
+  // Corpo que colide (ajustes de 14/10, pedido do Pablo: os personagens se esbarravam demais): bem menor que o desenho,
+  // no meio dele. Meio lado = fracaoDoTamanho × tamanho do desenho (40 → 12,8 px, um quadrado de 25,6 px). A área que
+  // recebe golpes continua do tamanho do desenho (Entidade.retangulo). PROVISÓRIO.
+  corpo: { fracaoDoTamanho: 0.32 },
+  // Zona em volta de cada corpo (ninguém fica em cima de ninguém). A zona de dois corpos vai até a soma dos raios dos
+  // corpos que colidem (corpo, acima) + folga; dentro dela, os dois se afastam aos poucos, até "forca" px/s quando um está em cima do outro.
   // O Líder é mais pesado: quando ele esbarra, quem sai do caminho são os aliados.
   // 5b.1: folga de 1 px = a separação só age quando dois corpos se encostam de verdade (nunca para "arrumar")
   separacao: { folga: 1, forca: 320, pesoDoLider: 4, pesoDoInimigo: 1.5 },
@@ -368,6 +399,8 @@ export const combateDeTeste = {
   // Ataque de teste de cada classe (clique esquerdo). "empurrao" = velocidade do empurrão no alvo
   ataques: {
     guerreiro: { dano: 25, alcance: 70, aberturaGraus: 120, recargaMs: 400, empurrao: 260 },
+    // Arqueiro (ajustes de 14/10): o dano, a velocidade e a recarga da flecha vêm do arco que carrega (arco, abaixo);
+    // daqui ficam o tamanho da flecha, o empurrão e o alcance que a IA usa para se posicionar (o máximo do arco)
     arqueiro: { dano: 18, velocidade: 900, alcance: 700, raio: 5, recargaMs: 350, empurrao: 140 },
     mago: {
       dano: 30,

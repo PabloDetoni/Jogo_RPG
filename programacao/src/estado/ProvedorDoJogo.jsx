@@ -188,6 +188,9 @@ export default function ProvedorDoJogo({ children }) {
       voltar: () => despachar({ tipo: 'voltar' }),
       abrirJanela: (janela) => despachar({ tipo: 'abrirJanela', janela }),
       fecharJanela: () => despachar({ tipo: 'fecharJanela' }),
+      fecharDica: () => despachar({ tipo: 'fecharDica' }),
+      esc: () => despachar({ tipo: 'esc' }),
+      reabrirDica: () => despachar({ tipo: 'reabrirDica' }),
       fecharAviso: (id) => despachar({ tipo: 'fecharAviso', id }),
 
       // RF01: uma aba por navegador no modo convidado; o progresso vem do navegador (HU01)
@@ -266,6 +269,7 @@ export default function ProvedorDoJogo({ children }) {
       devItensDeTeste: () => despachar({ tipo: 'devItensDeTeste' }),
       devMudarNivel: (classe, quantos) => despachar({ tipo: 'devMudarNivel', classe, quantos }),
       devQuaseSubir: (classe) => despachar({ tipo: 'devQuaseSubir', classe }),
+      devDefinirAtributo: (classe, atributo, valor) => despachar({ tipo: 'devDefinirAtributo', classe, atributo, valor }),
       apagarProgressoDoConvidado: () => {
         salvadorDoConvidado.apagar()
         window.location.reload()

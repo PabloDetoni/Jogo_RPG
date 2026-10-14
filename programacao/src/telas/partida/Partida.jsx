@@ -5,7 +5,10 @@ import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 import ArenaDaPartida from '../../jogo/ArenaDaPartida.jsx'
 import { criarPonte } from '../../jogo/ponte.js'
-import { tocarMusica } from '../../audio/gerenciador.js'
+import { prepararSonsDaPartida, tocarMusica } from '../../audio/gerenciador.js'
+import { carregamentoDaPartida } from '../../dados/interface.js'
+import { carregamentoInicial, demorouDemais, progressoDoCarregamento } from '../../regras/carregamento.js'
+import CarregandoAPartida from './CarregandoAPartida.jsx'
 import { musicaDaTela } from '../../regras/som.js'
 import { montarGrupoDaPartida } from '../../regras/grupoDaPartida.js'
 import BarraDeTeste from './BarraDeTeste.jsx'
@@ -14,7 +17,7 @@ import MochilaNaPartida from './MochilaNaPartida.jsx'
 import { itensDaJanela } from '../../regras/itensNaPartida.js'
 
 const pos = posicoes.partida
-const { msDaMensagem, mensagensNoMaximo } = combateDeTeste.hud
+const { msDaMensagem, mensagensNoMaximo, msParaJuntar } = combateDeTeste.hud
 
 // Partida (etapa 5): o Phaser desenha a arena embaixo; HUD, avisos e barra de teste ficam em React, por cima.
 // Os dois lados conversam só pela ponte (src/jogo/ponte.js). As contagens do Q e da fuga rodam dentro da partida,
@@ -42,6 +45,55 @@ export default function Partida() {
   const partida = useMemo(() => ({ bioma, pontoPartida, descobertas, levar, missao }), [bioma, pontoPartida, descobertas, levar, missao])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
+
+  // Tela de carregamento (ajustes de 14/10): o motor (o Phaser), a arte, os sons e o mapa, com o progresso de verdade.
+  // O mapa fica pronto quando chega a primeira situação. Demorou demais ou falhou: "Tentar de novo" monta o jogo outra vez.
+  const [tentativa, setTentativa] = useState(0)
+  const [andamento, setAndamento] = useState(carregamentoInicial)
+  const [problema, setProblema] = useState(null)
+  const [carregado, setCarregado] = useState(false)
+  const inicioDoCarregamento = useRef(null)
+  const andar = useCallback((etapa, fracao) => setAndamento((atual) => (atual[etapa] >= fracao ? atual : { ...atual, [etapa]: fracao })), [])
+  useEffect(() => ponte.ouvir('carregamento', ({ etapa, fracao }) => andar(etapa, fracao)), [ponte, andar])
+  useEffect(() => {
+    inicioDoCarregamento.current = performance.now()
+    prepararSonsDaPartida((fracao) => andar('som', fracao))
+  }, [andar, tentativa])
+  const mundoPronto = Boolean(situacao)
+  useEffect(() => {
+    if (!mundoPronto) return undefined
+    const relogio = setTimeout(() => setCarregado(true), carregamentoDaPartida.msDoSumico)
+    return () => clearTimeout(relogio)
+  }, [mundoPronto])
+  useEffect(() => {
+    if (mundoPronto || problema) return undefined
+    const relogio = setInterval(() => {
+      if (inicioDoCarregamento.current !== null && demorouDemais(inicioDoCarregamento.current, performance.now(), andamento, carregamentoDaPartida.msLimite)) {
+        setProblema({ titulo: 'A partida está demorando para carregar', texto: 'Pode ser a internet lenta. Tente de novo; se não der, volte ao Reino (nada do seu progresso se perde).' })
+      }
+    }, 1000)
+    return () => clearInterval(relogio)
+  }, [mundoPronto, problema, andamento])
+  // O motor que não chegou fica marcado pelo navegador como falha: tentar de novo pede recarregar a página (nada do
+  // progresso se perde: a partida ainda não começou de verdade, e o jogo volta pela Tela inicial)
+  const falhou = useCallback(
+    () =>
+      setProblema({
+        titulo: 'Não deu para carregar a partida',
+        texto: 'Uma parte do jogo não chegou (a internet caiu ou o site acabou de ser atualizado). "Tentar de novo" recarrega a página; o seu progresso continua salvo.',
+        recarregar: true,
+      }),
+    [],
+  )
+  function tentarDeNovo() {
+    if (problema?.recarregar) {
+      window.location.reload()
+      return
+    }
+    setProblema(null)
+    setAndamento(carregamentoInicial())
+    setTentativa((atual) => atual + 1)
+  }
   // A música do Boss quando a barra dele aparece (Fase 4, TASK-105)
   const bossPorPerto = Boolean(situacao?.boss)
   useEffect(() => tocarMusica(musicaDaTela('partida', { bossPorPerto })), [bossPorPerto])
@@ -52,12 +104,20 @@ export default function Partida() {
   // A pausa congela o jogo; as Configurações e o aviso da fuga não pausam (Conceito §11.8)
   useEffect(() => ponte.definirPausa(pausado), [ponte, pausado])
 
-  // Mensagens curtas do HUD: cada uma some sozinha; aparecem no máximo algumas juntas
+  // Mensagens curtas do HUD: cada uma some sozinha; aparecem no máximo algumas juntas. As do mesmo tipo que chegam no
+  // mesmo instante viram uma linha só (ajustes de 14/10: vários subindo de nível de uma vez não empurram as outras)
   const relogios = useRef(new Set())
   const proximaMensagem = useRef(1)
   const mostrar = useCallback((mensagem) => {
     const id = proximaMensagem.current++
-    setMensagens((atuais) => [...atuais, { ...mensagem, id }].slice(-mensagensNoMaximo))
+    const agora = performance.now()
+    setMensagens((atuais) => {
+      const ultima = atuais.at(-1)
+      if (ultima && ultima.tipo === mensagem.tipo && agora - ultima.chegou < msParaJuntar && !ultima.texto.includes(mensagem.texto)) {
+        return [...atuais.slice(0, -1), { ...ultima, texto: `${ultima.texto} · ${mensagem.texto}`, chegou: agora }]
+      }
+      return [...atuais, { ...mensagem, id, chegou: agora }].slice(-mensagensNoMaximo)
+    })
     const relogio = setTimeout(() => {
       relogios.current.delete(relogio)
       setMensagens((atuais) => atuais.filter((outra) => outra.id !== id))
@@ -148,8 +208,8 @@ export default function Partida() {
   }, [ponte, acoes, usarItem])
 
   return (
-    <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes}>
-      <ArenaDaPartida ponte={ponte} grupo={grupo} partida={partida} />
+    <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes} dicaEm={pos.dica}>
+      <ArenaDaPartida key={tentativa} ponte={ponte} grupo={grupo} partida={partida} aoFalhar={falhou} />
       <HudDaPartida situacao={situacao} mudo={estado.preferencias.mudo} bioma={bioma} />
       <AvisosDaPartida situacao={situacao} mensagens={mensagens} />
       <BarraDeTeste ponte={ponte} situacao={situacao} />
@@ -159,6 +219,16 @@ export default function Partida() {
           escolhido={escolhidoNaMochila}
           aoEscolher={setEscolhidoNaMochila}
           aoUsar={usarItem}
+          aoDescartar={(id, quantidade) => ponte.avisar('comando', { tipo: 'descartarItem', id, quantidade })}
+        />
+      )}
+      {!carregado && (
+        <CarregandoAPartida
+          progresso={progressoDoCarregamento(mundoPronto ? { ...andamento, mundo: 1 } : andamento)}
+          problema={problema}
+          saindo={mundoPronto}
+          aoTentarDeNovo={tentarDeNovo}
+          aoVoltar={() => acoes.irPara('reino')}
         />
       )}
     </Tela>
