@@ -114,6 +114,15 @@ Toda caixa é um **painel**: um fundo e uma borda simples. Quando a pixel art ch
 
 O tamanho dos cantos (a "fatia") fica em `programacao/src/dados/interface.js` (`arteDaInterface`). `npm run conferir:arte` mostra quais dessas imagens já chegaram.
 
+## 7b. Partida, tela cheia e carregamento (ajustes de 14/10)
+
+- **HUD translúcido, em grupos nos cantos:** em cima à esquerda o Líder e o grupo; em cima no meio tempo, pontos, ouro, fuga e os selos; em cima à direita Configurações, minimapa, região e mochila; embaixo no meio a barra de ações (Clique, Espaço, 1, 2, 3) com a recarga em anel em volta de cada ícone e a tecla no canto. Fundo escuro translúcido (cerca de 46%) e sombra no texto: quem está embaixo continua aparecendo. Os avisos ficam num lugar fixo, embaixo dos números, no máximo 3; os do mesmo tipo que chegam juntos viram uma linha.
+- **Arco do Arqueiro:** puxando, uma barra amarela enche acima da cabeça, uma linha pontilhada mostra até onde a flecha vai e, na carga cheia, um anel brilha; no HUD, o ícone do ataque enche de baixo para cima.
+- **Itens no chão:** o natural não tem marca; o dropado tem um anel amarelo (vermelho no fim) que esvazia com o tempo, e pisca nos últimos 5 s.
+- **Tela cheia:** entra no clique de Iniciar jogo, Jogar e Começar partida; um X discreto (35% de opacidade) no canto de cima à direita sai dela; se o navegador tirar da tela cheia sem o jogador pedir, aparece "Voltar à tela cheia" no mesmo canto.
+- **Carregamento:** ao abrir o site, uma tela escura com o nome e uma barra; na partida, "Carregando a partida" com a barra, a porcentagem, a etapa e uma dica sorteada; falhou ou demorou, a mensagem diz o que houve e oferece "Tentar de novo" e "Voltar ao Reino". O Reino, o Mapa, a Preparação, a partida e o Resumo entram com um fade de 0,25 s (sem fade com "reduzir movimento" ligado no sistema).
+- **Descartar:** "Descartar…" abre a escolha (1, − e +, Todas) e a confirmação com o quadradinho do item, a quantidade e o que acontece com ele; só "Sim, descartar N" descarta.
+
 ## 8. Temas claro e escuro
 
 As cores ficam em variáveis (`--painel`, `--boa`, `--ruim`, `--destaque`, `--quadro`, `--papel`), redefinidas no tema escuro. Algumas peças ficam iguais nos dois temas, porque imitam objetos:

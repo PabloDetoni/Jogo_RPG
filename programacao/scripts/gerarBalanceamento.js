@@ -58,6 +58,7 @@ import { fichaNaRegiao } from '../src/regras/mobs.js'
 import { capacidadeDaMochila } from '../src/regras/mochila.js'
 import { aplicarTaxa, taxaNaDistancia } from '../src/regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../src/regras/xp.js'
+import { danoPorSegundo, flechaDaCarga, msDeRecargaDoArco, msParaCargaCheia } from '../src/regras/arco.js'
 
 // Fica junto da documentação, que é a fonte de verdade do grupo (TASK-011)
 const destino = fileURLToPath(new URL('../../documentacao/Balanceamento.md', import.meta.url))
@@ -292,7 +293,7 @@ const segundos = (ms) => `${numero(ms / 1000, ms % 1000 ? 2 : 0).replace(/(,\d*?
 const ataque = combate.ataques
 const ataquesDeTeste = {
   guerreiro: ['Espada: varre um arco na frente', `${ataque.guerreiro.dano}`, `arco de ${ataque.guerreiro.aberturaGraus}°, alcance ${ataque.guerreiro.alcance}`],
-  arqueiro: ['Flecha: rápida, um alvo só', `${ataque.arqueiro.dano}`, `${numero(ataque.arqueiro.velocidade)} px/s, até ${ataque.arqueiro.alcance}`],
+  arqueiro: ['Arco que carrega: segura e solta (ver abaixo)', `${numero(combate.arco.fracaoMinimaDoDano * 100)}% a 100% de ${combate.arco.danoBase} + ${numero(combate.arco.danoPorForca, 1)} × Força`, `${numero(combate.arco.velocidadeMinima)} a ${numero(combate.arco.velocidadeMaxima)} px/s, até ${numero(combate.arco.fracaoMinimaDoAlcance * combate.arco.alcanceMaximo)} a ${numero(combate.arco.alcanceMaximo)} px`],
   mago: ['Bola mágica: explode em área', `${ataque.mago.dano}`, `cresce de ${ataque.mago.raioInicial} a ${ataque.mago.raioFinal}; explosão de raio ${ataque.mago.raioDaExplosao}`],
   sacerdote: ['Aura: cura quem está dentro', `cura ${ataque.sacerdote.curaPorPulso} por pulso`, `raio ${ataque.sacerdote.raio}; pulso a cada ${segundos(ataque.sacerdote.msEntrePulsos)} por ${segundos(ataque.sacerdote.msDeDuracao)}`],
   tanque: ['Escudo: bloqueia; o clique empurra', `${ataque.tanque.dano}`, `escudo de ${ataque.tanque.larguraDoEscudo} px; empurrão até ${ataque.tanque.alcanceDoEmpurrao}`],
@@ -308,14 +309,16 @@ escrever(
     ['Classe', 'Vida (nível 1)', 'Ataque de teste', 'Dano', 'Recarga', 'Detalhe'],
     classes.map((classe) => {
       const [nome, dano, detalhe] = ataquesDeTeste[classe.id]
-      return [classe.nome, numero(classe.atributosIniciais.vitalidade * combate.vidaPorPontoDeVitalidade), nome, dano, segundos(ataque[classe.id].recargaMs), detalhe]
+      const recarga = classe.id === 'arqueiro' ? `${numero(combate.arco.fracaoDaRecarga * 100)}% da carga cheia` : segundos(ataque[classe.id].recargaMs)
+      return [classe.nome, numero(classe.atributosIniciais.vitalidade * combate.vidaPorPontoDeVitalidade), nome, dano, recarga, detalhe]
     }),
   ),
   lista(
     `Andar: **${combate.personagem.velocidade} px/s**, igual na diagonal.`,
     `Esquiva (Espaço): avança **${combate.esquiva.distancia} px** em ${segundos(combate.esquiva.ms)}, sem levar dano; recarga de **${segundos(combate.esquiva.recargaMs)}**.`,
     `Depois de levar um golpe, **${segundos(combate.personagem.msDeImunidade)}** de imunidade (RF36).`,
-    `Separação: cada corpo tem uma zona de **${combate.separacao.folga} px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **${combate.separacao.forca} px/s** quando um está em cima do outro. O Líder pesa **${combate.separacao.pesoDoLider}** (os aliados saem da frente dele) e os inimigos, **${numero(combate.separacao.pesoDoInimigo, 1)}**.`,
+    `Corpo que colide (ajustes de 14/10): um quadrado no meio do desenho, com lado de **${numero(combate.corpo.fracaoDoTamanho * 100)}%** do desenho (um personagem de ${combate.personagem.tamanho} px colide com ${numero(2 * combate.corpo.fracaoDoTamanho * combate.personagem.tamanho, 1)} px); a área que recebe golpes continua do tamanho do desenho.`,
+    `Separação: cada corpo (o que colide) tem uma zona de **${combate.separacao.folga} px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **${combate.separacao.forca} px/s** quando um está em cima do outro. O Líder pesa **${combate.separacao.pesoDoLider}** (os aliados saem da frente dele) e os inimigos, **${numero(combate.separacao.pesoDoInimigo, 1)}**.`,
     `Travamento: quem anda sozinho e, em **${segundos(combate.travamento.msDaJanela)}**, anda menos de **${numero(combate.travamento.fracaoMinima * 100)}%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível ${combate.travamento.nivelDoPontoLivre}, desliza em **${segundos(combate.travamento.msDoDeslize)}** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **${combate.caminho.celula} px**.`,
   ),
   tabela(
@@ -332,6 +335,18 @@ escrever(
     ]),
   ),
   `Boneco de treino: **${numero(combate.boneco.vida)}** de vida, recupera tudo depois de **${segundos(combate.boneco.msParaRecuperar)}** sem apanhar.`,
+  '### Arco que carrega (Arqueiro; ajustes de 14/10)',
+  `Segurar o clique puxa; soltar atira. Tempo da carga cheia = ${segundos(combate.arco.msMinimoParaCarregar)} + (${segundos(combate.arco.msParaCarregarSemAgilidade)} − ${segundos(combate.arco.msMinimoParaCarregar)}) × (1 − Agilidade/100), nunca abaixo de **${segundos(combate.arco.msMinimoParaCarregar)}**. Recarga depois de soltar: **${numero(combate.arco.fracaoDaRecarga * 100)}%** desse tempo. Puxando, anda a **${numero(combate.arco.multiplicadorDaVelocidadePuxando * 100)}%** da velocidade. A carga parcial arredonda o dano para baixo (a cheia, para o mais perto).`,
+  tabela(
+    ['Agilidade', 'Carga cheia', 'Recarga', 'Força 10: dano rápido / cheio', 'Dano por segundo (rápido / cheio)'],
+    [5, 22, 50, 75, 100].map((agi) => {
+      const cheia = msParaCargaCheia(agi)
+      const rapida = flechaDaCarga(0, 10)
+      const forte = flechaDaCarga(1, 10)
+      return [agi, segundos(Math.round(cheia)), segundos(msDeRecargaDoArco(agi)), `${rapida.dano} / ${forte.dano}`, `${numero(danoPorSegundo(0, agi, 10), 1)} / ${numero(danoPorSegundo(cheia, agi, 10), 1)}`]
+    }),
+  ),
+  `Arqueiro aliado: a avançada carrega o bastante para a distância (com **${numero((combate.arco.ia.folgaDoAlcance - 1) * 100)}%** de folga); a média erra até **${numero(combate.arco.ia.erroDaMedia * 100)}%** da carga para mais ou para menos; a básica, metade das vezes, carrega de ${numero(combate.arco.ia.poucoDaBasica[0] * 100)}% a ${numero(combate.arco.ia.poucoDaBasica[1] * 100)}% do que precisa e, na outra metade, segura de ${segundos(combate.arco.ia.msDemaisDaBasica[0])} a ${segundos(combate.arco.ia.msDemaisDaBasica[1])} além da carga cheia.`,
 )
 
 const hab = combate.habilidades
@@ -548,7 +563,7 @@ escrever(
     conquistas.map((conquista) => [conquista.nome, conquista.descricao, conquista.recompensa?.ouro ? `${numero(conquista.recompensa.ouro)} de ouro` : '—']),
   ),
   '### Minijogos do Planalto (TASK-080 e TASK-081)',
-  `Rodada de **${minijogos.segundos} s**, no máximo ${minijogos.pontosNoMaximo} pontos. Cada ponto dá 1 do recurso e o XP do lugar (dividido entre todos os permanentes); o raro vem com a chance de cada ponto. Não é partida (sem taxa, ranking ou histórico).`,
+  `Rodada de **${minijogos.segundos} s**, no máximo ${minijogos.pontosNoMaximo} pontos; **${minijogos.rodadasPorDia} rodadas por dia** em cada minijogo, renovando à meia-noite de Brasília (ajustes de 14/10). Cada ponto dá 1 do recurso e o XP do lugar (dividido entre todos os permanentes); o raro vem com a chance de cada ponto. Não é partida (sem taxa, ranking ou histórico).`,
   tabela(
     ['Lugar', 'Como joga', 'Recurso', 'Raro (chance por ponto)', 'XP por ponto'],
     Object.entries(dadosDosMinijogos).map(([id, dados]) => [dados.nome, dados.regra, itemDoCatalogo(dados.item).nome, `${itemDoCatalogo(dados.raro).nome} (${numero(minijogos[id].chanceDoRaro * 100)}%)`, minijogos[id].xpPorPonto]),

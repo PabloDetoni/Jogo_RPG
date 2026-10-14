@@ -238,15 +238,16 @@ try {
   await aba.print('05-dominio-do-boss')
 
   console.log('7. Mobs por região (TASK-062)')
-  // Onde cada um nasceu (a casa): depois de nascer, eles andam e perseguem
+  // Onde cada um nasceu (a casa): depois de nascer, eles andam e perseguem. Dentro e encostado medem pelo corpo que
+  // colide (ajustes de 14/10: menor que o desenho)
   const mobs = await cena(`c.inimigos.map((i) => ({ tipo: i.tipo, regiao: i.regiao, x: Math.round(i.casaFixa.x), y: Math.round(i.casaFixa.y), tamanho: i.tamanho, hostil: i.config.hostil }))`)
   conferir('cada região nasce com os seus mobs (a zona segura, nenhum)', !nasceram.zonaSegura && nasceram.facil >= 10 && nasceram.media >= 15 && nasceram.dificil >= 18, nasceram)
   const inicios = await cena(`c.mapa.regioes.map((r) => r.inicio)`)
   const pertoDeInicio = mobs.filter((mob) => inicios.some((inicio) => Math.hypot(inicio.x - mob.x, inicio.y - mob.y) < 600))
   conferir('nenhum mob nasce perto do início de uma região (o grupo nunca nasce com mob perto)', pertoDeInicio.length === 0, pertoDeInicio.slice(0, 3))
-  const dentroDeObstaculo = await cena(`c.inimigos.filter((i) => c.paredesPerto(i, 100).some((p) => Math.abs(i.x - p.x) * 2 < p.largura + i.tamanho - 4 && Math.abs(i.y - p.y) * 2 < p.altura + i.tamanho - 4)).length`)
+  const dentroDeObstaculo = await cena(`c.inimigos.filter((i) => c.paredesPerto(i, 100).some((p) => Math.abs(i.x - p.x) * 2 < p.largura + 2 * i.raio - 4 && Math.abs(i.y - p.y) * 2 < p.altura + 2 * i.raio - 4)).length`)
   conferir('nenhum mob dentro de árvore, pedra ou mata', dentroDeObstaculo === 0, dentroDeObstaculo)
-  const encostados = await cena(`(() => { const l = c.inimigos; let n = 0; for (let a = 0; a < l.length; a++) for (let b = a + 1; b < l.length; b++) { const m = (l[a].tamanho + l[b].tamanho) / 2 - 1; if (Math.abs(l[a].x - l[b].x) < m && Math.abs(l[a].y - l[b].y) < m) n++ } return n })()`)
+  const encostados = await cena(`(() => { const l = c.inimigos; let n = 0; for (let a = 0; a < l.length; a++) for (let b = a + 1; b < l.length; b++) { const m = l[a].raio + l[b].raio - 1; if (Math.abs(l[a].x - l[b].x) < m && Math.abs(l[a].y - l[b].y) < m) n++ } return n })()`)
   conferir('nenhum mob em cima de outro', encostados === 0, encostados)
   await colocarLider(400, 1800)
   await pausa(400)

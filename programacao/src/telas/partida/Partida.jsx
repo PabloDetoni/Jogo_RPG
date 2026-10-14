@@ -74,8 +74,22 @@ export default function Partida() {
     }, 1000)
     return () => clearInterval(relogio)
   }, [mundoPronto, problema, andamento])
-  const falhou = useCallback(() => setProblema({ titulo: 'Não deu para carregar a partida', texto: 'Uma parte do jogo não chegou (a internet caiu ou o site acabou de ser atualizado). Tente de novo.' }), [])
+  // O motor que não chegou fica marcado pelo navegador como falha: tentar de novo pede recarregar a página (nada do
+  // progresso se perde: a partida ainda não começou de verdade, e o jogo volta pela Tela inicial)
+  const falhou = useCallback(
+    () =>
+      setProblema({
+        titulo: 'Não deu para carregar a partida',
+        texto: 'Uma parte do jogo não chegou (a internet caiu ou o site acabou de ser atualizado). "Tentar de novo" recarrega a página; o seu progresso continua salvo.',
+        recarregar: true,
+      }),
+    [],
+  )
   function tentarDeNovo() {
+    if (problema?.recarregar) {
+      window.location.reload()
+      return
+    }
     setProblema(null)
     setAndamento(carregamentoInicial())
     setTentativa((atual) => atual + 1)

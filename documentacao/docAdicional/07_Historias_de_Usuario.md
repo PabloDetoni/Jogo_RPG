@@ -88,6 +88,7 @@ Como jogador, quero ver as instruções na Tela Inicial para aprender os control
 
 Critérios de aceite:
 - As instruções podem ser abertas sem conta e também pelo menu de pausa.
+- O Como jogar mostra os controles (com o arco do Arqueiro: segurar o clique carrega) e as regras atuais.
 - Requisitos atendidos: RF13.
 
 ### HU11 · Visualizar Ranking (UC11)
@@ -127,6 +128,7 @@ Critérios de aceite:
 - Música e Som têm liga/desliga separados.
 - Na partida, as Configurações abrem sem pausar, sem as opções de conta, e M muta o jogo (até em combate).
 - O mudo não apaga a minha escolha de Música e Som, e o HUD mostra se está mudo.
+- Posso ligar ou desligar a tela cheia; ligada, ela entra no clique de Iniciar jogo, Jogar e Começar partida, e um X no canto sai dela.
 - Requisitos atendidos: RF14, RF18.
 
 ### HU15 · Gerenciar Mochila (UC15)
@@ -135,6 +137,7 @@ Como jogador, quero organizar minha mochila para saber o que tenho e quanto pesa
 
 Critérios de aceite:
 - Cada item mostra função, descrição e peso.
+- Ao descartar, escolho 1, várias ou todas, e a confirmação mostra o item, a quantidade e que ele some para sempre.
 - Requisitos atendidos: RF19, RF20.
 
 ### HU16 · Negociar no Mercado (UC16)
@@ -289,6 +292,7 @@ Critérios de aceite:
 - Durante a esquiva eu não levo dano.
 - Posso fugir de mobs; eles desistem quando saio do território deles.
 - O XP de cada monstro é dividido entre os permanentes ativos.
+- Com o Arqueiro, segurar o clique carrega o arco: a flecha carregada vai mais longe, mais rápida e bate mais forte; carregar cheio rende mais que clicar rápido.
 - Requisitos atendidos: RF36, RF37, RF50, RF55.
 
 ### HU33 · Usar habilidade (UC33)
@@ -315,6 +319,7 @@ Como jogador, quero explorar o bioma e coletar recursos para evoluir e fabricar 
 Critérios de aceite:
 - O minimapa revelado fica salvo.
 - Itens além da capacidade caem no chão por um tempo.
+- Os recursos do mapa ficam até eu pegar; o que um monstro deixa cair some em 30 s, com um anel que mostra o tempo.
 - Requisitos atendidos: RF31, RF40, RF50.
 
 ### HU36 · Usar item (UC36)
@@ -324,6 +329,7 @@ Como jogador, quero usar poções em mim ou em aliados durante a partida.
 Critérios de aceite:
 - Tab abre a Mochila sem pausar.
 - Poção não levanta personagem desmaiado.
+- Posso descartar da mochila da partida (1, várias ou todas): o item cai no chão perto do Líder.
 - Requisitos atendidos: RF41.
 
 ### HU37 · Levantar aliado desmaiado (UC37)
@@ -391,12 +397,14 @@ Critérios de aceite:
 - Não conta como partida, não tem taxa e não entra no ranking.
 - O XP é dividido entre os personagens permanentes.
 - Entro pelo Mapa e, ao sair, volto ao Mapa.
+- Cada minijogo tem rodadas por dia (3, provisório), que renovam à meia-noite de Brasília; a tela mostra quantas sobram e quando renova.
 - Requisitos atendidos: RF54, RF50.
 
 ## Alterações do projeto
 
 Decisões tomadas durante a programação (outubro de 2026). Os critérios acima já estão com o texto novo:
 
+- **HU10, HU14, HU15, HU32, HU35, HU36, HU43 (ajustes da versão final, 14/10):** Como jogar atualizado, tela cheia, descartar com a quantidade, arco que carrega, itens natural e dropado, descartar na partida e minijogos com rodadas por dia.
 - **HU08:** o convidado também tem "Sair do jogo"; sair recarrega a página.
 - **HU09:** o jogo também salva ao escolher a classe inicial e quando a aba fecha ou é escondida.
 - **HU11, HU12 e HU13:** Ranking, Histórico e Conquistas ficam no Salão da Glória.

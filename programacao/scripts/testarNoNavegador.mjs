@@ -1226,7 +1226,8 @@ try {
   await clicar('Invencível: não') // o Líder não leva dano nestes testes (o mob perseguindo já é combate)
   await cena(`(c.criarInimigo('mobVermelho', { x: c.lider.x + 200, y: c.lider.y }), true)`)
   await esperar(`${CENA}.emCombate`, 'o grupo entrar em combate', 4000)
-  await pausa(250)
+  // O HUD chega 8 vezes por segundo: espera ele mostrar (antes, uma pausa fixa às vezes media no quadro antigo)
+  await esperar(`(document.querySelector('.hud')?.innerText ?? '').includes('Em combate')`, 'o HUD mostrar "Em combate"', 2000).catch(() => {})
   conferir('com um mob perseguindo, o HUD mostra "Em combate"', (await textoDe('.hud')).includes('Em combate'))
   await apertar('esc')
   await pausa(150)
@@ -1249,7 +1250,7 @@ try {
   // A 1 s do fim, um mob aparece perto e vem atrás do grupo
   await cena(`(c.retorno.msRestantes = 1000, c.criarInimigo('mobVermelho', { x: c.lider.x + 180, y: c.lider.y }), true)`)
   await esperar(`${CENA}.retorno?.interrompido`, 'o combate interromper o retorno', 3000)
-  await pausa(200)
+  await esperar(`(document.querySelector('.avisos-da-partida')?.innerText ?? '').includes('Em combate: o retorno espera')`, 'o aviso do retorno esperando', 2000).catch(() => {})
   const retornoInterrompido = await cena(`({ ms: c.retorno.msRestantes, terminou: c.terminou })`)
   conferir('o combate a 1 s do fim faz o retorno voltar a 15 s e esperar (a partida não acaba)', retornoInterrompido.ms === 15000 && !retornoInterrompido.terminou, retornoInterrompido)
   const avisoDoRetorno = await textoDe('.avisos-da-partida')

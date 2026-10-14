@@ -55,6 +55,54 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 - Fazer: na Floresta, olhe um cogumelo ou uma madeira no chão. Derrote um lobo que deixe uma pele.
 - Deve acontecer: o recurso do mapa não tem anel e nunca some. A pele tem o anel do tempo, some em 30 s e pisca no fim. Com a mochila cheia (barra de teste: Encher mochila), apertar E perto da pele avisa que não cabe e o tempo dela continua o mesmo; perto do cogumelo, ele continua lá, sem tempo.
 
+**VF-09 · Tela cheia**
+- Fazer: na Tela inicial, clique em **Iniciar jogo**. Depois clique no X discreto do canto de cima à direita. No Reino, clique em **Jogar**. Nas Configurações, desligue **Tela cheia** e clique em Jogar de novo.
+- Deve acontecer: o clique em Iniciar jogo já entra em tela cheia (sem F11). O X sai dela. Jogar entra de novo. Desligada nas Configurações, nenhum clique entra mais em tela cheia. Se o navegador recusar, o jogo segue sem erro.
+
+**VF-10 · Esc em tela cheia na partida**
+- Fazer: comece uma partida em tela cheia, fora de combate, e aperte Esc. No Firefox, faça o mesmo.
+- Deve acontecer: no Chrome e no Edge, o Esc pausa e o jogo continua em tela cheia (segurar o Esc sai dela). No Firefox, o Esc sai da tela cheia, o jogo pausa e aparece **Voltar à tela cheia** no canto.
+
+**VF-11 · Tamanhos de tela**
+- Fazer: jogue numa tela de 1366×768 e numa de 1920×1080 (ou mude o zoom do navegador para 80% e 125%), com e sem tela cheia.
+- Deve acontecer: nada cortado, o HUD inteiro na tela e a mira exatamente onde está o mouse.
+
+**VF-12 · HUD transparente**
+- Fazer: na Floresta, com o grupo cheio (barra de teste: Encher grupo), ande até o alto e o canto do mapa; troque o tema nas Configurações.
+- Deve acontecer: sem faixa escura em cima: o Líder e o grupo em cima à esquerda; tempo, pontos, ouro e fuga no meio; Configurações e minimapa à direita; a barra de ações (Clique, Espaço, 1, 2, 3) embaixo no meio, com a recarga em volta de cada ícone. Quem passa embaixo do HUD continua aparecendo. Os avisos aparecem embaixo dos números, no máximo 3.
+
+**VF-13 · Minijogos diários**
+- Fazer: no Mapa, veja a linha embaixo da Fazenda. Entre e jogue 3 rodadas (pode sair no meio com Esc).
+- Deve acontecer: "Rodadas hoje: 3 de 3 · renova em HH:MM", e o número cai a cada rodada começada. Depois da terceira, a Fazenda fica apagada no Mapa e o botão do minijogo diz quando renova. A Mina e o Lago continuam com as 3 deles. Com conta, mudar o relógio do computador não devolve rodadas.
+
+**VF-14 · Hitbox menor**
+- Fazer: na Floresta, com o grupo cheio, ande no meio do grupo parado e passe entre duas árvores próximas.
+- Deve acontecer: o Líder passa sem grudar; o grupo inteiro passa pelo vão sem travar. Os desenhos podem se encostar um pouco, mas ninguém fica em cima de ninguém.
+
+**VF-15 · Telas de carregamento**
+- Fazer: abra o site com a internet lenta (F12 → Network → Slow 4G). Depois comece uma partida.
+- Deve acontecer: na hora, uma tela escura com "Jogo RPG" e uma barra, antes do jogo. Na partida, "Carregando a partida", a barra com a porcentagem, a etapa e uma dica. Desligando a internet na hora de começar a partida, aparece "Não deu para carregar a partida" com **Tentar de novo**.
+
+**VF-16 · Arco que carrega (rápido x cheio, no boneco)**
+- Fazer: no `npm run dev`, Jogar → **Arena de teste** → Começar partida, com o Arqueiro. Fique a uns 4 quadrados abaixo do boneco (o X) e dê um clique rápido nele. Depois segure o clique até a barra ficar amarela e brilhar, e solte.
+- Deve acontecer: o clique rápido solta uma flecha curta e fraca (cerca de 11 de dano), que não chega longe. Segurando, aparecem a barra em cima do Arqueiro, a linha pontilhada até onde a flecha vai e, na carga cheia, um brilho; a flecha vai até o fim da linha, mais rápida, e tira cerca de 38. Enquanto puxa, o Arqueiro anda mais devagar.
+
+**VF-17 · Arco com Agilidade baixa e alta**
+- Fazer: no painel `</> DEV`, em "Personagens do save", clique **Agi 5** no Arqueiro e repita o VF-16; depois **Agi 100** e repita.
+- Deve acontecer: com Agi 5, a barra leva cerca de 1 s para encher; com Agi 100, cerca de 0,45 s (nunca menos). Em nenhum caso dá para soltar flechas fortes em sequência: depois de soltar, há uma pausa curta antes de puxar de novo.
+
+**VF-18 · Arqueiro aliado**
+- Fazer: com outro Líder e o Arqueiro no grupo (Encher grupo), crie mobs (Criar mob vermelho).
+- Deve acontecer: o Arqueiro aliado mostra a barra de carga em cima dele antes de cada flecha; na IA básica às vezes a flecha cai antes do mob.
+
+**VF-19 · Tanque e o pisão do Boss**
+- Fazer: na Floresta (Muito difícil), com o Tanque como Líder, mire no Boss (escudo de frente) e fique dentro da marca do pisão.
+- Deve acontecer: o pisão tira vida do Tanque mesmo com o escudo de frente. Um bote de lobo ou um tiro vindo de frente continua sendo bloqueado ("Bloqueado").
+
+**VF-20 · Claude Code (Parte 0)**
+- Fazer: no Claude Code, digite `/mcp` e autentique **supabase** e **vercel**. Depois `/skill-doctor`.
+- Deve acontecer: as duas conexões ficam "connected"; o skill-doctor mostra as skills do projeto (modo-continuo, publicar, verify, relatorio-de-fase, balanceamento, run-jogo-rpg).
+
 ---
 
 ## A. Arena e combate básico (parte 5a)
