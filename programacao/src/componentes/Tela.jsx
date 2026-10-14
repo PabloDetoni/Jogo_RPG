@@ -16,14 +16,15 @@ import { ContextoDaTrilha } from './trilha.js'
 // semTitulo: para a Partida, onde o jogo ocupa a caixa inteira.
 // configuracoesEm: outro lugar para o botão Configurações (na Partida, dentro da faixa do HUD).
 // imagemDeFundo: um fundo escolhido pela própria tela (a cutscene troca as imagens), no lugar do da lista.
-export default function Tela({ className = '', semTitulo = false, configuracoesEm = posicoes.cantos.configuracoes, imagemDeFundo = null, children }) {
+// dicaEm: outro lugar para a dica da primeira visita (na Partida, que não tem título, ela fica em cima da barra de ações).
+export default function Tela({ className = '', semTitulo = false, configuracoesEm = posicoes.cantos.configuracoes, imagemDeFundo = null, dicaEm = null, children }) {
   const { estado, acoes } = useJogo()
   const tela = telas[estado.tela]
   const fundo = imagemDeFundo ?? urlDaArte(fundoDaTela(chavesDaArte, estado.tela))
   const [aba, setAba] = useState(null)
   const trilha = trilhaDaTela(estado.tela, estado.anteriores, aba)
   const dica = dicasDasTelas[estado.tela]
-  const mostrarDica = !semTitulo && estado.janelas.length === 0 && dicaVisivel(estado.tela, estado.preferencias?.dicasVistas, estado.dicaReaberta, Boolean(dica))
+  const mostrarDica = (!semTitulo || dicaEm) && estado.janelas.length === 0 && dicaVisivel(estado.tela, estado.preferencias?.dicasVistas, estado.dicaReaberta, Boolean(dica))
   const temAjuda = Boolean(ajudaDasTelas[estado.tela])
 
   return (
@@ -56,7 +57,7 @@ export default function Tela({ className = '', semTitulo = false, configuracoesE
       <ContextoDaTrilha.Provider value={setAba}>{children}</ContextoDaTrilha.Provider>
 
       {mostrarDica && (
-        <div className="dica-da-tela posicionado" style={estiloPosicao(posicoes.dica)} role="note" aria-label={`Dica: ${tela.nome}`}>
+        <div className={`dica-da-tela posicionado${dicaEm ? ' dica-da-tela-leve' : ''}`} style={estiloPosicao(dicaEm ?? posicoes.dica)} role="note" aria-label={`Dica: ${tela.nome}`}>
           <p>{dica}</p>
           <div className="dica-da-tela-botoes">
             <button type="button" className="botao" onClick={acoes.fecharDica}>

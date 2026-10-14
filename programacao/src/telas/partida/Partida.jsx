@@ -148,7 +148,7 @@ export default function Partida() {
   }, [ponte, acoes, usarItem])
 
   return (
-    <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes}>
+    <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes} dicaEm={pos.dica}>
       <ArenaDaPartida ponte={ponte} grupo={grupo} partida={partida} />
       <HudDaPartida situacao={situacao} mudo={estado.preferencias.mudo} bioma={bioma} />
       <AvisosDaPartida situacao={situacao} mensagens={mensagens} />

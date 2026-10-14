@@ -170,6 +170,7 @@ export const posicoes = {
   // jogável. As contagens do Q e da fuga e as mensagens ficam logo abaixo do HUD (HudDaPartida.jsx).
   partida: {
     configuracoes: { x: 92.4, y: 3.2 }, // em cima à direita, logo acima do minimapa (ajustes de 14/10)
+    dica: { x: 50, y: 68 }, // a dica da primeira partida, em cima da barra de ações
   },
   cutsceneDerrota: {
     mensagem: { x: 50, y: 45 },
