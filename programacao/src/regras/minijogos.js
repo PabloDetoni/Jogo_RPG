@@ -1,6 +1,7 @@
 import { minijogos } from '../dados/balanceamento.js'
 import { dadosDosMinijogos } from '../dados/minijogos.js'
 import { porNaMochila } from './mochila.js'
+import { contarRodada, podeJogarRodada, rodadasDoMinijogo } from './rodadasDoDia.js'
 import { nomeDoItem } from './textosDosItens.js'
 import { dividirXp, ganharXp } from './xp.js'
 
@@ -80,6 +81,17 @@ export function recompensaDaRodada(jogo, pontos, raros) {
   if (certos > 0) itens[dados.item] = certos
   if (extras > 0) itens[dados.raro] = (itens[dados.raro] ?? 0) + extras
   return { itens, xp: certos * minijogos[jogo].xpPorPonto }
+}
+
+// Começa uma rodada (ajustes de 14/10, RF54): conta no dia de Brasília; sem rodadas hoje, o motivo. "agora": a hora do
+// jogo (a do servidor para a conta, conta/horaDoServidor.js). Sair no meio não devolve a rodada.
+export function comecarRodadaDoMinijogo(progresso, jogo, agora) {
+  if (!dadosDosMinijogos[jogo]) return { ok: false, motivo: 'Minijogo desconhecido.' }
+  const pode = podeJogarRodada(progresso.minijogosDoDia, jogo, agora)
+  if (!pode.ok) return { ok: false, motivo: pode.motivo }
+  const minijogosDoDia = contarRodada(progresso.minijogosDoDia, jogo, agora)
+  const { sobram, porDia } = rodadasDoMinijogo(minijogosDoDia, jogo, agora)
+  return { ok: true, progresso: { ...progresso, minijogosDoDia }, mensagem: `Rodada começou · ${sobram} de ${porDia} ${sobram === 1 ? 'sobra' : 'sobram'} hoje` }
 }
 
 // Aplica a rodada no progresso (operação do Reino: só fora da partida). Recursos para a Mochila do Reino; XP dividido

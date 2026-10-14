@@ -2875,3 +2875,18 @@ button.slot:hover {
 .dica-da-tela-leve .botao {
   pointer-events: auto;
 }
+
+/* Minijogos diários (ajustes de 14/10): as rodadas de hoje embaixo do botão, no Mapa e no minijogo */
+.minijogo-no-mapa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.rodadas-do-dia {
+  font-size: 0.78em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}

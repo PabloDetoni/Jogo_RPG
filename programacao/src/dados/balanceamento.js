@@ -62,8 +62,11 @@ export const equipamentoNaPartida = { reducaoPorPontoDeDefesa: 0.02, reducaoMaxi
 // é a chance de cada ponto trazer também o item raro. "pontosNoMaximo" barra números absurdos numa rodada.
 // Tempos em ms: Fazenda (a planta cresce, fica madura um tempo e murcha), Mina (cliques por pedra) e Lago (espera da
 // boia e a janela para fisgar).
+// rodadasPorDia (ajustes de 14/10, RF54): rodadas de cada minijogo por dia, renovando à meia-noite de Brasília
+// (regras/rodadasDoDia.js). PROVISÓRIO.
 export const minijogos = {
   segundos: 30,
+  rodadasPorDia: 3,
   pontosNoMaximo: 60,
   fazenda: { xpPorPonto: 4, chanceDoRaro: 0.25, canteiros: 9, msCrescendo: [1500, 5000], msMadura: 1600, msMurcha: 900 },
   mina: { xpPorPonto: 5, chanceDoRaro: 0.15, cliquesPorPedra: 3 },

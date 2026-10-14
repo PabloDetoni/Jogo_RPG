@@ -16,6 +16,7 @@ import { habilidadesIniciais } from '../regras/habilidadesDaArvore.js'
 import { registrarItensVistos } from '../regras/interface.js'
 import { juntarItens } from '../regras/mochila.js'
 import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
+import { normalizarMinijogosDoDia } from '../regras/rodadasDoDia.js'
 
 // Progresso do jogador: é tudo o que fica salvo (no navegador para o convidado; no Supabase
 // para a conta, na etapa 8). As etapas seguintes preenchem os campos que hoje começam vazios.
@@ -35,6 +36,8 @@ export function progressoInicial() {
     // o XP da primeira descoberta (RF40). Fase 3.
     mapasDescobertos: {},
     itensVistos: [], // itens que o jogador já teve (Fase 4.5, o Catálogo da Forja e do Mercado; regras/interface.js)
+    // Rodadas dos minijogos hoje (ajustes de 14/10, RF54): { dia: 'AAAA-MM-DD' de Brasília, rodadas: { fazenda, mina, lago } }
+    minijogosDoDia: null,
     conquistas: {}, // conquistas concluídas: { id: true } (Fase 4, regras/conquistas.js); o progresso sai das estatísticas
     // Para o Resumo, o ranking e as conquistas. bossesDerrotados, grandesVitorias e missoesEntregues entraram na Fase 4.
     estatisticas: { partidasJogadas: 0, monstrosDerrotados: 0, bossesDerrotados: 0, grandesVitorias: 0, missoesEntregues: 0 },
@@ -206,6 +209,7 @@ export function normalizarProgresso(dados) {
     regioesDescobertas,
     mapasDescobertos,
     itensVistos,
+    minijogosDoDia: normalizarMinijogosDoDia(dados.minijogosDoDia),
     // Só conquistas que existem, marcadas como concluídas
     conquistas: Object.fromEntries(listaDeConquistas.filter((conquista) => ehObjeto(dados.conquistas) && dados.conquistas[conquista.id] === true).map((conquista) => [conquista.id, true])),
     estatisticas: {

@@ -132,11 +132,12 @@ export const posicoes = {
 
   // ---------- Mapa e partida ----------
   mapa: {
-    voltarAoReino: { x: 50, y: 45 },
-    planalto: { x: 50, y: 53 },
-    fazenda: { x: 38, y: 45 },
-    lago: { x: 50, y: 37 },
-    mina: { x: 62, y: 45 },
+    voltarAoReino: { x: 50, y: 47 },
+    planalto: { x: 50, y: 54 },
+    // Os minijogos com as rodadas de hoje embaixo (ajustes de 14/10)
+    fazenda: { x: 33, y: 48 },
+    lago: { x: 50, y: 36 },
+    mina: { x: 67, y: 48 },
     tundra: { x: 20, y: 27 },
     vulcanico: { x: 75, y: 27 },
     floresta: { x: 26, y: 70 },

@@ -348,7 +348,7 @@ try {
   console.log('10. Minijogo do Lago (uma rodada de 30 s)')
   await passo('Jogar novamente')
   await passo('Lago')
-  await passo('Começar')
+  await passo('Começar rodada', true)
   const pescou = await aba.avaliar(`(async () => {
     const fim = Date.now() + 31500
     while (Date.now() < fim) {
@@ -364,9 +364,24 @@ try {
     peixes: quantos(aposLago, 'peixe'),
   })
   await aba.print('05-lago')
+  // Minijogos diários (ajustes de 14/10): 3 rodadas por dia; a rodada conta ao começar, mesmo saindo no meio
+  conferir('a rodada contou no dia de Brasília, e a tela mostra "Rodadas hoje: 2 de 3 · renova em ..."', aposLago.minijogosDoDia?.rodadas?.lago === 1 && /Rodadas hoje: 2 de 3 · renova em \d\d:\d\d/.test(await aba.texto()), aposLago.minijogosDoDia)
+  for (let i = 0; i < 2; i++) {
+    await passo(i === 0 ? 'Jogar de novo' : 'Começar rodada', i > 0)
+    await pausa(300)
+    await clicar('Entendi') // a dica da primeira visita, se ainda estiver aberta (o Esc fecharia ela primeiro)
+    await aba.apertar('esc')
+    await aba.esperarTela('Mapa')
+    if (i === 0) await passo('Lago')
+  }
+  const semRodadas = await aba.avaliar(`(() => { const caixa = [...document.querySelectorAll('.minijogo-no-mapa')].find((c) => c.textContent.startsWith('Lago')); return { apagado: caixa?.querySelector('button')?.disabled ?? null, texto: caixa?.querySelector('.rodadas-do-dia')?.textContent ?? '' } })()`)
+  conferir('sair no meio também gasta; depois das 3 do dia, o Lago fica apagado no Mapa ("0 de 3"), e a Mina continua com 3', semRodadas.apagado === true && semRodadas.texto.startsWith('Rodadas hoje: 0 de 3') && (await aba.texto()).includes('Rodadas hoje: 3 de 3'), semRodadas)
+  await passo('Voltar ao Reino')
+  await aba.esperarTela('Reino')
+  await passo('Jogar')
+  await aba.esperarTela('Mapa')
 
   console.log('11. TEST-006, caso 4: abandonar com ouro abaixo da multa')
-  await passo('Voltar ao Mapa')
   await passo('Voltar ao Reino')
   await aba.esperarTela('Reino')
   await passo('Guilda')

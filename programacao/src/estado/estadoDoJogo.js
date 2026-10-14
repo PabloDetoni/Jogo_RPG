@@ -417,7 +417,10 @@ function atualizarSemConquistas(estado, acao) {
     case 'noReino': {
       if (estado.partidaAtual) return estado
       const resultado = aplicarNoReino(estado.progresso, acao.operacao, acao.argumentos)
-      return resultado.ok ? pedirSalvamento({ ...estado, progresso: resultado.progresso }) : estado
+      if (!resultado.ok) return estado
+      const salvo = pedirSalvamento({ ...estado, progresso: resultado.progresso })
+      // A rodada do minijogo vai já para o banco (ajustes de 14/10): o contador do dia vale em qualquer navegador
+      return acao.operacao === 'comecarRodadaDoMinijogo' ? pedirEnvioAoBanco(salvo) : salvo
     }
 
     case 'devContratarTodas':

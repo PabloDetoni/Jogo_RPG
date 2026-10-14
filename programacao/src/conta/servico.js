@@ -1,5 +1,6 @@
 import { partidasPorPaginaNoHistorico } from '../dados/regras.js'
 import { mensagemDoErro, traduzirErro } from '../regras/contas.js'
+import { iatDoToken } from './horaDoServidor.js'
 
 // Tudo o que o jogo pede ao Supabase (Fase 2), num lugar só. Recebe o cliente (src/conta/cliente.js) — nos testes, um
 // cliente falso. Toda função devolve { ok: true, ... } ou { ok: false, codigo, mensagem }: nunca lança erro, para
@@ -61,7 +62,8 @@ export function criarServicoDeConta(cliente, { origem = '', endereco = null, cha
       tentar(async () => {
         const { data, error } = await cliente.auth.signInWithPassword({ email: email.trim(), password: senha })
         if (error) return falhou(error)
-        return { ok: true, usuario: { id: data.user.id, email: data.user.email } }
+        // iat: quando o Supabase emitiu o token, agora (a reserva da hora do servidor, conta/horaDoServidor.js)
+        return { ok: true, usuario: { id: data.user.id, email: data.user.email }, iat: iatDoToken(data.session?.access_token) }
       }),
 
     // Sessão do Supabase guardada neste navegador (depois de recarregar a página ou do link de confirmação)
@@ -131,6 +133,13 @@ export function criarServicoDeConta(cliente, { origem = '', endereco = null, cha
       tentar(async () => {
         const { data, error } = await cliente.rpc('sinal_da_sessao', { p_sessao: sessao })
         return error ? falhou(error) : { ok: true, situacao: data } // 'ok' ou 'perdida'
+      }),
+
+    // A hora do banco (ajustes de 14/10; supabase/002_hora_do_servidor.sql): { ok, hora } (texto ISO)
+    horaDoServidor: () =>
+      tentar(async () => {
+        const { data, error } = await cliente.rpc('hora_do_servidor')
+        return error ? falhou(error) : { ok: true, hora: data }
       }),
 
     fecharSessao: (sessao) =>
