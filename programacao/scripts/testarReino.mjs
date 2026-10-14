@@ -455,6 +455,26 @@ try {
   })
   conferir('depois de recarregar, ouro, Mochila, personagens, missão e conquistas continuam iguais', JSON.stringify(resumo(antesDeRecarregar)) === JSON.stringify(resumo(depoisDeRecarregar)))
 
+  console.log('14. Carregamento da partida (ajustes de 14/10): progresso, falha com "Tentar de novo" e o fade')
+  // A página recarregou: o Phaser ainda não foi baixado nesta página. Bloqueado, o carregamento falha com uma mensagem clara
+  await aba.cdp.enviar('Network.enable')
+  await aba.cdp.enviar('Network.setCacheDisabled', { cacheDisabled: true })
+  await aba.cdp.enviar('Network.setBlockedURLs', { urls: ['*phaser*', '*criarJogo*'] })
+  await passo('Jogar')
+  await passo('Floresta')
+  await aba.esperarTela('Preparação')
+  await passo('Começar partida')
+  await aba.esperar(`!!document.querySelector('.carregando-a-partida')`, 'a tela de carregamento', 5000)
+  conferir('ao começar, aparece a tela de carregamento com a barra, a etapa e uma dica', await aba.avaliar(`(() => { const t = document.querySelector('.carregando-a-partida')?.innerText ?? ''; return t.includes('Dica:') || t.includes('Tentar de novo') })()`))
+  await aba.esperar(`(document.querySelector('.carregando-a-partida')?.innerText ?? '').includes('Tentar de novo')`, 'a mensagem de falha', 15000)
+  conferir('sem o motor do jogo, a falha vira uma mensagem clara com "Tentar de novo" (nunca tela branca)', (await aba.texto()).includes('Não deu para carregar a partida'))
+  await aba.print('09-carregamento-falhou')
+  await aba.cdp.enviar('Network.setBlockedURLs', { urls: [] })
+  await passo('Tentar de novo')
+  await aba.esperar(`!!${CENA}?.lider`, 'a partida depois de tentar de novo', 25000)
+  await aba.esperar(`!document.querySelector('.carregando-a-partida')`, 'a tela de carregamento sumir', 5000)
+  conferir('"Tentar de novo" carrega a partida, e a tela de carregamento some', !(await aba.avaliar(`!!document.querySelector('.carregando-a-partida')`)))
+
   const erros = await aba.avaliar(`window.__erros ?? []`)
   conferir('nenhum erro no console', erros.length === 0, erros.slice(0, 5))
 } catch (erro) {

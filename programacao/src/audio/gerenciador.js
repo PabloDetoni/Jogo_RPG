@@ -115,6 +115,33 @@ async function tocarArquivo(url) {
   fonte.start()
 }
 
+// Carregamento da partida (ajustes de 14/10): decodifica antes os efeitos que têm arquivo, avisando o andamento (de 0 a
+// 1). Sem arquivos (ou sem som no navegador), termina na hora. Nunca falha: o efeito que não carregar vira o bipe.
+export async function prepararSonsDaPartida(aoAndar = () => {}) {
+  const urls = [...new Set(Object.values(efeitos).map((efeito) => arquivoDoSom(efeito.arquivo, arquivosDeSom)).filter(Boolean))]
+  if (!contexto || urls.length === 0) {
+    aoAndar(1)
+    return
+  }
+  let prontos = 0
+  await Promise.all(
+    urls.map((url) => {
+      if (!decodificados.has(url)) {
+        decodificados.set(
+          url,
+          fetch(url)
+            .then((resposta) => resposta.arrayBuffer())
+            .then((dados) => contexto.decodeAudioData(dados)),
+        )
+      }
+      return decodificados
+        .get(url)
+        .catch(() => null)
+        .then(() => aoAndar(++prontos / urls.length))
+    }),
+  )
+}
+
 // Um efeito (dados/sons.js, efeitos): o arquivo, se existir; senão, o bipe provisório. O mesmo efeito não repete em
 // menos de msEntreIguais (um golpe em área acerta vários de uma vez).
 export function tocarEfeito(id) {

@@ -128,11 +128,14 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // A arte que já chegou (src/assets/arte/, dados/arte.js): sem ela, tudo continua em quadrados
+  // Ajustes de 14/10: o andamento vai para a tela de carregamento (Partida.jsx), pela ponte
   preload() {
+    this.load.on('progress', (fracao) => this.ponte?.avisar('carregamento', { etapa: 'arte', fracao }))
     carregarArte(this)
   }
 
   create() {
+    this.ponte?.avisar('carregamento', { etapa: 'arte', fracao: 1 })
     this.relogio = 0
     criarTexturas(this)
     prepararArte(this)

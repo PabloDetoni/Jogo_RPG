@@ -5,9 +5,109 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jogo RPG</title>
+    <!-- Tela de carregamento (ajustes de 14/10/2026): aparece na hora, antes do React, e some quando o jogo monta (o React
+         troca o conteúdo do #root). Se demorar demais ou o código não chegar, mostra o que houve e "Tentar de novo". -->
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: #111;
+      }
+      .carregando-o-site {
+        height: 100%;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at 50% 40%, #1f2a1f, #0d120d 70%);
+        color: #f2f2f2;
+        font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+      }
+      .carregando-o-site h1 {
+        margin: 0 0 0.6em;
+        font-size: clamp(28px, 4vw, 56px);
+        letter-spacing: 0.04em;
+      }
+      .carregando-o-site .barra {
+        width: min(60vw, 420px);
+        height: 12px;
+        margin: 0 auto;
+        overflow: hidden;
+        border: 2px solid #7fbf6a;
+        background: #0b0f0b;
+      }
+      .carregando-o-site .barra span {
+        display: block;
+        width: 35%;
+        height: 100%;
+        background: #7fbf6a;
+        animation: carregando-vai-e-volta 1.1s ease-in-out infinite alternate;
+      }
+      .carregando-o-site p {
+        margin: 0.9em 0 0;
+        font-size: 15px;
+        opacity: 0.85;
+      }
+      .carregando-o-site button {
+        margin-top: 1em;
+        padding: 0.5em 1.2em;
+        font: inherit;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      @keyframes carregando-vai-e-volta {
+        from {
+          transform: translateX(-10%);
+        }
+        to {
+          transform: translateX(200%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .carregando-o-site .barra span {
+          animation: none;
+          width: 100%;
+          opacity: 0.6;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="carregando-o-site" id="carregando-o-site" role="status" aria-live="polite">
+        <div>
+          <h1>Jogo RPG</h1>
+          <div class="barra"><span></span></div>
+          <p id="carregando-texto">Carregando o jogo...</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Se o jogo não montar em 20 s, ou se o código não chegar, diz o que houve (nunca uma tela parada sem explicação)
+      ;(function () {
+        function mostrarProblema(texto) {
+          var tela = document.getElementById('carregando-o-site')
+          if (!tela) return
+          tela.innerHTML =
+            '<div><h1>Jogo RPG</h1><p>' +
+            texto +
+            '</p><button type="button" onclick="location.reload()">Tentar de novo</button></div>'
+        }
+        setTimeout(function () {
+          mostrarProblema('O jogo está demorando para abrir. Confira a internet e tente de novo.')
+        }, 20000)
+        window.addEventListener(
+          'error',
+          function (evento) {
+            if (evento.target && evento.target.tagName === 'SCRIPT') mostrarProblema('Não deu para baixar o jogo. Confira a internet e tente de novo.')
+          },
+          true,
+        )
+      })()
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

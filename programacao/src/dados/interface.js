@@ -4,6 +4,10 @@
 // src/assets/arte/ (nomes abaixo, também em dados/arte.js), ela aparece no lugar, sem mexer em código.
 
 // Ações: cor (borda e símbolo dos botões) e símbolo (aparece num quadradinho da cor, antes do verbo)
+// Tela de carregamento da partida (ajustes de 14/10): depois de msLimite sem o mapa pronto, avisa e oferece "Tentar de
+// novo"; quando fica pronta, some num fade de msDoSumico
+export const carregamentoDaPartida = { msLimite: 20000, msDoSumico: 350 }
+
 export const acoes = {
   comprar: { nome: 'Comprar', cor: '#b8740a', simbolo: '⊖', significado: 'o ouro sai (moeda saindo)' },
   vender: { nome: 'Vender', cor: '#2b8a3e', simbolo: '⊕', significado: 'o ouro entra (moeda entrando)' },
