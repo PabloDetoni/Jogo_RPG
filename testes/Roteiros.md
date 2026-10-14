@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 11/10/2026, na Fase 4.5 (interface intuitiva). A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 14/10/2026, nos ajustes da versão final (seção VF). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -18,6 +18,42 @@ Atualizado em 11/10/2026, na Fase 4.5 (interface intuitiva). A cada parte nova, 
 7. **Para começar do zero:** no painel DEV, **Apagar progresso do convidado**.
 
 Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que mostrar. Se for diferente, anote como **falhou**.
+
+---
+
+## VF. Ajustes da versão final (14/10)
+
+**VF-01 · Trilha no alto**
+- Fazer: no Reino, entre na Forja e clique nas abas (Equipar, Comprar...).
+- Deve acontecer: no alto aparece "Reino › Forja › Equipar"; o nome da aba muda junto. Clicar em "Reino" na trilha volta ao Reino.
+
+**VF-02 · Esc igual ao Voltar**
+- Fazer: entre no Mercado e aperte Esc duas vezes. Depois abra o Mapa, entre na Fazenda e aperte Esc.
+- Deve acontecer: o primeiro Esc fecha a dica (se ela estiver aberta); o segundo volta ao Reino. Da Fazenda, o Esc volta ao Mapa. No Reino e na Tela inicial, o Esc não faz nada. Na partida, o Esc continua pausando.
+
+**VF-03 · Dica da primeira visita**
+- Fazer: com um convidado novo (painel DEV: Apagar progresso do convidado), passe pelas telas. Feche uma dica com **Entendi**. Volte para a mesma tela. Clique no **?**.
+- Deve acontecer: cada tela mostra, na primeira vez, uma frase curta dizendo para que serve. Fechada, ela não volta sozinha; o **?** reabre. **Como funciona** abre a explicação completa.
+
+**VF-04 · Confirmação das ações**
+- Fazer: no Mercado, compre 1 Poção de vida; venda 1; na Guilda, aceite uma missão.
+- Deve acontecer: embaixo aparece "Você comprou 1 Poção de vida · −25 de ouro", "Você vendeu 1 Poção de vida · +12 de ouro" e "Você aceitou a missão ...".
+
+**VF-05 · Como jogar**
+- Fazer: na Tela inicial, clique em **Como jogar**.
+- Deve acontecer: à esquerda os controles (WASD, mouse, clique, Espaço, 1 2 3, E, Tab, Q, F, Esc, M) e à direita as regras (objetivo, grupo, voltar com o ouro, itens no chão, entre as partidas).
+
+**VF-06 · Descartar na Mochila do Reino**
+- Fazer: na Mochila, escolha um item com 3 ou mais. Clique em **Descartar…**, aperte **+** uma vez e depois **Todas**. Cancele. Repita escolhendo 2 e confirme.
+- Deve acontecer: a caixa mostra o item, a quantidade e "Eles somem para sempre". Cancelar não muda nada; confirmar tira só os 2 e mostra "Você descartou 2 ...".
+
+**VF-07 · Descartar na partida (critério do Pablo)**
+- Fazer: leve 3 poções na Preparação. Na partida, aperte Tab, escolha a poção, **Descartar…**, **+** (fica 2) e **Sim, descartar 2**.
+- Deve acontecer: fica 1 poção na mochila e 2 caem no chão perto do Líder, com um anel amarelo em volta que vai esvaziando. Em 30 s elas somem (piscando nos últimos 5 s). Pegar de volta com E antes disso devolve as 2.
+
+**VF-08 · Item natural e item dropado**
+- Fazer: na Floresta, olhe um cogumelo ou uma madeira no chão. Derrote um lobo que deixe uma pele.
+- Deve acontecer: o recurso do mapa não tem anel e nunca some. A pele tem o anel do tempo, some em 30 s e pisca no fim. Com a mochila cheia (barra de teste: Encher mochila), apertar E perto da pele avisa que não cabe e o tempo dela continua o mesmo; perto do cogumelo, ele continua lá, sem tempo.
 
 ---
 
