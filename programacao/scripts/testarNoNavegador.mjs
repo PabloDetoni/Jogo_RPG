@@ -886,7 +886,7 @@ try {
   let arqueiroPuxou = false
   for (let i = 0; i < 30; i++) {
     await colocarLider(420, 450)
-    arqueiroPuxou ||= await cena(`!!${membro('arqueiro')}?.puxando`)
+    arqueiroPuxou ||= await cena(`(() => { const a = ${membro('arqueiro')}; return !!a && (!!a.puxando || a.ultimaCarga !== undefined) })()`)
     const amostra = await cena(`(() => {
       const tanque = ${membro('tanque')}, arqueiro = ${membro('arqueiro')}
       const vivos = c.inimigos.filter(i => !i.morto)

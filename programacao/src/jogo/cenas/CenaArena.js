@@ -25,17 +25,7 @@ import {
   somarXpDoAbate,
   xpParaOProximoNivel,
 } from '../../regras/andamentoDaPartida.js'
-import {
-  aplicarDano,
-  circuloTocaRetangulo,
-  fracaoDaRecarga,
-  podeUsar,
-  retangulosSeTocam,
-  rolarCritico,
-  vagaNaFormacao,
-  velocidadeDoMovimento,
-  vetorDeEmpurrao,
-} from '../../regras/combate.js'
+import { aplicarDano, circuloTocaRetangulo, escudoBloqueia, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
 import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
@@ -1023,6 +1013,7 @@ export default class CenaArena extends Phaser.Scene {
     }
     const agora = this.agora
     const flecha = flechaAgora(membro, agora)
+    membro.ultimaCarga = cargaAtual(membro, agora) // para os roteiros e a depuração: com quanto soltou
     membro.puxando = null
     membro.ultimoAtaque = agora
     membro.inicioDoGolpe = agora
@@ -1258,8 +1249,10 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // Golpe corpo a corpo: o escudo do Tanque bloqueia o que vem da frente
-  inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao) {
-    if (membro.escudo?.bloqueiaGolpe(inimigo)) {
+  // tipo (ajustes de 14/10): 'golpe' (corpo a corpo: o escudo do Tanque segura se vier pela frente) ou 'area' (o pisão
+  // do Boss, explosões: atinge o Tanque normalmente; regras/combate.js, escudoBloqueia)
+  inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao, tipo = 'golpe') {
+    if (membro.escudo && escudoBloqueia({ escudoAtivo: membro.escudo.ativo, tipo, naFrente: membro.escudo.bloqueiaGolpe(inimigo) })) {
       const { x, y } = membro.escudo.retangulo()
       this.mostrarBloqueado(x, y)
       inimigo.empurrar(vetorDeEmpurrao(membro, inimigo, forcaDoEmpurrao), 220)

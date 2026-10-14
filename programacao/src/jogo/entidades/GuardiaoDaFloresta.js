@@ -147,9 +147,9 @@ export default class GuardiaoDaFloresta extends Inimigo {
     this.escalaExtra.x = 1
     this.escalaExtra.y = 1
     if (tipo === 'pisao') {
-      // Todo mundo do grupo dentro da área leva o golpe
+      // Todo mundo do grupo dentro da área leva o golpe; é ataque em área: o escudo do Tanque não segura (ajustes de 14/10)
       for (const membro of this.cena.membrosDePe) {
-        if (circuloTocaRetangulo({ x: this.x, y: this.y, raio: ficha.raio }, membro.retangulo())) this.cena.inimigoAcerta(this, membro, ficha.dano, ficha.empurrao)
+        if (circuloTocaRetangulo({ x: this.x, y: this.y, raio: ficha.raio }, membro.retangulo())) this.cena.inimigoAcerta(this, membro, ficha.dano, ficha.empurrao, 'area')
       }
       particulas(this.cena, this.x, this.y, 0x8a6a3a, 22, 320)
       tremerTela(this.cena, 160, 0.006)
