@@ -14,7 +14,7 @@ import MochilaNaPartida from './MochilaNaPartida.jsx'
 import { itensDaJanela } from '../../regras/itensNaPartida.js'
 
 const pos = posicoes.partida
-const { msDaMensagem, mensagensNoMaximo } = combateDeTeste.hud
+const { msDaMensagem, mensagensNoMaximo, msParaJuntar } = combateDeTeste.hud
 
 // Partida (etapa 5): o Phaser desenha a arena embaixo; HUD, avisos e barra de teste ficam em React, por cima.
 // Os dois lados conversam só pela ponte (src/jogo/ponte.js). As contagens do Q e da fuga rodam dentro da partida,
@@ -52,12 +52,20 @@ export default function Partida() {
   // A pausa congela o jogo; as Configurações e o aviso da fuga não pausam (Conceito §11.8)
   useEffect(() => ponte.definirPausa(pausado), [ponte, pausado])
 
-  // Mensagens curtas do HUD: cada uma some sozinha; aparecem no máximo algumas juntas
+  // Mensagens curtas do HUD: cada uma some sozinha; aparecem no máximo algumas juntas. As do mesmo tipo que chegam no
+  // mesmo instante viram uma linha só (ajustes de 14/10: vários subindo de nível de uma vez não empurram as outras)
   const relogios = useRef(new Set())
   const proximaMensagem = useRef(1)
   const mostrar = useCallback((mensagem) => {
     const id = proximaMensagem.current++
-    setMensagens((atuais) => [...atuais, { ...mensagem, id }].slice(-mensagensNoMaximo))
+    const agora = performance.now()
+    setMensagens((atuais) => {
+      const ultima = atuais.at(-1)
+      if (ultima && ultima.tipo === mensagem.tipo && agora - ultima.chegou < msParaJuntar && !ultima.texto.includes(mensagem.texto)) {
+        return [...atuais.slice(0, -1), { ...ultima, texto: `${ultima.texto} · ${mensagem.texto}`, chegou: agora }]
+      }
+      return [...atuais, { ...mensagem, id, chegou: agora }].slice(-mensagensNoMaximo)
+    })
     const relogio = setTimeout(() => {
       relogios.current.delete(relogio)
       setMensagens((atuais) => atuais.filter((outra) => outra.id !== id))

@@ -259,7 +259,8 @@ export const combateDeTeste = {
   // distância dele (px da arena; o canto mais longe da arena fica a ~1400 px). Muda na etapa 6, com o mapa de verdade.
   distanciaAteABorda: 1400,
   // HUD (5c): quanto tempo cada mensagem curta fica na tela e quantas aparecem juntas
-  hud: { msDaMensagem: 2500, mensagensNoMaximo: 4 },
+  // Ajustes de 14/10: no máximo 3 mensagens; as do mesmo tipo que chegam a menos de msParaJuntar ms viram uma linha só
+  hud: { msDaMensagem: 2500, mensagensNoMaximo: 3, msParaJuntar: 300 },
   // Botões de teste (5c). "+ouro" soma ao ouro ganho na partida (para chegar à Grande Vitória sem jogar horas).
   // Teste do foco: o Líder fica com esta fração da vida (abaixo do limite do foco) por msPreso, com mobs perto.
   testes: { ouroDoBotao: 300, foco: { vidaDoLider: 0.25, msPreso: 20000, mobs: 3, distancia: 300 } },

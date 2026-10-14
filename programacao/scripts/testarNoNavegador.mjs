@@ -297,7 +297,7 @@ const dentroDePedra = () =>
     const pedras = ${JSON.stringify(PEDRAS)}
     const area = ${JSON.stringify(AREA)}
     return [...c.grupo.filter(p => !p.perdido), ...c.inimigos.filter(i => !i.morto)].filter(e => {
-      const m = e.tamanho / 2 - 2
+      const m = e.raio - 2 // o corpo que colide (ajustes de 14/10: menor que o desenho)
       const naPedra = pedras.some(p => Math.abs(e.x - p.x) < p.largura / 2 + m && Math.abs(e.y - p.y) < p.altura / 2 + m)
       const fora = e.x < area.esquerda + m || e.x > area.direita - m || e.y < area.topo + m || e.y > area.base - m
       return naPedra || fora
@@ -496,7 +496,7 @@ try {
   conferir('o Líder não entra na faixa de cima da arena', (await cena(`c.lider.y - c.lider.raio`)) >= AREA.topo - 1, await cena(`Math.round(c.lider.y)`))
   await colocarLider(300, AREA.base - 40)
   await segurar(['s'], 600)
-  conferir('o Líder não entra embaixo da barra de teste', (await cena(`c.lider.y`)) <= AREA.base - 19, await cena(`Math.round(c.lider.y)`))
+  conferir('o Líder não entra embaixo da barra de teste', (await cena(`c.lider.y + c.lider.raio`)) <= AREA.base + 1, await cena(`Math.round(c.lider.y)`))
 
   console.log('3. Movimento (WASD), diagonal e esquiva')
   await colocarLider(300, 430)
@@ -1587,7 +1587,7 @@ try {
     let travou = 0
     const inicioDoDesvio = Date.now()
     while (Date.now() - inicioDoDesvio < 3500) {
-      const amostra = await cena(`(() => { const s = ${membro('sacerdote')}, g = ${membro('guerreiro')}; return { folga: Math.max(Math.abs(s.x - g.x), Math.abs(s.y - g.y)) - (s.tamanho + g.tamanho) / 2, travou: s.travamento?.nivel ?? 0, aura: ${auraAtiva} } })()`)
+      const amostra = await cena(`(() => { const s = ${membro('sacerdote')}, g = ${membro('guerreiro')}; return { folga: Math.max(Math.abs(s.x - g.x), Math.abs(s.y - g.y)) - (s.raio + g.raio), travou: s.travamento?.nivel ?? 0, aura: ${auraAtiva} } })()`)
       menorFolga = Math.min(menorFolga, amostra.folga)
       travou = Math.max(travou, amostra.travou)
       if (amostra.aura) break

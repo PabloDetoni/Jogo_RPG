@@ -115,18 +115,20 @@ try {
   conferir('o clique ataca na direção da mira', Boolean(tiro), tiro)
 
   console.log('4. Bordas e mata fechada: ninguém atravessa')
+  // O corpo que colide é menor que o desenho (ajustes de 14/10): o limite é o raio dele
+  const raioDoLider = await cena(`c.lider.raio`)
   await colocarLider(60, 1800)
   await aba.segurar(['a'], 900)
   const esquerda = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX })`)
-  conferir('na beira esquerda do mapa, o Líder não passa e a câmera para no limite', esquerda.x >= 19 && esquerda.scrollX === 0, esquerda)
+  conferir('na beira esquerda do mapa, o Líder não passa e a câmera para no limite', esquerda.x >= raioDoLider - 1 && esquerda.scrollX === 0, esquerda)
   await colocarLider(500, 1540)
   await aba.segurar(['w'], 900)
   const cima = await cena(`c.lider.y`)
-  conferir('na zona segura, a mata fechada de cima é parede', cima >= 1500 + 19, Math.round(cima))
+  conferir('na zona segura, a mata fechada de cima é parede', cima >= 1500 + raioDoLider - 1, Math.round(cima))
   await colocarLider(500, 2060)
   await aba.segurar(['s'], 900)
   const baixo = await cena(`c.lider.y`)
-  conferir('...e a de baixo também', baixo <= 2100 - 19, Math.round(baixo))
+  conferir('...e a de baixo também', baixo <= 2100 - raioDoLider + 1, Math.round(baixo))
   // O fundo é o domínio do Boss: sozinho e sem o Invencível, o Líder às vezes caía antes da conferência, e Líder sozinho
   // caído é Derrota (a partida acabava no meio do roteiro)
   await cena(`(c.invencivel = true, true)`)
@@ -134,7 +136,7 @@ try {
   await aba.segurar(['d'], 900)
   await pausa(600)
   const direita = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX, limite: c.mapa.tamanho.largura - c.cameras.main.width })`)
-  conferir('no fundo da Floresta, o Líder não sai do mapa e a câmera para no limite', direita.x <= 7200 - 19 && Math.abs(direita.scrollX - direita.limite) < 2, direita)
+  conferir('no fundo da Floresta, o Líder não sai do mapa e a câmera para no limite', direita.x <= 7200 - raioDoLider + 1 && Math.abs(direita.scrollX - direita.limite) < 2, direita)
   await aba.print('03-fundo-da-floresta')
   await colocarLider(400, 1800)
   await cena(`(c.lider.vida = c.lider.vidaMaxima, c.invencivel = false, true)`)
@@ -149,18 +151,21 @@ try {
   const grupo = await cena(`c.aliados.map((a) => ({ classe: a.classe, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)) }))`)
   conferir('depois de 6 s andando pela Floresta, os 4 aliados continuam perto do Líder', grupo.length === 4 && grupo.every((um) => um.distancia < 400), grupo)
   await aba.print('04-grupo-andando')
-  // Corredor estreito (ajustes de 14/10, hitbox menor): o par de obstáculos mais apertado da Fácil, um ao lado do outro
-  // (a passagem mínima), com o grupo de um lado e o Líder indo para o outro; todos passam sem travar
+  // Corredor estreito (ajustes de 14/10, hitbox menor): o vão mais apertado entre dois obstáculos (árvore ou pedra), um ao
+  // lado do outro, longe da mata fechada, com o grupo de um lado e o Líder indo para o outro; todos passam sem travar
   const corredor = await cena(`(() => {
-    const facil = c.mapa.regioes.find((r) => r.id === 'facil')
-    const dentro = (o) => o.x - o.largura / 2 > facil.x0 + 150 && o.x + o.largura / 2 < facil.x1 - 150 && o.y - o.altura / 2 > facil.y0 + 300 && o.y + o.altura / 2 < facil.y1 - 300
-    const obs = c.mapa.obstaculos.filter(dentro)
+    const obs = c.mapa.obstaculos.filter((o) => o.tipo !== 'mata' && o.x > 1100 && o.x < 6200)
+    const livre = (x, y) => !c.mapa.obstaculos.some((o) => Math.abs(o.x - x) < o.largura / 2 + 40 && Math.abs(o.y - y) < o.altura / 2 + 40)
     let melhor = null
     for (const a of obs) for (const b of obs) {
       if (b.x <= a.x) continue
       const vao = (b.x - b.largura / 2) - (a.x + a.largura / 2)
       const encaram = Math.min(a.y + a.altura / 2, b.y + b.altura / 2) - Math.max(a.y - a.altura / 2, b.y - b.altura / 2)
-      if (vao < 60 || vao > 130 || encaram < 40) continue
+      if (vao < 60 || vao > 240 || encaram < 30) continue
+      const meio = (a.x + a.largura / 2 + b.x - b.largura / 2) / 2
+      const topo = Math.min(a.y - a.altura / 2, b.y - b.altura / 2)
+      const base = Math.max(a.y + a.altura / 2, b.y + b.altura / 2)
+      if (!livre(meio, topo - 170) || !livre(meio, base + 130)) continue
       if (!melhor || vao < melhor.vao) melhor = { vao: Math.round(vao), x: (a.x + a.largura / 2 + b.x - b.largura / 2) / 2, topo: Math.min(a.y - a.altura / 2, b.y - b.altura / 2), base: Math.max(a.y + a.altura / 2, b.y + b.altura / 2) }
     }
     return melhor

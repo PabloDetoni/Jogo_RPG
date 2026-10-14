@@ -309,7 +309,7 @@ Chance = **5% + 0,5% por ponto de Agilidade**; o golpe crítico causa **1,5×** 
 
 ### HUD e botões de teste
 
-- Mensagens curtas do HUD (crítico, nível, desmaio, perdido, retorno...): ficam **2,5 s**, no máximo **4** juntas.
+- Mensagens curtas do HUD (crítico, nível, desmaio, perdido, retorno...): ficam **2,5 s**, no máximo **3** juntas.
 - Botão "+300 de ouro" (só no npm run dev): soma ao ouro ganho na partida, para chegar à Grande Vitória (pontuação base acima de 1.000) sem jogar horas.
 - Botão "Testar foco": IA avançada para todos, Líder com **25%** da vida por **20 s** e **3 mobs** a 300 px.
 
