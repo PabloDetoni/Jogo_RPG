@@ -121,3 +121,25 @@ export function itensLevados(levar) {
     .filter(([id, quantidade]) => itemDoCatalogo(id) && quantidade > 0)
     .map(([id, quantidade]) => ({ id, peso: pesoDoItem(id), quantidade }))
 }
+
+// ---------- Descartar (ajustes de 14/10/2026) ----------
+
+// Quantos descartar: 1, várias ou todas, sempre entre 1 e o que se tem (inteiro). 0 quando não há nada.
+export function quantidadeParaDescartar(pedida, tem) {
+  if (!Number.isFinite(tem) || tem <= 0) return 0
+  const inteira = Math.floor(Number(pedida))
+  if (!Number.isFinite(inteira)) return 1
+  return Math.min(tem, Math.max(1, inteira))
+}
+
+// Tira da mochila da partida (lista de { id, quantidade }) a quantidade descartada; ela cai no chão perto do Líder como
+// item dropado (regras/itensNoChao.js).
+// Devolve { ok, itens, quantidade } ou { ok: false, motivo }.
+export function descartarDaMochilaDaPartida(itens, id, pedida) {
+  const pilha = itens.find((item) => item.id === id)
+  if (!pilha) return { ok: false, motivo: 'Este item não está na mochila.' }
+  const quantidade = quantidadeParaDescartar(pedida, pilha.quantidade)
+  const resto = pilha.quantidade - quantidade
+  const novos = resto > 0 ? itens.map((item) => (item === pilha ? { ...item, quantidade: resto } : item)) : itens.filter((item) => item !== pilha)
+  return { ok: true, itens: novos, quantidade }
+}

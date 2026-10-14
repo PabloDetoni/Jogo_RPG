@@ -15,6 +15,7 @@ export default class ItemNoChao {
     this.item = item
     this.quantidade = quantidade
     this.expiraEm = expiraEm // null = fica até alguém pegar (os recursos do chão)
+    this.jaColetado = false // foi pego e descartado (ajustes de 14/10): pegar de novo não conta outra vez
     this.sombra = cena.add.ellipse(x, y + 12, 22, 8, 0x000000, 0.25).setDepth(camadas.sombras)
     const icone = imagemDaArte(cena, iconeDoItem(item.id))
     if (icone) {

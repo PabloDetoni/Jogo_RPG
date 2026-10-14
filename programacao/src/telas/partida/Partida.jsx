@@ -159,6 +159,7 @@ export default function Partida() {
           escolhido={escolhidoNaMochila}
           aoEscolher={setEscolhidoNaMochila}
           aoUsar={usarItem}
+          aoDescartar={(id, quantidade) => ponte.avisar('comando', { tipo: 'descartarItem', id, quantidade })}
         />
       )}
     </Tela>

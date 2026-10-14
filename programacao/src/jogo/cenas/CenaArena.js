@@ -48,7 +48,7 @@ import { tocarEfeito } from '../../audio/gerenciador.js'
 import { efeitoDoAtaque } from '../../regras/som.js'
 import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
-import { capacidadeDaMochila, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
+import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
@@ -424,10 +424,13 @@ export default class CenaArena extends Phaser.Scene {
     const pegou = noChao.quantidade - (sobra?.quantidade ?? 0)
     this.mochila.itens = itens
     if (pegou > 0) {
-      if (item.tipo === 'recurso') this.ganhos.recursos += pegou
-      this.contarParaAMissao(() => {
-        this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
-      })
+      // O que foi descartado e pego de novo não conta outra vez (ajustes de 14/10)
+      if (!noChao.jaColetado) {
+        if (item.tipo === 'recurso') this.ganhos.recursos += pegou
+        this.contarParaAMissao(() => {
+          this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
+        })
+      }
       numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
     }
     if (!sobra) {
@@ -1483,6 +1486,18 @@ export default class CenaArena extends Phaser.Scene {
     this.mensagem(`${item.nome} em ${alvo === this.lider ? 'você' : nomeDaClasse(alvo.classe)}: ${resultado.texto}`, 'aviso')
   }
 
+  // Descartar da mochila da partida (ajustes de 14/10): a quantidade sai da mochila e cai no chão perto do Líder como item
+  // dropado (some em 30 s). Pegar de novo não conta outra vez para a missão nem para os recursos.
+  descartarItem(id, quantidade) {
+    const item = itemDoCatalogo(id)
+    const resultado = descartarDaMochilaDaPartida(this.mochila.itens, id, quantidade)
+    if (!item || !resultado.ok) return
+    this.mochila.itens = resultado.itens
+    const noChao = this.soltarItem(item, resultado.quantidade, this.lider, mundo.coleta.msQuandoNaoCabe)
+    noChao.jaColetado = true
+    this.mensagem(`Você descartou ${resultado.quantidade} ${item.nome} · no chão por ${Math.round(mundo.coleta.msQuandoNaoCabe / 1000)} s`, 'aviso')
+  }
+
   executarComando(comando) {
     if (this.terminou) return
     // Teclas e pedidos do jogo (não são de teste): Q, Voltar ao Reino da pausa e a fuga confirmada
@@ -1492,6 +1507,7 @@ export default class CenaArena extends Phaser.Scene {
     // Mochila da partida (Fase 4, TASK-047): Tab abre sem pausar; E usa no Líder e R no aliado mais perto da mira
     if (comando.tipo === 'mochilaAberta') this.mochilaAberta = Boolean(comando.aberta)
     if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
+    if (comando.tipo === 'descartarItem') this.descartarItem(comando.id, comando.quantidade)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)
     if (import.meta.env.DEV) this.comandoDeTeste(comando)
     if (this.terminou) return

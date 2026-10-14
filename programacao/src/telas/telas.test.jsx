@@ -470,8 +470,8 @@ describe('Mochila do Reino (Fase 4, TASK-072)', () => {
     expect(html).toContain('Consumíveis')
     expect(html).toContain('Recupera 40% da vida')
     expect(html).toContain('Peso 1')
-    expect(html).toContain('Descartar 1')
-    expect(html).toContain('Descartar todos (3)')
+    // Descartar escolhe a quantidade depois do clique (ajustes de 14/10)
+    expect(html).toContain('Descartar…')
     expect(html).toContain('peso total 13')
   })
 

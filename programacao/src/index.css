@@ -2715,3 +2715,43 @@ button.slot:hover {
   gap: 0.25em;
   white-space: nowrap;
 }
+
+/* Descartar com escolha da quantidade (ajustes de 14/10), nas duas mochilas */
+.descartar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  padding: 0.5em 0.6em;
+  border: 2px solid var(--ruim, #a61b1b);
+  background: var(--painel, var(--janela));
+}
+
+.descartar-quantidade {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3em;
+}
+
+.descartar-quantidade .botao {
+  padding: 0.15em 0.55em;
+}
+
+.descartar-numero {
+  min-width: 2ch;
+  font-weight: bold;
+  font-size: 1.15em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.descartar-confirmacao {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.descartar-confirmacao p {
+  margin: 0;
+  line-height: 1.3;
+}
