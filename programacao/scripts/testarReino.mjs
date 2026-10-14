@@ -186,7 +186,7 @@ try {
   console.log('7. TEST-006, caso 5: arma de outra classe; Forja comprar e fabricar')
   await irAoReino()
   await passo('Forja')
-  conferir('no alto, a trilha mostra onde se está ("Reino › Forja › Equipar")', (await aba.avaliar(`document.querySelector('.trilha')?.innerText.replace(/\s+/g, ' ') ?? ''`)) === 'Reino › Forja › Equipar', await aba.avaliar(`document.querySelector('.trilha')?.innerText ?? ''`))
+  conferir('no alto, a trilha mostra onde se está ("Reino › Forja › Equipar")', (await aba.avaliar(`document.querySelector('.trilha')?.innerText.split(String.fromCharCode(10)).map((parte) => parte.trim()).filter(Boolean).join(' ') ?? ''`)) === 'Reino › Forja › Equipar', await aba.avaliar(`document.querySelector('.trilha')?.innerText ?? ''`))
   conferir('na primeira visita, a dica curta da tela aparece', await aba.avaliar(`!!document.querySelector('.dica-da-tela')`))
   await aba.apertar('esc')
   conferir('Esc fecha a dica e fica na Forja', !(await aba.avaliar(`!!document.querySelector('.dica-da-tela')`)) && (await aba.titulo()) === 'Forja')
