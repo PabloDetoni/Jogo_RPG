@@ -69,6 +69,7 @@ import BolaMagica from '../ataques/bolaMagica.js'
 import Escudo from '../ataques/escudo.js'
 import { golpeDeEspada } from '../ataques/espada.js'
 import Flecha from '../ataques/flecha.js'
+import { DesenhoDoArco, cargaAtual, comecarAPuxar, flechaAgora, horaDeSoltar, msDeRecargaDoAtaque, multiplicadorDaVelocidade, podePuxar, puxarParaADistancia, usaArco } from '../arco.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
 import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
@@ -252,9 +253,19 @@ export default class CenaArena extends Phaser.Scene {
       habilidade3: 'THREE',
       interagir: 'E',
     })
+    // Clique: o ataque da classe. O Arqueiro (ajustes de 14/10) puxa o arco enquanto segura e atira ao soltar
     this.input.on('pointerdown', (ponteiro) => {
-      if (ponteiro.leftButtonDown() && !this.lider.caido) this.usarAtaque(this.lider, this.anguloDaMira)
+      if (!ponteiro.leftButtonDown() || this.lider.caido) return
+      if (usaArco(this.lider)) {
+        if (podePuxar(this.lider, this.agora)) comecarAPuxar(this.lider, this.agora)
+      } else this.usarAtaque(this.lider, this.anguloDaMira)
     })
+    const soltarDoLider = () => {
+      if (this.lider.puxando && this.lider.puxando.msParaSoltar === null) this.soltarFlecha(this.lider, this.anguloDaMira)
+    }
+    this.input.on('pointerup', soltarDoLider)
+    this.input.on('pointerupoutside', soltarDoLider)
+    this.desenhoDoArco = new DesenhoDoArco(this)
 
     const pararDeOuvir = [
       this.ponte.ouvir('comando', (comando) => this.executarComando(comando)),
@@ -536,6 +547,7 @@ export default class CenaArena extends Phaser.Scene {
     this.acordarOuDormir()
     for (const inimigo of [...this.inimigos]) if (!inimigo.dormindo) inimigo.atualizar(agora)
     this.boneco?.atualizar(agora)
+    this.atualizarArcos(agora)
     this.moverTodos(agora, segundos)
 
     this.projeteis = this.projeteis.filter((projetil) => {
@@ -807,7 +819,7 @@ export default class CenaArena extends Phaser.Scene {
       const empurrado = entidade.estaSendoEmpurrado(agora)
       let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
       // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
-      const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora)
+      const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora) * multiplicadorDaVelocidade(entidade) // puxando o arco, mais devagar
       if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
@@ -983,18 +995,62 @@ export default class CenaArena extends Phaser.Scene {
   usarAtaque(membro, angulo) {
     if (membro.caido || this.terminou) return false
     const agora = this.agora
-    if (!podeUsar(agora, membro.ultimoAtaque, ataques[membro.classe].recargaMs)) return false
+    if (!podeUsar(agora, membro.ultimoAtaque, msDeRecargaDoAtaque(membro, ataques[membro.classe].recargaMs))) return false
     membro.ultimoAtaque = agora
     membro.inicioDoGolpe = agora // a animação de ataque, na arte
     membro.anguloDaMira = angulo
     this.contagemDeTiros.disparados[membro.classe] = (this.contagemDeTiros.disparados[membro.classe] ?? 0) + 1
     if (membro.classe === 'guerreiro') golpeDeEspada(this, membro, angulo)
-    if (membro.classe === 'arqueiro') this.adicionarProjetil(new Flecha(this, membro, angulo))
+    // Sem puxar (um clique sem segurar), a flecha sai com a carga mínima
+    if (membro.classe === 'arqueiro') {
+      this.adicionarProjetil(new Flecha(this, membro, angulo, flechaAgora(membro, agora)))
+      membro.puxando = null
+    }
     if (membro.classe === 'mago') this.adicionarProjetil(new BolaMagica(this, membro, angulo))
     if (membro.classe === 'sacerdote') this.adicionarProjetil(new Aura(this, membro, agora))
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
     if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
+  }
+
+  // ---------- Arco que carrega (Arqueiro; ajustes de 14/10, jogo/arco.js) ----------
+
+  // Solta a flecha com a carga de agora (o Líder ao largar o clique; o aliado quando puxou o que queria)
+  soltarFlecha(membro, angulo) {
+    if (!membro.puxando || membro.caido || this.terminou) {
+      membro.puxando = null
+      return
+    }
+    const agora = this.agora
+    const flecha = flechaAgora(membro, agora)
+    membro.puxando = null
+    membro.ultimoAtaque = agora
+    membro.inicioDoGolpe = agora
+    membro.anguloDaMira = angulo
+    this.contagemDeTiros.disparados[membro.classe] = (this.contagemDeTiros.disparados[membro.classe] ?? 0) + 1
+    this.adicionarProjetil(new Flecha(this, membro, angulo, flecha))
+    if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe))
+  }
+
+  // O Arqueiro aliado começa a puxar o bastante para a distância do alvo, pelo nível da IA dele
+  puxarArcoDoAliado(aliado, distancia) {
+    if (!podePuxar(aliado, this.agora)) return
+    puxarParaADistancia(aliado, this.agora, distancia, this.perfilDaIA(aliado).id)
+  }
+
+  // A cada quadro: quem caiu para de puxar; o aliado solta na hora; o Líder solta se o clique já não está apertado
+  // (largou fora da tela ou com uma janela por cima); sem inimigo vivo, o aliado desiste. E o desenho da carga.
+  atualizarArcos(agora) {
+    const temInimigo = this.inimigos.some((inimigo) => !inimigo.morto)
+    for (const membro of this.grupo) {
+      if (!membro.puxando) continue
+      if (membro.caido) membro.puxando = null
+      else if (membro.lider) {
+        if (membro.puxando.msParaSoltar === null && !this.input.activePointer.leftButtonDown()) this.soltarFlecha(membro, this.anguloDaMira)
+      } else if (!temInimigo) membro.puxando = null
+      else if (horaDeSoltar(membro, agora)) this.soltarFlecha(membro, membro.anguloDaMira)
+    }
+    this.desenhoDoArco.atualizar(this.grupo, this.lider, this.anguloDaMira, agora)
   }
 
   // A habilidade dá para usar agora? (para a IA decidir; não avisa nada)
@@ -1743,7 +1799,8 @@ export default class CenaArena extends Phaser.Scene {
       manaMaxima: lider.manaMaxima,
       caido: lider.caido,
       segundosParaLevantar: lider.caido ? segundosRestantes(lider.caidoDesde, agora, prazoParaLevantar) : null,
-      recargaDoAtaque: fracaoDaRecarga(agora, lider.ultimoAtaque, ataques[lider.classe].recargaMs),
+      recargaDoAtaque: fracaoDaRecarga(agora, lider.ultimoAtaque, msDeRecargaDoAtaque(lider, ataques[lider.classe].recargaMs)),
+      cargaDoArco: lider.puxando ? cargaAtual(lider, agora) : null, // o arco do Arqueiro puxando (ajustes de 14/10)
       recargaDaEsquiva: fracaoDaRecarga(agora, this.ultimaEsquiva, esquiva.recargaMs),
       habilidades: lider.habilidades.map((_, indice) => recargaDe(lider, indice)),
       aliados: this.aliados.map((aliado) => ({

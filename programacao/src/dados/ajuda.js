@@ -26,7 +26,7 @@ export const dicasDasTelas = {
   lago: 'Minijogo: quando a boia afundar, clique rápido.',
   pontoPartida: 'Escolha onde o grupo começa. Mais longe é mais difícil, e a fuga custa mais.',
   preparacao: 'Escolha o Líder e o que levar na mochila. Depois, Começar partida.',
-  partida: 'WASD anda, o mouse mira e o clique ataca. Q volta ao Reino; F foge.',
+  partida: 'WASD anda, o mouse mira e o clique ataca (o Arqueiro segura o clique para carregar). Q volta ao Reino; F foge.',
   resumo: 'Como foi a partida e o que você ganhou. Só o ouro paga taxa; o XP nunca.',
 }
 

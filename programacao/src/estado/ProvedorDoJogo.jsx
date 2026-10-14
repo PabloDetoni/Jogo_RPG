@@ -269,6 +269,7 @@ export default function ProvedorDoJogo({ children }) {
       devItensDeTeste: () => despachar({ tipo: 'devItensDeTeste' }),
       devMudarNivel: (classe, quantos) => despachar({ tipo: 'devMudarNivel', classe, quantos }),
       devQuaseSubir: (classe) => despachar({ tipo: 'devQuaseSubir', classe }),
+      devDefinirAtributo: (classe, atributo, valor) => despachar({ tipo: 'devDefinirAtributo', classe, atributo, valor }),
       apagarProgressoDoConvidado: () => {
         salvadorDoConvidado.apagar()
         window.location.reload()

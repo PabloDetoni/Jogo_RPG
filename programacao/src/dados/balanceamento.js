@@ -351,6 +351,28 @@ export const combateDeTeste = {
   },
   // Grupo: distância das vagas em volta do Líder
   raioDaFormacao: 80,
+  // ARCO QUE CARREGA (Arqueiro; ajustes de 14/10, regras/arco.js). PROVISÓRIO. Segurar o clique puxa; soltar atira.
+  // - Agilidade → tempo da carga cheia: msMinimoParaCarregar + (msParaCarregarSemAgilidade − mínimo) × (1 − agi/100)^curva
+  //   (linear e suave, nunca abaixo do mínimo); a recarga depois de soltar é fracaoDaRecarga desse tempo;
+  // - Força → dano da carga cheia: danoBase + danoPorForca × Força; carga zero dá fracaoMinimaDoDano dele;
+  // - alcance de fracaoMinimaDoAlcance × alcanceMaximo (carga zero) até alcanceMaximo; velocidade de mínima a máxima;
+  // - puxando, quem atira anda com multiplicadorDaVelocidadePuxando da velocidade;
+  // - ia: o Arqueiro aliado (folga no alcance, erro da média, a básica às vezes pouco e às vezes demais).
+  arco: {
+    msParaCarregarSemAgilidade: 1100,
+    msMinimoParaCarregar: 450,
+    curvaDaAgilidade: 1, // 1 = linha reta: cada ponto tira o mesmo tanto (6,5 ms), até o mínimo no 100
+    fracaoDaRecarga: 0.6,
+    danoBase: 26,
+    danoPorForca: 1.2,
+    fracaoMinimaDoDano: 0.3,
+    alcanceMaximo: 700,
+    fracaoMinimaDoAlcance: 0.35,
+    velocidadeMinima: 450,
+    velocidadeMaxima: 1000,
+    multiplicadorDaVelocidadePuxando: 0.55,
+    ia: { folgaDoAlcance: 1.1, erroDaMedia: 0.15, chanceDePoucoDaBasica: 0.5, poucoDaBasica: [0.3, 0.75], msDemaisDaBasica: [250, 700] },
+  },
   // Corpo que colide (ajustes de 14/10, pedido do Pablo: os personagens se esbarravam demais): bem menor que o desenho,
   // no meio dele. Meio lado = fracaoDoTamanho × tamanho do desenho (40 → 12,8 px, um quadrado de 25,6 px). A área que
   // recebe golpes continua do tamanho do desenho (Entidade.retangulo). PROVISÓRIO.
@@ -377,6 +399,8 @@ export const combateDeTeste = {
   // Ataque de teste de cada classe (clique esquerdo). "empurrao" = velocidade do empurrão no alvo
   ataques: {
     guerreiro: { dano: 25, alcance: 70, aberturaGraus: 120, recargaMs: 400, empurrao: 260 },
+    // Arqueiro (ajustes de 14/10): o dano, a velocidade e a recarga da flecha vêm do arco que carrega (arco, abaixo);
+    // daqui ficam o tamanho da flecha, o empurrão e o alcance que a IA usa para se posicionar (o máximo do arco)
     arqueiro: { dano: 18, velocidade: 900, alcance: 700, raio: 5, recargaMs: 350, empurrao: 140 },
     mago: {
       dano: 30,

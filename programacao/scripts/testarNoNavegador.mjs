@@ -276,6 +276,18 @@ async function atacarEm(x, y) {
   await clicarNaTela(p.x, p.y)
 }
 
+// Segura o clique por "ms" mirando num ponto da arena e solta (o arco do Arqueiro carrega enquanto segura; ajustes de 14/10)
+async function atirarCarregado(x, y, ms) {
+  const p = await naTela(x, y)
+  await moverMouse(p.x, p.y)
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', x: p.x, y: p.y, button: 'left', buttons: 1, clickCount: 1 })
+  await pausa(ms)
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', x: p.x, y: p.y, button: 'left', buttons: 0, clickCount: 1 })
+  await pausa(60)
+}
+// A última flecha que saiu: dano, alcance e velocidade
+const ultimaFlecha = () => cena(`(() => { const f = c.projeteis.filter((p) => p.constructor.name === 'Flecha').at(-1); return f ? { dano: f.dano, alcance: f.alcance, velocidade: Math.round(Math.hypot(f.vx, f.vy)) } : null })()`)
+
 const textoDe = (seletor) => avaliar(`document.querySelector(${JSON.stringify(seletor)})?.innerText ?? ''`)
 
 // Quem está em cima de quem: pares de corpos (Líder, aliados, inimigos) que entram mais de "folga" px um no outro. Desde
@@ -555,11 +567,34 @@ try {
   await clicar('Arqueiro')
   await pausa(3200)
   await colocarLider(420, 650)
+  // Arco que carrega (ajustes de 14/10): o boneco está a 360 px; o clique rápido não chega, a flecha carregada chega
   await atacarEm(420, 290)
+  const rapida = await ultimaFlecha()
+  await pausa(900)
+  conferir('Arco: o clique rápido solta uma flecha curta (uns 35% do alcance), que não chega ao boneco a 360 px', rapida && rapida.alcance >= 245 && rapida.alcance <= 280 && (await vidaDoBoneco()) === 300, { rapida, boneco: await vidaDoBoneco() })
+  await atirarCarregado(420, 290, 1600)
+  const cheia = await ultimaFlecha()
   await pausa(40)
   await print('04-arqueiro-flecha')
-  await pausa(500)
-  conferir('Arqueiro: a flecha acerta o boneco', (await vidaDoBoneco()) < 300, await vidaDoBoneco())
+  await pausa(600)
+  conferir('Arco: carregada cheia, a flecha vai até o alcance máximo, mais rápida, e acerta o boneco', cheia && cheia.alcance === 700 && cheia.velocidade > rapida.velocidade && (await vidaDoBoneco()) < 300, { cheia, boneco: await vidaDoBoneco() })
+  conferir('Arco: a carga mínima dá uns 30% do dano da cheia', rapida && cheia && rapida.dano / cheia.dano >= 0.25 && rapida.dano / cheia.dano <= 0.35, { rapida: rapida?.dano, cheia: cheia?.dano })
+  // Puxando, o HUD mostra a carga e o Arqueiro anda mais devagar
+  await colocarLider(300, 430)
+  await pausa(700)
+  await moverMouse(...Object.values(await naTela(700, 430)))
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', ...(await naTela(700, 430)), button: 'left', buttons: 1, clickCount: 1 })
+  await pausa(300)
+  conferir('Arco: puxando, o HUD enche o ícone do ataque com a carga', await avaliar(`!!document.querySelector('.hud-espaco-carregando')`))
+  const antesPuxando = await cena(`c.lider.x`)
+  await segurar(['d'], 500)
+  const andouPuxando = (await cena(`c.lider.x`)) - antesPuxando
+  await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', ...(await naTela(700, 430)), button: 'left', buttons: 0, clickCount: 1 })
+  await pausa(700)
+  const antesNormal = await cena(`c.lider.x`)
+  await segurar(['d'], 500)
+  const andouNormal = (await cena(`c.lider.x`)) - antesNormal
+  conferir('Arco: puxando, o Arqueiro anda mais devagar (uns 55% da velocidade)', andouPuxando > 0 && andouPuxando < andouNormal * 0.75, { puxando: Math.round(andouPuxando), normal: Math.round(andouNormal) })
   await clicar('Sacerdote')
   await cena(`(c.lider.vida = 30, true)`)
   await colocarLider(300, 430)
@@ -848,8 +883,10 @@ try {
   let arqueiroLonge = 0
   let amostras = 0
   let comSobreposicao = 0
+  let arqueiroPuxou = false
   for (let i = 0; i < 30; i++) {
     await colocarLider(420, 450)
+    arqueiroPuxou ||= await cena(`!!${membro('arqueiro')}?.puxando`)
     const amostra = await cena(`(() => {
       const tanque = ${membro('tanque')}, arqueiro = ${membro('arqueiro')}
       const vivos = c.inimigos.filter(i => !i.morto)
@@ -870,6 +907,7 @@ try {
     await pausa(200)
   }
   conferir('os mobs miram o Tanque na maior parte do tempo', perseguindo > 0 && noTanque / perseguindo >= 0.5, { noTanque, perseguindo })
+  conferir('o Arqueiro aliado também puxa o arco antes de atirar (ajustes de 14/10)', arqueiroPuxou)
   conferir('o Arqueiro não encosta nos mobs (≥ 90% do tempo a mais de 70 px)', amostras === 0 || arqueiroLonge / amostras >= 0.9, { arqueiroLonge, amostras })
   conferir('os aliados lutam: os mobs perdem vida', (await vidaDosMobs()) < vidaInicialDosMobs, { antes: vidaInicialDosMobs, depois: await vidaDosMobs() })
   conferir('lutando, quase nunca alguém fica em cima de alguém (≤ 10% das amostras)', comSobreposicao <= 3, comSobreposicao)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { contratarTodasAsClasses, mudarNivel, quaseSubir, itensDeTeste, ouroDeTeste, pontosDeTeste } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, definirAtributo, mudarNivel, quaseSubir, itensDeTeste, ouroDeTeste, pontosDeTeste } from './ferramentasDeDev.js'
 import { itemDoCatalogo } from '../dados/itens.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 
@@ -45,5 +45,17 @@ describe('itens de teste (Fase 4, só no npm run dev)', () => {
     const [mago] = itensDeTeste(antes).personagens
     expect(mago.pontosDeAtributo).toBe(pontosDeTeste.atributo)
     expect(mago.pontosDeHabilidade).toBe(pontosDeTeste.habilidade)
+  })
+})
+
+describe('atributo pelo painel DEV (ajustes de 14/10: o arco com Agilidade baixa e alta)', () => {
+  it('põe a Agilidade entre 1 e o máximo, só no personagem pedido', () => {
+    const progresso = { ...progressoInicial(), personagens: [novoPersonagem('arqueiro'), novoPersonagem('mago')] }
+    const alta = definirAtributo(progresso, 'arqueiro', 'agilidade', 100)
+    expect(alta.personagens[0].atributos.agilidade).toBe(100)
+    expect(alta.personagens[1]).toEqual(progresso.personagens[1])
+    expect(definirAtributo(progresso, 'arqueiro', 'agilidade', 500).personagens[0].atributos.agilidade).toBe(100)
+    expect(definirAtributo(progresso, 'arqueiro', 'agilidade', -3).personagens[0].atributos.agilidade).toBe(1)
+    expect(definirAtributo(progresso, 'arqueiro', 'sorte', 5)).toEqual(progresso)
   })
 })

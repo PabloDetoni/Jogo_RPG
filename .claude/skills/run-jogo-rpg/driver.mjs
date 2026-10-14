@@ -8,6 +8,7 @@
 //   tecla:<nome>       aperta uma tecla (w a s d e f q r m tab espaco esc um setaCima setaBaixo)
 //   segurar:<t>:<ms>   segura uma tecla por <ms> milissegundos
 //   mouse:<x>:<y>      clica nesse ponto da tela (pixels da janela de 1366x768)
+//   segurarMouse:<x>:<y>:<ms>[:print]  aperta o botão do mouse por <ms> (com :print, continua apertado; solte com soltarMouse:<x>:<y>)
 //   esperar:<ms>       espera
 //   tela:<título>      espera a tela com esse título (.tela .titulo)
 //   eval:<js>          roda JS na página e mostra o resultado (window.__jogoDaPartida existe na partida)
@@ -44,6 +45,16 @@ try {
     else if (nome === 'tecla') await aba.apertar(valor)
     else if (nome === 'segurar') await aba.segurar([resto[0]], Number(resto[1]))
     else if (nome === 'mouse') await aba.clicarNaTela(Number(resto[0]), Number(resto[1]))
+    else if (nome === 'segurarMouse') {
+      const [x, y, ms] = resto.map(Number)
+      await aba.moverMouse(x, y)
+      await aba.cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 })
+      await pausa(ms)
+      if (resto[3] !== 'print') await aba.cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 })
+    } else if (nome === 'soltarMouse') {
+      const [x, y] = resto.map(Number)
+      await aba.cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 })
+    }
     else if (nome === 'esperar') await pausa(Number(valor))
     else if (nome === 'tela') await aba.esperarTela(valor, 15000)
     else if (nome === 'eval') console.log(JSON.stringify(await aba.avaliar(valor)))

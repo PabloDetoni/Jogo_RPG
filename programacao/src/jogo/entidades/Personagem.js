@@ -72,6 +72,10 @@ export default class Personagem extends Entidade {
     this.usarArte(membro.classe)
     this.nivel = membro.nivel ?? 1 // decide a IA quando é aliado
     this.chanceDeCritico = membro.chanceDeCritico ?? 0 // pela Agilidade (regras/combate.js)
+    // Força e Agilidade: o arco do Arqueiro (ajustes de 14/10, regras/arco.js) usa as duas
+    this.forca = membro.forca ?? 0
+    this.agilidade = membro.agilidade ?? 0
+    this.puxando = null
     this.defesa = membro.defesa ?? 0 // do equipamento (Fase 4): tira uma parte do dano recebido
     this.reducaoDeRecarga = membro.reducaoDeRecarga ?? 0 // do equipamento (Fase 4): recargas mais curtas
     this.vidaMaxima = membro.vidaMaxima

@@ -4,7 +4,7 @@
 export const controlesDoJogo = [
   { teclas: ['W', 'A', 'S', 'D'], acao: 'Andar' },
   { teclas: ['Mouse'], acao: 'Mirar' },
-  { teclas: ['Clique'], acao: 'Atacar' },
+  { teclas: ['Clique'], acao: 'Atacar. Arqueiro: segure para puxar o arco (vai mais longe, mais rápido e bate mais forte) e solte para atirar' },
   { teclas: ['Espaço'], acao: 'Esquivar (só o Líder): para onde anda; parado, para a mira' },
   { teclas: ['1', '2', '3'], acao: 'Habilidades (gastam mana e têm recarga)' },
   { teclas: ['E'], acao: 'Pegar o item do chão perto do Líder' },

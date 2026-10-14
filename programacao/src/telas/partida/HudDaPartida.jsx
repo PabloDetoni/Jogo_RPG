@@ -93,7 +93,7 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
           </div>
         )}
         <div className="hud-barra-de-acoes">
-          <Espaco tecla="Clique" nome="Ataque" recarga={situacao.recargaDoAtaque} carga={situacao.cargaDoArco} />
+          <Espaco tecla="Clique" nome={situacao.classe === 'arqueiro' ? 'Arco (segure)' : 'Ataque'} recarga={situacao.recargaDoAtaque} carga={situacao.cargaDoArco ?? null} />
           <Espaco tecla="Espaço" nome="Esquiva" recarga={situacao.recargaDaEsquiva} />
           {situacao.habilidades.map((habilidade, indice) => (
             <Espaco

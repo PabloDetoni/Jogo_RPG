@@ -4,6 +4,7 @@ import { nivelInicial, nivelMaximo } from '../dados/regras.js'
 import { porNaMochila } from '../regras/mochila.js'
 import { xpParaSubir } from '../regras/xp.js'
 import { novoPersonagem } from './progresso.js'
+import { atributoMaximo } from '../dados/balanceamento.js'
 
 // SÓ PARA TESTAR (painel "</> DEV", que existe só no npm run dev). Mexem no progresso fora da partida, para ver a IA
 // mudar com o nível sem jogar horas. O jogo de verdade nunca chama estas funções: a ação do estado que usa cada
@@ -34,6 +35,15 @@ export function mudarNivel(progresso, classe, quantos) {
     nivel: Math.min(nivelMaximo, Math.max(nivelInicial, personagem.nivel + quantos)),
     xp: 0,
   }))
+}
+
+// Põe um atributo num valor (ajustes de 14/10: testar o arco do Arqueiro com Agilidade baixa e alta), entre 1 e o máximo
+export function definirAtributo(progresso, classe, atributo, valor) {
+  return mudarPersonagem(progresso, classe, (personagem) =>
+    personagem.atributos?.[atributo] === undefined
+      ? personagem
+      : { ...personagem, atributos: { ...personagem.atributos, [atributo]: Math.min(atributoMaximo, Math.max(1, Math.round(valor))) } },
+  )
 }
 
 // Deixa o personagem a 1 ponto de XP do próximo nível: o primeiro monstro da partida já o faz subir

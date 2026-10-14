@@ -2976,3 +2976,8 @@ button.slot:hover {
     transition: none;
   }
 }
+
+/* Arco do Arqueiro puxando (ajustes de 14/10): o ícone do ataque enche de baixo para cima com a carga */
+.hud-espaco-carregando .hud-espaco-icone {
+  background: linear-gradient(to top, rgb(255 212 59 / 0.85) calc(var(--carga) * 100%), rgb(12 18 28 / 0.85) 0);
+}

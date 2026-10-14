@@ -28,7 +28,8 @@ function numerosDoMembro(atributosSemEquipamento, equipamento = {}, arvore = {})
   return {
     defesa: defesa + passivas.defesa,
     reducaoDeRecarga,
-    forca: atributos.forca ?? 0, // a capacidade da mochila da partida sai da Força do grupo (RF33)
+    forca: atributos.forca ?? 0, // a capacidade da mochila da partida sai da Força do grupo (RF33); o dano do arco também
+    agilidade: atributos.agilidade ?? 0, // o tempo para carregar o arco (ajustes de 14/10, regras/arco.js)
     vidaMaxima: Math.round(vidaMaximaPelaVitalidade(atributos.vitalidade) * (1 + passivas.vida)),
     manaMaxima: manaMaxima(atributos.inteligencia),
     manaPorSegundo: manaPorSegundo(atributos.sabedoria) * (1 + passivas.mana),

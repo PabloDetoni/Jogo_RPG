@@ -187,6 +187,16 @@ function Personagens() {
               Quase subir
             </button>
           </span>
+          {/* Ajustes de 14/10: para testar o arco que carrega com Agilidade baixa e alta */}
+          <span>
+            Agi {personagem.atributos?.agilidade ?? '?'}:{' '}
+            <button type="button" disabled={naPartida} onClick={() => acoes.devDefinirAtributo(personagem.classe, 'agilidade', 5)} title="Agilidade 5 (o arco carrega devagar)">
+              Agi 5
+            </button>
+            <button type="button" disabled={naPartida} onClick={() => acoes.devDefinirAtributo(personagem.classe, 'agilidade', 100)} title="Agilidade 100 (o arco carrega no tempo mínimo)">
+              Agi 100
+            </button>
+          </span>
         </div>
       ))}
     </details>

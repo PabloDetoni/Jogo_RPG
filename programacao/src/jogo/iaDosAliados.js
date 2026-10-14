@@ -358,7 +358,11 @@ function atirarDeLonge(aliado, plano, contexto) {
 
   aliado.anguloDaMira = anguloEntre(aliado, alvo)
   const podeAtirar = livre || !plano.respeitaLinha
-  if (podeAtirar && distancia(aliado, alvo) <= plano.alcance) cena.usarAtaque(aliado, aliado.anguloDaMira)
+  // O Arqueiro puxa o arco o bastante para a distância (ajustes de 14/10; a IA decide quanto) e solta sozinho
+  if (podeAtirar && distancia(aliado, alvo) <= plano.alcance) {
+    if (arqueiro) cena.puxarArcoDoAliado(aliado, distancia(aliado, alvo))
+    else cena.usarAtaque(aliado, aliado.anguloDaMira)
+  }
   // Habilidades: o Tiro perfurante também para em pedra; o Meteoro cai do céu
   if (arqueiro && podeAtirar) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))
   if (!arqueiro && alvo.quantos >= 2 && distancia(aliado, alvo) <= habilidades.mago.alcance) cena.usarHabilidadeDaRaiz(aliado, mirandoEm(aliado, alvo))

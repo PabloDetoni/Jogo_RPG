@@ -8,7 +8,7 @@ import { aplicarNoReino } from '../regras/reino.js'
 import { capacidadeDaPartida } from '../regras/grupoDaPartida.js'
 import { ajustarLevar, deixarNoReino, levarNaPartida } from '../regras/mochila.js'
 import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
-import { contratarTodasAsClasses, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
+import { contratarTodasAsClasses, definirAtributo, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 import { dicasDasTelas } from '../dados/ajuda.js'
@@ -191,6 +191,7 @@ function ferramentaDeDev(estado, acao) {
     devContratarTodas: (progresso) => contratarTodasAsClasses(progresso),
     devMudarNivel: (progresso) => mudarNivel(progresso, acao.classe, acao.quantos),
     devQuaseSubir: (progresso) => quaseSubir(progresso, acao.classe),
+    devDefinirAtributo: (progresso) => definirAtributo(progresso, acao.classe, acao.atributo, acao.valor),
     devItensDeTeste: (progresso) => itensDeTeste(progresso),
   }
   return pedirSalvamento({ ...estado, progresso: ferramentas[acao.tipo](estado.progresso) })
@@ -426,6 +427,7 @@ function atualizarSemConquistas(estado, acao) {
     case 'devContratarTodas':
     case 'devMudarNivel':
     case 'devQuaseSubir':
+    case 'devDefinirAtributo':
     case 'devItensDeTeste':
       return ferramentaDeDev(estado, acao)
 
