@@ -22,7 +22,7 @@ export function descartar(progresso, id, quantidade = 1) {
   if (!quantidadeValida(quantidade)) return { ok: false, motivo: 'Quantidade inválida.' }
   const tirou = tirarDaMochila(progresso.mochila, { [id]: quantidade })
   if (!tirou.ok) return { ok: false, motivo: `Você não tem ${quantidade} ${nomeDoItem(id)} na Mochila.` }
-  return { ok: true, progresso: { ...progresso, mochila: tirou.mochila }, mensagem: `${quantidade} ${nomeDoItem(id)} descartado${quantidade > 1 ? 's' : ''}.` }
+  return { ok: true, progresso: { ...progresso, mochila: tirou.mochila }, mensagem: `Você descartou ${quantidade} ${nomeDoItem(id)} · ${quantidade > 1 ? 'sumiram' : 'sumiu'} da Mochila` }
 }
 
 // Todas as operações pelo nome

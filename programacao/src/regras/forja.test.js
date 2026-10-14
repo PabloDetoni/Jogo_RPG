@@ -17,7 +17,7 @@ describe('Forja: equipar (TASK-075)', () => {
     const troca = equipar(p, 'guerreiro', 'elmoDeFerro')
     expect(troca.progresso.personagens[0].equipamento).toEqual({ capacete: 'elmoDeFerro' })
     expect(troca.progresso.mochila).toEqual([{ id: 'capuzDeCouro', quantidade: 1 }])
-    expect(troca.mensagem).toBe('Guerreiro equipou Elmo de ferro (Capuz de couro voltou para a Mochila).')
+    expect(troca.mensagem).toBe('Guerreiro equipou Elmo de ferro · Capuz de couro voltou para a Mochila')
   })
 
   it('critério do card: arma de Mago no Guerreiro não dá', () => {

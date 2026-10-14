@@ -45,7 +45,7 @@ describe('missões no Reino (TASK-078)', () => {
   it('aceitar do quadro guarda só o que o save precisa, com o progresso em zero', () => {
     const r = aceitarMissaoDoQuadro(base(), 'cacarLobos')
     expect(r.progresso.missaoAtiva).toEqual({ id: 'cacarLobos', tipo: 'matar', alvo: 'lobo', quantidade: 8, recompensa: { ouro: 80, xp: 120 }, progresso: 0 })
-    expect(r.mensagem).toBe('Missão aceita: Caçar lobos. O progresso conta a partir de agora.')
+    expect(r.mensagem).toBe('Você aceitou a missão Caçar lobos · o progresso conta a partir de agora')
     expect(aceitarMissaoDoQuadro(r.progresso, 'aranhasNoCaminho').ok).toBe(false) // uma por vez
     expect(aceitarMissaoDoQuadro(base(), 'naoExiste').ok).toBe(false)
   })
@@ -60,7 +60,7 @@ describe('missões no Reino (TASK-078)', () => {
     const entregue = entregarMissaoNaGuilda(p)
     expect(entregue.progresso.ouro).toBe(85)
     expect(entregue.progresso.missaoAtiva).toBeNull()
-    expect(entregue.mensagem).toContain('+80 de ouro e 100 XP')
+    expect(entregue.mensagem).toContain('+80 de ouro · +100 XP')
   })
 
   it('coletar conta o que foi pego; explorar, a área visitada depois de aceitar', () => {
@@ -85,7 +85,7 @@ describe('missões no Reino (TASK-078)', () => {
     const r = abandonarMissaoNaGuilda(p)
     expect(r.progresso.ouro).toBe(0)
     expect(r.progresso.missaoAtiva).toBeNull()
-    expect(r.mensagem).toBe('Missão abandonada. Multa: 40 de ouro.')
+    expect(r.mensagem).toBe('Você abandonou a missão · −40 de ouro de multa')
   })
 })
 

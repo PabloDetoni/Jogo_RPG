@@ -10,6 +10,7 @@ import { itemDoCatalogo, itens } from '../dados/itens.js'
 import { ofertasFixas, ofertasRotativas, trocas } from '../dados/mercado.js'
 import { dadosDosMinijogos } from '../dados/minijogos.js'
 import { floresta } from '../dados/mundo/floresta.js'
+import { telas } from '../dados/telas.js'
 import { atributosComEquipamento, bonusDoEquipamento, podeEquipar } from './equipamento.js'
 
 // O item passa no filtro? (o tipo ou a raridade está na lista do filtro; "todos" deixa tudo)
@@ -106,4 +107,40 @@ export function registrarItensVistos(progresso) {
 // Uma cor de dados/ (número, como 0xd9604c) como cor de CSS ("#d9604c")
 export function corCss(numero) {
   return Number.isInteger(numero) ? `#${numero.toString(16).padStart(6, '0')}` : undefined
+}
+
+// ---------- Trilha e Esc (ajustes de 14/10/2026) ----------
+
+// A tela de cima (dados/telas.js, "pai"): para onde o Voltar e o Esc levam. '*' é a tela de onde se veio. null: o Esc não
+// sai desta tela (Tela inicial, Reino, partida, a narrativa e a escolha da classe do começo).
+export function telaDeCima(tela, anteriores = []) {
+  const pai = telas[tela]?.pai ?? null
+  if (pai !== '*') return pai
+  const anterior = anteriores.at(-1)
+  return anterior && anterior !== tela ? anterior : 'reino'
+}
+
+// A trilha do alto da tela, da de cima para a atual: [{ id, nome }] (a última é a atual). "aba" (a aba aberta, como
+// "Equipar") entra no fim, sem id. Nunca passa de 5 passos (protege de um ciclo nos dados).
+export function trilhaDaTela(tela, anteriores = [], aba = null) {
+  if (!telas[tela]) return []
+  const trilha = [{ id: tela, nome: telas[tela].nome }]
+  let atual = tela
+  let resto = anteriores
+  for (let passo = 0; passo < 5; passo++) {
+    const pai = telaDeCima(atual, resto)
+    if (!pai || !telas[pai] || trilha.some((item) => item.id === pai)) break
+    trilha.unshift({ id: pai, nome: telas[pai].nome })
+    // Ao subir pelo '*', o caminho de antes também sobe um passo
+    resto = telas[atual].pai === '*' ? resto.slice(0, -1) : resto
+    atual = pai
+  }
+  if (aba) trilha.push({ id: null, nome: aba })
+  return trilha
+}
+
+// A dica da primeira visita aparece? (a tela tem dica e ainda não foi fechada neste navegador, ou o "?" reabriu)
+export function dicaVisivel(tela, dicasVistas = [], reaberta = null, temDica = true) {
+  if (!temDica) return false
+  return reaberta === tela || !dicasVistas.includes(tela)
 }

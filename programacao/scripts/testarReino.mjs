@@ -150,6 +150,7 @@ try {
   await passo('Comprar por 25', true)
   const recomprou = await salvo()
   conferir('recomprar desconta o preço cheio e a poção volta', recomprou.ouro === vendeu.ouro - 25 && quantos(recomprou, 'pocaoDeVida') === quantos(antesDeVender, 'pocaoDeVida'), { ouro: recomprou.ouro })
+  conferir('a compra confirma o que aconteceu ("Você comprou 1 Poção de vida · −25 de ouro")', await mensagem().then((texto) => texto.includes('Você comprou 1 Poção de vida · −25 de ouro')), await mensagem())
   await aba.print('01-mercado')
 
   console.log('5. TEST-006, caso 3: missão de entrega depois de vender os itens')
@@ -185,6 +186,13 @@ try {
   console.log('7. TEST-006, caso 5: arma de outra classe; Forja comprar e fabricar')
   await irAoReino()
   await passo('Forja')
+  conferir('no alto, a trilha mostra onde se está ("Reino › Forja › Equipar")', (await aba.avaliar(`document.querySelector('.trilha')?.innerText.replace(/\s+/g, ' ') ?? ''`)) === 'Reino › Forja › Equipar')
+  conferir('na primeira visita, a dica curta da tela aparece', await aba.avaliar(`!!document.querySelector('.dica-da-tela')`))
+  await aba.apertar('esc')
+  conferir('Esc fecha a dica e fica na Forja', !(await aba.avaliar(`!!document.querySelector('.dica-da-tela')`)) && (await aba.titulo()) === 'Forja')
+  await passo('?')
+  conferir('o "?" reabre a dica', await aba.avaliar(`!!document.querySelector('.dica-da-tela')`))
+  await passo('Entendi')
   const arcosAntes = quantos(await salvo(), 'arcoDeCaca')
   await aba.avaliar(`(() => { document.querySelector('button[aria-label^="Arma:"]').click(); return true })()`)
   await pausa(200)
@@ -224,6 +232,9 @@ try {
     { mensagem: await mensagem() },
   )
   await aba.print('02-forja')
+  await aba.apertar('esc')
+  await pausa(200)
+  conferir('Esc faz o mesmo que o Voltar: da Forja ao Reino', (await aba.titulo()) === 'Reino')
 
   console.log('8. Árvores: atributos e habilidades')
   await irAoReino()

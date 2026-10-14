@@ -188,6 +188,8 @@ export default function ProvedorDoJogo({ children }) {
       voltar: () => despachar({ tipo: 'voltar' }),
       abrirJanela: (janela) => despachar({ tipo: 'abrirJanela', janela }),
       fecharJanela: () => despachar({ tipo: 'fecharJanela' }),
+      fecharDica: () => despachar({ tipo: 'fecharDica' }),
+      reabrirDica: () => despachar({ tipo: 'reabrirDica' }),
       fecharAviso: (id) => despachar({ tipo: 'fecharAviso', id }),
 
       // RF01: uma aba por navegador no modo convidado; o progresso vem do navegador (HU01)

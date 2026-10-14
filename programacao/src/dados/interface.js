@@ -18,6 +18,7 @@ export const acoes = {
   usar: { nome: 'Usar', cor: '#d6336c', simbolo: '♥', significado: 'usar um item' },
   levar: { nome: 'Levar', cor: '#1098ad', simbolo: '→', significado: 'da Mochila do Reino para a da partida' },
   aplicar: { nome: 'Aplicar', cor: '#5c940d', simbolo: '+', significado: 'fixar pontos e escolhas' },
+  jogar: { nome: 'Jogar', cor: '#4263eb', simbolo: '▶', significado: 'começar a partida ou a rodada' },
 }
 
 // Cor da borda de cada raridade (o nome fica no detalhe do item)

@@ -12,7 +12,11 @@ import {
   ordenarItens,
   origensDoItem,
   registrarItensVistos,
+  dicaVisivel,
+  telaDeCima,
+  trilhaDaTela,
 } from './interface.js'
+import { dicasDasTelas } from '../dados/ajuda.js'
 
 const arqueiro = {
   classe: 'arqueiro',
@@ -126,5 +130,47 @@ describe('interface: Catálogo (de onde vem e o que já foi visto)', () => {
     const vendeu = registrarItensVistos({ ...visto, mochila: [] })
     expect(vendeu).toBe(registrarItensVistos(vendeu)) // nada novo: o mesmo objeto
     expect(vendeu.itensVistos).toContain('madeira')
+  })
+})
+
+describe('trilha, Esc e dica da primeira visita (ajustes de 14/10)', () => {
+  it('a trilha vai do Reino até a tela e a aba aberta', () => {
+    expect(trilhaDaTela('forja', [], 'Equipar').map((passo) => passo.nome)).toEqual(['Reino', 'Forja', 'Equipar'])
+    expect(trilhaDaTela('preparacao').map((passo) => passo.nome)).toEqual(['Reino', 'Mapa', 'Preparação'])
+    expect(trilhaDaTela('fazenda').map((passo) => passo.id)).toEqual(['reino', 'mapa', 'fazenda'])
+    expect(trilhaDaTela('criarConta').map((passo) => passo.id)).toEqual(['telaInicial', 'login', 'criarConta'])
+    expect(trilhaDaTela('reino')).toEqual([{ id: 'reino', nome: 'Reino' }])
+  })
+
+  it('o Salão da Glória fica embaixo da tela de onde se veio', () => {
+    expect(trilhaDaTela('salaoGloria', ['reino', 'forja']).map((passo) => passo.id)).toEqual(['reino', 'forja', 'salaoGloria'])
+    expect(trilhaDaTela('salaoGloria', ['telaInicial']).map((passo) => passo.id)).toEqual(['telaInicial', 'salaoGloria'])
+    expect(telaDeCima('salaoGloria', ['reino', 'mapa'])).toBe('mapa')
+    expect(telaDeCima('salaoGloria', [])).toBe('reino')
+  })
+
+  it('o Esc vai para a mesma tela do Voltar; Tela inicial, Reino e partida não têm tela de cima', () => {
+    expect(telaDeCima('mercado')).toBe('reino')
+    expect(telaDeCima('preparacao')).toBe('mapa')
+    expect(telaDeCima('lago')).toBe('mapa')
+    expect(telaDeCima('login')).toBe('telaInicial')
+    expect(telaDeCima('resumo')).toBe('reino')
+    for (const tela of ['telaInicial', 'reino', 'partida', 'cutsceneDerrota', 'narrativaInicial', 'selecaoClasse']) expect(telaDeCima(tela), tela).toBe(null)
+  })
+
+  it('toda tela fora da partida tem uma dica curta (uma ou duas frases)', () => {
+    for (const [id, tela] of Object.entries(telas)) {
+      if (tela.naPartida && id !== 'partida') continue
+      expect(dicasDasTelas[id], id).toBeTruthy()
+      expect(dicasDasTelas[id].length, id).toBeLessThanOrEqual(160)
+    }
+  })
+
+  it('a dica aparece na primeira visita e some depois de fechada; o "?" reabre', () => {
+    expect(dicaVisivel('forja', [])).toBe(true)
+    expect(dicaVisivel('forja', ['forja'])).toBe(false)
+    expect(dicaVisivel('forja', ['forja'], 'forja')).toBe(true)
+    expect(dicaVisivel('forja', ['forja'], 'mercado')).toBe(false)
+    expect(dicaVisivel('forja', [], null, false)).toBe(false)
   })
 })

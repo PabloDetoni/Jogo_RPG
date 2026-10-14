@@ -7,6 +7,8 @@
 export const posicoes = {
   // Valem para todas as telas
   titulo: { x: 50, y: 11 },
+  trilha: { x: 50, y: 3.6 }, // "Reino › Forja › Equipar" (ajustes de 14/10)
+  dica: { x: 50, y: 22 }, // a dica da primeira visita, logo abaixo do título
   cantos: {
     salaoGloria: { x: 9, y: 11 },
     configuracoes: { x: 93, y: 11 },

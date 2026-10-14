@@ -37,7 +37,7 @@ describe('comprar, vender e trocar (TASK-074)', () => {
     const resultado = comprarNoMercado(com({ ouro: 100 }), 'pocaoDeVida', 2)
     expect(resultado.progresso.ouro).toBe(50)
     expect(resultado.progresso.mochila).toEqual([{ id: 'pocaoDeVida', quantidade: 2 }])
-    expect(resultado.mensagem).toBe('Comprou 2 Poção de vida por 50 de ouro.')
+    expect(resultado.mensagem).toBe('Você comprou 2 Poção de vida · −50 de ouro')
   })
 
   it('não compra o que não está à venda agora (rotativa de outra rodada ou equipamento)', () => {
@@ -58,7 +58,7 @@ describe('comprar, vender e trocar (TASK-074)', () => {
   it('critério do card: 3 peles e a troca de 3 por 1 → recebe o item e as peles saem da Mochila', () => {
     const resultado = trocarNoMercado(com({ mochila: [{ id: 'peleDeLobo', quantidade: 3 }] }), 'pelesPorPresa')
     expect(resultado.progresso.mochila).toEqual([{ id: 'presaDeJavali', quantidade: 1 }])
-    expect(resultado.mensagem).toBe('Trocou 3 Pele de lobo por 1 Presa de javali.')
+    expect(resultado.mensagem).toBe('Você trocou 3 Pele de lobo · recebeu 1 Presa de javali')
   })
 
   it('troca sem os itens diz o que falta; troca que não existe não muda nada', () => {

@@ -14,7 +14,11 @@ A ideia: quem não programou o jogo tem que entender, só de olhar, o que cada t
   - verde com ▲ quando melhora, vermelho com ▼ quando piora.
 - **Botão que não dá para usar fica apagado e diz o motivo logo embaixo**, em vermelho. Exemplos: "Ouro insuficiente: custa 300 e você tem 0.", "Espada curta é só para Guerreiro.", "Falta 1 Pele de lobo.". O motivo é o mesmo que a regra do jogo daria.
 - **Tela vazia explica o que fazer.** Exemplo: "Sua mochila está vazia. Itens vêm das partidas (aperte E perto deles), dos minijogos e do Mercado."
-- **Toda tela tem um "?" no canto de cima**, ao lado de Configurações. Ele abre "Como funciona", uma explicação curta (os textos ficam em `programacao/src/dados/ajuda.js`). Esc fecha.
+- **No alto de cada tela, a trilha mostra onde a pessoa está** ("Reino › Forja › Equipar"; ajustes de 14/10). Cada passo de cima é clicável e leva até ele. A tela de cima de cada uma fica em `programacao/src/dados/telas.js` (`pai`).
+- **Voltar e Esc fazem a mesma coisa em todo lugar** (ajustes de 14/10): o Esc fecha a janela aberta; sem janela, fecha a dica; sem dica, vai para a tela de cima da trilha (a mesma do botão Voltar). Na partida, o Esc continua sendo a pausa. Na Tela inicial, no Reino e nas telas do começo (narrativa, escolha da classe), o Esc não sai.
+- **Na primeira vez em cada tela, uma dica curta e fechável diz para que ela serve** (ajustes de 14/10; textos em `dicasDasTelas`, `programacao/src/dados/ajuda.js`). "Entendi" ou Esc fecham; ela não volta sozinha naquele navegador.
+- **Toda tela tem um "?" no canto de cima**, ao lado de Configurações. Ele reabre a dica; a dica tem "Como funciona", a explicação completa (`ajudaDasTelas`). Esc fecha.
+- **Toda ação importante confirma o que aconteceu**, embaixo da tela, no formato "Você comprou 1 Poção de vida · −25 de ouro" (o verbo no passado, depois o que mudou, separado por ·).
 - **Imagens são só fundo e moldura.** Textos, números e botões são do código, por cima. Nenhum texto desenhado dentro da imagem.
 - **Nada muda nas regras do jogo:** a interface só mostra e chama as mesmas regras de antes.
 
@@ -32,6 +36,7 @@ A ideia: quem não programou o jogo tem que entender, só de olhar, o que cada t
 | Descartar, abandonar | vermelho `#c92a2a` | ✕ | algo some (item, missão, multa) | `acao-perder.png` |
 | Usar item | rosa `#d6336c` | ♥ | usar uma poção na partida | `acao-usar.png` |
 | Levar na partida | ciano `#1098ad` | → | da Mochila do Reino para a da partida | `acao-levar.png` |
+| Jogar (começar a partida ou a rodada) | anil `#4263eb` | ▶ | começar a partida ou a rodada do minijogo | `acao-jogar.png` |
 
 As cores e os símbolos ficam em `programacao/src/dados/interface.js` (`acoes`).
 

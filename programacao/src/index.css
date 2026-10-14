@@ -2568,3 +2568,150 @@ button.slot:hover {
   gap: 0.25em;
   padding: 0.45em 0.6em;
 }
+
+/* Trilha no alto de cada tela e dica da primeira visita (ajustes de 14/10) */
+.trilha {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 1cqw;
+  white-space: nowrap;
+  color: var(--texto);
+  opacity: 0.85;
+}
+
+.trilha-passo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.trilha-separador {
+  opacity: 0.6;
+}
+
+.trilha-link {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.trilha-link:hover,
+.trilha-link:focus-visible {
+  opacity: 1;
+  text-decoration-thickness: 2px;
+}
+
+.trilha [aria-current='page'] {
+  font-weight: bold;
+}
+
+.dica-da-tela {
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  width: max-content;
+  max-width: 62cqw;
+  padding: 0.6em 0.9em;
+  background: var(--janela);
+  border: 2px solid var(--borda);
+  border-left: 0.45em solid var(--destaque, #e67700);
+  box-shadow: 0 0.3em 0.9em rgb(0 0 0 / 35%);
+  font-size: 1.15cqw;
+}
+
+.dica-da-tela p {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.dica-da-tela-botoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  flex-shrink: 0;
+}
+
+.botao-discreto {
+  font-size: 0.85em;
+  background: transparent;
+}
+
+/* Como jogar (ajustes de 14/10): controles à esquerda, regras à direita */
+.como-jogar {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 1.6em;
+  max-width: 78cqw;
+  max-height: 66cqh;
+  overflow-y: auto;
+  font-size: 0.72em;
+  text-align: left;
+}
+
+.como-jogar h3 {
+  margin: 0 0 0.5em;
+}
+
+.lista-de-controles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  margin: 0;
+}
+
+.controle {
+  display: grid;
+  grid-template-columns: 8.5em 1fr;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.controle dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+}
+
+.controle dd {
+  margin: 0;
+  line-height: 1.3;
+}
+
+.como-jogar kbd {
+  min-width: 1.6em;
+  padding: 0.1em 0.4em;
+  font: inherit;
+  font-weight: bold;
+  text-align: center;
+  background: var(--botao);
+  border: 1px solid var(--borda);
+  border-bottom-width: 3px;
+  border-radius: 0.25em;
+}
+
+.regra-do-jogo + .regra-do-jogo {
+  margin-top: 0.7em;
+}
+
+.regra-do-jogo h4 {
+  margin: 0 0 0.15em;
+}
+
+.regra-do-jogo p {
+  line-height: 1.35;
+}
+
+.comecar-partida {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25em;
+  white-space: nowrap;
+}

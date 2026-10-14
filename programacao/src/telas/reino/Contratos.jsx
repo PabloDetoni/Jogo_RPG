@@ -55,7 +55,8 @@ function useContratar(tipo) {
       return
     }
     acoes.contratar(tipo, classe)
-    setMensagem({ texto: `Contrato assinado: ${nomeDaClasse(classe)}${tipo === 'temporario' ? ' (temporário)' : ''} entrou no grupo.`, erro: false })
+    const preco = estado.progresso.ouro - resultado.progresso.ouro
+    setMensagem({ texto: `Você contratou ${nomeDaClasse(classe)}${tipo === 'temporario' ? ' (temporário)' : ''} · −${preco} de ouro · já está no grupo`, erro: false })
   }
   return { progresso: estado.progresso, mensagem, setMensagem, assinando, setAssinando, assinar, previa: (classe) => regra(estado.progresso, classe) }
 }

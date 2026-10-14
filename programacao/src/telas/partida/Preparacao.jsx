@@ -4,10 +4,12 @@ import Botao from '../../componentes/Botao.jsx'
 import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import Barra from '../../componentes/ui/Barra.jsx'
+import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
 import GradeDeItens from '../../componentes/ui/GradeDeItens.jsx'
 import Painel from '../../componentes/ui/Painel.jsx'
 import Simbolo from '../../componentes/ui/Simbolo.jsx'
 import { retratoDaClasse } from '../../dados/arte.js'
+import { biomas, pontosDePartida } from '../../dados/biomas.js'
 import { acoes as acoesDaInterface, arteDaAcao } from '../../dados/interface.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import { itemDoCatalogo, usavelNaPartida } from '../../dados/itens.js'
@@ -50,9 +52,18 @@ export default function Preparacao() {
       <Area em={pos.mochila}>
         <MochilaDaPartida />
       </Area>
-      <Botao em={pos.comecarPartida} desativado={!temLider} onClick={acoes.comecarPartida}>
-        Começar partida
-      </Botao>
+      {/* Verbo e resultado (ajustes de 14/10): para onde vai e com quem; sem Líder, o motivo */}
+      <Area em={pos.comecarPartida} className="comecar-partida">
+        <BotaoDeAcao acao="jogar" grande desativado={!temLider} motivo="Escolha um Líder primeiro" onClick={acoes.comecarPartida}>
+          Começar partida
+        </BotaoDeAcao>
+        {temLider && (
+          <span className="nota">
+            {biomas.find((b) => b.id === estado.escolhasDaPartida.bioma)?.nome ?? 'Bioma'} ·{' '}
+            {pontosDePartida.find((p) => p.id === estado.escolhasDaPartida.pontoPartida)?.nome ?? 'Início do bioma'} · Líder: {nomeDaClasse(lider)}
+          </span>
+        )}
+      </Area>
       <Botao em={pos.voltarAoReino} onClick={() => acoes.irPara('reino')}>
         Voltar ao Reino
       </Botao>

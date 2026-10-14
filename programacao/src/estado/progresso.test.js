@@ -159,7 +159,7 @@ describe('normalizarPreferencias (RF18)', () => {
   })
 
   it('válidas ficam; inválidas voltam ao padrão', () => {
-    expect(normalizarPreferencias({ musica: false, som: true, mudo: true, tema: 'escuro' })).toEqual({ musica: false, som: true, mudo: true, tema: 'escuro' })
+    expect(normalizarPreferencias({ musica: false, som: true, mudo: true, tema: 'escuro' })).toEqual({ musica: false, som: true, mudo: true, tema: 'escuro', dicasVistas: [] })
     expect(normalizarPreferencias({ musica: false, som: true, tema: 'escuro' }).mudo).toBe(false)
     expect(normalizarPreferencias({ musica: 'nao', som: 0, mudo: 'sim', tema: 'roxo' })).toEqual(preferenciasPadrao)
   })
