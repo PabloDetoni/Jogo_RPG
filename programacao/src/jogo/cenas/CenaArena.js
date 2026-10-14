@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { coresDaArena, faixas, tamanhoDaArena } from '../../dados/arenaDeTeste.js'
+import { coresDaArena, faixaDeBaixo, faixas, tamanhoDaArena } from '../../dados/arenaDeTeste.js'
 import { arteDaFloresta } from '../../dados/arte.js'
 import { combateDeTeste, critico, mundo } from '../../dados/balanceamento.js'
 import { nomeDaClasse } from '../../dados/classes.js'
@@ -305,13 +305,14 @@ export default class CenaArena extends Phaser.Scene {
     }
   }
 
-  // Na Floresta, a câmera segue o Líder e para nos limites do mapa. Ela mostra o mundo só entre a faixa do HUD e a
-  // de baixo: ninguém fica escondido embaixo delas. Na arena, a câmera fica parada (a arena cabe na tela).
+  // Na Floresta, a câmera segue o Líder e para nos limites do mapa. Ela mostra o mundo desde o alto da tela (o HUD é
+  // translúcido, por cima, ajustes de 14/10) até a faixa de baixo (a barra de teste, só no npm run dev). Na arena, a
+  // câmera fica parada (a arena cabe na tela).
   prepararCamera() {
     if (!this.mapa.comCamera) return
     const { largura, altura } = tamanhoDaArena
     const camera = this.cameras.main
-    camera.setViewport(0, faixas.hud, largura, altura - faixas.hud - faixas.barraDeTeste)
+    camera.setViewport(0, 0, largura, altura - faixaDeBaixo)
     camera.setBounds(0, 0, this.mapa.tamanho.largura, this.mapa.tamanho.altura)
     camera.setBackgroundColor(this.mapa.cores.mata)
     camera.startFollow(this.lider.corpo, true, mundo.camera.suavidade, mundo.camera.suavidade)

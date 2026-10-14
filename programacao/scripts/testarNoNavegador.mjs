@@ -369,14 +369,22 @@ async function botaoDoPersonagem(nome, texto, vezes = 1) {
     await pausa(60)
   }
 }
-// O HUD cabe? Nenhuma linha estoura, os blocos não se encostam e nada fica embaixo do botão Configurações
+// O HUD cabe? (ajustes de 14/10: grupos translúcidos nos cantos) Nenhuma linha estoura, os grupos não se encostam, o
+// botão Configurações não cobre nenhum deles, e tudo fica dentro da tela e acima da barra de teste
 const CABE_NO_HUD = `(() => {
   const hud = document.querySelector('.hud')
   const r = (el) => el.getBoundingClientRect()
-  const estouradas = [...hud.querySelectorAll('.hud-linha')].filter(l => l.scrollWidth > l.clientWidth + 1).length
+  const tela = r(document.querySelector('.moldura'))
+  const estouradas = [...hud.querySelectorAll('.hud-linha, .medidor, .hud-aliado')].filter(l => l.scrollWidth > l.clientWidth + 1).length
   const config = [...document.querySelectorAll('.tela-partida > .botao')].find(b => b.textContent === 'Configurações')
-  const p = r(hud.querySelector('.hud-principal')), n = r(hud.querySelector('.hud-numeros')), m = r(hud.querySelector('.hud-minimapa')), c = r(config)
-  return { estouradas, emOrdem: p.right <= n.left + 1 && n.right <= m.left + 1 && m.right <= c.left + 1, altura: hud.scrollHeight <= hud.clientHeight + 1 }
+  const grupos = ['.hud-principal', '.hud-numeros', '.hud-minimapa', '.hud-acoes'].map((s) => r(hud.querySelector(s)))
+  const tocam = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+  let encostados = 0
+  for (let i = 0; i < grupos.length; i++) for (let j = i + 1; j < grupos.length; j++) if (tocam(grupos[i], grupos[j])) encostados++
+  const cobertos = grupos.filter((g) => tocam(g, r(config))).length
+  const barra = document.querySelector('.barra-de-teste')
+  const fora = grupos.filter((g) => g.left < tela.left - 1 || g.right > tela.right + 1 || g.top < tela.top - 1 || g.bottom > (barra ? r(barra).top : tela.bottom) + 1).length
+  return { estouradas, emOrdem: encostados === 0 && cobertos === 0, altura: fora === 0 }
 })()`
 // Contrata pela carta da classe na Guilda e assina o contrato (Fase 4.5: cada classe é uma carta)
 async function contratarPelaCarta(classe) {
@@ -469,10 +477,19 @@ try {
     const escala = canvas.height / 900
     return { topo: canvas.top + ${AREA.topo} * escala, base: canvas.top + ${AREA.base} * escala, hud: hud.bottom, barra: barra.top, config: config.bottom }
   })()`)
-  conferir('o HUD acaba onde começa a área jogável', faixas.hud <= faixas.topo + 1, faixas)
+  // HUD translúcido (ajustes de 14/10): grupos nos cantos, sobre o mapa, com fundo transparente; o meio da tela fica livre
+  const translucido = await avaliar(`(() => {
+    const alfa = (el) => Number((getComputedStyle(el).backgroundColor.match(/[\\d.]+/g) ?? [])[3] ?? 1)
+    const grupos = [...document.querySelectorAll('.hud-grupo-do-canto, .hud-barra-de-acoes')]
+    const hud = getComputedStyle(document.querySelector('.hud')).backgroundColor
+    return { grupos: grupos.length, alfas: grupos.map(alfa), hudSemFundo: hud === 'rgba(0, 0, 0, 0)' || hud === 'transparent' }
+  })()`)
+  conferir('o HUD é translúcido: 4 grupos com fundo transparente, e nenhuma faixa escura', translucido.grupos === 4 && translucido.alfas.every((a) => a > 0 && a < 0.7) && translucido.hudSemFundo, translucido)
   conferir('a barra de teste começa onde acaba a área jogável', faixas.barra >= faixas.base - 1, faixas)
-  conferir('o botão Configurações fica dentro da faixa do HUD', faixas.config <= faixas.topo + 1, faixas)
-  conferir('o conteúdo do HUD cabe na faixa', await avaliar(`(() => { const h = document.querySelector('.hud'); return h.scrollHeight <= h.clientHeight + 1 })()`))
+  const cabeNoComeco = await avaliar(CABE_NO_HUD)
+  conferir('os grupos do HUD não se encostam, cabem na tela e o Configurações não cobre nenhum', cabeNoComeco.estouradas === 0 && cabeNoComeco.emOrdem && cabeNoComeco.altura, cabeNoComeco)
+  const acoes = await avaliar(`(() => { const a = document.querySelector('.hud-acoes').getBoundingClientRect(); const m = document.querySelector('.moldura').getBoundingClientRect(); return { meio: Math.abs((a.left + a.right) / 2 - (m.left + m.right) / 2), base: a.bottom, barra: document.querySelector('.barra-de-teste').getBoundingClientRect().top } })()`)
+  conferir('a barra de ações fica embaixo, no meio, logo acima da barra de teste', acoes.meio <= 2 && acoes.base <= acoes.barra && acoes.barra - acoes.base < 40, acoes)
   await colocarLider(300, AREA.topo + 60)
   await segurar(['w'], 600)
   conferir('o Líder não entra embaixo do HUD', (await cena(`c.lider.y`)) >= AREA.topo + 19, await cena(`Math.round(c.lider.y)`))

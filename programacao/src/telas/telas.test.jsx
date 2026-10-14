@@ -239,10 +239,10 @@ describe('telas de acesso com contas (Fase 2)', () => {
     expect(conta).not.toContain('Só jogadores com conta aparecem')
   })
 
-  it('jogo publicado (fora do npm run dev): a faixa de baixo da partida mostra só as teclas, sem botões de teste', () => {
+  it('jogo publicado (fora do npm run dev): sem a faixa de baixo nem botões de teste (as teclas ficam no HUD, ajustes de 14/10)', () => {
     vi.stubEnv('DEV', false)
     const html = desenhar('partida', 'convidado')
-    expect(html).toContain('Q volta ao Reino · F foge · M muta')
+    expect(html).not.toContain('barra-de-teste')
     expect(html).not.toContain('TESTE')
     expect(html).not.toContain('>Grande Vitória</button>')
     expect(html).not.toContain('Invencível')
@@ -425,12 +425,13 @@ describe('Floresta no HUD e no Resumo (Fase 3)', () => {
     expect(html).toContain('hud-mochila-cheia')
   })
 
-  it('avisos: a barra grande do Boss e o "não cabe" da mochila', () => {
+  it('avisos: a barra grande do Boss; o "não cabe" da mochila fica em cima da barra de ações (ajustes de 14/10)', () => {
     const html = renderToString(<AvisosDaPartida situacao={daFloresta} mensagens={[]} />).replace(/<!-- -->/g, '')
     expect(html).toContain('Guardião da Floresta')
     expect(html).toContain('width:50%')
-    expect(html).toContain('Mochila cheia: não cabe Pele de lobo')
-    const cabe = renderToString(<AvisosDaPartida situacao={{ ...daFloresta, itemPerto: { nome: 'Cogumelo', quantidade: 1, cabe: true } }} mensagens={[]} />)
+    const noHud = renderToString(<HudDaPartida situacao={{ ...situacao, ...daFloresta }} />).replace(/<!-- -->/g, '')
+    expect(noHud).toContain('Mochila cheia: não cabe Pele de lobo')
+    const cabe = renderToString(<HudDaPartida situacao={{ ...situacao, ...daFloresta, itemPerto: { nome: 'Cogumelo', quantidade: 1, cabe: true } }} />)
     expect(cabe).toContain('E: pegar Cogumelo')
   })
 

@@ -169,7 +169,7 @@ export const posicoes = {
   // Configurações fica dentro da faixa do HUD, no canto direito (menor que nas outras telas), para não cobrir a área
   // jogável. As contagens do Q e da fuga e as mensagens ficam logo abaixo do HUD (HudDaPartida.jsx).
   partida: {
-    configuracoes: { x: 94.8, y: 5.3 },
+    configuracoes: { x: 92.4, y: 3.2 }, // em cima à direita, logo acima do minimapa (ajustes de 14/10)
   },
   cutsceneDerrota: {
     mensagem: { x: 50, y: 45 },

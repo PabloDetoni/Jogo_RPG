@@ -78,7 +78,7 @@ try {
   conferir('andando para a direita, a câmera vai junto', andou.lider > 150 && Math.abs(andou.camera - andou.lider) < 40, { antes, depois, tiradosDoCaminho: noCaminho })
   conferir('o Líder fica perto do meio da tela', Math.abs(depois.meio - depois.x) < 60, depois)
   const vista = await cena(`({ y: c.cameras.main.y, altura: c.cameras.main.height })`)
-  conferir('o mapa aparece só entre a faixa do HUD e a de baixo (ninguém fica escondido embaixo delas)', vista.y === 96 && vista.altura === 900 - 96 - 112, vista)
+  conferir('o mapa aparece desde o alto da tela (o HUD é translúcido, por cima) até a barra de teste', vista.y === 0 && vista.altura === 900 - 112, vista)
   await aba.print('02-camera')
 
   console.log('3. A mira continua certa com a câmera andando (mouse parado)')

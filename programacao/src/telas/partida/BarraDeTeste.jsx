@@ -10,14 +10,10 @@ const teclas = 'WASD anda · mouse mira · clique ataca · 1 2 3 habilidades · 
 // Os botões não pegam o foco do teclado: assim o Espaço continua sendo a esquiva, e não um clique.
 // Os 4 resultados acabam a partida com os números reais dela. "Subir nível" e "+ouro" mexem no que a partida ganhou,
 // que só entra no save no fim, pelo caminho normal.
+// Desde os ajustes de 14/10, no jogo publicado a faixa de baixo não existe: as teclas ficam embaixo da barra de ações do
+// HUD, e o mapa vai até o fim da tela.
 export default function BarraDeTeste({ ponte, situacao }) {
-  if (!import.meta.env.DEV) {
-    return (
-      <div className="barra-de-teste" aria-label="Teclas" style={{ height: emCqw(faixas.barraDeTeste) }}>
-        <p className="dica-de-teclas">{teclas}</p>
-      </div>
-    )
-  }
+  if (!import.meta.env.DEV) return null
   return <BotoesDeTeste ponte={ponte} situacao={situacao} />
 }
 

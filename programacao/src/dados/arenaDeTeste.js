@@ -6,7 +6,11 @@
 export const tamanhoDaArena = { largura: 1600, altura: 900 }
 
 // Altura das faixas em pixels da arena. O React usa os mesmos números, convertidos por emCqw.
+// Desde os ajustes de 14/10 o HUD é translúcido, por cima do mapa: a faixa "hud" só existe na arena de teste (a borda de
+// cima dela). Na Floresta, a câmera mostra o mundo desde o alto da tela até a faixa de baixo, que é a barra de teste no
+// npm run dev e não existe no jogo publicado (faixaDeBaixo).
 export const faixas = { hud: 96, barraDeTeste: 112 }
+export const faixaDeBaixo = import.meta.env.DEV ? faixas.barraDeTeste : 0
 
 // Pixels da arena → "cqw" do CSS (a arena ocupa a caixa 16:9 inteira: 100 cqw = largura da arena)
 export function emCqw(pixels) {
