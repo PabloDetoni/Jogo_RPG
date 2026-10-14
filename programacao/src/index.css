@@ -1210,12 +1210,15 @@ body {
 /* Janela ao lado (a mochila da partida): no lado direito, embaixo do HUD, para não cobrir o Líder no meio da tela */
 .janela-fundo-ao-lado {
   place-items: start end;
-  padding: 7.5cqw 1.2cqw 0 0;
+  /* Logo abaixo do grupo de cima à direita do HUD (minimapa, região e mochila; ajustes de 14/10) */
+  padding: 12.2cqw 1.2cqw 0 0;
 }
 
 .janela-fundo-ao-lado .janela {
   min-width: 24cqw;
   max-width: 27cqw;
+  max-height: calc(100cqh - 12.2cqw - 1cqw);
+  overflow-y: auto;
 }
 
 /* Listas curtas dentro do detalhe (trocas da Mercado, receitas da Forja); o que falta fica em destaque */
