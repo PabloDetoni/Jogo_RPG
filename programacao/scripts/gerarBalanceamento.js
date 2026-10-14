@@ -475,7 +475,7 @@ escrever(
   ),
   '### Coleta, minimapa e outros',
   lista(
-    `Coleta com E até **${mundo.coleta.alcance} px** do Líder. O drop de um mob fica no chão por **${segundosDoMundo(mundo.coleta.msDoDrop)}**; o que não coube na mochila, por **${segundosDoMundo(mundo.coleta.msQuandoNaoCabe)}** (os dois piscam nos últimos 5 s). Os recursos do chão ficam até alguém pegar e voltam a cada partida.`,
+    `Coleta com E até **${mundo.coleta.alcance} px** do Líder. Item natural (os recursos do mapa): fica até alguém pegar e volta a cada partida. Item dropado (drop de mob e o que o jogador descarta): some **${segundosDoMundo(mundo.coleta.msDoItemDropado)}** depois de cair, com um anel do tempo, piscando nos últimos **${segundosDoMundo(mundo.coleta.msPiscando)}**; descartado de novo, cai com o tempo novo. O que não coube na mochila fica como estava.`,
     `Minimapa: células de **${mundo.minimapa.celula} px**; o grupo revela tudo a até **${mundo.minimapa.raioRevelado} px** do Líder.`,
     `Mobs nascem a pelo menos **${mundo.nascimento.longeDosInicios} px** do início de cada região (o grupo nunca nasce com mob perto), a **${mundo.nascimento.distanciaEntreMobs} px** uns dos outros e com **${mundo.nascimento.folga} px** livres em volta.`,
     `Mob que desiste volta para casa sem olhar para o grupo por **${segundosDoMundo(mundo.msVoltandoParaCasa)}**; atacado, persegue mesmo fora do território por **${segundosDoMundo(mundo.msProvocado)}**.`,

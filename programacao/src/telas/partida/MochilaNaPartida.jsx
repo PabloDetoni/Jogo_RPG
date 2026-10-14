@@ -54,7 +54,7 @@ export default function MochilaNaPartida({ mochila, escolhido, aoEscolher, aoUsa
           key={atual.id}
           id={atual.id}
           tem={atual.quantidade}
-          oQueAcontece={(quantidade) => `${quantidade > 1 ? 'Caem' : 'Cai'} no chão perto do Líder e ${quantidade > 1 ? 'somem' : 'some'} em ${Math.round(mundo.coleta.msQuandoNaoCabe / 1000)} s (dá para pegar de volta com E).`}
+          oQueAcontece={(quantidade) => `${quantidade > 1 ? 'Caem' : 'Cai'} no chão perto do Líder e ${quantidade > 1 ? 'somem' : 'some'} em ${Math.round(mundo.coleta.msDoItemDropado / 1000)} s (dá para pegar de volta com E).`}
           aoConfirmar={(quantidade) => aoDescartar(atual.id, quantidade)}
         />
       )}

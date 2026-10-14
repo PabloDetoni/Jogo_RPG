@@ -41,6 +41,7 @@ import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
+import { contaAoPegar, itemDescartado, itemDropado, itemNatural, tempoRestante } from '../../regras/itensNoChao.js'
 import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { escolherPedra } from '../../regras/arte.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
@@ -387,15 +388,16 @@ export default class CenaArena extends Phaser.Scene {
       const item = itemDoCatalogo(ponto.tipo)
       if (!item) continue
       const lugar = this.lugarLivre(24, ponto, null, 4, false)
-      this.itensNoChao.push(new ItemNoChao(this, lugar.x, lugar.y, item, 1))
+      this.itensNoChao.push(new ItemNoChao(this, lugar.x, lugar.y, item, 1, itemNatural()))
     }
   }
 
-  // Um item cai no chão (drop de mob, ou o que não coube na mochila), um pouco espalhado, e some depois de um tempo
-  soltarItem(item, quantidade, ponto, msNoChao) {
+  // Um item cai no chão como dropado (drop de mob ou descartado; regras/itensNoChao.js), um pouco espalhado, e some 30 s
+  // depois. estado: itemDropado (padrão) ou itemDescartado.
+  soltarItem(item, quantidade, ponto, estado = itemDropado(this.agora)) {
     const angulo = Math.random() * Math.PI * 2
     const lugar = this.lugarLivre(20, { x: ponto.x + Math.cos(angulo) * 26, y: ponto.y + Math.sin(angulo) * 26 }, null, 2, false)
-    const noChao = new ItemNoChao(this, lugar.x, lugar.y, item, quantidade, this.agora + msNoChao)
+    const noChao = new ItemNoChao(this, lugar.x, lugar.y, item, quantidade, estado)
     this.itensNoChao.push(noChao)
     return noChao
   }
@@ -415,7 +417,7 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // Tecla E (RF35, TASK-064): pega o item mais perto, se couber na mochila (regras/mochila.js). O que não couber fica no
-  // chão, com aviso, e some depois de um tempo.
+  // chão como estava (ajustes de 14/10): o natural continua natural; o dropado, com o tempo que tinha.
   coletar(agora) {
     const noChao = this.itemPerto()
     if (!noChao || this.lider.caido) return
@@ -425,7 +427,7 @@ export default class CenaArena extends Phaser.Scene {
     this.mochila.itens = itens
     if (pegou > 0) {
       // O que foi descartado e pego de novo não conta outra vez (ajustes de 14/10)
-      if (!noChao.jaColetado) {
+      if (contaAoPegar(noChao)) {
         if (item.tipo === 'recurso') this.ganhos.recursos += pegou
         this.contarParaAMissao(() => {
           this.ganhos.coletados[item.id] = (this.ganhos.coletados[item.id] ?? 0) + pegou
@@ -439,8 +441,8 @@ export default class CenaArena extends Phaser.Scene {
       return
     }
     noChao.quantidade = sobra.quantidade
-    if (noChao.expiraEm === null || noChao.expiraEm - agora > mundo.coleta.msQuandoNaoCabe) noChao.expiraEm = agora + mundo.coleta.msQuandoNaoCabe
-    this.mensagem(`Mochila cheia: ${sobra.quantidade} ${item.nome} ficou no chão (some em ${Math.round((noChao.expiraEm - agora) / 1000)} s)`, 'alerta')
+    const falta = noChao.dropado ? ` (some em ${Math.ceil(tempoRestante(noChao, agora) / 1000)} s)` : ''
+    this.mensagem(`Mochila cheia: ${sobra.quantidade} ${item.nome} ficou no chão${falta}`, 'alerta')
   }
 
   // Itens no chão: sobem e descem e somem quando o tempo acaba
@@ -1131,7 +1133,7 @@ export default class CenaArena extends Phaser.Scene {
       const { especial } = inimigo.config
       const item = itemDoCatalogo(especial.item)
       if (item && Math.random() < (this.chanceDoEspecialForcada ?? especial.chance)) {
-        this.soltarItem(item, 1, inimigo, mundo.coleta.msDoDrop)
+        this.soltarItem(item, 1, inimigo)
         this.mensagem(`O ${inimigo.config.nome} deixou: ${item.nome}!`, 'nivel')
       }
     }
@@ -1140,7 +1142,7 @@ export default class CenaArena extends Phaser.Scene {
       const item = itemDoCatalogo(drop.item)
       const [minimo, maximo] = drop.quantidade ?? [1, 1]
       if (!item || Math.random() >= (this.chanceDeDropForcada ?? drop.chance)) continue
-      this.soltarItem(item, minimo + Math.floor(Math.random() * (maximo - minimo + 1)), inimigo, mundo.coleta.msDoDrop)
+      this.soltarItem(item, minimo + Math.floor(Math.random() * (maximo - minimo + 1)), inimigo)
     }
     this.matarInimigo(inimigo)
     this.dividirXp(xp)
@@ -1493,9 +1495,8 @@ export default class CenaArena extends Phaser.Scene {
     const resultado = descartarDaMochilaDaPartida(this.mochila.itens, id, quantidade)
     if (!item || !resultado.ok) return
     this.mochila.itens = resultado.itens
-    const noChao = this.soltarItem(item, resultado.quantidade, this.lider, mundo.coleta.msQuandoNaoCabe)
-    noChao.jaColetado = true
-    this.mensagem(`Você descartou ${resultado.quantidade} ${item.nome} · no chão por ${Math.round(mundo.coleta.msQuandoNaoCabe / 1000)} s`, 'aviso')
+    this.soltarItem(item, resultado.quantidade, this.lider, itemDescartado(this.agora))
+    this.mensagem(`Você descartou ${resultado.quantidade} ${item.nome} · no chão por ${Math.round(mundo.coleta.msDoItemDropado / 1000)} s`, 'aviso')
   }
 
   executarComando(comando) {

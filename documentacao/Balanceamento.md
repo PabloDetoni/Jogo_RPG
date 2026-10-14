@@ -346,7 +346,7 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 
 ### Coleta, minimapa e outros
 
-- Coleta com E até **80 px** do Líder. O drop de um mob fica no chão por **60 s**; o que não coube na mochila, por **30 s** (os dois piscam nos últimos 5 s). Os recursos do chão ficam até alguém pegar e voltam a cada partida.
+- Coleta com E até **80 px** do Líder. Item natural (os recursos do mapa): fica até alguém pegar e volta a cada partida. Item dropado (drop de mob e o que o jogador descarta): some **30 s** depois de cair, com um anel do tempo, piscando nos últimos **5 s**; descartado de novo, cai com o tempo novo. O que não coube na mochila fica como estava.
 - Minimapa: células de **200 px**; o grupo revela tudo a até **450 px** do Líder.
 - Mobs nascem a pelo menos **700 px** do início de cada região (o grupo nunca nasce com mob perto), a **140 px** uns dos outros e com **24 px** livres em volta.
 - Mob que desiste volta para casa sem olhar para o grupo por **4 s**; atacado, persegue mesmo fora do território por **5 s**.

@@ -233,10 +233,11 @@ export const mundo = {
   msVoltandoParaCasa: 3500,
   // Atacado, o mob persegue mesmo fora do território por este tempo (um tiro de longe não fica sem resposta)
   msProvocado: 5000,
-  // Coleta (TASK-064): E pega o item mais perto a até "alcance" px do Líder. O drop de um mob fica no chão por
-  // msDoDrop; o que não coube na mochila, por msQuandoNaoCabe (os dois piscam nos últimos 5 s e somem). Os recursos do
-  // chão (cogumelo, erva, madeira) ficam até alguém pegar.
-  coleta: { alcance: 80, msDoDrop: 60000, msQuandoNaoCabe: 30000 },
+  // Coleta (TASK-064; ajustes de 14/10, regras/itensNoChao.js): E pega o item mais perto a até "alcance" px do Líder.
+  // O item natural (os recursos do mapa: cogumelo, erva, madeira) fica até alguém pegar. O dropado (drop de mob e o que o
+  // jogador descarta) some msDoItemDropado depois de cair, piscando nos últimos msPiscando (troca a cada msDoPisca).
+  // PROVISÓRIO. Troca os 60 s do drop e os 30 s do que não coube: todos os dropados passam a 30 s.
+  coleta: { alcance: 80, msDoItemDropado: 30000, msPiscando: 5000, msDoPisca: 150 },
   // Minimapa (RF40): o mapa é dividido em células de "celula" px; o grupo revela tudo a até "raioRevelado" px do Líder
   minimapa: { celula: 200, raioRevelado: 450 },
   // XP da primeira descoberta de cada área (RF40), pela dificuldade da região; dividido como o dos monstros (RF50)

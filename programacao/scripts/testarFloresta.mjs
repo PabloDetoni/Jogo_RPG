@@ -328,8 +328,8 @@ try {
 
   console.log('13. Coleta com E, drops e mochila da partida (TASK-064)')
   await cena(`(c.invencivel = true, true)`)
-  const recursos = await cena(`c.itensNoChao.filter((i) => i.expiraEm === null).length`)
-  conferir('a Floresta tem recursos no chão (cogumelo, erva, madeira)', recursos > 20, recursos)
+  const recursos = await cena(`c.itensNoChao.filter((i) => i.tipo === 'natural' && i.expiraEm === null && !i.anel).length`)
+  conferir('a Floresta tem recursos no chão (cogumelo, erva, madeira), naturais: sem tempo e sem anel', recursos > 20, recursos)
   // Um cogumelo, longe dos mobs
   const cogumelo = await cena(`(() => { const i = c.itensNoChao.find((um) => um.item.id === 'cogumelo' && um.expiraEm === null); return { x: i.x, y: i.y } })()`)
   await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${cogumelo.x}, i.y - ${cogumelo.y}) < 1500).forEach((i) => c.matarInimigo(i)), true)`)
@@ -343,8 +343,8 @@ try {
   // Drop: um lobo com a chance forçada em 100%
   await cena(`(() => { c.chanceDeDropForcada = 1; const l = c.criarMobDoMundo('lobo', 'media', { x: c.lider.x + 200, y: c.lider.y }); l.__drop = true; return true })()`)
   await pausa(200)
-  const drop = await cena(`(() => { const l = c.inimigos.find((i) => i.__drop); const ponto = { x: l.x, y: l.y }; const antes = c.itensNoChao.length; c.acertar(l, 99999, c.lider, 0, c.lider); const novo = c.itensNoChao.slice(antes)[0]; return novo ? { id: novo.item.id, quantidade: novo.quantidade, some: Math.round((novo.expiraEm - c.agora) / 1000), x: novo.x, y: novo.y, longe: Math.round(Math.hypot(novo.x - ponto.x, novo.y - ponto.y)) } : null })()`)
-  conferir('o lobo derrotado deixa a pele no chão, que some se ninguém pegar', drop?.id === 'peleDeLobo' && drop.some > 50 && drop.longe < 80, drop)
+  const drop = await cena(`(() => { const l = c.inimigos.find((i) => i.__drop); const ponto = { x: l.x, y: l.y }; const antes = c.itensNoChao.length; c.acertar(l, 99999, c.lider, 0, c.lider); const novo = c.itensNoChao.slice(antes)[0]; return novo ? { id: novo.item.id, tipo: novo.tipo, anel: !!novo.anel, quantidade: novo.quantidade, some: Math.round((novo.expiraEm - c.agora) / 1000), x: novo.x, y: novo.y, longe: Math.round(Math.hypot(novo.x - ponto.x, novo.y - ponto.y)) } : null })()`)
+  conferir('o lobo derrotado deixa a pele no chão como dropado: anel do tempo e some em 30 s', drop?.id === 'peleDeLobo' && drop.tipo === 'dropado' && drop.anel && drop.some > 27 && drop.some <= 30 && drop.longe < 80, drop)
   await cena(`(c.chanceDeDropForcada = undefined, true)`)
   await aba.print('09-drop-no-chao')
   // Mochila cheia: o item fica no chão, com aviso, e some depois
@@ -357,8 +357,24 @@ try {
   await aba.apertar('e')
   await pausa(300)
   const cheia = await cena(`(() => { const i = c.itensNoChao.find((um) => um.item.id === 'peleDeLobo'); return i ? { quantidade: i.quantidade, some: Math.round((i.expiraEm - c.agora) / 1000) } : null })()`)
-  conferir('E com a mochila cheia: o item continua no chão e passa a sumir em até 30 s', cheia && cheia.some <= 30, cheia)
+  conferir('E com a mochila cheia: o dropado continua no chão com o tempo que tinha (até 30 s)', cheia && cheia.some <= 30 && cheia.some > 20, cheia)
   await aba.print('10-mochila-cheia')
+  // Natural com a mochila cheia: continua natural (nunca some sozinho)
+  const natural = await cena(`(() => { const i = c.itensNoChao.find((um) => um.tipo === 'natural'); return { x: i.x, y: i.y, id: i.item.id } })()`)
+  await colocarLider(natural.x - 40, natural.y)
+  await pausa(300)
+  await aba.apertar('e')
+  await pausa(300)
+  const naturalCheia = await cena(`(() => { const i = c.itensNoChao.find((um) => um.x === ${natural.x} && um.y === ${natural.y}); return i ? { tipo: i.tipo, expiraEm: i.expiraEm } : null })()`)
+  conferir('o natural que não coube continua natural, sem tempo', naturalCheia?.tipo === 'natural' && naturalCheia.expiraEm === null, naturalCheia)
+  // Nos últimos 5 s o dropado pisca
+  await cena(`(c.itensNoChao.filter((i) => i.item.id === 'peleDeLobo').forEach((i) => { i.expiraEm = c.agora + 3500 }), true)`)
+  const alfas = []
+  for (let i = 0; i < 8; i++) {
+    alfas.push(await cena(`c.itensNoChao.find((i) => i.item.id === 'peleDeLobo')?.desenho.alpha ?? -1`))
+    await pausa(90)
+  }
+  conferir('nos últimos 5 s o dropado pisca', alfas.some((a) => a < 0.5) && alfas.some((a) => a === 1), alfas)
   await cena(`(c.itensNoChao.filter((i) => i.item.id === 'peleDeLobo').forEach((i) => { i.expiraEm = c.agora + 300 }), true)`)
   await pausa(800)
   conferir('quando o tempo acaba, o item some do chão', !(await cena(`c.itensNoChao.some((i) => i.item.id === 'peleDeLobo')`)))
