@@ -1,5 +1,6 @@
 import Botao from '../componentes/Botao.jsx'
 import Janela from '../componentes/Janela.jsx'
+import { pedirTelaCheia, sairDaTelaCheia, telaCheiaSuportada } from '../componentes/telaCheia.js'
 import { telas } from '../dados/telas.js'
 import { useJogo } from '../estado/contexto.js'
 
@@ -50,8 +51,23 @@ export default function Configuracoes() {
         Mudo (tecla M): {preferencias.mudo ? 'sim' : 'não'}
       </Botao>
 
-      <h3>Tema</h3>
-      <Botao onClick={() => acoes.alternarPreferencia('tema')}>Tema: {preferencias.tema}</Botao>
+      <h3>Tela</h3>
+      <div className="linha">
+        <Botao onClick={() => acoes.alternarPreferencia('tema')}>Tema: {preferencias.tema}</Botao>
+        {/* Ajustes de 14/10: liga e desliga a tela cheia dos botões principais; desligar também sai dela agora */}
+        {telaCheiaSuportada() && (
+          <Botao
+            selecionado={preferencias.telaCheia}
+            onClick={() => {
+              if (preferencias.telaCheia) sairDaTelaCheia()
+              else pedirTelaCheia(true)
+              acoes.alternarPreferencia('telaCheia')
+            }}
+          >
+            Tela cheia: {preferencias.telaCheia ? 'ligada' : 'desligada'}
+          </Botao>
+        )}
+      </div>
 
       <Botao onClick={acoes.fecharJanela}>Fechar</Botao>
     </Janela>

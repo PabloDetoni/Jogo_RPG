@@ -33,6 +33,19 @@ const passo = async (texto, comeco = false) => {
   if (!(await clicar(texto, comeco))) throw new Error(`não achei o botão "${texto}"`)
   await pausa(220)
 }
+// Clique de verdade (mouse do navegador, não o click() do JavaScript): a tela cheia só entra assim
+const clicarDeVerdade = async (seletorOuTexto) => {
+  const centro = await aba.avaliar(`(() => {
+    const alvo = document.querySelector(${JSON.stringify(seletorOuTexto)}) ?? [...document.querySelectorAll('button')].find((b) => !b.disabled && b.textContent.trim().startsWith(${JSON.stringify(seletorOuTexto)}))
+    if (!alvo) return null
+    const r = alvo.getBoundingClientRect()
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+  })()`).catch(() => null)
+  if (!centro) throw new Error(`não achei "${seletorOuTexto}" para clicar de verdade`)
+  await aba.clicarNaTela(centro.x, centro.y)
+  await pausa(500)
+}
+const emTelaCheia = () => aba.avaliar(`!!document.fullscreenElement`)
 // Clica num botão de dentro de uma parte da tela (quando o mesmo texto aparece também numa aba)
 const clicarDentro = async (seletor, texto) => {
   const achou = await aba.avaliar(`(() => {
@@ -273,10 +286,32 @@ try {
       (await aba.avaliar(`document.querySelector('.mochila-da-preparacao .barra-texto')?.textContent ?? ''`)).startsWith('Peso 2 de'),
   )
   const pocoesAntes = quantos(await salvo(), 'pocaoDeVida')
-  await passo('Começar partida')
+  await clicarDeVerdade('Começar partida')
   await aba.esperar(`!!${CENA}?.lider`, 'a partida', 20000)
   await pausa(800)
   conferir('a partida começa com as 2 poções na mochila da partida', await cena(`c.mochila.itens.some((i) => i.id === 'pocaoDeVida' && i.quantidade === 2)`))
+  // Tela cheia (ajustes de 14/10): entra no clique de Começar partida, com o X discreto no canto
+  conferir('o clique em Começar partida entra em tela cheia, com o X para sair', (await emTelaCheia()) && (await aba.avaliar(`!!document.querySelector('.sair-da-tela-cheia')`)))
+  // (no início do bioma não há mob por perto: fora de combate, o Esc pausa)
+  await aba.esperar(`!${CENA}.emCombate`, 'estar fora de combate', 9000)
+  await aba.avaliar(`(document.exitFullscreen(), true)`)
+  await pausa(600)
+  conferir('saiu da tela cheia sem pedir (o Esc do navegador): vale como Esc, pausa e aparece "Voltar à tela cheia"', (await aba.texto()).includes('Continuar') && (await aba.avaliar(`!!document.querySelector('[aria-label="Pausa"]')`)) && (await aba.avaliar(`!!document.querySelector('.voltar-a-tela-cheia')`)))
+  await passo('Continuar')
+  await clicarDeVerdade('.voltar-a-tela-cheia')
+  conferir('"Voltar à tela cheia" volta', await emTelaCheia())
+  // De 1366×768 a 1920×1080: o jogo ocupa a tela inteira, sem cortar, e a mira cai no ponto certo
+  await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
+  await pausa(700)
+  const grande = await aba.avaliar(`(() => { const m = document.querySelector('.moldura').getBoundingClientRect(); const t = document.querySelector('.arena canvas').getBoundingClientRect(); return { moldura: [Math.round(m.width), Math.round(m.height)], canvas: [Math.round(t.left), Math.round(t.top), Math.round(t.width), Math.round(t.height)] } })()`)
+  await aba.moverMouse(grande.canvas[0] + (400 / 1600) * grande.canvas[2], grande.canvas[1] + (300 / 900) * grande.canvas[3])
+  await pausa(200)
+  const ponteiro = await cena(`({ x: Math.round(c.input.activePointer.x), y: Math.round(c.input.activePointer.y) })`)
+  conferir('em 1920×1080 o jogo ocupa a tela inteira e a mira cai no ponto certo', grande.moldura[0] === 1920 && grande.moldura[1] === 1080 && grande.canvas[2] === 1920 && Math.abs(ponteiro.x - 400) <= 2 && Math.abs(ponteiro.y - 300) <= 2, { ...grande, ponteiro })
+  await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
+  await pausa(500)
+  await clicarDeVerdade('.sair-da-tela-cheia')
+  conferir('o X sai da tela cheia (sem pausar e sem o "Voltar à tela cheia")', !(await emTelaCheia()) && !(await aba.avaliar(`!!document.querySelector('.voltar-a-tela-cheia, [aria-label="Pausa"]')`)))
   await cena(`(c.lider.vida = 10, true)`)
   await aba.apertar('tab')
   await pausa(300)

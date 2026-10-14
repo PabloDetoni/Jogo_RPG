@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { aplicarPreferencias, prepararAudio, tocarMusica } from './audio/gerenciador.js'
 import Avisos from './componentes/Avisos.jsx'
+import ControleDaTelaCheia from './componentes/ControleDaTelaCheia.jsx'
 import PainelDev from './componentes/PainelDev.jsx'
 import { useJogo } from './estado/contexto.js'
 import ProvedorDoJogo from './estado/ProvedorDoJogo.jsx'
@@ -41,6 +42,7 @@ function Jogo() {
           return <JanelaAberta key={id} />
         })}
         <Avisos />
+        <ControleDaTelaCheia />
       </div>
       {import.meta.env.DEV && <PainelDev />}
     </>

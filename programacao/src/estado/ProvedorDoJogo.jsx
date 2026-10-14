@@ -189,6 +189,7 @@ export default function ProvedorDoJogo({ children }) {
       abrirJanela: (janela) => despachar({ tipo: 'abrirJanela', janela }),
       fecharJanela: () => despachar({ tipo: 'fecharJanela' }),
       fecharDica: () => despachar({ tipo: 'fecharDica' }),
+      esc: () => despachar({ tipo: 'esc' }),
       reabrirDica: () => despachar({ tipo: 'reabrirDica' }),
       fecharAviso: (id) => despachar({ tipo: 'fecharAviso', id }),
 

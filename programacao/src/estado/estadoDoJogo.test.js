@@ -296,12 +296,12 @@ describe('navegação, janelas e preferências', () => {
 
   it('música, som e tema alternam', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'tema' }, { tipo: 'alternarPreferencia', chave: 'musica' })
-    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro', dicasVistas: [] })
+    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro', telaCheia: true, dicasVistas: [] })
   })
 
   it('o mudo (tecla M) alterna sem mexer na música nem no som (RF18)', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'mudo' })
-    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro', dicasVistas: [] })
+    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro', telaCheia: true, dicasVistas: [] })
     expect(fazer(e, { tipo: 'alternarPreferencia', chave: 'mudo' }).preferencias.mudo).toBe(false)
   })
 })

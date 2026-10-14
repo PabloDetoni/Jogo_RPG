@@ -3,6 +3,7 @@ import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Icone from '../../componentes/Icone.jsx'
 import Tela from '../../componentes/Tela.jsx'
+import { pedirTelaCheia } from '../../componentes/telaCheia.js'
 import Barra from '../../componentes/ui/Barra.jsx'
 import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
 import GradeDeItens from '../../componentes/ui/GradeDeItens.jsx'
@@ -54,7 +55,10 @@ export default function Preparacao() {
       </Area>
       {/* Verbo e resultado (ajustes de 14/10): para onde vai e com quem; sem Líder, o motivo */}
       <Area em={pos.comecarPartida} className="comecar-partida">
-        <BotaoDeAcao acao="jogar" grande desativado={!temLider} motivo="Escolha um Líder primeiro" onClick={acoes.comecarPartida}>
+        <BotaoDeAcao acao="jogar" grande desativado={!temLider} motivo="Escolha um Líder primeiro" onClick={() => {
+            pedirTelaCheia(estado.preferencias.telaCheia)
+            acoes.comecarPartida()
+          }}>
           Começar partida
         </BotaoDeAcao>
         {temLider && (
