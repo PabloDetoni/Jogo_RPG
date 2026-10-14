@@ -278,13 +278,14 @@ async function atacarEm(x, y) {
 
 const textoDe = (seletor) => avaliar(`document.querySelector(${JSON.stringify(seletor)})?.innerText ?? ''`)
 
-// Quem está em cima de quem: pares de corpos (Líder, aliados, inimigos) que entram mais de "folga" px um no outro
+// Quem está em cima de quem: pares de corpos (Líder, aliados, inimigos) que entram mais de "folga" px um no outro. Desde
+// os ajustes de 14/10, pelo corpo que colide (menor que o desenho: os desenhos podem se cobrir um pouco, os corpos não)
 const SOBREPOSTOS = `(folga => {
   const corpos = [...c.grupo.filter(p => !p.perdido), ...c.inimigos.filter(i => !i.morto)]
   const pares = []
   for (let i = 0; i < corpos.length; i++) for (let j = i + 1; j < corpos.length; j++) {
-    const a = corpos[i], b = corpos[j], meio = (a.tamanho + b.tamanho) / 2 - folga
-    if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.classe ?? a.constructor.name, b.classe ?? b.constructor.name, Math.round(a.x), Math.round(a.y), (a.deslizando || b.deslizando) ? 'deslizando' : '', Math.round(((a.tamanho + b.tamanho) / 2 - Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))) * 10) / 10])
+    const a = corpos[i], b = corpos[j], meio = a.raio + b.raio - folga
+    if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.classe ?? a.constructor.name, b.classe ?? b.constructor.name, Math.round(a.x), Math.round(a.y), (a.deslizando || b.deslizando) ? 'deslizando' : '', Math.round((a.raio + b.raio - Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))) * 10) / 10])
   }
   return pares
 })`
@@ -492,7 +493,7 @@ try {
   conferir('a barra de ações fica embaixo, no meio, logo acima da barra de teste', acoes.meio <= 2 && acoes.base <= acoes.barra && acoes.barra - acoes.base < 40, acoes)
   await colocarLider(300, AREA.topo + 60)
   await segurar(['w'], 600)
-  conferir('o Líder não entra embaixo do HUD', (await cena(`c.lider.y`)) >= AREA.topo + 19, await cena(`Math.round(c.lider.y)`))
+  conferir('o Líder não entra na faixa de cima da arena', (await cena(`c.lider.y - c.lider.raio`)) >= AREA.topo - 1, await cena(`Math.round(c.lider.y)`))
   await colocarLider(300, AREA.base - 40)
   await segurar(['s'], 600)
   conferir('o Líder não entra embaixo da barra de teste', (await cena(`c.lider.y`)) <= AREA.base - 19, await cena(`Math.round(c.lider.y)`))
@@ -802,6 +803,21 @@ try {
   conferir('depois de 1,5 s, ninguém está em cima de ninguém', (await sobrepostos()).length === 0, await sobrepostos())
   conferir('e ninguém foi parar numa pedra ou fora da área', (await dentroDePedra()).length === 0, await dentroDePedra())
   await print('18-separados')
+
+  console.log('10b. Hitbox menor (ajustes de 14/10): o corpo que colide é bem menor que o desenho')
+  const corpos = await cena(`({ desenho: c.lider.tamanho, corpo: c.lider.raio * 2, fisica: Math.round(c.lider.corpo.body.width), golpe: c.lider.retangulo().largura })`)
+  conferir('o corpo que colide é bem menor que o desenho, e a área do golpe continua do tamanho do desenho', corpos.corpo <= corpos.desenho * 0.7 && corpos.fisica === Math.round(corpos.corpo) && corpos.golpe === corpos.desenho, corpos)
+  await tirarInimigos()
+  // O grupo parado na frente do Líder: ele passa pelo meio sem grudar
+  await colocarLider(700, 420)
+  await cena(`(c.aliados.forEach((a, i) => a.colocarEm(760 + (i % 2) * 34, 380 + i * 26)), true)`)
+  await pausa(150)
+  const antesDeAtravessar = await cena(`c.lider.x`)
+  await segurar(['d'], 1000)
+  const atravessou = (await cena(`c.lider.x`)) - antesDeAtravessar
+  conferir('o Líder passa pelo meio do grupo parado sem grudar (anda pelo menos 70% do normal em 1 s)', atravessou >= 0.7 * 220, Math.round(atravessou))
+  await pausa(800)
+  conferir('depois de passar, ninguém fica em cima de ninguém', (await sobrepostos(1)).length === 0, await sobrepostos(1))
   await tirarInimigos()
 
   console.log('11. Aliados lutando (TASK-043), na IA avançada (5b.1)')

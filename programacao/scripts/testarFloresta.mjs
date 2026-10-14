@@ -149,6 +149,35 @@ try {
   const grupo = await cena(`c.aliados.map((a) => ({ classe: a.classe, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)) }))`)
   conferir('depois de 6 s andando pela Floresta, os 4 aliados continuam perto do Líder', grupo.length === 4 && grupo.every((um) => um.distancia < 400), grupo)
   await aba.print('04-grupo-andando')
+  // Corredor estreito (ajustes de 14/10, hitbox menor): o par de obstáculos mais apertado da Fácil, um ao lado do outro
+  // (a passagem mínima), com o grupo de um lado e o Líder indo para o outro; todos passam sem travar
+  const corredor = await cena(`(() => {
+    const facil = c.mapa.regioes.find((r) => r.id === 'facil')
+    const dentro = (o) => o.x - o.largura / 2 > facil.x0 + 150 && o.x + o.largura / 2 < facil.x1 - 150 && o.y - o.altura / 2 > facil.y0 + 300 && o.y + o.altura / 2 < facil.y1 - 300
+    const obs = c.mapa.obstaculos.filter(dentro)
+    let melhor = null
+    for (const a of obs) for (const b of obs) {
+      if (b.x <= a.x) continue
+      const vao = (b.x - b.largura / 2) - (a.x + a.largura / 2)
+      const encaram = Math.min(a.y + a.altura / 2, b.y + b.altura / 2) - Math.max(a.y - a.altura / 2, b.y - b.altura / 2)
+      if (vao < 60 || vao > 130 || encaram < 40) continue
+      if (!melhor || vao < melhor.vao) melhor = { vao: Math.round(vao), x: (a.x + a.largura / 2 + b.x - b.largura / 2) / 2, topo: Math.min(a.y - a.altura / 2, b.y - b.altura / 2), base: Math.max(a.y + a.altura / 2, b.y + b.altura / 2) }
+    }
+    return melhor
+  })()`)
+  if (corredor) {
+    await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${corredor.x}, i.y - ${corredor.topo}) < 1200).forEach((i) => c.matarInimigo(i)), true)`)
+    await colocarLider(corredor.x, corredor.topo - 90)
+    for (const membro of [0, 1, 2, 3]) await cena(`(c.aliados[${membro}]?.colocarEm(${corredor.x} + (${membro} - 1.5) * 34, ${corredor.topo} - 150 - (${membro} % 2) * 30), true)`)
+    await pausa(300)
+    await colocarLider(corredor.x, corredor.base + 120)
+    await pausa(5000)
+    const passaram = await cena(`c.aliados.map((a) => ({ classe: a.classe, passou: a.y > ${corredor.base}, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)), deslizou: !!a.deslizando }))`)
+    conferir(`corredor estreito (${corredor.vao} px entre dois obstáculos): o grupo inteiro passa para o outro lado sem travar`, passaram.length === 4 && passaram.every((um) => um.passou && um.distancia < 260), { vao: corredor.vao, passaram })
+    await aba.print('04b-corredor')
+  } else {
+    conferir('achou um corredor estreito na Fácil para o teste', false)
+  }
 
   console.log('6. Regiões: o HUD mostra a região, e a taxa conta do ponto inicial até a borda real (TASK-061)')
   // O que está no quadro do minimapa (o mapa, a região e a mochila) fica inteiro dentro dele, e o quadro dentro da faixa

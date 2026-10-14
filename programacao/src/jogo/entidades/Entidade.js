@@ -1,11 +1,14 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { direcaoDoVetor } from '../../regras/arte.js'
+import { raioDoCorpo } from '../../regras/movimento.js'
 import { DesenhoDoBoneco } from '../arte.js'
 import { camadas } from '../efeitos.js'
 
 // Base de tudo que tem corpo na arena: Líder, aliados, mobs e boneco.
 // A hitbox (uma zona de física, invisível) é separada do desenho (o quadrado, a sombra, a barra),
-// como pede o CLAUDE.md: dá para trocar a arte sem mexer no acerto. Com a arte (usarArte), o quadrado dá lugar à
+// como pede o CLAUDE.md: dá para trocar a arte sem mexer no acerto. Ajustes de 14/10: o corpo que colide é bem menor que
+// o desenho (regras/movimento.js, raioDoCorpo), para o grupo deslizar um no outro e nas pedras; a área que recebe
+// golpes (retangulo) continua do tamanho do desenho, para o combate não ficar injusto. Com a arte (usarArte), o quadrado dá lugar à
 // imagem animada do boneco (jogo/arte.js); sem ela, continua o quadrado.
 export default class Entidade {
   constructor(cena, { x, y, tamanho, cor, estatico = false }) {
@@ -15,7 +18,8 @@ export default class Entidade {
     this.morto = false
     this.podeSerEmpurrado = !estatico
 
-    this.corpo = cena.add.zone(x, y, tamanho, tamanho)
+    this.raioDoCorpo = raioDoCorpo(tamanho)
+    this.corpo = cena.add.zone(x, y, this.raioDoCorpo * 2, this.raioDoCorpo * 2)
     cena.physics.add.existing(this.corpo, estatico)
     this.corpo.entidade = this
 
@@ -52,8 +56,9 @@ export default class Entidade {
     return this.corpo.y
   }
 
+  // O meio lado do corpo que colide (menor que o desenho): é o que a separação, as pedras e o caminho usam
   get raio() {
-    return this.tamanho / 2
+    return this.raioDoCorpo
   }
 
   // Quem não se mexe na separação (o boneco; os caídos, em Personagem)

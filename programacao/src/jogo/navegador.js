@@ -1,6 +1,6 @@
 import { combateDeTeste } from '../dados/balanceamento.js'
 import { velocidadeDoMovimento } from '../regras/combate.js'
-import { caminhoNaGrade, criarGrade, linhaLivre } from '../regras/movimento.js'
+import { caminhoNaGrade, criarGrade, linhaLivre, raioDoCorpo } from '../regras/movimento.js'
 import { retangulosEntre } from '../regras/vizinhanca.js'
 
 const { caminho: config, personagem } = combateDeTeste
@@ -13,7 +13,7 @@ export default class Navegador {
   constructor(area, paredes, indice) {
     this.paredes = paredes
     this.indice = indice
-    this.grade = criarGrade(area, paredes, { celula: config.celula, folga: personagem.tamanho / 2 + 2 })
+    this.grade = criarGrade(area, paredes, { celula: config.celula, folga: raioDoCorpo(personagem.tamanho) + 2 })
     this.caminhos = new Map()
   }
 

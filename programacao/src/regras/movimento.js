@@ -5,9 +5,15 @@
 // - travamento: percebe quem tenta andar e não sai do lugar, e diz o que fazer;
 // - ponto livre: o lugar mais perto onde um corpo cabe (para nascer, reaparecer e destravar).
 // Corpos são quadrados: { x, y, raio } com raio = metade do lado. Retângulos: { x, y, largura, altura }, x e y no centro.
+import { combateDeTeste } from '../dados/balanceamento.js'
 import { segmentoCortaRetangulo } from './combate.js'
 
 const distancia = (a, b) => Math.hypot(b.x - a.x, b.y - a.y)
+
+// O meio lado do corpo que colide (ajustes de 14/10): bem menor que o desenho (combateDeTeste.corpo)
+export function raioDoCorpo(tamanhoDoDesenho, fracao = combateDeTeste.corpo.fracaoDoTamanho) {
+  return Math.round(tamanhoDoDesenho * fracao * 10) / 10
+}
 const tamanhoDoVetor = (v) => Math.hypot(v.x, v.y)
 
 function limitarVetor(vetor, maximo) {

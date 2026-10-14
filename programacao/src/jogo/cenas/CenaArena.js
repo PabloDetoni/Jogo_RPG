@@ -893,7 +893,7 @@ export default class CenaArena extends Phaser.Scene {
 
   // Quem já saiu do bolo do "Juntar todos" (ninguém mais em cima dele) volta a ter a batida dura
   encerrarSeparacaoSuave(andantes, agora) {
-    const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < ((a.tamanho + b.tamanho) / 2) * 0.6
+    const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < (a.raio + b.raio) * 0.94
     for (const entidade of andantes) {
       if (entidade.separandoAte > agora && !andantes.some((outro) => outro !== entidade && emCima(entidade, outro))) {
         entidade.separandoAte = 0
@@ -908,7 +908,7 @@ export default class CenaArena extends Phaser.Scene {
     if (a.deslizando || b.deslizando) return false
     const agora = this.agora
     if (a.separandoAte <= agora && b.separandoAte <= agora) return true
-    return Math.hypot(a.x - b.x, a.y - b.y) > ((a.tamanho + b.tamanho) / 2) * 0.6
+    return Math.hypot(a.x - b.x, a.y - b.y) > (a.raio + b.raio) * 0.94
   }
 
   // Quase não saiu do lugar tentando andar: escorrega para um lado, depois para o outro, dá a volta e,

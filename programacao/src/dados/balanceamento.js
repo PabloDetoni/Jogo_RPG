@@ -350,8 +350,12 @@ export const combateDeTeste = {
   },
   // Grupo: distância das vagas em volta do Líder
   raioDaFormacao: 80,
-  // Zona em volta de cada corpo (ninguém fica em cima de ninguém). A zona de dois corpos vai até a soma das
-  // metades + folga; dentro dela, os dois se afastam aos poucos, até "forca" px/s quando um está em cima do outro.
+  // Corpo que colide (ajustes de 14/10, pedido do Pablo: os personagens se esbarravam demais): bem menor que o desenho,
+  // no meio dele. Meio lado = fracaoDoTamanho × tamanho do desenho (40 → 12,8 px, um quadrado de 25,6 px). A área que
+  // recebe golpes continua do tamanho do desenho (Entidade.retangulo). PROVISÓRIO.
+  corpo: { fracaoDoTamanho: 0.32 },
+  // Zona em volta de cada corpo (ninguém fica em cima de ninguém). A zona de dois corpos vai até a soma dos raios dos
+  // corpos que colidem (corpo, acima) + folga; dentro dela, os dois se afastam aos poucos, até "forca" px/s quando um está em cima do outro.
   // O Líder é mais pesado: quando ele esbarra, quem sai do caminho são os aliados.
   // 5b.1: folga de 1 px = a separação só age quando dois corpos se encostam de verdade (nunca para "arrumar")
   separacao: { folga: 1, forca: 320, pesoDoLider: 4, pesoDoInimigo: 1.5 },
