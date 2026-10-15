@@ -25,14 +25,14 @@ import {
   somarXpDoAbate,
   xpParaOProximoNivel,
 } from '../../regras/andamentoDaPartida.js'
-import { aplicarDano, circuloTocaRetangulo, escudoBloqueia, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
+import { aplicarDano, circuloTocaRetangulo, golpeNoEscudo, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
 import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { contaAoPegar, itemDescartado, itemDropado, itemNatural, tempoRestante } from '../../regras/itensNoChao.js'
-import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
+import { aliadoQueMaisPrecisa, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { escolherPedra } from '../../regras/arte.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
 import { tocarEfeito } from '../../audio/gerenciador.js'
@@ -43,22 +43,14 @@ import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, ite
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
-import {
-  acompanharTravamento,
-  desfazerSobreposicoes,
-  escorregar,
-  linhaLivre,
-  manobraParaDestravar,
-  pontoLivreMaisProximo,
-  separacao,
-  tirarDasParedes,
-} from '../../regras/movimento.js'
+import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, saltoMaximoPorQuadro, separacao, tirarDasParedes } from '../../regras/movimento.js'
 import { criarIndice, retangulosEntre, retangulosNaCaixa, retangulosPerto } from '../../regras/vizinhanca.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
 import Escudo from '../ataques/escudo.js'
 import { golpeDeEspada } from '../ataques/espada.js'
 import Flecha from '../ataques/flecha.js'
+import { colisaoVolta, liderAtravessa, naFrenteDoLider, saidaDoAliado, velocidadeParaAbrir } from '../../regras/passagemDoLider.js'
 import { DesenhoDoArco, cargaAtual, comecarAPuxar, flechaAgora, horaDeSoltar, msDeRecargaDoAtaque, multiplicadorDaVelocidade, podePuxar, puxarParaADistancia, usaArco } from '../arco.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
 import Atirador from '../entidades/Atirador.js'
@@ -186,6 +178,7 @@ export default class CenaArena extends Phaser.Scene {
     // Andamento (5c): em combate, retorno com Q, fuga com F e o que a partida ganhou até agora
     this.ultimoDano = null // quando alguém do grupo causou ou recebeu dano pela última vez
     this.emCombate = false
+    this.atravessaveis = new Set() // aliados que o Líder atravessa agora (ajustes da partida, 14/10; regras/passagemDoLider.js)
     this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
@@ -245,7 +238,7 @@ export default class CenaArena extends Phaser.Scene {
     })
     // Clique: o ataque da classe. O Arqueiro (ajustes de 14/10) puxa o arco enquanto segura e atira ao soltar
     this.input.on('pointerdown', (ponteiro) => {
-      if (!ponteiro.leftButtonDown() || this.lider.caido) return
+      if (!ponteiro.leftButtonDown() || this.lider.caido || this.mochilaAberta) return
       if (usaArco(this.lider)) {
         if (podePuxar(this.lider, this.agora)) comecarAPuxar(this.lider, this.agora)
       } else this.usarAtaque(this.lider, this.anguloDaMira)
@@ -732,15 +725,18 @@ export default class CenaArena extends Phaser.Scene {
 
   atualizarLider(agora) {
     const lider = this.lider
-    if (lider.caido) {
+    // Caído, ou com a mochila aberta (ajustes da partida, 14/10: o jogo não pausa, mas o Líder não anda, não ataca, não
+    // esquiva, não usa habilidade e não coleta), o Líder fica parado
+    if (lider.caido || this.mochilaAberta) {
       lider.parar()
+      // O que foi apertado agora não vale depois (o E da mochila não pega do chão ao fechar)
+      for (const tecla of ['esquiva', 'interagir', 'habilidade1', 'habilidade2', 'habilidade3']) Phaser.Input.Keyboard.JustDown(this.teclas[tecla])
       return
     }
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
-    // Com a mochila da partida aberta (Tab), o E usa o item escolhido, não pega do chão (RF41; Partida.jsx manda o comando)
-    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir) && !this.mochilaAberta) this.coletar(agora)
+    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
     ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
       if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
@@ -790,6 +786,8 @@ export default class CenaArena extends Phaser.Scene {
   // quem anda sozinho e não sai do lugar tenta outro jeito (regras/movimento.js).
   moverTodos(agora, segundos) {
     const andantes = this.andantes()
+    // Passar pelos aliados (ajustes da partida, 14/10): quem sai da frente do Líder e quem ele atravessa
+    const abrirCaminho = this.planejarPassagem()
     const corpos = [...andantes, ...(this.boneco ? [this.boneco] : [])].map((entidade) => ({
       x: entidade.x,
       y: entidade.y,
@@ -797,7 +795,8 @@ export default class CenaArena extends Phaser.Scene {
       peso: entidade.peso,
       fixo: entidade.fixo,
     }))
-    const afastamentos = separacao(corpos, combateDeTeste.separacao)
+    const atravessa = (a, b) => (a.lider && this.atravessaveis.has(b)) || (b.lider && this.atravessaveis.has(a))
+    const afastamentos = separacao(corpos, combateDeTeste.separacao, (i, j) => i < andantes.length && j < andantes.length && atravessa(andantes[i], andantes[j]))
     this.encerrarSeparacaoSuave(andantes, agora)
     andantes.forEach((entidade, i) => {
       if (entidade.deslizando) return
@@ -811,22 +810,27 @@ export default class CenaArena extends Phaser.Scene {
       // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
       const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora) * multiplicadorDaVelocidade(entidade) // puxando o arco, mais devagar
       if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
+      // O aliado no caminho do Líder sai para o lado antes do encontro (o grupo "se abre como água")
+      if (!empurrado && abrirCaminho.has(entidade)) base = somar(base, abrirCaminho.get(entidade))
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
       // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo).
       // O Líder é a exceção com os aliados: ele pode empurrá-los, para nunca ficar preso atrás de um aliado
       // parado (a correção de sobreposição continua valendo).
-      const encostados = entidade.lider ? andantes.filter((outro) => !this.grupo.includes(outro)) : andantes
+      const encostados = entidade.lider
+        ? andantes.filter((outro) => !this.grupo.includes(outro))
+        : andantes.filter((outro) => !(outro.lider && this.atravessaveis.has(entidade)))
       const outros = this.corposEncostados(entidade, [entidade, ...encostados], agora)
       const paredes = this.paredesPerto(entidade)
-      // Quem anda sozinho escorrega em tudo; o Líder escorrega nos corpos e, nas pedras, só no afastamento
-      // (contra uma pedra, quem manda é o jogador)
+      // Quem anda sozinho escorrega em tudo (ao longo da parede, mais devagar). O Líder (ajustes da partida, 14/10)
+      // para na parede, na borda e nos corpos sem nunca deslizar para o lado: ao longo da parede, só o que o jogador já
+      // empurra para o lado, e para nas quinas. Andar para cima encostado na parede não vira deslizar para o lado.
       // (o "segundos" faz cada um olhar à frente o tanto que vai andar neste quadro)
       const final = entidade.andaSozinho
         ? escorregar(somar(base, afastamentos[i]), entidade, [...paredes, ...outros], this.area, 4, segundos)
         : somar(
-            escorregar(base, entidade, outros, this.semBorda, 4, segundos),
-            escorregar(afastamentos[i], entidade, [...paredes, ...outros], this.area, 4, segundos),
+            escorregar(base, entidade, [...paredes, ...outros], this.area, 4, segundos, { deslizar: false }),
+            escorregar(afastamentos[i], entidade, [...paredes, ...outros], this.area, 4, segundos, { deslizar: false }),
           )
       corpo.setVelocity(final.x, final.y)
     })
@@ -867,6 +871,8 @@ export default class CenaArena extends Phaser.Scene {
       raio: entidade.raio,
       fixo: entidade.fixo,
       ignorar: entidade.deslizando || entidade.separandoAte > agora,
+      lider: entidade.lider,
+      atravessavel: this.atravessaveis.has(entidade),
     }))
     const posicoes = desfazerSobreposicoes(corpos, paredes, this.area, 8)
     andantes.forEach((entidade, i) => {
@@ -896,6 +902,39 @@ export default class CenaArena extends Phaser.Scene {
     return retangulosNaCaixa(this.indiceDasParedes, { x: (x0 + x1) / 2, y: (y0 + y1) / 2, largura: x1 - x0 + folga * 2, altura: y1 - y0 + folga * 2 })
   }
 
+  // Passar pelos aliados (ajustes da partida, 14/10; regras/passagemDoLider.js). A cada quadro:
+  // - na fuga (F) e no retorno (Q), o Líder atravessa todos os aliados;
+  // - quem o Líder já atravessa continua assim até os dois se separarem (aí a colisão volta);
+  // - o aliado no caminho sai para o lado; se não tem para onde (encurralado), o Líder atravessa só ele.
+  // Devolve a velocidade para abrir caminho de cada aliado que sai da frente. Os mobs não entram: colidem sempre.
+  planejarPassagem() {
+    const lider = this.lider
+    const abrir = new Map()
+    const fugindoOuRetornando = Boolean(this.fuga || this.retorno)
+    const velocidade = lider.caido ? { x: 0, y: 0 } : lider.querida
+    for (const aliado of this.aliados) {
+      if (aliado.caido || aliado.deslizando || !this.grupo.includes(aliado)) {
+        this.atravessaveis.delete(aliado)
+        continue
+      }
+      const jaAtravessa = this.atravessaveis.has(aliado) && !colisaoVolta(lider, aliado)
+      const nivel = this.perfilDaIA(aliado).id
+      const noCaminho = naFrenteDoLider(lider, velocidade, aliado, combateDeTeste.passagemDoLider.alcance[nivel] ?? 90)
+      let lado = null
+      if (noCaminho && !fugindoOuRetornando && !jaAtravessa) {
+        const outros = this.andantes()
+          .filter((outro) => outro !== aliado && outro !== lider)
+          .map((outro) => ({ x: outro.x, y: outro.y, raio: outro.raio }))
+        lado = saidaDoAliado(lider, velocidade, aliado, { paredes: this.paredesPerto(aliado), area: this.area, outros })
+      }
+      const atravessa = liderAtravessa({ fugindoOuRetornando, encurralado: noCaminho && !lado }) || jaAtravessa
+      if (atravessa) this.atravessaveis.add(aliado)
+      else this.atravessaveis.delete(aliado)
+      if (lado && !atravessa) abrir.set(aliado, velocidadeParaAbrir(lider, aliado, lado, nivel))
+    }
+    return abrir
+  }
+
   // Quem já saiu do bolo do "Juntar todos" (ninguém mais em cima dele) volta a ter a batida dura
   encerrarSeparacaoSuave(andantes, agora) {
     const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < (a.raio + b.raio) * 0.94
@@ -911,6 +950,8 @@ export default class CenaArena extends Phaser.Scene {
   // e quem está deslizando para o ponto livre passa por todos.
   podemColidir(a, b) {
     if (a.deslizando || b.deslizando) return false
+    // O Líder atravessando um aliado (encurralado, ou na fuga e no retorno): sem colisão entre os dois
+    if ((a.lider && this.atravessaveis.has(b)) || (b.lider && this.atravessaveis.has(a))) return false
     const agora = this.agora
     if (a.separandoAte <= agora && b.separandoAte <= agora) return true
     return Math.hypot(a.x - b.x, a.y - b.y) > (a.raio + b.raio) * 0.94
@@ -943,6 +984,8 @@ export default class CenaArena extends Phaser.Scene {
 
   // Último caso: desliza depressa (sem teletransporte) até o lugar livre mais próximo, com folga em volta
   deslizarParaPontoLivre(entidade) {
+    // O Líder nunca é reposicionado (ajustes da partida, 14/10): quem manda nele é o jogador
+    if (entidade.lider) return
     entidade.travamento = null
     entidade.manobra = null
     const ponto = this.lugarLivre(entidade.tamanho, entidade, entidade, travamento.folgaDoPontoLivre)
@@ -965,8 +1008,9 @@ export default class CenaArena extends Phaser.Scene {
       targets: caminho,
       x: ponto.x,
       y: ponto.y,
-      duration: travamento.msDoDeslize,
-      ease: 'Quad.Out',
+      // Na velocidade do deslize, em linha reta (ajustes de 14/10): nunca um pulo, sempre um movimento que se vê
+      duration: Math.max(travamento.msDoDeslize, (Math.hypot(ponto.x - entidade.x, ponto.y - entidade.y) / combateDeTeste.movimento.velocidadeDoDeslize) * 1000),
+      ease: 'Linear',
       onUpdate: () => {
         if (!entidade.morto) entidade.corpo.body.reset(caminho.x, caminho.y)
       },
@@ -1001,6 +1045,24 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
     if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
+  }
+
+  // Só para os roteiros (npm run dev; ajustes da partida, 14/10): uma pedra nova no meio da partida (corredor, canto)
+  paredeDeTeste(pedra) {
+    if (!import.meta.env.DEV) return
+    const nova = { ...pedra, tipo: 'pedra' }
+    this.mapa = { ...this.mapa, obstaculos: [...this.mapa.obstaculos, nova] }
+    this.add.rectangle(nova.x, nova.y, nova.largura, nova.altura, coresDaArena.pedra).setStrokeStyle(2, coresDaArena.contorno).setDepth(nova.y)
+    this.obstaculos.add(this.add.zone(nova.x, nova.y, nova.largura, nova.altura))
+    this.retangulosDosObstaculos = [...this.mapa.obstaculos, ...(this.boneco ? [this.boneco.retangulo()] : [])]
+    this.indiceDasParedes = criarIndice(this.retangulosDosObstaculos)
+    this.indiceDasPedras = this.boneco ? criarIndice(this.mapa.obstaculos) : this.indiceDasParedes
+    this.navegador = new Navegador(this.area, this.retangulosDosObstaculos, this.indiceDasParedes)
+  }
+
+  // O máximo que um corpo pode andar num quadro (regras/movimento.js): o monitor dos roteiros usa (ajustes de 14/10)
+  saltoMaximoPorQuadro(ms) {
+    return saltoMaximoPorQuadro(ms)
   }
 
   // ---------- Arco que carrega (Arqueiro; ajustes de 14/10, jogo/arco.js) ----------
@@ -1250,15 +1312,41 @@ export default class CenaArena extends Phaser.Scene {
 
   // Golpe corpo a corpo: o escudo do Tanque bloqueia o que vem da frente
   // tipo (ajustes de 14/10): 'golpe' (corpo a corpo: o escudo do Tanque segura se vier pela frente) ou 'area' (o pisão
-  // do Boss, explosões: atinge o Tanque normalmente; regras/combate.js, escudoBloqueia)
+  // do Boss, explosões: atinge o Tanque normalmente). Golpe forte demais para a Força do Tanque (ajustes na partida,
+  // 14/10) rompe o escudo: o Tanque leva o dano inteiro (regras/combate.js, golpeNoEscudo).
   inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao, tipo = 'golpe') {
-    if (membro.escudo && escudoBloqueia({ escudoAtivo: membro.escudo.ativo, tipo, naFrente: membro.escudo.bloqueiaGolpe(inimigo) })) {
+    const noEscudo = membro.escudo
+      ? golpeNoEscudo({ escudoAtivo: membro.escudo.ativo, tipo, naFrente: membro.escudo.bloqueiaGolpe(inimigo), dano, forca: membro.forca })
+      : 'passa'
+    if (noEscudo === 'bloqueado') {
       const { x, y } = membro.escudo.retangulo()
       this.mostrarBloqueado(x, y)
       inimigo.empurrar(vetorDeEmpurrao(membro, inimigo, forcaDoEmpurrao), 220)
       return 'bloqueado'
     }
-    return this.membroLevaGolpe(membro, dano, inimigo, forcaDoEmpurrao)
+    const resultado = this.membroLevaGolpe(membro, dano, inimigo, forcaDoEmpurrao)
+    if (noEscudo === 'rompido' && resultado === 'acertou') this.escudoRompido(membro.escudo)
+    return resultado
+  }
+
+  // Projétil que bate no escudo de um Tanque: segura até o limite pela Força; acima, rompe e o Tanque leva o dano
+  // inteiro. O projétil acaba no escudo nos dois casos.
+  projetilNoEscudo(escudo, dano, origem, forcaDoEmpurrao, x, y) {
+    if (golpeNoEscudo({ escudoAtivo: escudo.ativo, tipo: 'projetil', naFrente: true, dano, forca: escudo.dono.forca }) !== 'rompido') {
+      this.mostrarBloqueado(x, y)
+      return
+    }
+    if (this.membroLevaGolpe(escudo.dono, dano, origem, forcaDoEmpurrao) === 'acertou') this.escudoRompido(escudo)
+  }
+
+  // "Escudo rompido!" em cima do escudo, que treme; e o aviso no HUD (a primeira vez que se vê, para entender)
+  escudoRompido(escudo) {
+    const { x, y } = escudo.retangulo()
+    tocarEfeito('bloqueio')
+    numeroFlutuante(this, x, y - 26, 'Escudo rompido!', coresDaArena.escudoRompido, 20)
+    particulas(this, x, y, 0xffb070, 10, 220)
+    escudo.tremer()
+    this.mensagem(`Escudo rompido: golpe forte demais para a Força do ${escudo.dono.lider ? 'seu ' : ''}Tanque`, 'alerta')
   }
 
   // Quem é do grupo leva o golpe (Líder ou aliado). Não leva quem está caído ou imune depois de apanhar;
@@ -1515,13 +1603,13 @@ export default class CenaArena extends Phaser.Scene {
     if (aviso) this.mensagem(aviso, 'bom')
   }
 
-  // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé mais perto da mira (em = 'aliado').
+  // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé que mais precisa dele (em = 'aliado').
   // A regra (regras/itensNaPartida.js) diz o que muda; quando não dá (desmaiado, vida cheia), nada é gasto.
   usarItem(id, em) {
     const pilha = this.mochila.itens.find((item) => item.id === id)
     const item = itemDoCatalogo(id)
     if (!pilha || !item) return
-    const alvo = em === 'aliado' ? aliadoPelaMira(this.aliados, this.mouseNoMundo ?? this.lider) : this.lider
+    const alvo = em === 'aliado' ? aliadoQueMaisPrecisa(this.aliados, item, this.lider) : this.lider
     if (!alvo) {
       this.mensagem('Nenhum aliado de pé para usar o item', 'aviso')
       return
@@ -1558,8 +1646,12 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'alternarRetorno') this.alternarRetorno()
     if (comando.tipo === 'comecarRetorno') this.alternarRetorno(true)
     if (comando.tipo === 'fugir') this.fugir()
-    // Mochila da partida (Fase 4, TASK-047): Tab abre sem pausar; E usa no Líder e R no aliado mais perto da mira
-    if (comando.tipo === 'mochilaAberta') this.mochilaAberta = Boolean(comando.aberta)
+    // Mochila da partida (Fase 4, TASK-047; ajustes da partida, 14/10): Tab abre no meio da tela, sem pausar; o Líder
+    // fica parado (o arco que ele puxava desarma, sem atirar). E usa no Líder e R no aliado que mais precisa.
+    if (comando.tipo === 'mochilaAberta') {
+      this.mochilaAberta = Boolean(comando.aberta)
+      if (this.mochilaAberta) this.lider.puxando = null
+    }
     if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
     if (comando.tipo === 'descartarItem') this.descartarItem(comando.id, comando.quantidade)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)

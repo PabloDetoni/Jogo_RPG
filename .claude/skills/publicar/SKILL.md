@@ -11,7 +11,7 @@ description: Regra de commits e publicação do Jogo RPG no endereço principal 
 
 ## No fim de cada fase
 
-1. Rodar tudo (skill `verify`, seção 3): `npm test`, lint, build, `testar:navegador`, `testar:floresta`, `testar:reino`, `testar:arte`.
+1. Rodar tudo (skill `verify`, seção 3): `npm test`, lint, build, `testar:navegador`, `testar:floresta`, `testar:reino`, `testar:paredes`, `testar:arte`.
 2. **Nunca publicar com teste falhando.** Com tudo passando:
 
 ```bash

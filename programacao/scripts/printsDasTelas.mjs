@@ -114,7 +114,11 @@ try {
   await print('forja-dica-da-primeira-visita', { manterDica: true })
   // Na aba Equipar, uma peça escolhida (para o print mostrar o antes e depois)
   await abaChamada('Equipar')
-  await aba.avaliar(`(() => { document.querySelector('.balcao-grade .slot:not(.slot-apagado)')?.click(); return true })()`)
+  // A grade com o item na mão: o clique pega e o segundo põe de volta (o detalhe fica no item)
+  for (let vez = 0; vez < 2; vez++) {
+    await aba.avaliar(`(() => { document.querySelector('.balcao-grade .celula-da-grade:first-child')?.click(); return true })()`)
+    await pausa(150)
+  }
   await pausa(250)
   await abasDaTela('forja', ['Equipar', 'Comprar', 'Vender', 'Fabricar', 'Catálogo'])
 

@@ -46,7 +46,8 @@ import {
 import { resultados } from '../src/dados/resultados.js'
 import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
 import { efeitoComExpoente, pontosDeAtributoAteONivel } from '../src/regras/atributos.js'
-import { chanceDeCritico } from '../src/regras/combate.js'
+import { chanceDeCritico, limiteDoEscudo } from '../src/regras/combate.js'
+import { saltoMaximoPorQuadro } from '../src/regras/movimento.js'
 import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
 import { numerosNoNivel } from '../src/regras/habilidadesDaArvore.js'
 import { precoDeVenda } from '../src/regras/mercado.js'
@@ -296,7 +297,11 @@ const ataquesDeTeste = {
   arqueiro: ['Arco que carrega: segura e solta (ver abaixo)', `${numero(combate.arco.fracaoMinimaDoDano * 100)}% a 100% de ${combate.arco.danoBase} + ${numero(combate.arco.danoPorForca, 1)} × Força`, `${numero(combate.arco.velocidadeMinima)} a ${numero(combate.arco.velocidadeMaxima)} px/s, até ${numero(combate.arco.fracaoMinimaDoAlcance * combate.arco.alcanceMaximo)} a ${numero(combate.arco.alcanceMaximo)} px`],
   mago: ['Bola mágica: explode em área', `${ataque.mago.dano}`, `cresce de ${ataque.mago.raioInicial} a ${ataque.mago.raioFinal}; explosão de raio ${ataque.mago.raioDaExplosao}`],
   sacerdote: ['Aura: cura quem está dentro', `cura ${ataque.sacerdote.curaPorPulso} por pulso`, `raio ${ataque.sacerdote.raio}; pulso a cada ${segundos(ataque.sacerdote.msEntrePulsos)} por ${segundos(ataque.sacerdote.msDeDuracao)}`],
-  tanque: ['Escudo: bloqueia; o clique empurra', `${ataque.tanque.dano}`, `escudo de ${ataque.tanque.larguraDoEscudo} px; empurrão até ${ataque.tanque.alcanceDoEmpurrao}`],
+  tanque: [
+    'Escudo: bloqueia; o clique empurra',
+    `${ataque.tanque.dano}`,
+    `escudo de ${ataque.tanque.larguraDoEscudo} px; empurrão até ${ataque.tanque.alcanceDoEmpurrao}; segura golpe de frente até ${numero(ataque.tanque.limiteDoEscudo.base)} + ${numero(ataque.tanque.limiteDoEscudo.porForca, 1)} × Força de dano (Força 15: ${numero(limiteDoEscudo(15), 1)}; 50: ${numero(limiteDoEscudo(50), 1)}; 100: ${numero(limiteDoEscudo(100), 1)}); acima, rompe e o Tanque leva o dano inteiro`,
+  ],
 }
 const inimigosDeTeste = [
   ['Mob vermelho', combate.mobVermelho, `aviso de ${segundos(combate.mobVermelho.msDeAviso)}, bote de ${combate.mobVermelho.distanciaDoBote} px`],
@@ -319,6 +324,8 @@ escrever(
     `Depois de levar um golpe, **${segundos(combate.personagem.msDeImunidade)}** de imunidade (RF36).`,
     `Corpo que colide (ajustes de 14/10): um quadrado no meio do desenho, com lado de **${numero(combate.corpo.fracaoDoTamanho * 100)}%** do desenho (um personagem de ${combate.personagem.tamanho} px colide com ${numero(2 * combate.corpo.fracaoDoTamanho * combate.personagem.tamanho, 1)} px); a área que recebe golpes continua do tamanho do desenho.`,
     `Separação: cada corpo (o que colide) tem uma zona de **${combate.separacao.folga} px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **${combate.separacao.forca} px/s** quando um está em cima do outro. O Líder pesa **${combate.separacao.pesoDoLider}** (os aliados saem da frente dele) e os inimigos, **${numero(combate.separacao.pesoDoInimigo, 1)}**.`,
+    `Nunca teletransportar (ajustes na partida, 14/10): quem entrou numa pedra sai pelo lado em que entrou menos, no máximo **${combate.movimento.correcaoMaximaPorQuadro} px por quadro**; o maior passo de um quadro é **${numero(combate.movimento.velocidadeMaxima)} px/s** × o tempo do quadro + essa correção (a 60 FPS, ${numero(saltoMaximoPorQuadro(1000 / 60), 1)} px). O Líder não escorrega de lado nas paredes; os aliados e os mobs seguem a parede a **${numero(combate.movimento.fatorDoEscorregar * 100)}%** do passo, e o deslize até um ponto livre anda a **${combate.movimento.velocidadeDoDeslize} px/s**, em linha reta.`,
+    `Passar pelos aliados (ajustes na partida, 14/10): o aliado no caminho do Líder começa a sair para o lado a **${combate.passagemDoLider.alcance.basica} / ${combate.passagemDoLider.alcance.media} / ${combate.passagemDoLider.alcance.avancada} px** do encontro (IA básica / média / avançada), a **${numero(combate.passagemDoLider.forca.basica * 100)} / ${numero(combate.passagemDoLider.forca.media * 100)} / ${numero(combate.passagemDoLider.forca.avancada * 100)}%** da velocidade de andar; sem **${combate.passagemDoLider.distanciaParaSair} px** livres de nenhum lado, está encurralado e o Líder passa por dentro dele; a colisão volta quando os dois se separam por **${combate.passagemDoLider.folgaParaVoltar} px**. Na fuga e no retorno, o Líder passa por todos.`,
     `Travamento: quem anda sozinho e, em **${segundos(combate.travamento.msDaJanela)}**, anda menos de **${numero(combate.travamento.fracaoMinima * 100)}%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível ${combate.travamento.nivelDoPontoLivre}, desliza em **${segundos(combate.travamento.msDoDeslize)}** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **${combate.caminho.celula} px**.`,
   ),
   tabela(

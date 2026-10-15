@@ -10,6 +10,23 @@ import { segmentoCortaRetangulo } from './combate.js'
 
 const distancia = (a, b) => Math.hypot(b.x - a.x, b.y - a.y)
 
+// ---------- Nunca teletransportar (ajustes da partida, 14/10) ----------
+
+// O máximo que um corpo pode andar num quadro de "ms" milissegundos: o mais rápido do jogo no tempo do quadro, mais a
+// correção máxima (sair da parede ou de outro corpo). Vale para o Líder, os aliados e os mobs.
+export function saltoMaximoPorQuadro(ms, { velocidadeMaxima, correcaoMaximaPorQuadro } = combateDeTeste.movimento) {
+  return (velocidadeMaxima * Math.max(0, ms)) / 1000 + correcaoMaximaPorQuadro
+}
+
+// Corta o passo de "de" até "para" no máximo "maximo" px, na mesma direção
+export function limitarPasso(de, para, maximo) {
+  const dx = para.x - de.x
+  const dy = para.y - de.y
+  const tamanho = Math.hypot(dx, dy)
+  if (tamanho <= maximo || tamanho === 0) return { x: para.x, y: para.y }
+  return { x: de.x + (dx / tamanho) * maximo, y: de.y + (dy / tamanho) * maximo }
+}
+
 // O meio lado do corpo que colide (ajustes de 14/10): bem menor que o desenho (combateDeTeste.corpo)
 export function raioDoCorpo(tamanhoDoDesenho, fracao = combateDeTeste.corpo.fracaoDoTamanho) {
   return Math.round(tamanhoDoDesenho * fracao * 10) / 10
@@ -59,13 +76,15 @@ function dentroDaArea(corpo, area, folga = 0) {
 // O mais pesado se mexe menos; quem é fixo (caído, boneco) não se mexe e o outro sai sozinho.
 // No mesmo ponto exato, cada par se afasta numa direção diferente, então ninguém fica parado em cima de ninguém.
 // Devolve uma velocidade { x, y } para cada corpo, na mesma ordem, nunca maior que a força.
-export function separacao(corpos, { folga, forca }) {
+// ignorarPar(i, j) (ajustes da partida, 14/10): o par não se separa (o Líder atravessando um aliado)
+export function separacao(corpos, { folga, forca }, ignorarPar = null) {
   const velocidades = corpos.map(() => ({ x: 0, y: 0 }))
   for (let i = 0; i < corpos.length; i++) {
     for (let j = i + 1; j < corpos.length; j++) {
       const a = corpos[i]
       const b = corpos[j]
       if (a.fixo && b.fixo) continue
+      if (ignorarPar?.(i, j)) continue
       const zona = a.raio + b.raio + folga
       const ate = distancia(a, b)
       if (ate >= zona) continue
@@ -97,7 +116,9 @@ export function separacao(corpos, { folga, forca }) {
 // mais perto; na borda, para o lado em que já ia (ou para o meio da área). Nos cantos fechados, para.
 // O corpo "testa" à frente pelo menos "passo" px, ou o tanto que vai andar no quadro (segundos), se for mais:
 // assim, rápido ou com o navegador lento, ele não entra na parede antes de percebê-la.
-export function escorregar(velocidade, corpo, paredes, area, passo = 4, segundos = 0) {
+// opcoes.deslizar = false (o Líder, ajustes da partida de 14/10): a parte que entra na parede some, mas nunca vira
+// deslizar para o lado; ao longo da parede, só o que o jogador já empurra para o lado (para nas quinas).
+export function escorregar(velocidade, corpo, paredes, area, passo = 4, segundos = 0, { deslizar = true } = {}) {
   const tamanho = tamanhoDoVetor(velocidade)
   if (tamanho === 0) return velocidade
   const passoX = Math.max(passo, Math.abs(velocidade.x) * segundos + 1)
@@ -128,16 +149,18 @@ export function escorregar(velocidade, corpo, paredes, area, passo = 4, segundos
   if (paredeEmX) x = 0
   if (paredeEmY) y = 0
   if (paredeEmX && paredeEmY) return { x, y }
+  if (!deslizar) return { x, y }
 
-  // Sobrou pouco para o lado: escorrega com quase toda a velocidade
+  // Sobrou pouco para o lado: escorrega ao longo da parede, mais devagar que andando (fatorDoEscorregar)
   const minimo = tamanho * 0.3
+  const lento = tamanho * combateDeTeste.movimento.fatorDoEscorregar
   if (paredeEmX && Math.abs(y) < minimo) {
     const sentido = ladoParaEscorregar(paredeEmX, corpo.y, velocidade.y, area.y, 'y')
-    if (!bloqueio(0, sentido * passoDoLado)) y = sentido * tamanho * 0.9
+    if (!bloqueio(0, sentido * passoDoLado)) y = sentido * lento
   }
   if (paredeEmY && Math.abs(x) < minimo) {
     const sentido = ladoParaEscorregar(paredeEmY, corpo.x, velocidade.x, area.x, 'x')
-    if (!bloqueio(sentido * passoDoLado, 0)) x = sentido * tamanho * 0.9
+    if (!bloqueio(sentido * passoDoLado, 0)) x = sentido * lento
   }
   return { x, y }
 }
@@ -152,31 +175,55 @@ function ladoParaEscorregar(parede, posicao, velocidadeDoLado, meioDaArea, eixo)
 
 // ---------- Tirar de dentro das pedras ----------
 
-// Quem ficou um pouco dentro de uma pedra (empurrado no aperto) sai pelo lado em que entrou menos; se esse lado
-// der em outra pedra ou fora da área, tenta os outros lados. A física sozinha não tira um corpo parado de dentro
-// da pedra (ela o considera "enterrado"). corpos: [{ x, y, raio }]. Devolve as posições novas { x, y }.
-export function tirarDasParedes(corpos, paredes, area) {
+// Quem ficou um pouco dentro de uma parede (empurrado no aperto, ou a física no canto) é empurrado para fora pelo lado
+// em que entrou menos naquela parede; numa quina (duas paredes), os dois empurrões somam. Ajustes da partida (14/10):
+// nunca mais que "maximo" px por quadro, e nunca para longe. Antes, quando o lado mais perto dava em outra parede, ele
+// procurava a saída livre seguinte, que num bloco de mata enorme podia ser o outro lado do bloco, a mais de mil pixels:
+// era o teletransporte. A física sozinha não tira um corpo parado de dentro da pedra (ela o considera "enterrado").
+// corpos: [{ x, y, raio }]. Devolve as posições novas { x, y }.
+export function tirarDasParedes(corpos, paredes, area, maximo = combateDeTeste.movimento.correcaoMaximaPorQuadro) {
   return corpos.map((corpo) => {
-    let posicao = { x: corpo.x, y: corpo.y }
-    for (let volta = 0; volta < 3; volta++) {
-      const parede = paredes.find((outra) => sobrepoe(quadradoDoCorpo({ ...corpo, ...posicao }), outra))
-      if (!parede) break
-      const meioX = corpo.raio + parede.largura / 2
-      const meioY = corpo.raio + parede.altura / 2
-      const saidas = [
-        { x: parede.x - meioX, y: posicao.y },
-        { x: parede.x + meioX, y: posicao.y },
-        { x: posicao.x, y: parede.y - meioY },
-        { x: posicao.x, y: parede.y + meioY },
-      ].sort((a, b) => distancia(a, posicao) - distancia(b, posicao))
-      const livre = saidas.find(
-        (saida) =>
-          dentroDaArea({ ...corpo, ...saida }, area) && !paredes.some((outra) => sobrepoe(quadradoDoCorpo({ ...corpo, ...saida }), outra)),
-      )
-      if (!livre) break
-      posicao = livre
+    // Cada parede em que o corpo entrou: quanto empurra em x e em y, para fora dela
+    const dentro = paredes
+      .filter((parede) => sobrepoe(quadradoDoCorpo(corpo), parede))
+      .map((parede) => {
+        const dx = corpo.x - parede.x
+        const dy = corpo.y - parede.y
+        return {
+          x: (dx >= 0 ? 1 : -1) * (corpo.raio + parede.largura / 2 - Math.abs(dx)),
+          y: (dy >= 0 ? 1 : -1) * (corpo.raio + parede.altura / 2 - Math.abs(dy)),
+        }
+      })
+    if (dentro.length === 0) return { x: corpo.x, y: corpo.y }
+    // O maior empurrão em cada sentido (duas paredes do mesmo lado não empurram em dobro); apertado dos dois lados
+    // num eixo (um vão mais estreito que o corpo), aquele eixo não serve
+    const somar = (eixos) => {
+      const total = { x: [0, 0], y: [0, 0] }
+      dentro.forEach((d, i) => {
+        const eixo = eixos[i]
+        const lado = d[eixo] > 0 ? 1 : 0
+        total[eixo][lado] = Math.max(total[eixo][lado], Math.abs(d[eixo]))
+      })
+      const apertadoX = total.x[0] > 0 && total.x[1] > 0
+      const apertadoY = total.y[0] > 0 && total.y[1] > 0
+      return { x: total.x[1] - total.x[0], y: total.y[1] - total.y[0], apertadoX, apertadoY }
     }
-    return posicao
+    // Primeiro, cada parede pelo eixo em que o corpo entrou menos; se um eixo ficar apertado, aquelas paredes empurram
+    // pelo outro eixo (sai por cima ou por baixo do vão estreito)
+    let eixos = dentro.map((d) => (Math.abs(d.x) <= Math.abs(d.y) ? 'x' : 'y'))
+    let soma = somar(eixos)
+    // (só se a saída por ali for curta, até o tamanho do corpo: nunca atravessar um vão comprido de ponta a ponta)
+    let longe = Infinity
+    if (soma.apertadoX || soma.apertadoY) {
+      eixos = eixos.map((eixo) => (eixo === 'x' && soma.apertadoX ? 'y' : eixo === 'y' && soma.apertadoY ? 'x' : eixo))
+      soma = somar(eixos)
+      longe = 2 * corpo.raio + 2
+    }
+    const x = soma.apertadoX || Math.abs(soma.x) > longe ? 0 : soma.x
+    const y = soma.apertadoY || Math.abs(soma.y) > longe ? 0 : soma.y
+    if (x === 0 && y === 0) return { x: corpo.x, y: corpo.y }
+    const passo = limitarPasso(corpo, { x: corpo.x + x, y: corpo.y + y }, maximo)
+    return dentroDaArea({ ...corpo, ...passo }, area) ? passo : { x: corpo.x, y: corpo.y }
   })
 }
 
@@ -188,7 +235,7 @@ export function tirarDasParedes(corpos, paredes, area) {
 // - se só um dos dois sairia para cima de um terceiro, sai o outro (assim uma fila contra a pedra se desfaz).
 // Quem tem "ignorar" (no bolo do "Juntar todos", deslizando) fica de fora. Algumas voltas, porque desfazer
 // um par pode encostar em outro. corpos: [{ x, y, raio, fixo?, ignorar? }]. Devolve as posições novas { x, y }.
-export function desfazerSobreposicoes(corpos, paredes, area, voltas = 3) {
+export function desfazerSobreposicoes(corpos, paredes, area, voltas = 3, maximo = combateDeTeste.movimento.correcaoMaximaPorQuadro) {
   const posicoes = corpos.map((corpo) => ({ x: corpo.x, y: corpo.y }))
   // O que impede o corpo i de ir para (x, y): 'parede', 'corpo' (um terceiro, que não é o par) ou null
   const impedimento = (i, x, y, par) => {
@@ -209,6 +256,8 @@ export function desfazerSobreposicoes(corpos, paredes, area, voltas = 3) {
         const a = corpos[i]
         const b = corpos[j]
         if (a.ignorar || b.ignorar || (a.fixo && b.fixo)) continue
+        // O Líder atravessando um aliado (ajustes da partida, 14/10): os dois não se desfazem um do outro
+        if ((a.lider && b.atravessavel) || (b.lider && a.atravessavel)) continue
         const pa = posicoes[i]
         const pb = posicoes[j]
         const entrouX = a.raio + b.raio - Math.abs(pa.x - pb.x)
@@ -241,7 +290,8 @@ export function desfazerSobreposicoes(corpos, paredes, area, voltas = 3) {
     }
     if (!mexeu) break
   }
-  return posicoes
+  // Nunca mais que "maximo" px por quadro para cada um (ajustes de 14/10): o resto sai nos quadros seguintes
+  return posicoes.map((posicao, k) => limitarPasso(corpos[k], posicao, maximo))
 }
 
 // ---------- Caminho na grade ----------

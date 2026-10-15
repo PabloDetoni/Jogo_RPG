@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { filtrosDeItens } from '../../dados/interface.js'
-import { contarPorFiltro, filtrarItens } from '../../regras/interface.js'
+import { filtrarItens } from '../../regras/interface.js'
+import FiltrosDeItens from './FiltrosDeItens.jsx'
 import Slot from './Slot.jsx'
 
 // Grade de quadradinhos com os filtros por tipo (Fase 4.5): Mochila, Mercado, Forja, Catálogo e Preparação.
@@ -9,27 +9,11 @@ import Slot from './Slot.jsx'
 // apagados.
 export default function GradeDeItens({ itens, escolhido, aoEscolher, vazio, rotulo, comFiltros = true, tamanho = 'grande' }) {
   const [filtro, setFiltro] = useState('todos')
-  const contagem = contarPorFiltro(itens)
   const visiveis = comFiltros ? filtrarItens(itens, filtro) : itens
 
   return (
     <div className="grade-de-itens">
-      {comFiltros && itens.length > 0 && (
-        <div className="filtros" role="group" aria-label="Filtrar por tipo">
-          {filtrosDeItens.map((um) => (
-            <button
-              key={um.id}
-              type="button"
-              className="botao filtro"
-              aria-pressed={um.id === filtro}
-              disabled={um.id !== 'todos' && contagem[um.id] === 0}
-              onClick={() => setFiltro(um.id)}
-            >
-              {um.nome} <span className="filtro-contagem">{contagem[um.id]}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {comFiltros && itens.length > 0 && <FiltrosDeItens itens={itens} filtro={filtro} aoMudar={setFiltro} />}
       {visiveis.length === 0 ? (
         <p className="vazio">{itens.length === 0 ? vazio : 'Nenhum item deste tipo.'}</p>
       ) : (

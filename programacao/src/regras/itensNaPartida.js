@@ -1,20 +1,24 @@
 import { itemDoCatalogo, usavelNaPartida } from '../dados/itens.js'
 
-// ITENS NA PARTIDA (Fase 4, TASK-047; RF41): Tab abre a mochila da partida sem pausar; E usa o item escolhido no Líder e
-// R usa num aliado (PROVISÓRIO, decisão em aberto no card: o aliado mais perto da mira). A partida só aplica o que
-// esta regra devolve.
+// ITENS NA PARTIDA (Fase 4, TASK-047; RF41): Tab abre a mochila da partida sem pausar; E usa o item no Líder e R num
+// aliado. A partida só aplica o que esta regra devolve.
 
-// Quem recebe com R: o aliado de pé mais perto do ponto da mira (o mouse no mapa). Sem aliado de pé, ninguém.
-export function aliadoPelaMira(aliados, ponto) {
+// Quem recebe com R (ajustes da partida, 14/10; decisão do Claude): com a mochila no meio da tela não há mira, então R
+// usa no aliado de pé que mais precisa daquele item. Poção de vida: o mais ferido (menor fração da vida); poção de
+// mana: o com menos mana (fração); acelerador: o mais perto do Líder. Empate: o mais perto do Líder. Sem aliado de pé,
+// ninguém.
+export function aliadoQueMaisPrecisa(aliados, item, lider) {
+  const tipo = item?.efeito?.tipo
+  const falta = (aliado) => {
+    if (tipo === 'vida') return aliado.vida / Math.max(1, aliado.vidaMaxima)
+    if (tipo === 'mana') return aliado.mana / Math.max(1, aliado.manaMaxima)
+    return 0
+  }
+  const distancia = (aliado) => Math.hypot(aliado.x - lider.x, aliado.y - lider.y)
   let melhor = null
-  let menor = Infinity
   for (const aliado of aliados) {
     if (aliado.caido) continue
-    const distancia = Math.hypot(aliado.x - ponto.x, aliado.y - ponto.y)
-    if (distancia < menor) {
-      menor = distancia
-      melhor = aliado
-    }
+    if (!melhor || falta(aliado) < falta(melhor) || (falta(aliado) === falta(melhor) && distancia(aliado) < distancia(melhor))) melhor = aliado
   }
   return melhor
 }

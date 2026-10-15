@@ -165,7 +165,7 @@ try {
       const meio = (a.x + a.largura / 2 + b.x - b.largura / 2) / 2
       const topo = Math.min(a.y - a.altura / 2, b.y - b.altura / 2)
       const base = Math.max(a.y + a.altura / 2, b.y + b.altura / 2)
-      if (!livre(meio, topo - 170) || !livre(meio, base + 130)) continue
+      if (!livre(meio, topo - 170) || !livre(meio, base + 130) || !livre(meio, base + 200)) continue
       if (!melhor || vao < melhor.vao) melhor = { vao: Math.round(vao), x: (a.x + a.largura / 2 + b.x - b.largura / 2) / 2, topo: Math.min(a.y - a.altura / 2, b.y - b.altura / 2), base: Math.max(a.y + a.altura / 2, b.y + b.altura / 2) }
     }
     return melhor
@@ -175,7 +175,8 @@ try {
     await colocarLider(corredor.x, corredor.topo - 90)
     for (const membro of [0, 1, 2, 3]) await cena(`(c.aliados[${membro}]?.colocarEm(${corredor.x} + (${membro} - 1.5) * 34, ${corredor.topo} - 150 - (${membro} % 2) * 30), true)`)
     await pausa(300)
-    await colocarLider(corredor.x, corredor.base + 120)
+    // O Líder bem depois da saída (200 px): quem para na distância normal de seguir (uns 130 px) já atravessou
+    await colocarLider(corredor.x, corredor.base + 200)
     await pausa(5000)
     const passaram = await cena(`c.aliados.map((a) => ({ classe: a.classe, passou: a.y > ${corredor.base}, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)), deslizou: !!a.deslizando }))`)
     conferir(`corredor estreito (${corredor.vao} px entre dois obstáculos): o grupo inteiro passa para o outro lado sem travar`, passaram.length === 4 && passaram.every((um) => um.passou && um.distancia < 260), { vao: corredor.vao, passaram })
@@ -466,6 +467,19 @@ try {
   await pausa(150)
   const tanque = await cena(`({ vida: c.lider.vida, maxima: c.lider.vidaMaxima })`)
   conferir('o Tanque virado para o Boss (escudo de frente) leva o pisão em área', deFrente && tanque.vida < tanque.maxima, { deFrente, ...tanque })
+  // Escudo contra golpe forte (ajustes na partida, 14/10): a investida do Boss (40) passa do limite do Tanque do começo
+  // (Força 15: 32,5) e rompe o escudo; o Tanque leva o dano inteiro
+  await pausa(700)
+  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0; c.boss.ultimoAtaque = null; c.lider.colocarEm(c.boss.x - 300, c.boss.y); return true })()`)
+  const miraDaInvestida = await naTela(await cena(`c.boss.x`), await cena(`c.boss.y`))
+  await aba.moverMouse(miraDaInvestida.x, miraDaInvestida.y)
+  await pausa(300)
+  await cena(`(c.boss.alvo = c.lider, c.boss.estado = 'perseguindo', c.boss.comecarAtaque('investida', c.agora), true)`)
+  await aba.esperar(`${CENA}.boss.estado === 'perseguindo' || ${CENA}.lider.vida < ${CENA}.lider.vidaMaxima`, 'a investida', 5000)
+  await pausa(250)
+  const investida = await cena(`({ perdeu: Math.round(c.lider.vidaMaxima - c.lider.vida), forca: c.lider.forca, rompido: c.children.list.some((o) => o.type === 'Text' && o.text === 'Escudo rompido!'), deFrente: c.lider.escudo.bloqueiaGolpe(c.boss) })`)
+  await aba.print('11b-escudo-rompido-pelo-boss')
+  conferir('a investida do Boss rompe o escudo do Tanque do começo ("Escudo rompido!") e tira o dano inteiro', investida.rompido && investida.perdeu >= 40, investida)
   await aba.clicar('Arqueiro')
   await pausa(300)
   // Derrota do Boss, com o drop especial forçado em 100% (barra de teste, só no npm run dev)

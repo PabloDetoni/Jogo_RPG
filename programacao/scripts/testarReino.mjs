@@ -46,6 +46,37 @@ const clicarDeVerdade = async (seletorOuTexto) => {
   await pausa(500)
 }
 const emTelaCheia = () => aba.avaliar(`!!document.fullscreenElement`)
+// Grade com o item na mão (ajustes da partida, 14/10): o mouse de verdade num quadradinho pelo começo do nome
+// (botao 'right' = botão direito); os nomes dos quadradinhos com item; e a quantidade na mão
+const celula = (nome) => `.celula-da-grade[aria-label^=${JSON.stringify(nome)}]`
+const naGrade = async (nome, botao = 'left') => {
+  await aba.clicarNoElemento(celula(nome), botao)
+  await pausa(200)
+}
+const nomesNaGrade = (seletor = '') =>
+  aba.avaliar(`[...document.querySelectorAll(${JSON.stringify(`${seletor} .celula-da-grade`)})].map((b) => b.getAttribute('aria-label')).filter((t) => t !== 'Quadradinho vazio')`)
+// O painel </> DEV fica no canto de baixo e cobre a lixeira e o mapa à esquerda da mochila: minimizado enquanto o
+// mouse de verdade mexe nas grades (só existe no npm run dev; o jogador nunca o vê)
+const minimizarPainelDev = async () => {
+  await aba.avaliar(`(document.querySelector('[aria-label="Minimizar o painel"]')?.click(), true)`)
+  await pausa(150)
+}
+const abrirPainelDev = async () => {
+  await aba.avaliar(`(document.querySelector('.painel-dev-mini')?.click(), true)`)
+  await pausa(150)
+}
+// O lugar (0, 1, 2...) do quadradinho do item e o clique de verdade num lugar
+const posicaoNaGrade = (nome) =>
+  aba.avaliar(`[...document.querySelectorAll('.celula-da-grade')].findIndex((b) => (b.getAttribute('aria-label') ?? '').startsWith(${JSON.stringify(nome)}))`)
+const naPosicao = async (indice, botao = 'left') => {
+  await aba.clicarNoElemento(`.celula-da-grade:nth-child(${indice + 1})`, botao)
+  await pausa(200)
+}
+const quantoNaGrade = async (nome) => {
+  const rotulo = (await nomesNaGrade()).find((t) => t.startsWith(nome))
+  if (!rotulo) return 0
+  return Number(rotulo.match(/×(\d+)/)?.[1] ?? 1)
+}
 // Clica num botão de dentro de uma parte da tela (quando o mesmo texto aparece também numa aba)
 const clicarDentro = async (seletor, texto) => {
   const achou = await aba.avaliar(`(() => {
@@ -186,15 +217,45 @@ try {
     await motivo('.missao-ativa'),
   )
 
-  console.log('6. Mochila: descartar com confirmação')
+  console.log('6. Mochila: a grade com o item na mão, a lixeira e descartar com confirmação')
   await irAoReino()
   await passo('Mochila')
-  await clicarItem('Tônico ligeiro')
+  await minimizarPainelDev()
+  const tonicos = await quantoNaGrade('Tônico ligeiro')
+  // Botão direito pega a metade (a maior); a lixeira pede confirmação; Cancelar devolve para a grade
+  await naGrade('Tônico ligeiro', 'right')
+  const metade = Math.ceil(tonicos / 2)
+  conferir('Reino: o botão direito pega a metade (a maior) e deixa o resto no quadradinho', (await quantoNaGrade('Tônico ligeiro')) === tonicos - metade, { tonicos, ficou: await quantoNaGrade('Tônico ligeiro') })
+  await aba.clicarNoElemento('.lixeira')
+  await pausa(250)
+  conferir(
+    'Reino: soltar na lixeira pede confirmação, com o item, quantos e que some para sempre',
+    (await aba.avaliar(`document.querySelector('.confirmacao-lixeira')?.textContent ?? ''`)).includes(`Descartar ${metade} Tônico ligeiro?`),
+    await aba.avaliar(`document.querySelector('.confirmacao-lixeira')?.textContent ?? ''`),
+  )
+  await passo('Cancelar (volta para a grade)')
+  conferir('Reino: Cancelar devolve para a grade (nada some do save)', (await quantoNaGrade('Tônico ligeiro')) === tonicos && quantos(await salvo(), 'tonicoLigeiro') === tonicos)
+  // Clique pega a pilha inteira; clique no último quadradinho vazio põe lá (troca de lugar só na tela)
+  const deOnde = await posicaoNaGrade('Tônico ligeiro')
+  await naGrade('Tônico ligeiro')
+  const ultimoLugar = (await aba.avaliar(`document.querySelectorAll('.celula-da-grade').length`)) - 1
+  await naPosicao(ultimoLugar)
+  conferir('Reino: clique pega a pilha e clique noutro quadradinho põe lá', (await posicaoNaGrade('Tônico ligeiro')) === ultimoLugar && ultimoLugar !== deOnde, { deOnde, ultimoLugar })
+  await naGrade('Tônico ligeiro', 'right')
+  await aba.clicarNoElemento('.lixeira')
+  await pausa(250)
+  await passo(`Sim, descartar ${metade}`)
+  conferir('Reino: confirmado na lixeira, a metade sai do save, com a mensagem', quantos(await salvo(), 'tonicoLigeiro') === tonicos - metade && (await mensagem()).startsWith(`Você descartou ${metade} Tônico ligeiro`), await mensagem())
+  // O Descartar… do detalhe continua (para quem usa o teclado): o último clicado aparece no detalhe (pegar e pôr de volta)
+  const elixir = await posicaoNaGrade('Elixir do foco')
+  await naPosicao(elixir)
+  await naPosicao(elixir)
   await passo('Descartar…')
-  conferir('descartar pede a quantidade e confirma o item, quantos e o que acontece', (await aba.texto()).includes('Quantos?') && (await aba.avaliar(`document.querySelector('.descartar-confirmacao')?.textContent ?? ''`)).includes('Descartar 1 Tônico ligeiro? Ele some para sempre'))
-  const antesDeDescartar = quantos(await salvo(), 'tonicoLigeiro')
+  conferir('descartar pede a quantidade e confirma o item, quantos e o que acontece', (await aba.texto()).includes('Quantos?') && (await aba.avaliar(`document.querySelector('.descartar-confirmacao')?.textContent ?? ''`)).includes('Descartar 1 Elixir do foco? Ele some para sempre'))
+  const antesDeDescartar = quantos(await salvo(), 'elixirDoFoco')
   await passo('Sim, descartar 1')
-  conferir('confirmado, o item sai da Mochila, com a confirmação do que aconteceu', quantos(await salvo(), 'tonicoLigeiro') === antesDeDescartar - 1 && (await mensagem()).startsWith('Você descartou 1 Tônico ligeiro'))
+  conferir('confirmado, o item sai da Mochila, com a confirmação do que aconteceu', quantos(await salvo(), 'elixirDoFoco') === antesDeDescartar - 1 && (await mensagem()).startsWith('Você descartou 1 Elixir do foco'))
+  await abrirPainelDev()
 
   console.log('7. TEST-006, caso 5: arma de outra classe; Forja comprar e fabricar')
   await irAoReino()
@@ -313,26 +374,52 @@ try {
   await clicarDeVerdade('.sair-da-tela-cheia')
   conferir('o X sai da tela cheia (sem pausar e sem o "Voltar à tela cheia")', !(await emTelaCheia()) && !(await aba.avaliar(`!!document.querySelector('.voltar-a-tela-cheia, [aria-label="Pausa"]')`)))
   await cena(`(c.lider.vida = 10, true)`)
+  await minimizarPainelDev()
   await aba.apertar('tab')
   await pausa(300)
-  conferir('Tab abre a mochila da partida, sem pausar', (await aba.avaliar(`!!document.querySelector('[aria-label="Mochila da partida"]')`)) && !(await aba.avaliar(`document.body.innerText.includes('Continuar partida')`)))
+  const mochilaAberta = () => aba.avaliar(`!!document.querySelector('[role="dialog"][aria-label="Mochila"]')`)
+  conferir(
+    'Tab abre a "MOCHILA" no meio da tela, com o peso, sem pausar',
+    (await mochilaAberta()) &&
+      !(await aba.avaliar(`document.body.innerText.includes('Continuar partida')`)) &&
+      (await aba.avaliar(`document.querySelector('.janela-mochila .barra-texto')?.textContent ?? ''`)).startsWith('Peso 2 /') &&
+      (await aba.avaliar(`(() => { const r = document.querySelector('.janela-mochila').getBoundingClientRect(); return Math.abs(r.left + r.width / 2 - innerWidth / 2) < 40 && Math.abs(r.top + r.height / 2 - innerHeight / 2) < 80 })()`)),
+  )
+  // Com a mochila aberta o Líder não anda (o jogo continua rodando)
+  const antesDeAndar = await cena(`({ x: Math.round(c.lider.x), y: Math.round(c.lider.y), tempo: c.agora })`)
+  await aba.segurar(['d'], 500)
+  const depoisDeAndar = await cena(`({ x: Math.round(c.lider.x), y: Math.round(c.lider.y), tempo: c.agora })`)
+  conferir('com a mochila aberta o Líder não anda, e o jogo não pausa', depoisDeAndar.x === antesDeAndar.x && depoisDeAndar.y === antesDeAndar.y && depoisDeAndar.tempo - antesDeAndar.tempo > 300, { antesDeAndar, depoisDeAndar })
+  // Passar o mouse mostra o nome e o efeito; com o mouse em cima, E usa no Líder
+  await aba.moverParaElemento(celula('Poção de vida'))
+  await pausa(250)
+  conferir('passar o mouse num item mostra o nome e o que ele faz', (await aba.avaliar(`document.querySelector('.caixinha-do-item')?.textContent ?? ''`)).includes('Recupera 40% da vida'))
   await aba.apertar('e')
   await pausa(300)
-  const usou = await cena(`({ vida: c.lider.vida, pocoes: c.mochila.itens.find((i) => i.id === 'pocaoDeVida')?.quantidade ?? 0 })`)
-  conferir('E usa a poção no Líder: a vida sobe e sobra 1', usou.vida > 10 && usou.pocoes === 1, usou)
-  // Descartar na partida (ajustes de 14/10): DADO 3 poções QUANDO descarto 2 ENTÃO fica 1 e 2 caem no chão com 30 s
+  const usou = await cena(`({ vida: c.lider.vida, pocoes: c.mochila.itens.find((i) => i.id === 'pocaoDeVida')?.quantidade ?? 0, noChao: c.itensNoChao.length })`)
+  conferir('com o mouse na poção, E usa no Líder: a vida sobe e sobra 1 (e não pega nada do chão)', usou.vida > 10 && usou.pocoes === 1, usou)
+  // Jogar no chão (ajustes da partida, 14/10): DADO 3 poções QUANDO pego a metade (2) e clico fora ENTÃO fica 1 e 2 caem com 30 s
   await cena(`(() => { c.mochila.itens.find((i) => i.id === 'pocaoDeVida').quantidade += 2; return true })()`)
   await pausa(400)
-  await passo('Descartar…')
-  await passo('+')
-  conferir('na partida, a confirmação diz que as 2 poções caem no chão', (await aba.avaliar(`document.querySelector('.descartar-confirmacao')?.textContent ?? ''`)).includes('Descartar 2 Poção de vida? Caem no chão perto do Líder'))
-  await passo('Sim, descartar 2')
+  await naGrade('Poção de vida', 'right')
+  conferir('botão direito pega a metade (2 de 3) e deixa 1 no quadradinho', (await quantoNaGrade('Poção de vida')) === 1 && (await aba.avaliar(`!!document.querySelector('.item-na-mao')`)))
+  const fora = await aba.avaliar(`(() => { const r = document.querySelector('.janela-mochila').getBoundingClientRect(); return { x: Math.max(20, r.left - 120), y: r.top + r.height / 2 } })()`)
+  await aba.clicarNaTela(fora.x, fora.y)
   await pausa(300)
   const descartou = await cena(`({ naMochila: c.mochila.itens.find((i) => i.id === 'pocaoDeVida')?.quantidade ?? 0, noChao: c.itensNoChao.filter((i) => i.item.id === 'pocaoDeVida').map((i) => ({ q: i.quantidade, falta: i.expiraEm - c.agora, perto: Math.hypot(i.x - c.lider.x, i.y - c.lider.y) < 80 })) })`)
-  conferir('descartadas 2 de 3: fica 1 na mochila e 2 caem perto do Líder, com o tempo de 30 s', descartou.naMochila === 1 && descartou.noChao.length === 1 && descartou.noChao[0].q === 2 && descartou.noChao[0].falta > 28000 && descartou.noChao[0].falta <= 30000 && descartou.noChao[0].perto, descartou)
+  conferir('clique fora da janela com 2 na mão: fica 1 na mochila e 2 caem perto do Líder, com o tempo de 30 s (sem confirmação)', descartou.naMochila === 1 && descartou.noChao.length === 1 && descartou.noChao[0].q === 2 && descartou.noChao[0].falta > 28000 && descartou.noChao[0].falta <= 30000 && descartou.noChao[0].perto && (await mochilaAberta()), descartou)
+  // Fechar com item na mão devolve
+  await naGrade('Poção de vida')
   await aba.apertar('esc')
   await pausa(300)
-  conferir('Esc fecha a mochila (sem pausar)', !(await aba.avaliar(`!!document.querySelector('[aria-label="Mochila da partida"]')`)))
+  conferir('Esc fecha a mochila (sem pausar)', !(await mochilaAberta()) && !(await aba.avaliar(`document.body.innerText.includes('Continuar partida')`)))
+  const depoisDeFechar = await cena(`c.mochila.itens.find((i) => i.id === 'pocaoDeVida')?.quantidade ?? 0`)
+  await aba.apertar('tab')
+  await pausa(300)
+  conferir('fechar com item na mão devolve para a mochila (nada cai no chão)', depoisDeFechar === 1 && (await quantoNaGrade('Poção de vida')) === 1 && !(await aba.avaliar(`!!document.querySelector('.item-na-mao')`)))
+  await aba.apertar('tab')
+  await pausa(300)
+  await abrirPainelDev()
   await cena(`(() => { c.invencivel = true; for (const l of c.inimigos.filter((i) => i.tipo === 'lobo').slice(0, 2)) c.acertar(l, 99999, c.lider, 0, c.lider); return true })()`)
   await pausa(300)
   conferir('derrotar lobos avisa a missão no HUD', (await aba.texto()).includes('Missão: 2/8 lobo'))
@@ -405,13 +492,14 @@ try {
   console.log('11b. Interface (Fase 4.5): filtros, trocas, Catálogo, o "?" e o aviso de conquista')
   await irAoReino()
   await passo('Mochila')
-  const todos = await aba.avaliar(`document.querySelectorAll('.balcao-grade button.slot').length`)
+  const todos = await nomesNaGrade('.balcao-grade')
   await passo('Consumíveis', true)
-  const consumiveis = await aba.avaliar(`[...document.querySelectorAll('.balcao-grade button.slot')].map((b) => b.getAttribute('aria-label'))`)
+  const acesos = await aba.avaliar(`[...document.querySelectorAll('.balcao-grade .celula-da-grade')].filter((b) => b.querySelector('.slot:not(.slot-vazio):not(.slot-apagado)')).map((b) => b.getAttribute('aria-label'))`)
+  const depoisDoFiltro = await nomesNaGrade('.balcao-grade')
   conferir(
-    'Mochila: o filtro Consumíveis deixa só poções e aceleradores',
-    consumiveis.length > 0 && consumiveis.length < todos && consumiveis.every((nome) => /^(Poção|Tônico|Elixir)/.test(nome)),
-    { todos, consumiveis },
+    'Mochila: o filtro Consumíveis deixa acesos só poções e aceleradores, sem tirar ninguém do lugar',
+    acesos.length > 0 && acesos.length < todos.length && acesos.every((nome) => /^(Poção|Tônico|Elixir)/.test(nome)) && JSON.stringify(depoisDoFiltro) === JSON.stringify(todos),
+    { todos: todos.length, acesos },
   )
   await irAoReino()
   await passo('Mercado')

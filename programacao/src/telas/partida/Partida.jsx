@@ -6,7 +6,7 @@ import { useJogo } from '../../estado/contexto.js'
 import ArenaDaPartida from '../../jogo/ArenaDaPartida.jsx'
 import { criarPonte } from '../../jogo/ponte.js'
 import { prepararSonsDaPartida, tocarMusica } from '../../audio/gerenciador.js'
-import { carregamentoDaPartida } from '../../dados/interface.js'
+import { carregamentoDaPartida, gradeComMao } from '../../dados/interface.js'
 import { carregamentoInicial, demorouDemais, progressoDoCarregamento } from '../../regras/carregamento.js'
 import CarregandoAPartida from './CarregandoAPartida.jsx'
 import { musicaDaTela } from '../../regras/som.js'
@@ -15,6 +15,8 @@ import BarraDeTeste from './BarraDeTeste.jsx'
 import HudDaPartida, { AvisosDaPartida } from './HudDaPartida.jsx'
 import MochilaNaPartida from './MochilaNaPartida.jsx'
 import { itensDaJanela } from '../../regras/itensNaPartida.js'
+import { useGradeComMao } from '../../componentes/ui/useGradeComMao.js'
+import { itemDoCatalogo, usavelNaPartida } from '../../dados/itens.js'
 
 const pos = posicoes.partida
 const { msDaMensagem, mensagensNoMaximo, msParaJuntar } = combateDeTeste.hud
@@ -141,22 +143,27 @@ export default function Partida() {
     if (pedido) ponte.avisar('comando', { tipo: pedido.tipo })
   }, [ponte, pedido])
 
-  // Mochila da partida (Fase 4, TASK-047): Tab abre e fecha (sem pausar); com ela aberta, ↑ ↓ escolhem o item, E usa no
-  // Líder e R no aliado de pé mais perto da mira. A partida fica sabendo se ela está aberta (o E não pega do chão).
+  // Mochila da partida (Fase 4, TASK-047; ajustes da partida, 14/10): Tab abre e fecha a janela no meio da tela (sem
+  // pausar; o Líder fica parado). A arrumação da grade (o item na mão) fica aqui enquanto durar a partida; fechar com
+  // item na mão devolve. Com o mouse em cima de um consumível (ou com ele na mão), E usa no Líder e R no aliado que mais
+  // precisa. A partida fica sabendo se ela está aberta (o Líder para).
   const mochilaAberta = janelas.at(-1) === 'mochilaDaPartida'
-  const [escolhidoNaMochila, setEscolhidoNaMochila] = useState(null) // o id do item escolhido
+  const itensDaMochila = itensDaJanela(situacao?.mochila?.itens).map(({ id, quantidade }) => ({ id, quantidade }))
+  const gradeDaMochila = useGradeComMao(itensDaMochila, { ...gradeComMao.partida, aberta: mochilaAberta })
   useEffect(() => ponte.avisar('comando', { tipo: 'mochilaAberta', aberta: mochilaAberta }), [ponte, mochilaAberta])
 
-  // O que as teclas precisam saber agora (as janelas abertas, a situação, a fuga e o item escolhido na mochila)
-  const atual = useRef({ janelas, situacao, fugindo: false, escolhidoNaMochila: null })
+  // O que as teclas precisam saber agora (as janelas abertas, a situação, a fuga e o item em foco na mochila)
+  const itemEmFoco = gradeDaMochila.itemEmFoco?.id ?? null
+  const atual = useRef({ janelas, situacao, fugindo: false, itemEmFoco: null })
   useEffect(() => {
-    atual.current = { janelas, situacao, fugindo: controle.andamento.fugindo, escolhidoNaMochila }
-  }, [janelas, situacao, controle.andamento.fugindo, escolhidoNaMochila])
+    atual.current = { janelas, situacao, fugindo: controle.andamento.fugindo, itemEmFoco }
+  }, [janelas, situacao, controle.andamento.fugindo, itemEmFoco])
 
   const usarItem = useCallback(
     (em) => {
-      const { situacao: agora, escolhidoNaMochila: id } = atual.current
-      if (id && (agora?.mochila?.itens ?? []).some((item) => item.id === id)) ponte.avisar('comando', { tipo: 'usarItem', id, em })
+      const { situacao: agora, itemEmFoco: id } = atual.current
+      const naMochila = (agora?.mochila?.itens ?? []).some((item) => item.id === id)
+      if (id && naMochila && usavelNaPartida(itemDoCatalogo(id))) ponte.avisar('comando', { tipo: 'usarItem', id, em })
     },
     [ponte],
   )
@@ -174,21 +181,7 @@ export default function Partida() {
         evento.preventDefault()
         if (evento.repeat) return
         if (mochila) acoes.fecharJanela()
-        else if (abertas.length === 0) {
-          // Ao abrir, se o escolhido não está mais na mochila, escolhe o primeiro item (os usáveis vêm antes)
-          const itens = itensDaJanela(agora?.mochila?.itens)
-          if (!itens.some((item) => item.id === atual.current.escolhidoNaMochila)) setEscolhidoNaMochila(itens[0]?.id ?? null)
-          acoes.abrirJanela('mochilaDaPartida')
-        }
-        return
-      }
-      if (mochila && (tecla === 'arrowup' || tecla === 'arrowdown')) {
-        evento.preventDefault()
-        const itens = itensDaJanela(agora?.mochila?.itens)
-        if (itens.length === 0) return
-        const onde = itens.findIndex((item) => item.id === atual.current.escolhidoNaMochila)
-        const proximo = onde < 0 ? (tecla === 'arrowup' ? itens.length - 1 : 0) : (onde + (tecla === 'arrowup' ? itens.length - 1 : 1)) % itens.length
-        setEscolhidoNaMochila(itens[proximo].id)
+        else if (abertas.length === 0) acoes.abrirJanela('mochilaDaPartida')
         return
       }
       if (evento.repeat) return
@@ -216,10 +209,8 @@ export default function Partida() {
       {mochilaAberta && (
         <MochilaNaPartida
           mochila={situacao?.mochila}
-          escolhido={escolhidoNaMochila}
-          aoEscolher={setEscolhidoNaMochila}
-          aoUsar={usarItem}
-          aoDescartar={(id, quantidade) => ponte.avisar('comando', { tipo: 'descartarItem', id, quantidade })}
+          grade={gradeDaMochila}
+          aoSoltarNoChao={({ id, quantidade }) => ponte.avisar('comando', { tipo: 'descartarItem', id, quantidade })}
         />
       )}
       {!carregado && (

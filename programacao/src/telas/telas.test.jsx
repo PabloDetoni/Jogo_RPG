@@ -12,6 +12,9 @@ import HudDaPartida, { AvisosDaPartida } from './partida/HudDaPartida.jsx'
 import Resumo from './partida/Resumo.jsx'
 import ArvoreDeHabilidades from './reino/ArvoreDeHabilidades.jsx'
 import MochilaNaPartida from './partida/MochilaNaPartida.jsx'
+import { useGradeComMao } from '../componentes/ui/useGradeComMao.js'
+import { gradeComMao } from '../dados/interface.js'
+import { itensDaJanela } from '../regras/itensNaPartida.js'
 import Pentagono from '../componentes/Pentagono.jsx'
 import { atributosIniciaisDaClasse } from '../dados/classes.js'
 import { descreverMissao } from '../dados/missoes.js'
@@ -502,30 +505,34 @@ describe('Preparação: mochila da partida (Fase 4, TASK-073)', () => {
   })
 })
 
-describe('mochila da partida com Tab (Fase 4, TASK-047)', () => {
+describe('mochila da partida com Tab (Fase 4, TASK-047; estilo Minecraft nos ajustes da partida, 14/10)', () => {
+  // Como na Partida: a grade com o item na mão sai da lista da mochila, os usáveis primeiro
+  function MochilaDeTeste({ mochila }) {
+    const grade = useGradeComMao(itensDaJanela(mochila.itens).map(({ id, quantidade }) => ({ id, quantidade })), gradeComMao.partida)
+    return <MochilaNaPartida mochila={mochila} grade={grade} aoSoltarNoChao={() => {}} />
+  }
+  const desenharMochila = (mochila) => renderToString(<MochilaDeTeste mochila={mochila} />).replace(/<!-- -->/g, '')
   const mochila = { peso: 4, capacidade: 20, itens: [{ id: 'peleDeLobo', quantidade: 2 }, { id: 'pocaoDeVida', quantidade: 1 }] }
-  const desenharMochila = (escolhido) =>
-    renderToString(<MochilaNaPartida mochila={mochila} escolhido={escolhido} aoEscolher={() => {}} aoUsar={() => {}} />).replace(/<!-- -->/g, '')
 
-  it('poções primeiro, o escolhido marcado com a função, e os botões de E e R', () => {
-    const html = desenharMochila('pocaoDeVida')
-    expect(html).toContain('Peso 4 de 20')
-    expect(html.indexOf('Poção de vida')).toBeLessThan(html.indexOf('Pele de lobo'))
-    expect(html).toContain('Recupera 40% da vida')
-    expect(html).toContain('Usar no Líder (E)')
-    expect(html).toContain('Usar no aliado (R)')
-    expect(html).toContain('janela-fundo-ao-lado')
+  it('janela "MOCHILA" no meio, com o peso usado e a capacidade, e o mapa escurecido atrás', () => {
+    const html = desenharMochila(mochila)
+    expect(html).toContain('MOCHILA')
+    expect(html).toContain('Peso 4 / 20')
+    expect(html).toContain('janela-fundo-mochila')
+    expect(html).not.toContain('janela-fundo-ao-lado')
   })
 
-  it('sem item escolhido (o escolhido acabou), pede para escolher e não deixa usar', () => {
-    const html = desenharMochila(null)
-    expect(html).toContain('Escolha um item')
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>(<span[^>]*><\/span>)?Usar no Líder/)
+  it('a grade: poções primeiro, a quantidade no nome, e os quadradinhos vazios (18 no mínimo)', () => {
+    const html = desenharMochila(mochila)
+    expect(html.indexOf('aria-label="Poção de vida"')).toBeLessThan(html.indexOf('aria-label="Pele de lobo ×2"'))
+    expect(html.match(/class="celula-da-grade"/g)).toHaveLength(gradeComMao.partida.minimo)
+    expect(html.match(/aria-label="Quadradinho vazio"/g)).toHaveLength(gradeComMao.partida.minimo - 2)
   })
 
-  it('vazia, explica como pegar itens do chão', () => {
-    const html = renderToString(<MochilaNaPartida mochila={{ peso: 0, capacidade: 20, itens: [] }} escolhido={null} aoEscolher={() => {}} aoUsar={() => {}} />)
-    expect(html).toContain('Vazia')
+  it('explica o mouse e as teclas; vazia, explica como pegar itens do chão', () => {
+    expect(desenharMochila(mochila)).toContain('botão direito: pega a metade')
+    expect(desenharMochila(mochila)).toContain('clique fora da janela: joga no chão')
+    expect(desenharMochila({ peso: 0, capacidade: 20, itens: [] })).toContain('Vazia')
   })
 })
 

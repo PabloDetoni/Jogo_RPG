@@ -7,8 +7,9 @@ import { corCss } from '../../regras/interface.js'
 // Um quadradinho de item (Fase 4.5): o ícone (src/assets/arte/item-<id>.png, em tamanho inteiro) ou, até ele chegar,
 // uma forma simples pelo tipo com a inicial, na cor do item; a quantidade no canto e a borda na cor da raridade.
 // rotulo: uma faixa embaixo (o preço). apagado: não dá para usar agora. silhueta: item ainda não encontrado (Catálogo).
-// Com onClick vira botão (escolher); o nome do item fica no aria-label e na dica do mouse.
-export default function Slot({ id, quantidade, escolhido = false, apagado = false, silhueta = false, rotulo, onClick, tamanho = 'grande', titulo }) {
+// Com onClick vira botão (escolher); o nome do item fica no aria-label e na dica do mouse. semDica: sem a dica do
+// navegador (a grade com o item na mão mostra a dela).
+export default function Slot({ id, quantidade, escolhido = false, apagado = false, silhueta = false, rotulo, onClick, tamanho = 'grande', titulo, semDica = false }) {
   const item = itemDoCatalogo(id)
   const nome = item?.nome ?? id
   const icone = silhueta ? null : urlDaArte(iconeDoItem(id))
@@ -40,7 +41,7 @@ export default function Slot({ id, quantidade, escolhido = false, apagado = fals
   )
   if (!onClick) {
     return (
-      <span className={classes} style={estilo} title={descricao} role="img" aria-label={descricao}>
+      <span className={classes} style={estilo} title={semDica ? undefined : descricao} role="img" aria-label={descricao}>
         {conteudo}
       </span>
     )

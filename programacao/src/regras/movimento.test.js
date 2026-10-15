@@ -12,9 +12,18 @@ import {
   pontoLivreMaisProximo,
   separacao,
   tirarDasParedes,
+  limitarPasso,
+  saltoMaximoPorQuadro,
 } from './movimento.js'
+import { combateDeTeste } from '../dados/balanceamento.js'
 
 const tamanho = (v) => Math.hypot(v.x, v.y)
+// Vários quadros seguidos (ajustes de 14/10: cada correção anda no máximo alguns px por quadro); devolve o último
+const quadros = (corpos, passo, n = 12) => {
+  let atuais = corpos
+  for (let i = 0; i < n; i++) atuais = passo(atuais).map((p, k) => ({ ...atuais[k], ...p }))
+  return atuais.map(({ x, y }) => ({ x, y }))
+}
 const config = { folga: 10, forca: 300 }
 const area = { x: 500, y: 300, largura: 1000, altura: 600 } // de (0, 0) a (1000, 600)
 
@@ -123,16 +132,40 @@ describe('tirar de dentro das pedras', () => {
     expect(saiu).toEqual({ x: 60, y: 55 })
   })
 
-  it('se o lado mais curto dá em outra pedra, sai por outro', () => {
+  it('na quina entre duas pedras, sai em alguns quadros, sem salto e sem entrar em outra pedra', () => {
     const vizinha = { x: 40, y: 100, largura: 40, altura: 100 } // de x 20 a 60, colada à esquerda
-    const [saiu] = tirarDasParedes([{ x: 75, y: 70, raio: 20 }], [pedra, vizinha], area)
-    expect(lugarLivre(saiu, { area, paredes: [pedra, vizinha], raio: 20 })).toBe(true)
+    const paredes = [pedra, vizinha]
+    let atual = { x: 75, y: 70, raio: 20 }
+    for (let i = 0; i < 12; i++) {
+      const [proximo] = tirarDasParedes([atual], paredes, area)
+      expect(Math.hypot(proximo.x - atual.x, proximo.y - atual.y)).toBeLessThanOrEqual(combateDeTeste.movimento.correcaoMaximaPorQuadro + 1e-9)
+      atual = { ...atual, ...proximo }
+    }
+    expect(lugarLivre(atual, { area, paredes, raio: 20 })).toBe(true)
+  })
+
+  it('teletransporte (ajustes da partida): encostado num bloco de mata enorme, perto da quina com outro bloco, nunca vai para o outro lado', () => {
+    // Bloco de cima (x 0 a 1800, y -1000 a 500) e bloco da esquerda (x -800 a 0, y 0 a 1500): o corpo entrou 0,8 px no de cima
+    const mataDeCima = { x: 900, y: -250, largura: 1800, altura: 1500 }
+    const mataDaEsquerda = { x: -400, y: 750, largura: 800, altura: 1500 }
+    const corpo = { x: 13, y: 512, raio: 12.8 }
+    const [saiu] = tirarDasParedes([corpo], [mataDeCima, mataDaEsquerda], { x: 0, y: 0, largura: 1e7, altura: 1e7 })
+    expect(Math.hypot(saiu.x - corpo.x, saiu.y - corpo.y)).toBeLessThanOrEqual(1)
+    expect(saiu.y).toBeGreaterThan(corpo.y)
+  })
+
+  it('dentro de duas paredes de lados opostos (vão mais estreito que o corpo), não salta para fora de nenhuma', () => {
+    const esquerda = { x: 90, y: 300, largura: 40, altura: 400 } // até x 110
+    const direita = { x: 150, y: 300, largura: 40, altura: 400 } // desde x 130
+    const [ficou] = tirarDasParedes([{ x: 120, y: 300, raio: 20 }], [esquerda, direita], area)
+    expect(ficou).toEqual({ x: 120, y: 300 })
   })
 })
 
 describe('desfazer sobreposições (aperto)', () => {
   const pedra = { x: 100, y: 100, largura: 40, altura: 100 } // de x 80 a 120
-  const sobrepoem = (a, b, raio = 20) => Math.abs(a.x - b.x) < 2 * raio - 0.01 && Math.abs(a.y - b.y) < 2 * raio - 0.01
+  // Encostado conta até 0,5 px (a regra deixa essa sobra; ajustes de 14/10: a correção vem em vários quadros)
+  const sobrepoem = (a, b, raio = 20) => Math.abs(a.x - b.x) < 2 * raio - 0.6 && Math.abs(a.y - b.y) < 2 * raio - 0.6
 
   it('sem sobreposição, ninguém se mexe', () => {
     const corpos = [{ x: 200, y: 200, raio: 20 }, { x: 250, y: 200, raio: 20 }]
@@ -145,15 +178,15 @@ describe('desfazer sobreposições (aperto)', () => {
     expect(b).toEqual({ x: 235, y: 205 })
   })
 
-  it('um encostado na pedra: ele fica, e o outro sai todo (ninguém entra na pedra)', () => {
+  it('um encostado na pedra: ele fica, e o outro sai todo em alguns quadros (ninguém entra na pedra)', () => {
     // A encostado na pedra (x 40 a 80); B entrou 12 px nele pela esquerda
-    const [a, b] = desfazerSobreposicoes([{ x: 60, y: 100, raio: 20 }, { x: 32, y: 100, raio: 20 }], [pedra], area)
+    const [a, b] = quadros([{ x: 60, y: 100, raio: 20 }, { x: 32, y: 100, raio: 20 }], (corpos) => desfazerSobreposicoes(corpos, [pedra], area))
     expect(a).toEqual({ x: 60, y: 100 })
     expect(b.x).toBeCloseTo(20)
   })
 
   it('caído (fixo) não se mexe; no bolo do "Juntar todos" (ignorar), nada muda', () => {
-    const [caido, outro] = desfazerSobreposicoes([{ x: 200, y: 200, raio: 20, fixo: true }, { x: 230, y: 200, raio: 20 }], [], area)
+    const [caido, outro] = quadros([{ x: 200, y: 200, raio: 20, fixo: true }, { x: 230, y: 200, raio: 20 }], (corpos) => desfazerSobreposicoes(corpos, [], area))
     expect(caido).toEqual({ x: 200, y: 200 })
     expect(outro).toEqual({ x: 240, y: 200 })
     const juntos = [{ x: 200, y: 200, raio: 20, ignorar: true }, { x: 200, y: 200, raio: 20 }]
@@ -167,7 +200,7 @@ describe('desfazer sobreposições (aperto)', () => {
       { x: 180, y: 300, largura: 40, altura: 400 },
     ]
     // Corredor de x 120 a 160 (só 40 px): A e B entraram 10 px um no outro em x e 30 px em y
-    const [a, b] = desfazerSobreposicoes([{ x: 140, y: 300, raio: 20 }, { x: 140, y: 310, raio: 20 }], pedras, area)
+    const [a, b] = quadros([{ x: 140, y: 300, raio: 20 }, { x: 140, y: 310, raio: 20 }], (corpos) => desfazerSobreposicoes(corpos, pedras, area))
     const dentro = (p) => pedras.some((pedra) => Math.abs(p.x - pedra.x) < 20 + pedra.largura / 2 - 0.01 && Math.abs(p.y - pedra.y) < 20 + pedra.altura / 2 - 0.01)
     expect(dentro(a)).toBe(false)
     expect(dentro(b)).toBe(false)
@@ -197,11 +230,52 @@ describe('desfazer sobreposições (aperto)', () => {
       { x: 232, y: 100, raio: 20 },
       { x: 205, y: 100, raio: 20 },
     ]
-    const [a, b, c] = desfazerSobreposicoes(fila, [outraPedra], area, 6)
+    const [a, b, c] = quadros(fila, (corpos) => desfazerSobreposicoes(corpos, [outraPedra], area, 6))
     expect(a).toEqual({ x: 260, y: 100 })
     expect(sobrepoem(a, b)).toBe(false)
     expect(sobrepoem(b, c)).toBe(false)
     expect(sobrepoem(a, c)).toBe(false)
+  })
+})
+
+describe('nunca teletransportar (ajustes da partida, 14/10)', () => {
+  it('o salto máximo por quadro é a coisa mais rápida do jogo no tempo do quadro, mais a correção', () => {
+    const { velocidadeMaxima, correcaoMaximaPorQuadro } = combateDeTeste.movimento
+    expect(saltoMaximoPorQuadro(1000 / 60)).toBeCloseTo((velocidadeMaxima * 1) / 60 + correcaoMaximaPorQuadro)
+    expect(saltoMaximoPorQuadro(0)).toBe(correcaoMaximaPorQuadro)
+    expect(saltoMaximoPorQuadro(1000 / 60)).toBeLessThan(40)
+  })
+
+  it('cortar um passo grande deixa a direção e encurta até o máximo; um passo pequeno fica igual', () => {
+    expect(limitarPasso({ x: 0, y: 0 }, { x: 300, y: 400 }, 10)).toEqual({ x: 6, y: 8 })
+    expect(limitarPasso({ x: 0, y: 0 }, { x: 3, y: 4 }, 10)).toEqual({ x: 3, y: 4 })
+  })
+
+  it('cada correção (sair da parede ou de outro corpo) anda no máximo o limite num quadro', () => {
+    const maximo = combateDeTeste.movimento.correcaoMaximaPorQuadro
+    const fundo = { x: 100, y: 100, largura: 200, altura: 200 }
+    const [saiu] = tirarDasParedes([{ x: 100, y: 15, raio: 20 }], [fundo], area)
+    expect(Math.hypot(saiu.x - 100, saiu.y - 15)).toBeLessThanOrEqual(maximo + 1e-9)
+    const [a, b] = desfazerSobreposicoes([{ x: 200, y: 200, raio: 20 }, { x: 201, y: 200, raio: 20 }], [], area)
+    expect(Math.abs(a.x - 200)).toBeLessThanOrEqual(maximo + 1e-9)
+    expect(Math.abs(b.x - 201)).toBeLessThanOrEqual(maximo + 1e-9)
+  })
+
+  it('o Líder contra a parede não desliza para o lado (sem "deslizar"); em diagonal, segue a parede e para na quina', () => {
+    const parede = { x: 500, y: 40, largura: 1000, altura: 80 } // de y 0 a 80
+    const corpo = { x: 500, y: 93, raio: 12.8 }
+    expect(escorregar({ x: 0, y: -220 }, corpo, [parede], area, 4, 1 / 60, { deslizar: false })).toEqual({ x: 0, y: 0 })
+    expect(escorregar({ x: 155, y: -155 }, corpo, [parede], area, 4, 1 / 60, { deslizar: false })).toEqual({ x: 155, y: 0 })
+    // Na quina (outra parede à direita): para
+    const quina = { x: 530, y: 300, largura: 40, altura: 400 } // de x 510 a 550
+    expect(escorregar({ x: 155, y: -155 }, { x: 496, y: 93, raio: 12.8 }, [parede, quina], area, 4, 1 / 60, { deslizar: false })).toEqual({ x: 0, y: 0 })
+  })
+
+  it('quem anda sozinho, de frente para a parede, escorrega ao longo dela mais devagar que andando', () => {
+    const parede = { x: 500, y: 40, largura: 1000, altura: 80 }
+    const lado = escorregar({ x: 0, y: -220 }, { x: 300, y: 93, raio: 12.8 }, [parede], area, 4, 1 / 60)
+    expect(lado.y).toBe(0)
+    expect(Math.abs(lado.x)).toBeCloseTo(220 * combateDeTeste.movimento.fatorDoEscorregar)
   })
 })
 

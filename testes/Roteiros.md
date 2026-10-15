@@ -21,6 +21,54 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## AP. Ajustes na partida (14/10)
+
+**AP-01 · O Líder nunca é teletransportado (Parte 2)**
+- Fazer: na Floresta, ande encostado na mata fechada em volta das regiões, de frente e na diagonal, e entre nas quinas. Os pontos onde o salto acontecia: a parede de cima da região Média (perto de x 2.878 a 4.066, y 513, uns 2 minutos andando para a direita a partir do Reino, subindo até a mata) e as árvores do domínio do Boss (perto de x 5.655, y 1.452 e x 5.686, y 1.748).
+- Deve acontecer: empurrando de frente, o Líder para na parede (não escorrega de lado); na diagonal, segue a parede devagar; na quina, para. Ele nunca some e aparece em outro lugar.
+
+**AP-02 · O grupo abre caminho em campo aberto (Parte 3)**
+- Fazer: com o grupo cheio e parado num campo aberto, ande com o Líder bem no meio dele.
+- Deve acontecer: cada aliado no caminho sai para o lado antes de o Líder encostar, e o grupo se fecha atrás. O Líder não para. Com aliados de nível alto (IA avançada), eles saem mais cedo.
+
+**AP-03 · Passar por quem não tem para onde ir (Parte 3)**
+- Fazer: leve o grupo para um corredor estreito entre árvores ou pedras (ou um canto) e ande com o Líder contra eles.
+- Deve acontecer: o Líder passa por dentro de quem não tem para onde sair, sem travar e sem empurrar ninguém para dentro da pedra. Depois de passar, eles voltam a colidir. Nenhum aliado fica em cima de outro.
+
+**AP-04 · Fugindo pelo meio do grupo (Parte 3)**
+- Fazer: aperte F duas vezes (fuga) e corra pelo meio do grupo. Teste também com Q (voltar ao Reino) fora de combate.
+- Deve acontecer: durante a contagem, o Líder passa por todos os aliados sem parar.
+
+**AP-05 · A MOCHILA no meio da tela (Parte 1)**
+- Fazer: na partida, com poções na mochila, aperte Tab. Tente andar (WASD) e atacar.
+- Deve acontecer: a janela "MOCHILA" abre no meio, com "Peso usado / capacidade" e o mapa um pouco escuro atrás. O tempo do jogo continua correndo (os mobs se mexem), mas o Líder não anda, não ataca e não pega nada do chão.
+
+**AP-06 · Pegar, metade, pôr e trocar (Parte 1)**
+- Fazer: com a mochila aberta, passe o mouse numa poção; clique nela; clique num quadradinho vazio; clique com o botão direito numa pilha; clique noutro item com algo na mão.
+- Deve acontecer: passar o mouse mostra uma caixinha com o nome e o que o item faz. O clique pega a pilha inteira (ela segue o mouse); clicar no vazio põe lá. O botão direito pega a metade (de 5, pega 3). Com item na mão, clicar noutro item troca os dois de lugar.
+
+**AP-07 · Jogar no chão e fechar com item na mão (Parte 1)**
+- Fazer: pegue a metade de uma pilha e clique fora da janela (no mapa escuro). Depois pegue outro item e aperte Tab (ou Esc).
+- Deve acontecer: o item cai no chão perto do Líder, com o anel do tempo (some em 30 s), sem pedir confirmação. Ao fechar com item na mão, ele volta para a mochila (nada cai no chão).
+
+**AP-08 · E e R com o mouse no item (Parte 1)**
+- Fazer: deixe o Líder e um aliado feridos. Com a mochila aberta, passe o mouse numa poção de vida e aperte E; depois R.
+- Deve acontecer: E cura o Líder; R cura o aliado mais ferido (com uma poção de mana, o com menos mana; com um acelerador, o mais perto do Líder).
+
+**AP-09 · Lixeira na Mochila do Reino (Parte 1)**
+- Fazer: no Reino, abra a Mochila. Pegue uma pilha com o botão direito e clique na lixeira; clique em Cancelar. Pegue de novo e confirme.
+- Deve acontecer: a lixeira fica vermelha com item na mão. Ao soltar nela, o detalhe pergunta "Descartar N …? … somem para sempre". Cancelar devolve o item para a grade; "Sim, descartar" tira do save, com a mensagem "Você descartou …". O filtro por tipo apaga os outros itens sem mudar ninguém de lugar.
+
+**AP-10 · Escudo segura o lobo e rompe com o Boss (Parte 4)**
+- Fazer: jogue com o Tanque como Líder (Força do começo, 15, sem equipamento de Força). Fique de frente para um lobo da região Fácil e deixe ele morder. Depois vá ao domínio do Boss, fique de frente para ele e espere a investida (a faixa no chão).
+- Deve acontecer: a mordida do lobo é bloqueada ("BLOQUEADO", sem perder vida). A investida do Boss (40) passa do limite (32,5): aparece "Escudo rompido!", o escudo treme e fica avermelhado, e o Tanque perde a vida do golpe inteiro. O pisão (área) continua acertando o Tanque mesmo de frente.
+
+**AP-11 · Escudo com mais Força (Parte 4)**
+- Fazer: nas Árvores, ponha pontos em Força no Tanque até pelo menos 20 e repita a investida do Boss.
+- Deve acontecer: com Força 20 ou mais, a investida é bloqueada ("BLOQUEADO").
+
+---
+
 ## VF. Ajustes da versão final (14/10)
 
 **VF-01 · Trilha no alto**
