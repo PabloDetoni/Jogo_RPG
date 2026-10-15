@@ -231,12 +231,33 @@ function criarAba(cdp, nome, pastaDosPrints) {
       await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y })
       await pausa(50)
     },
-    async clicarNaTela(x, y) {
+    // botao: 'left' ou 'right' (o botão direito também dispara o "contextmenu", como no mouse de verdade)
+    async clicarNaTela(x, y, botao = 'left') {
       await aba.moverMouse(x, y)
-      await cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 })
+      await cdp.enviar('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: botao, buttons: botao === 'right' ? 2 : 1, clickCount: 1 })
       await pausa(30)
-      await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 })
+      await cdp.enviar('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: botao, buttons: 0, clickCount: 1 })
       await pausa(60)
+    },
+    // O meio de um elemento na tela (null se não existe); dentro de uma lista que rola, rola até ele aparecer
+    centroDe: (seletor) =>
+      aba.avaliar(`(() => {
+        const e = document.querySelector(${JSON.stringify(seletor)})
+        if (!e) return null
+        e.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        const r = e.getBoundingClientRect()
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+      })()`),
+    // Clique de mouse de verdade no meio do elemento (o React recebe o mousemove, o clique e o botão direito)
+    async clicarNoElemento(seletor, botao = 'left') {
+      const centro = await aba.centroDe(seletor)
+      if (!centro) throw new Error(`(${nome}) não achei ${seletor}`)
+      await aba.clicarNaTela(centro.x, centro.y, botao)
+    },
+    async moverParaElemento(seletor) {
+      const centro = await aba.centroDe(seletor)
+      if (!centro) throw new Error(`(${nome}) não achei ${seletor}`)
+      await aba.moverMouse(centro.x, centro.y)
     },
     async print(arquivo) {
       await aba.avaliar(`(() => { for (const p of document.querySelectorAll('.painel-dev, .painel-dev-mini')) p.style.visibility = 'hidden' })()`)

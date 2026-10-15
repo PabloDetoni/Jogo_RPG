@@ -122,6 +122,7 @@ O tamanho dos cantos (a "fatia") fica em `programacao/src/dados/interface.js` (`
 - **Tela cheia:** entra no clique de Iniciar jogo, Jogar e Começar partida; um X discreto (35% de opacidade) no canto de cima à direita sai dela; se o navegador tirar da tela cheia sem o jogador pedir, aparece "Voltar à tela cheia" no mesmo canto.
 - **Carregamento:** ao abrir o site, uma tela escura com o nome e uma barra; na partida, "Carregando a partida" com a barra, a porcentagem, a etapa e uma dica sorteada; falhou ou demorou, a mensagem diz o que houve e oferece "Tentar de novo" e "Voltar ao Reino". O Reino, o Mapa, a Preparação, a partida e o Resumo entram com um fade de 0,25 s (sem fade com "reduzir movimento" ligado no sistema).
 - **Descartar:** "Descartar…" abre a escolha (1, − e +, Todas) e a confirmação com o quadradinho do item, a quantidade e o que acontece com ele; só "Sim, descartar N" descarta.
+- **Mochila com o item na mão (ajustes na partida, 14/10; `GradeComMao`):** como o inventário do Minecraft. Clique pega a pilha inteira, o botão direito pega a metade (ou põe 1); o item na mão segue o mouse, com sombra, e clicar noutro quadradinho põe, junta ou troca. Passar o mouse mostra uma caixinha escura perto do cursor com o nome, a raridade, o tipo, o peso, o que o item faz e, na partida, as teclas E e R. Na partida, a janela "MOCHILA" fica no meio da tela, com a barra "Peso usado / capacidade", o mapa um pouco escuro atrás (30%) e 18 quadradinhos em 6 colunas; clicar fora dela com item na mão joga no chão. No Reino, a grade ganha a **lixeira** embaixo (tracejada; vermelha com item na mão), que abre a confirmação no detalhe; o filtro por tipo **apaga** os outros itens em vez de escondê-los, para ninguém mudar de lugar.
 
 ## 8. Temas claro e escuro
 
@@ -131,6 +132,6 @@ As cores ficam em variáveis (`--painel`, `--boa`, `--ruim`, `--destaque`, `--qu
 
 ## 9. Onde fica no código
 
-- **Componentes comuns:** `programacao/src/componentes/ui/` (Slot, GradeDeItens, BotaoDeAcao, Painel, Selo, Barra, Mudanca, Simbolo e a arte da interface na raiz).
+- **Componentes comuns:** `programacao/src/componentes/ui/` (Slot, GradeDeItens, GradeComMao com o useGradeComMao, FiltrosDeItens, BotaoDeAcao, Painel, Selo, Barra, Mudanca, Simbolo e a arte da interface na raiz).
 - **Contas puras da interface:** `programacao/src/regras/interface.js`, com testes (filtros, ordem, comparação antes e depois, de onde vem cada item, itens já vistos).
 - **Telas:** Mochila, Mercado, Forja, Guilda (missões e contratos), Preparação, mochila da partida (Tab), Salão da Glória e Reino.

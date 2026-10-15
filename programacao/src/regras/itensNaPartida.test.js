@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { itemDoCatalogo } from '../dados/itens.js'
-import { aliadoPelaMira, itensDaJanela, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from './itensNaPartida.js'
+import { aliadoQueMaisPrecisa, itensDaJanela, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from './itensNaPartida.js'
 
 const item = (id) => itemDoCatalogo(id)
 const ferido = { vida: 30, vidaMaxima: 100, mana: 10, manaMaxima: 50, caido: false }
@@ -41,15 +41,26 @@ describe('itens na partida (Fase 4, TASK-047)', () => {
     expect(recargaComEfeitos(10000, 1, 0.05)).toBe(9500)
   })
 
-  it('R: o aliado de pé mais perto da mira; ninguém de pé, ninguém', () => {
+  it('R (ajustes da partida, 14/10): o aliado de pé que mais precisa daquele item', () => {
+    const lider = { x: 0, y: 0 }
     const aliados = [
-      { classe: 'mago', x: 100, y: 0, caido: false },
-      { classe: 'tanque', x: 10, y: 0, caido: true },
-      { classe: 'arqueiro', x: 300, y: 0, caido: false },
+      { classe: 'mago', x: 100, y: 0, vida: 50, vidaMaxima: 100, mana: 5, manaMaxima: 50, caido: false },
+      { classe: 'tanque', x: 10, y: 0, vida: 10, vidaMaxima: 100, mana: 0, manaMaxima: 50, caido: true },
+      { classe: 'arqueiro', x: 300, y: 0, vida: 30, vidaMaxima: 100, mana: 40, manaMaxima: 50, caido: false },
+      { classe: 'sacerdote', x: 60, y: 0, vida: 90, vidaMaxima: 100, mana: 50, manaMaxima: 50, caido: false },
     ]
-    expect(aliadoPelaMira(aliados, { x: 0, y: 0 }).classe).toBe('mago')
-    expect(aliadoPelaMira(aliados, { x: 280, y: 0 }).classe).toBe('arqueiro')
-    expect(aliadoPelaMira([{ x: 0, y: 0, caido: true }], { x: 0, y: 0 })).toBeNull()
+    expect(aliadoQueMaisPrecisa(aliados, item('pocaoDeVida'), lider).classe).toBe('arqueiro') // o mais ferido (o caído não conta)
+    expect(aliadoQueMaisPrecisa(aliados, item('pocaoDeMana'), lider).classe).toBe('mago') // o com menos mana
+    expect(aliadoQueMaisPrecisa(aliados, item('tonicoLigeiro'), lider).classe).toBe('sacerdote') // acelerador: o mais perto
+    expect(aliadoQueMaisPrecisa([{ x: 0, y: 0, caido: true }], item('pocaoDeVida'), lider)).toBeNull()
+  })
+
+  it('R: empate na vida, o mais perto do Líder', () => {
+    const iguais = [
+      { classe: 'mago', x: 200, y: 0, vida: 40, vidaMaxima: 100, caido: false },
+      { classe: 'arqueiro', x: 50, y: 0, vida: 40, vidaMaxima: 100, caido: false },
+    ]
+    expect(aliadoQueMaisPrecisa(iguais, item('pocaoDeVida'), { x: 0, y: 0 }).classe).toBe('arqueiro')
   })
 })
 

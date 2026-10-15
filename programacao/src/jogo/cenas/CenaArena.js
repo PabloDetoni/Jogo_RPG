@@ -32,7 +32,7 @@ import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regr
 import { avisoDoMotivo, gastarMana, podeUsarHabilidade, regenerarMana } from '../../regras/habilidades.js'
 import { itemDoCatalogo } from '../../dados/itens.js'
 import { contaAoPegar, itemDescartado, itemDropado, itemNatural, tempoRestante } from '../../regras/itensNoChao.js'
-import { aliadoPelaMira, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
+import { aliadoQueMaisPrecisa, multiplicadorAtivo, recargaComEfeitos, usarItemEm } from '../../regras/itensNaPartida.js'
 import { escolherPedra } from '../../regras/arte.js'
 import { reducaoPelaDefesa } from '../../regras/equipamento.js'
 import { tocarEfeito } from '../../audio/gerenciador.js'
@@ -238,7 +238,7 @@ export default class CenaArena extends Phaser.Scene {
     })
     // Clique: o ataque da classe. O Arqueiro (ajustes de 14/10) puxa o arco enquanto segura e atira ao soltar
     this.input.on('pointerdown', (ponteiro) => {
-      if (!ponteiro.leftButtonDown() || this.lider.caido) return
+      if (!ponteiro.leftButtonDown() || this.lider.caido || this.mochilaAberta) return
       if (usaArco(this.lider)) {
         if (podePuxar(this.lider, this.agora)) comecarAPuxar(this.lider, this.agora)
       } else this.usarAtaque(this.lider, this.anguloDaMira)
@@ -725,15 +725,18 @@ export default class CenaArena extends Phaser.Scene {
 
   atualizarLider(agora) {
     const lider = this.lider
-    if (lider.caido) {
+    // Caído, ou com a mochila aberta (ajustes da partida, 14/10: o jogo não pausa, mas o Líder não anda, não ataca, não
+    // esquiva, não usa habilidade e não coleta), o Líder fica parado
+    if (lider.caido || this.mochilaAberta) {
       lider.parar()
+      // O que foi apertado agora não vale depois (o E da mochila não pega do chão ao fechar)
+      for (const tecla of ['esquiva', 'interagir', 'habilidade1', 'habilidade2', 'habilidade3']) Phaser.Input.Keyboard.JustDown(this.teclas[tecla])
       return
     }
     const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
     const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
-    // Com a mochila da partida aberta (Tab), o E usa o item escolhido, não pega do chão (RF41; Partida.jsx manda o comando)
-    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir) && !this.mochilaAberta) this.coletar(agora)
+    if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
     ;['habilidade1', 'habilidade2', 'habilidade3'].forEach((tecla, indice) => {
       if (Phaser.Input.Keyboard.JustDown(this.teclas[tecla])) this.usarHabilidade(lider, indice, this.miraDoLider())
@@ -1574,13 +1577,13 @@ export default class CenaArena extends Phaser.Scene {
     if (aviso) this.mensagem(aviso, 'bom')
   }
 
-  // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé mais perto da mira (em = 'aliado').
+  // Usa um item da mochila da partida no Líder (em = 'lider') ou no aliado de pé que mais precisa dele (em = 'aliado').
   // A regra (regras/itensNaPartida.js) diz o que muda; quando não dá (desmaiado, vida cheia), nada é gasto.
   usarItem(id, em) {
     const pilha = this.mochila.itens.find((item) => item.id === id)
     const item = itemDoCatalogo(id)
     if (!pilha || !item) return
-    const alvo = em === 'aliado' ? aliadoPelaMira(this.aliados, this.mouseNoMundo ?? this.lider) : this.lider
+    const alvo = em === 'aliado' ? aliadoQueMaisPrecisa(this.aliados, item, this.lider) : this.lider
     if (!alvo) {
       this.mensagem('Nenhum aliado de pé para usar o item', 'aviso')
       return
@@ -1617,8 +1620,12 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'alternarRetorno') this.alternarRetorno()
     if (comando.tipo === 'comecarRetorno') this.alternarRetorno(true)
     if (comando.tipo === 'fugir') this.fugir()
-    // Mochila da partida (Fase 4, TASK-047): Tab abre sem pausar; E usa no Líder e R no aliado mais perto da mira
-    if (comando.tipo === 'mochilaAberta') this.mochilaAberta = Boolean(comando.aberta)
+    // Mochila da partida (Fase 4, TASK-047; ajustes da partida, 14/10): Tab abre no meio da tela, sem pausar; o Líder
+    // fica parado (o arco que ele puxava desarma, sem atirar). E usa no Líder e R no aliado que mais precisa.
+    if (comando.tipo === 'mochilaAberta') {
+      this.mochilaAberta = Boolean(comando.aberta)
+      if (this.mochilaAberta) this.lider.puxando = null
+    }
     if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
     if (comando.tipo === 'descartarItem') this.descartarItem(comando.id, comando.quantidade)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)

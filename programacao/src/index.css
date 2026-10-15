@@ -1202,24 +1202,137 @@ body {
   font-weight: bold;
 }
 
-/* Mochila da partida (Tab, TASK-047): lista curta que rola, dentro da janela leve */
-.mochila-na-partida-itens {
-  max-height: 12cqw;
+/* Mochila da partida (Tab; ajustes da partida, 14/10): no meio da tela, com o mapa um pouco escuro atrás (o clique
+   fora da janela joga no chão o item da mão) */
+.janela-fundo-mochila {
+  background: rgb(0 0 0 / 0.3);
 }
 
-/* Janela ao lado (a mochila da partida): no lado direito, embaixo do HUD, para não cobrir o Líder no meio da tela */
-.janela-fundo-ao-lado {
-  place-items: start end;
-  /* Logo abaixo do grupo de cima à direita do HUD (minimapa, região e mochila; ajustes de 14/10) */
-  padding: 12.2cqw 1.2cqw 0 0;
+.janela-mochila {
+  min-width: 0;
+  max-height: calc(100cqh - 2cqw);
+  padding: 0.8em 1.2em;
+  font-size: 0.85em;
+  box-shadow: 0 0.4em 1.4em rgb(0 0 0 / 0.45);
 }
 
-.janela-fundo-ao-lado .janela {
-  min-width: 24cqw;
-  max-width: 27cqw;
-  max-height: calc(100cqh - 12.2cqw - 1cqw);
-  overflow-y: auto;
+.janela-mochila h2 {
+  letter-spacing: 0.12em;
 }
+
+.mochila-teclas {
+  max-width: 30em;
+  margin: 0;
+}
+
+/* Grade com o item na mão (componentes/ui/GradeComMao.jsx): cada quadradinho é um botão (clique e botão direito) */
+.grade-com-mao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  min-height: 0;
+}
+
+.grade-com-mao-quadradinhos {
+  justify-content: start;
+}
+
+/* Com o número de colunas fixo (a mochila da partida), a grade tem a largura delas */
+.grade-com-colunas {
+  width: max-content;
+  max-width: 100%;
+  align-self: center;
+}
+
+.celula-da-grade {
+  display: block;
+  padding: 0;
+  font: inherit;
+  line-height: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.celula-da-grade:hover .slot {
+  filter: brightness(1.12);
+}
+
+.celula-da-grade:focus-visible {
+  outline: 3px solid var(--destaque);
+  outline-offset: 1px;
+}
+
+.slot-vazio {
+  background: var(--fundo-da-grade);
+  border-color: rgb(0 0 0 / 0.25);
+}
+
+/* O item na mão e a caixinha do item: numa camada da moldura, por cima de tudo, sem pegar o clique */
+.camada-do-mouse {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.item-na-mao {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0.3em 0.4em rgb(0 0 0 / 0.5));
+}
+
+.caixinha-do-item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  max-width: 24cqw;
+  padding: 0.45em 0.7em;
+  font-size: 1.15cqw;
+  line-height: 1.3;
+  color: #f4f0ff;
+  background: rgb(22 16 34 / 0.95);
+  border: 2px solid var(--cor-da-raridade, #8a7fb0);
+  border-radius: 4px;
+}
+
+.caixinha-do-item-nome {
+  color: #fff;
+  font-size: 1.1em;
+  text-shadow: 0 1px 2px #000;
+}
+
+.caixinha-do-item-tipo {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.caixinha-do-item-dica {
+  color: #ffd43b;
+}
+
+/* Lixeira da Mochila do Reino: acende com item na mão */
+.lixeira {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  padding: 0.35em 0.8em;
+  font: inherit;
+  color: var(--texto);
+  background: var(--botao);
+  border: 2px dashed var(--borda);
+  cursor: pointer;
+}
+
+.lixeira-ativa {
+  color: #fff;
+  background: #b02a37;
+  border-style: solid;
+}
+
 
 /* Listas curtas dentro do detalhe (trocas da Mercado, receitas da Forja); o que falta fica em destaque */
 .lista-simples {
@@ -2022,6 +2135,10 @@ button.slot:hover {
   flex: 1;
 }
 
+.balcao-grade .grade-com-mao {
+  flex: 1;
+}
+
 .balcao-detalhe {
   overflow-y: auto;
 }
@@ -2567,11 +2684,6 @@ button.slot:hover {
   --lado-da-grade: 56px;
 }
 
-/* Mochila da partida (Tab): a grade pequena */
-.mochila-na-partida-grade {
-  max-height: 12cqw;
-}
-
 /* Salão da Glória: os 3 primeiros com medalha e a linha do jogador em destaque */
 .tabela .linha-podio-1 td {
   background: rgb(240 190 30 / 0.28);
@@ -2635,10 +2747,6 @@ button.slot:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4em 1em;
-}
-
-.janela-fundo-ao-lado .linha {
-  flex-wrap: wrap;
 }
 
 .cartas .carta-de-contrato {

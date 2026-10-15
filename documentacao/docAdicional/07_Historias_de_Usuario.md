@@ -137,7 +137,8 @@ Como jogador, quero organizar minha mochila para saber o que tenho e quanto pesa
 
 Critérios de aceite:
 - Cada item mostra função, descrição e peso.
-- Ao descartar, escolho 1, várias ou todas, e a confirmação mostra o item, a quantidade e que ele some para sempre.
+- Mexo nos itens com o mouse: o clique pega a pilha, o botão direito pega a metade, e clicar noutro quadradinho põe ou troca.
+- Ao descartar (soltando na lixeira ou pelo Descartar, escolhendo 1, várias ou todas), a confirmação mostra o item, a quantidade e que ele some para sempre; cancelar devolve para a grade.
 - Requisitos atendidos: RF19, RF20.
 
 ### HU16 · Negociar no Mercado (UC16)
@@ -280,6 +281,7 @@ Critérios de aceite:
 - Os aliados ficam sempre em volta do Líder e, parados, não ficam tremendo nem se empurrando.
 - A IA dos aliados melhora com o nível de cada um (básica, média e avançada); nenhuma é perfeita, e a de nível alto não é atrapalhada pela de nível baixo (desvia de quem está parado).
 - O Sacerdote cura sempre que alguém do grupo, ele mesmo também, não está com a vida cheia: o mais ferido primeiro e, em empate, o Líder.
+- Quando ando contra o grupo, o aliado no caminho abre caminho; se ele não tem para onde ir, passo por dentro dele; na fuga e no retorno, passo por todos. Nunca fico preso no meu próprio grupo.
 - Só o Líder esquiva.
 - Requisitos atendidos: RF34, RF35, RF36, RF42, RF53.
 
@@ -290,6 +292,7 @@ Como jogador, quero combater em tempo real para derrotar monstros e ganhar XP, o
 Critérios de aceite:
 - O clique faz o ataque básico da classe do meu Líder, sem gastar mana.
 - Durante a esquiva eu não levo dano.
+- Encostado numa pedra, na mata ou na borda, o Líder para ou segue a parede devagar, sem nunca pular de lugar.
 - Posso fugir de mobs; eles desistem quando saio do território deles.
 - O XP de cada monstro é dividido entre os permanentes ativos.
 - Com o Arqueiro, segurar o clique carrega o arco: a flecha carregada vai mais longe, mais rápida e bate mais forte; carregar cheio rende mais que clicar rápido.
@@ -327,9 +330,10 @@ Critérios de aceite:
 Como jogador, quero usar poções em mim ou em aliados durante a partida.
 
 Critérios de aceite:
-- Tab abre a Mochila sem pausar.
+- Tab abre a Mochila no meio da tela sem pausar; com ela aberta, o Líder não anda, não ataca e não coleta.
+- Mexo nos itens com o mouse (pilha, metade, pôr, trocar); clicar fora da janela com item na mão joga no chão perto do Líder (some em 30 s); fechar com item na mão devolve.
+- Com o mouse num consumível, E usa em mim e R no aliado que mais precisa dele.
 - Poção não levanta personagem desmaiado.
-- Posso descartar da mochila da partida (1, várias ou todas): o item cai no chão perto do Líder.
 - Requisitos atendidos: RF41.
 
 ### HU37 · Levantar aliado desmaiado (UC37)
@@ -404,6 +408,7 @@ Critérios de aceite:
 
 Decisões tomadas durante a programação (outubro de 2026). Os critérios acima já estão com o texto novo:
 
+- **HU15, HU31, HU32, HU36 (ajustes na partida, 14/10):** mochila estilo inventário (no Reino, com a lixeira; na partida, no meio da tela, com o Líder parado e R no aliado que mais precisa), passar pelos aliados e o Líder nunca teletransportado.
 - **HU10, HU14, HU15, HU32, HU35, HU36, HU43 (ajustes da versão final, 14/10):** Como jogar atualizado, tela cheia, descartar com a quantidade, arco que carrega, itens natural e dropado, descartar na partida e minijogos com rodadas por dia.
 - **HU08:** o convidado também tem "Sair do jogo"; sair recarrega a página.
 - **HU09:** o jogo também salva ao escolher a classe inicial e quando a aba fecha ou é escondida.

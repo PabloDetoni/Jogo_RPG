@@ -37,7 +37,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
-| UC15 | Gerenciar Mochila | Associação | — | — | Vê itens, função, descrição e peso; descarta itens escolhendo a quantidade (1, várias ou todas), com confirmação. |
+| UC15 | Gerenciar Mochila | Associação | — | — | Vê itens, função, descrição e peso; mexe nos itens com o mouse, como num inventário (pegar a pilha, a metade, pôr, trocar); descarta pela lixeira ou escolhendo a quantidade (1, várias ou todas), sempre com confirmação. |
 | UC16 | Negociar no Mercado | Associação | — | — | Compra, vende e troca itens com NPCs. |
 | UC17 | Gerenciar equipamentos (Forja) | Associação | Estendido por UC18 | — | Equipa os personagens e compra e vende equipamentos. |
 | UC18 | Fabricar equipamento | «extend» de UC17 | — | Condição: possuir os materiais e o ouro da receita | Fabrica um equipamento a partir de uma receita. |
@@ -59,11 +59,11 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
 | UC30 | Preparar mochila da partida | «extend» de UC26 | — | Condição: o jogador quer levar itens | Leva itens da Mochila do Reino respeitando o limite de peso. |
 | UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos, com uma IA que melhora com o nível de cada personagem (básica, média e avançada), sem que um nível atrapalhe o outro. O Sacerdote cura sempre que alguém não está com a vida cheia. Só o Líder esquiva. Começa com uma tela de carregamento (progresso real e uma dica); o HUD é translúcido, em grupos nos cantos. |
-| UC32 | Combater monstros | «extend» de UC31 | Estendido por UC33 e UC34 | Condição: há mob hostil por perto | Luta em tempo real: o clique faz o ataque básico da classe do Líder (o Arqueiro segura o clique para carregar o arco e solta para atirar); a esquiva não deixa levar dano durante o avanço; há knockback e breve imunidade. O escudo do Tanque segura só golpes e tiros de frente; ataques em área o atingem. |
+| UC32 | Combater monstros | «extend» de UC31 | Estendido por UC33 e UC34 | Condição: há mob hostil por perto | Luta em tempo real: o clique faz o ataque básico da classe do Líder (o Arqueiro segura o clique para carregar o arco e solta para atirar); a esquiva não deixa levar dano durante o avanço; há knockback e breve imunidade. O escudo do Tanque segura só golpes e tiros de frente; ataques em área o atingem. O Líder nunca é teletransportado ao encostar em pedra, mata ou borda. |
 | UC33 | Usar habilidade | «extend» de UC32 | — | Condição: mana e recarga disponíveis | Usa uma das 3 habilidades ativas com as teclas 1, 2 e 3. |
 | UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele; cada ataque é avisado no chão antes do golpe. |
 | UC35 | Explorar e coletar recursos | «extend» de UC31 | — | — | Revela o minimapa (a primeira vez em cada área dá XP) e coleta materiais e itens com E. Os recursos do mapa ficam até alguém pegar; o que cai de monstro ou é descartado some em 30 s. |
-| UC36 | Usar item | «extend» de UC31 | — | Condição: há item na mochila da partida | Usa um item em si (E) ou em um aliado (R) pela Mochila, ou o descarta (cai no chão perto do Líder e some em 30 s). |
+| UC36 | Usar item | «extend» de UC31 | — | Condição: há item na mochila da partida | Abre a Mochila no meio da tela (Tab, sem pausar; o Líder fica parado), mexe nos itens com o mouse e, com o mouse num consumível, usa em si (E) ou no aliado que mais precisa (R); clicar fora da janela com item na mão joga o item no chão perto do Líder (some em 30 s). |
 | UC37 | Levantar aliado desmaiado | «extend» de UC31 | — | Condição: aliado desmaiado dentro dos 30 s e área limpa (nenhum inimigo vivo perto dele) | Levanta um aliado com a ajuda de 5 segundos: basta ficar parado perto, sem tecla. |
 | UC38 | Pausar partida | «extend» de UC31 | — | Condição: o grupo está fora de combate | Pausa o jogo com Esc e abre o menu de pausa. |
 | UC39 | Retornar ao Reino | «extend» de UC31 | — | Condição: o grupo está fora de combate | Volta ao Reino sem custo depois de 15 segundos (tecla Q ou menu de pausa). |
@@ -78,6 +78,7 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 
 | Caso de uso | O que mudou |
 |---|---|
+| UC15, UC31, UC32, UC36 | Ajustes na partida (14/10): a Mochila estilo inventário (na partida, no meio da tela, com o Líder parado; no Reino, com a lixeira); R usa no aliado que mais precisa do item; o Líder passa pelos aliados (abrem caminho; encurralado, passa por dentro; na fuga e no retorno, por todos); o Líder nunca é teletransportado. Nenhum caso de uso foi criado ou removido. |
 | UC10, UC14, UC15, UC31, UC32, UC35, UC36, UC43 | Ajustes da versão final (14/10): o Como jogar com os controles atuais; a tela cheia nas Configurações; descartar escolhendo a quantidade (também na mochila da partida); a tela de carregamento e o HUD translúcido; o arco que carrega do Arqueiro e o escudo do Tanque que não segura ataque em área; os itens natural e dropado; os minijogos com rodadas por dia. Nenhum caso de uso foi criado ou removido. |
 | UC08 | O convidado também encerra a sessão ("Sair do jogo"); sair recarrega a página. |
 | UC11, UC12, UC13 | Ranking, Histórico e Conquistas ficam juntos no Salão da Glória. |

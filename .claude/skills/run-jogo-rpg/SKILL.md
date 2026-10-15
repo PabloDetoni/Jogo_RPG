@@ -28,7 +28,9 @@ node ../.claude/skills/run-jogo-rpg/driver.mjs entrar clicar:Jogar clicar:Flores
 
 - Prints em `programacao/testes-do-navegador/driver/<nome>.png` (fora do git). Abra o PNG para olhar.
 - Passos: `entrar` (convidado novo → Arqueiro → Reino), `clicar:<começo do texto do botão>`, `tecla:<w|a|s|d|e|f|q|r|m|tab|espaco|esc|um>`,
-  `segurar:<tecla>:<ms>`, `mouse:<x>:<y>`, `esperar:<ms>`, `tela:<título>`, `eval:<js>`, `print:<nome>`.
+  `segurar:<tecla>:<ms>`, `mouse:<x>:<y>[:direito]`, `esperar:<ms>`, `tela:<título>`, `eval:<js>`, `print:<nome>`,
+  e o mouse de verdade num elemento pelo seletor de CSS: `clicarEm:<seletor>`, `direitoEm:<seletor>` (botão direito) e
+  `passarEm:<seletor>` (só passa o mouse; a caixinha do item aparece). Ex.: `clicarEm:.celula-da-grade:nth-child(2)`.
 - No fim, ele diz a tela atual e os erros do console (`window.__erros`). Sai com código 1 se um passo falhar.
 - Na partida, `window.__jogoDaPartida` é o jogo do Phaser (só no dev); a barra de teste e o painel `</> DEV` aparecem.
 

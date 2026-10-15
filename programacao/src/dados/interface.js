@@ -55,6 +55,12 @@ export const ordemDosTipos = ['consumivel', 'utilitario', 'equipamento', 'materi
 // Tamanho dos quadradinhos na tela (px): o ícone de 32 px aparece em tamanho inteiro (2× nas grades do Reino; 1× no
 // boneco da Forja, nas receitas e trocas e na mochila da partida), sem borrar
 export const ladoDoSlot = { grande: 72, medio: 56, pequeno: 44 }
+// Grade com o item na mão (ajustes da partida, 14/10; componentes/ui/GradeComMao.jsx): quantos quadradinhos no mínimo e
+// de quantos em quantos ela cresce quando enche (a mochila da partida tem 6 colunas; a do Reino, as que couberem)
+export const gradeComMao = {
+  partida: { minimo: 18, passo: 6, colunas: 6, tamanho: 'medio' },
+  reino: { minimo: 24, passo: 1, tamanho: 'grande' },
+}
 export const ladoDoIconeNoSlot = { grande: 64, medio: 32, pequeno: 32 }
 
 // Missões: símbolo e cor de cada tipo (o ícone do cartaz)

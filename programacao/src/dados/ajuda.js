@@ -14,7 +14,7 @@ export const dicasDasTelas = {
   narrativaInicial: 'A história do começo. Clique em Continuar para escolher a sua primeira classe.',
   selecaoClasse: 'Clique numa classe para ver o que ela faz. A escolhida vira o seu primeiro personagem e o Líder.',
   reino: 'O Reino é a sua base entre as partidas. Clique num lugar para entrar; Jogar abre o mapa.',
-  mochila: 'Tudo o que você tem no Reino. Clique num item para ver o que ele faz ou para descartar.',
+  mochila: 'Tudo o que você tem no Reino. Clique num item para pegar (o botão direito pega a metade) e solte noutro lugar ou na lixeira.',
   mercado: 'Compre, venda e troque itens. Antes de cada compra, a tela mostra quanto ouro sobra.',
   forja: 'Equipe os personagens e fabrique equipamento. Antes de equipar, a tela mostra o que muda nos atributos.',
   guilda: 'Aceite uma missão no quadro ou contrate personagens para o seu grupo.',
@@ -39,8 +39,9 @@ export const ajudaDasTelas = {
   ],
   mochila: [
     'Aqui ficam todos os itens que você tem no Reino. Cada quadradinho é um item: o número no canto é a quantidade, e a cor da borda é a raridade (cinza comum, verde incomum, azul raro, laranja especial).',
-    'Os botões de cima filtram por tipo. Clique num item para ver o que ele faz.',
-    'Descartar tira o item para sempre (o jogo pergunta antes). Para ganhar ouro com ele, venda no Mercado.',
+    'Mexa nos itens com o mouse, como num inventário: o clique pega a pilha inteira, o botão direito pega a metade; clique noutro quadradinho para pôr (ou trocar de lugar). O detalhe ao lado mostra o último item clicado; passar o mouse mostra um resumo.',
+    'Os botões de cima apagam os itens de outros tipos, sem tirar ninguém do lugar. A arrumação vale enquanto a tela está aberta.',
+    'Para descartar, solte o item da mão na lixeira (ou use Descartar… no detalhe): o jogo pergunta antes, e o item some para sempre. Cancelar devolve para a grade. Para ganhar ouro com ele, venda no Mercado.',
   ],
   mercado: [
     'Comprar: escolha uma oferta e veja quanto ouro fica depois. As ofertas com ★ mudam com as partidas jogadas.',

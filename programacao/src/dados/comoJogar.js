@@ -8,7 +8,7 @@ export const controlesDoJogo = [
   { teclas: ['Espaço'], acao: 'Esquivar (só o Líder): para onde anda; parado, para a mira' },
   { teclas: ['1', '2', '3'], acao: 'Habilidades (gastam mana e têm recarga)' },
   { teclas: ['E'], acao: 'Pegar o item do chão perto do Líder' },
-  { teclas: ['Tab'], acao: 'Abrir a mochila da partida (o jogo não pausa): E usa no Líder, R no aliado mais perto da mira' },
+  { teclas: ['Tab'], acao: 'Abrir a mochila no meio da tela (o jogo não pausa, mas o Líder fica parado). Clique pega a pilha, botão direito a metade; clique fora joga no chão. Com o mouse num consumível: E usa no Líder, R no aliado que mais precisa' },
   { teclas: ['Q'], acao: 'Voltar ao Reino: 15 s de contagem fora de combate, só com a taxa normal (Q de novo cancela)' },
   { teclas: ['F'], acao: 'Fugir: 5 s, mesmo em combate, pagando uma parte do ouro (não se cancela)' },
   { teclas: ['Esc'], acao: 'Fechar a janela aberta; na partida, pausar (fora de combate); nas telas, voltar' },

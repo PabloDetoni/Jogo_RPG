@@ -1,64 +1,57 @@
-import Janela from '../../componentes/Janela.jsx'
 import Barra from '../../componentes/ui/Barra.jsx'
-import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
-import Descartar from '../../componentes/ui/Descartar.jsx'
-import Slot from '../../componentes/ui/Slot.jsx'
+import GradeComMao from '../../componentes/ui/GradeComMao.jsx'
 import { mundo } from '../../dados/balanceamento.js'
-import { funcaoDoItem, usavelNaPartida } from '../../dados/itens.js'
-import { itensDaJanela } from '../../regras/itensNaPartida.js'
+import { gradeComMao } from '../../dados/interface.js'
+import { usavelNaPartida } from '../../dados/itens.js'
 
-// Mochila da partida (TASK-047, RF41; Fase 4.5): Tab abre sem pausar (janela leve, o jogo continua embaixo). A mesma grade de
-// quadradinhos do Reino (ícone de 32 px), com a barra de peso. ↑ e ↓ escolhem; E usa no Líder e R no aliado de pé mais
-// perto da mira. Poção não levanta quem desmaiou. Tab ou Esc fecham. Descartar (ajustes de 14/10): 1, várias ou todas; o
-// item cai no chão perto do Líder e some em 30 s (dá para pegar de volta com E).
-// O estado das teclas e o envio para a partida ficam em Partida.jsx; aqui só o desenho. "escolhido" é o id do item: quando
-// ele acaba, nada fica escolhido (apertar E de novo não gasta outro item sem querer).
-export default function MochilaNaPartida({ mochila, escolhido, aoEscolher, aoUsar, aoDescartar }) {
-  const itens = itensDaJanela(mochila?.itens)
-  const atual = itens.find((item) => item.id === escolhido) ?? null
-  const podeUsar = atual && usavelNaPartida(atual.dado)
+const { colunas, tamanho } = gradeComMao.partida
+const segundosNoChao = Math.round(mundo.coleta.msDoItemDropado / 1000)
+
+// Mochila da partida (TASK-047, RF41; ajustes da partida, 14/10): Tab abre no meio da tela, com o mapa um pouco escuro
+// atrás. O jogo NÃO pausa, mas o Líder fica parado (não anda, não ataca, não coleta). Mexe nos itens como no Minecraft
+// (componentes/ui/GradeComMao.jsx): clique pega a pilha, botão direito a metade, clique noutro quadradinho põe ou troca;
+// clique fora da janela com item na mão joga ele no chão perto do Líder (some em 30 s, sem confirmação); fechar com
+// item na mão devolve. Com o mouse em cima de um consumível: E usa no Líder, R no aliado que mais precisa.
+// A arrumação (grade) fica guardada em Partida.jsx enquanto durar a partida; as teclas também ficam lá.
+export default function MochilaNaPartida({ mochila, grade, aoSoltarNoChao }) {
   const peso = mochila?.peso ?? 0
   const capacidade = mochila?.capacidade ?? 0
 
+  // Clique fora da janela (no mapa escurecido): o item da mão vai para o chão; sem item na mão, nada
+  function cliqueFora(evento) {
+    evento.preventDefault()
+    if (!grade.estado.mao) return
+    const noChao = grade.soltar()
+    if (noChao) aoSoltarNoChao(noChao)
+  }
+
   return (
-    <Janela titulo="Mochila da partida" aoLado>
-      <Barra fracao={peso / Math.max(1, capacidade)} texto={`Peso ${peso} de ${capacidade}`} alerta={peso >= capacidade} rotulo="Peso da mochila da partida" />
-      {itens.length === 0 ? (
-        <p className="vazio">Vazia. Itens do chão: chegue perto e aperte E (com esta janela fechada).</p>
-      ) : (
-        <div className="grade grade-pequeno mochila-na-partida-grade" role="group" aria-label="Itens da mochila da partida">
-          {itens.map((item) => (
-            <Slot
-              key={item.id}
-              id={item.id}
-              quantidade={item.quantidade}
-              tamanho="pequeno"
-              apagado={!usavelNaPartida(item.dado)}
-              escolhido={item.id === escolhido}
-              onClick={() => aoEscolher(item.id)}
-            />
-          ))}
-        </div>
-      )}
-      <p className="nota">{atual ? `${atual.dado.nome}: ${funcaoDoItem(atual.dado)}` : 'Escolha um item com ↑ ↓ ou com o mouse. Apagados: só servem no Reino.'}</p>
-      <div className="linha">
-        <BotaoDeAcao acao="usar" desativado={!podeUsar} onClick={() => aoUsar('lider')}>
-          Usar no Líder (E)
-        </BotaoDeAcao>
-        <BotaoDeAcao acao="usar" desativado={!podeUsar} onClick={() => aoUsar('aliado')}>
-          Usar no aliado (R)
-        </BotaoDeAcao>
-      </div>
-      {atual && (
-        <Descartar
-          key={atual.id}
-          id={atual.id}
-          tem={atual.quantidade}
-          oQueAcontece={(quantidade) => `${quantidade > 1 ? 'Caem' : 'Cai'} no chão perto do Líder e ${quantidade > 1 ? 'somem' : 'some'} em ${Math.round(mundo.coleta.msDoItemDropado / 1000)} s (dá para pegar de volta com E).`}
-          aoConfirmar={(quantidade) => aoDescartar(atual.id, quantidade)}
+    <div className="janela-fundo janela-fundo-mochila" onClick={cliqueFora} onContextMenu={cliqueFora}>
+      <div
+        className="janela janela-mochila"
+        role="dialog"
+        aria-label="Mochila"
+        onClick={(evento) => evento.stopPropagation()}
+        onContextMenu={(evento) => {
+          evento.preventDefault()
+          evento.stopPropagation()
+        }}
+      >
+        <h2>MOCHILA</h2>
+        <Barra fracao={peso / Math.max(1, capacidade)} texto={`Peso ${peso} / ${capacidade}`} alerta={peso >= capacidade} rotulo="Peso da mochila" />
+        {!mochila?.itens?.length && <p className="vazio">Vazia. Itens do chão: chegue perto e aperte E (com esta janela fechada).</p>}
+        <GradeComMao
+          grade={grade}
+          tamanho={tamanho}
+          colunas={colunas}
+          rotulo="Itens da mochila"
+          dica={(_slot, item) => (usavelNaPartida(item) ? 'E: usar no Líder · R: no aliado que mais precisa' : 'Não se usa na partida: leve para o Reino.')}
         />
-      )}
-      <p className="nota">↑ ↓ escolhe · R usa no aliado mais perto da mira · Tab ou Esc fecha · o jogo não pausa</p>
-    </Janela>
+        <p className="nota mochila-teclas">
+          Clique: pega a pilha · botão direito: pega a metade (ou põe 1) · clique fora da janela: joga no chão (some em {segundosNoChao} s) · Tab ou Esc: fecha · o
+          jogo não pausa
+        </p>
+      </div>
+    </div>
   )
 }

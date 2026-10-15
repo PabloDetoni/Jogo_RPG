@@ -6,7 +6,7 @@ export const dicasDoCarregamento = [
   'Q volta ao Reino só com a taxa normal; F foge na hora, mas custa mais.',
   'Quem desmaia tem 30 s: fique parado perto dele, sem inimigos em volta, para levantá-lo.',
   'O que um monstro deixa cair some em 30 s. Os recursos do mapa ficam até alguém pegar.',
-  'Tab abre a mochila sem pausar: E usa no Líder, R no aliado mais perto da mira.',
+  'Tab abre a mochila sem pausar. Com o mouse num consumível, E usa no Líder e R no aliado que mais precisa.',
   'Quanto mais longe do Reino, maior a taxa do ouro. O XP nunca paga taxa.',
   'Em combate não dá para pausar nem começar o retorno com Q.',
   'O Sacerdote cura sozinho quem estiver ferido, ele mesmo também.',
