@@ -3,6 +3,8 @@
 // Separação, caminho em volta das pedras e travamento ficam em regras/movimento.js.
 // Posições são { x, y }; um retângulo é { x, y, largura, altura } com x e y no centro; ângulos em radianos.
 
+import { combateDeTeste } from '../dados/balanceamento.js'
+
 const limitar = (valor, minimo, maximo) => Math.min(maximo, Math.max(minimo, valor))
 const distancia = (a, b) => Math.hypot(b.x - a.x, b.y - a.y)
 
@@ -84,6 +86,19 @@ export function noArco(centro, anguloMira, alcance, aberturaGraus, ponto) {
 // tipo: 'golpe' | 'projetil' | 'area'. naFrente: quem atacou (ou o projétil) está na frente do escudo.
 export function escudoBloqueia({ escudoAtivo = true, tipo, naFrente }) {
   return Boolean(escudoAtivo && naFrente && tipo !== 'area')
+}
+
+// Até quanto de dano o escudo do Tanque segura (ajustes na partida, 14/10; PROVISÓRIO, aprovado pelo Pablo):
+// base + porForca × Força do Tanque
+export function limiteDoEscudo(forca, { base, porForca } = combateDeTeste.ataques.tanque.limiteDoEscudo) {
+  return base + porForca * Math.max(0, forca ?? 0)
+}
+
+// O que o escudo faz com um golpe ou projétil: 'bloqueado' (segura tudo: dano até o limite), 'rompido' (forte demais
+// para a Força do Tanque: ele leva o dano inteiro) ou 'passa' (não vem pela frente, é em área ou o escudo está caído)
+export function golpeNoEscudo({ escudoAtivo = true, tipo, naFrente, dano, forca }) {
+  if (!escudoBloqueia({ escudoAtivo, tipo, naFrente })) return 'passa'
+  return dano <= limiteDoEscudo(forca) ? 'bloqueado' : 'rompido'
 }
 
 // A bola do Mago cresce enquanto voa: do raio inicial (saindo) ao final (no alcance máximo)

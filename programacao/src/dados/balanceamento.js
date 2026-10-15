@@ -222,7 +222,9 @@ export const mundo = {
     raioDoPasseio: 60,
     msEntreAtaques: 1500,
     pisao: { alcance: 230, raio: 190, msDeAviso: 900, dano: 26, empurrao: 520 },
-    investida: { alcance: 520, comprimento: 440, largura: 80, msDeAviso: 800, msDaInvestida: 380, dano: 22, empurrao: 480 },
+    // A investida é o golpe mais forte da Floresta (ajustes na partida, 14/10: era 22, menos que a mordida de um lobo no
+    // domínio do Boss): rompe o escudo de um Tanque com a Força do começo (limite 32,5) e é segurada a partir da Força 20
+    investida: { alcance: 520, comprimento: 440, largura: 80, msDeAviso: 800, msDaInvestida: 380, dano: 40, empurrao: 480 },
     espinhos: { quantos: 5, abertura: 0.7, msDeAviso: 600, velocidadeDoTiro: 300, raioDoTiro: 9, alcanceDoTiro: 760, dano: 12, empurrao: 200 },
     drops: [{ item: 'cascaAntiga', chance: 1, quantidade: [1, 2] }],
     especial: { item: 'coroaDeRaizes', chance: 0.08 },
@@ -442,6 +444,12 @@ export const combateDeTeste = {
       alcanceDoEmpurrao: 90,
       recargaMs: 600,
       empurrao: 560,
+      // Escudo contra golpe forte (ajustes na partida, 14/10; aprovado pelo Pablo como PROVISÓRIO; regras/combate.js,
+      // golpeNoEscudo): segura golpe e projétil de frente com dano até base + porForca × Força do Tanque (Força 15 do
+      // começo: 32,5; Força 100: 160). Acima, o escudo rompe e o Tanque leva o dano inteiro; o escudo treme por
+      // msDoTremor.
+      limiteDoEscudo: { base: 10, porForca: 1.5 },
+      msDoTremor: 380,
     },
   },
   // Mob vermelho: persegue dentro do raio de detecção e desiste longe do raio de desistência.

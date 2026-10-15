@@ -18,6 +18,8 @@ import {
   velocidadeParaSeguir,
   vetorDeEmpurrao,
   escudoBloqueia,
+  golpeNoEscudo,
+  limiteDoEscudo,
 } from './combate.js'
 
 const perto = (valor, esperado) => expect(valor).toBeCloseTo(esperado, 6)
@@ -243,5 +245,37 @@ describe('escudo do Tanque (ajustes de 14/10)', () => {
   it('ataque em área (o pisão do Boss, explosões) atinge o Tanque mesmo de frente', () => {
     expect(escudoBloqueia({ tipo: 'area', naFrente: true })).toBe(false)
     expect(escudoBloqueia({ tipo: 'area', naFrente: false })).toBe(false)
+  })
+})
+
+describe('escudo contra golpe forte (ajustes na partida, 14/10)', () => {
+  const frente = (dano, forca, tipo = 'golpe') => golpeNoEscudo({ tipo, naFrente: true, dano, forca })
+
+  it('o limite é 10 + 1,5 × Força (Força 15 do começo: 32,5; Força 100: 160)', () => {
+    expect(limiteDoEscudo(0)).toBe(10)
+    expect(limiteDoEscudo(15)).toBe(32.5)
+    expect(limiteDoEscudo(100)).toBe(160)
+    expect(limiteDoEscudo(-5)).toBe(10)
+  })
+
+  it('Força baixa (15): abaixo e no limite segura; acima rompe', () => {
+    expect(frente(10, 15)).toBe('bloqueado') // o lobo da região fácil
+    expect(frente(32.5, 15)).toBe('bloqueado')
+    expect(frente(33, 15)).toBe('rompido')
+    expect(frente(40, 15)).toBe('rompido') // a investida do Boss
+  })
+
+  it('Força alta (40, limite 70): o que rompia a Força baixa agora segura', () => {
+    expect(frente(40, 40)).toBe('bloqueado')
+    expect(frente(70, 40)).toBe('bloqueado')
+    expect(frente(71, 40)).toBe('rompido')
+  })
+
+  it('vale igual para projétil; de lado, em área ou com o escudo caído, o golpe passa (sem contar o limite)', () => {
+    expect(frente(12, 15, 'projetil')).toBe('bloqueado')
+    expect(frente(50, 15, 'projetil')).toBe('rompido')
+    expect(golpeNoEscudo({ tipo: 'golpe', naFrente: false, dano: 5, forca: 100 })).toBe('passa')
+    expect(golpeNoEscudo({ tipo: 'area', naFrente: true, dano: 5, forca: 100 })).toBe('passa')
+    expect(golpeNoEscudo({ escudoAtivo: false, tipo: 'golpe', naFrente: true, dano: 5, forca: 100 })).toBe('passa')
   })
 })

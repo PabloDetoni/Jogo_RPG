@@ -1772,6 +1772,54 @@ try {
   conferir('fuga com F: nenhum aliado fica em cima de outro', fugindo.aliadosEmCima === 0, fugindo)
   await print('51-fuga-atravessa')
 
+  console.log('37. Escudo contra golpe forte (ajustes na partida, 14/10): segura até 10 + 1,5 × Força; acima, rompe')
+  await tirarInimigos()
+  await clicar('Tanque')
+  await cena(`(c.invencivel = false, c.lider.vida = c.lider.vidaMaxima, true)`)
+  await colocarLider(600, 430)
+  await mirarEm(820, 430)
+  await pausa(300)
+  // Um golpe de frente (o inimigo 120 px na mira), com o Líder sem a imunidade de quem acabou de apanhar
+  const golpeDeFrente = (dano, tipo = 'golpe') =>
+    cena(`(() => {
+      c.lider.fimDaImunidade = 0
+      c.lider.vida = c.lider.vidaMaxima
+      const vida = c.lider.vida
+      const r = c.inimigoAcerta({ x: c.lider.x + 120, y: c.lider.y, empurrar() {} }, c.lider, ${dano}, 0, '${tipo}')
+      return { r, perdeu: Math.round(vida - c.lider.vida), forca: c.lider.forca, tremor: Math.round(c.lider.escudo.tremor.forca * 100) / 100 }
+    })()`)
+  const rompidoNaTela = () => cena(`c.children.list.some((o) => o.type === 'Text' && o.text === 'Escudo rompido!')`)
+  const lobo = await golpeDeFrente(10)
+  conferir('Força 15 (limite 32,5): o golpe de um lobo (10) é segurado ("BLOQUEADO", nada de dano)', lobo.forca === 15 && lobo.r === 'bloqueado' && lobo.perdeu === 0, lobo)
+  const noLimite = await golpeDeFrente(32)
+  conferir('Força 15: 32 de dano, abaixo do limite, ainda é segurado', noLimite.r === 'bloqueado' && noLimite.perdeu === 0, noLimite)
+  const investida = await golpeDeFrente(40)
+  await pausa(60)
+  conferir('Força 15: a investida do Boss (40) rompe o escudo e o Tanque leva o dano inteiro', investida.r === 'acertou' && investida.perdeu === 40, investida)
+  conferir('aparece "Escudo rompido!" e o escudo treme', (await rompidoNaTela()) && investida.tremor > 0.5, investida)
+  await print('52-escudo-rompido')
+  await pausa(500)
+  conferir('o tremor passa', (await cena(`c.lider.escudo.tremor.forca`)) === 0)
+  await cena(`(c.lider.forca = 30, true)`)
+  const forte = await golpeDeFrente(40)
+  conferir('com Força 30 (limite 55), a mesma investida é segurada', forte.r === 'bloqueado' && forte.perdeu === 0, forte)
+  const area = await golpeDeFrente(5, 'area')
+  conferir('ataque em área (o pisão) atinge o Tanque de frente, mesmo fraco', area.r === 'acertou' && area.perdeu === 5, area)
+  // Projétil no escudo: o mesmo limite
+  const tiro = (dano) =>
+    cena(`(() => {
+      c.lider.fimDaImunidade = 0
+      c.lider.vida = c.lider.vidaMaxima
+      const vida = c.lider.vida
+      const { x, y } = c.lider.escudo.retangulo()
+      c.projetilNoEscudo(c.lider.escudo, ${dano}, { x: x + 200, y }, 0, x, y)
+      return Math.round(vida - c.lider.vida)
+    })()`)
+  await cena(`(c.lider.forca = 15, true)`)
+  const tiroFraco = await tiro(12)
+  const tiroForte = await tiro(50)
+  conferir('projétil: os espinhos (12) param no escudo; um tiro de 50 rompe e acerta o Tanque inteiro', tiroFraco === 0 && tiroForte === 50, { tiroFraco, tiroForte })
+
   const erros = await avaliar(`window.__erros`)
   conferir('nenhum erro no console', erros.length === 0, erros.slice(0, 5))
 } catch (erro) {

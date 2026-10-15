@@ -25,7 +25,7 @@ import {
   somarXpDoAbate,
   xpParaOProximoNivel,
 } from '../../regras/andamentoDaPartida.js'
-import { aplicarDano, circuloTocaRetangulo, escudoBloqueia, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
+import { aplicarDano, circuloTocaRetangulo, golpeNoEscudo, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
 import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
@@ -1312,15 +1312,41 @@ export default class CenaArena extends Phaser.Scene {
 
   // Golpe corpo a corpo: o escudo do Tanque bloqueia o que vem da frente
   // tipo (ajustes de 14/10): 'golpe' (corpo a corpo: o escudo do Tanque segura se vier pela frente) ou 'area' (o pisão
-  // do Boss, explosões: atinge o Tanque normalmente; regras/combate.js, escudoBloqueia)
+  // do Boss, explosões: atinge o Tanque normalmente). Golpe forte demais para a Força do Tanque (ajustes na partida,
+  // 14/10) rompe o escudo: o Tanque leva o dano inteiro (regras/combate.js, golpeNoEscudo).
   inimigoAcerta(inimigo, membro, dano, forcaDoEmpurrao, tipo = 'golpe') {
-    if (membro.escudo && escudoBloqueia({ escudoAtivo: membro.escudo.ativo, tipo, naFrente: membro.escudo.bloqueiaGolpe(inimigo) })) {
+    const noEscudo = membro.escudo
+      ? golpeNoEscudo({ escudoAtivo: membro.escudo.ativo, tipo, naFrente: membro.escudo.bloqueiaGolpe(inimigo), dano, forca: membro.forca })
+      : 'passa'
+    if (noEscudo === 'bloqueado') {
       const { x, y } = membro.escudo.retangulo()
       this.mostrarBloqueado(x, y)
       inimigo.empurrar(vetorDeEmpurrao(membro, inimigo, forcaDoEmpurrao), 220)
       return 'bloqueado'
     }
-    return this.membroLevaGolpe(membro, dano, inimigo, forcaDoEmpurrao)
+    const resultado = this.membroLevaGolpe(membro, dano, inimigo, forcaDoEmpurrao)
+    if (noEscudo === 'rompido' && resultado === 'acertou') this.escudoRompido(membro.escudo)
+    return resultado
+  }
+
+  // Projétil que bate no escudo de um Tanque: segura até o limite pela Força; acima, rompe e o Tanque leva o dano
+  // inteiro. O projétil acaba no escudo nos dois casos.
+  projetilNoEscudo(escudo, dano, origem, forcaDoEmpurrao, x, y) {
+    if (golpeNoEscudo({ escudoAtivo: escudo.ativo, tipo: 'projetil', naFrente: true, dano, forca: escudo.dono.forca }) !== 'rompido') {
+      this.mostrarBloqueado(x, y)
+      return
+    }
+    if (this.membroLevaGolpe(escudo.dono, dano, origem, forcaDoEmpurrao) === 'acertou') this.escudoRompido(escudo)
+  }
+
+  // "Escudo rompido!" em cima do escudo, que treme; e o aviso no HUD (a primeira vez que se vê, para entender)
+  escudoRompido(escudo) {
+    const { x, y } = escudo.retangulo()
+    tocarEfeito('bloqueio')
+    numeroFlutuante(this, x, y - 26, 'Escudo rompido!', coresDaArena.escudoRompido, 20)
+    particulas(this, x, y, 0xffb070, 10, 220)
+    escudo.tremer()
+    this.mensagem(`Escudo rompido: golpe forte demais para a Força do ${escudo.dono.lider ? 'seu ' : ''}Tanque`, 'alerta')
   }
 
   // Quem é do grupo leva o golpe (Líder ou aliado). Não leva quem está caído ou imune depois de apanhar;

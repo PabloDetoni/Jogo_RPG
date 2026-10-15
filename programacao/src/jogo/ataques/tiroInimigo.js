@@ -1,7 +1,8 @@
 import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import Projetil from './projetil.js'
 
-// Bolinha lenta do atirador: para numa pedra, na borda ou no escudo de um Tanque ("BLOQUEADO").
+// Bolinha lenta do atirador: para numa pedra, na borda ou no escudo de um Tanque ("BLOQUEADO"; forte demais para a
+// Força dele, rompe o escudo e acerta o Tanque: CenaArena.projetilNoEscudo).
 // Acerta o primeiro do grupo que estiver de pé no caminho (TASK-043: os aliados também levam dano).
 // Quem está protegido (esquivando, imune ou com o Invencível ligado) deixa a bolinha passar.
 export default class TiroInimigo extends Projetil {
@@ -21,7 +22,7 @@ export default class TiroInimigo extends Projetil {
       const circulo = this.circulo()
       if (this.percorrido >= config.alcanceDoTiro || this.cena.bateEmObstaculo(circulo)) acabou = true
       else if (this.cena.escudoQueBloqueia(circulo)) {
-        this.cena.mostrarBloqueado(this.x, this.y)
+        this.cena.projetilNoEscudo(this.cena.escudoQueBloqueia(circulo), config.dano, this.origemDoEmpurrao, config.empurrao, this.x, this.y)
         acabou = true
       } else {
         const membro = this.cena.membroAtingido(circulo)

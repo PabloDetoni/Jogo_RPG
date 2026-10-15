@@ -217,7 +217,7 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 | --- | --- | --- | --- | --- | --- |
 | Guerreiro | 120 | Espada: varre um arco na frente | 25 | 0,4 s | arco de 120°, alcance 70 |
 | Mago | 80 | Bola mágica: explode em área | 30 | 1,5 s | cresce de 10 a 26; explosão de raio 90 |
-| Tanque | 180 | Escudo: bloqueia; o clique empurra | 8 | 0,6 s | escudo de 70 px; empurrão até 90 |
+| Tanque | 180 | Escudo: bloqueia; o clique empurra | 8 | 0,6 s | escudo de 70 px; empurrão até 90; segura golpe de frente até 10 + 1,5 × Força de dano (Força 15: 32,5; 50: 85,0; 100: 160,0); acima, rompe e o Tanque leva o dano inteiro |
 | Sacerdote | 80 | Aura: cura quem está dentro | cura 5 por pulso | 3 s | raio 150; pulso a cada 0,5 s por 3 s |
 | Arqueiro | 60 | Arco que carrega: segura e solta (ver abaixo) | 30% a 100% de 26 + 1,2 × Força | 60% da carga cheia | 450 a 1.000 px/s, até 245 a 700 px |
 
@@ -226,6 +226,8 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 - Depois de levar um golpe, **0,5 s** de imunidade (RF36).
 - Corpo que colide (ajustes de 14/10): um quadrado no meio do desenho, com lado de **32%** do desenho (um personagem de 40 px colide com 25,6 px); a área que recebe golpes continua do tamanho do desenho.
 - Separação: cada corpo (o que colide) tem uma zona de **1 px** além do próprio tamanho; dentro dela, os dois se afastam aos poucos, até **320 px/s** quando um está em cima do outro. O Líder pesa **4** (os aliados saem da frente dele) e os inimigos, **1,5**.
+- Nunca teletransportar (ajustes na partida, 14/10): quem entrou numa pedra sai pelo lado em que entrou menos, no máximo **12 px por quadro**; o maior passo de um quadro é **1.200 px/s** × o tempo do quadro + essa correção (a 60 FPS, 32,0 px). O Líder não escorrega de lado nas paredes; os aliados e os mobs seguem a parede a **70%** do passo, e o deslize até um ponto livre anda a **330 px/s**, em linha reta.
+- Passar pelos aliados (ajustes na partida, 14/10): o aliado no caminho do Líder começa a sair para o lado a **60 / 90 / 130 px** do encontro (IA básica / média / avançada), a **80 / 95 / 110%** da velocidade de andar; sem **34 px** livres de nenhum lado, está encurralado e o Líder passa por dentro dele; a colisão volta quando os dois se separam por **4 px**. Na fuga e no retorno, o Líder passa por todos.
 - Travamento: quem anda sozinho e, em **0,6 s**, anda menos de **25%** do que queria, escorrega para um lado, depois para o outro, dá a volta e, no nível 4, desliza em **0,15 s** até o ponto livre mais próximo. O caminho em volta das pedras usa uma grade de **20 px**.
 
 | Inimigo | Vida | Dano | Velocidade | Persegue a | Desiste a | Recarga | Detalhe |
@@ -355,7 +357,7 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 
 - **Guardião da Floresta**: 2.400 de vida, 400 XP, 250 de ouro e **+500 na pontuação** (bônus de Boss, RF49). Território de 720 px no domínio dele.
 - Pisão (perto): área de 190 px em volta, aviso de 1 s, 26 de dano.
-- Investida (média distância): faixa de 440 × 80 px até o alvo, aviso de 1 s, 22 de dano.
+- Investida (média distância): faixa de 440 × 80 px até o alvo, aviso de 1 s, 40 de dano.
 - Espinhos (longe): leque de 5 tiros, aviso de 1 s, 12 de dano cada.
 - Um ataque a cada 2 s no máximo. Drop: cascaAntiga sempre e **8%** de chance do equipamento especial (coroaDeRaizes, RF39; no npm run dev dá para forçar 100%).
 

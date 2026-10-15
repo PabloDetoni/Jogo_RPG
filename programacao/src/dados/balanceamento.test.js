@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { manaMaxima, manaPorSegundo } from '../regras/habilidades.js'
 import { capacidadeDaMochila } from '../regras/mochila.js'
 import { efeitoDoAtributo } from '../regras/atributos.js'
-import { chanceDeCritico } from '../regras/combate.js'
+import { chanceDeCritico, limiteDoEscudo } from '../regras/combate.js'
 import { taxaNaDistancia } from '../regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../regras/xp.js'
 import {
@@ -19,7 +19,7 @@ import {
 } from './balanceamento.js'
 import { boneco as lugarDoBoneco, inicio, inimigosIniciais, tamanhoDaArena } from './arenaDeTeste.js'
 import { biomas } from './biomas.js'
-import { atributos, classes } from './classes.js'
+import { atributos, atributosIniciaisDaClasse, classes } from './classes.js'
 import { nivelInicial, nivelMaximo } from './regras.js'
 
 // TESTES DE LIMITE: olham os valores de verdade de balanceamento.js e classes.js.
@@ -417,5 +417,26 @@ describe('limites do Mercado e da Forja (Fase 4)', () => {
   it('as ofertas rotativas mudam de vez em quando, com poucas à venda de cada vez', () => {
     expect(Number.isInteger(mercado.partidasPorRotacao) && mercado.partidasPorRotacao >= 1 && mercado.partidasPorRotacao <= 20).toBe(true)
     expect(Number.isInteger(mercado.rotativasAVenda) && mercado.rotativasAVenda >= 1 && mercado.rotativasAVenda <= 8).toBe(true)
+  })
+})
+
+describe('limites do escudo do Tanque (ajustes na partida, 14/10)', () => {
+  const { limiteDoEscudo: limite } = combateDeTeste.ataques.tanque
+  const forcaInicial = atributosIniciaisDaClasse('tanque').forca
+
+  it('o limite começa positivo e cresce com a Força, sem exagero', () => {
+    expect(limite.base).toBeGreaterThan(0)
+    expect(limite.porForca).toBeGreaterThan(0)
+    expect(limite.porForca).toBeLessThanOrEqual(5)
+  })
+
+  it('o Tanque do começo segura o golpe de um lobo da região fácil, mas não a investida do Boss', () => {
+    expect(limiteDoEscudo(forcaInicial)).toBeGreaterThanOrEqual(mundo.mobs.lobo.dano)
+    expect(mundo.boss.investida.dano).toBeGreaterThan(limiteDoEscudo(forcaInicial))
+  })
+
+  it('com a Força no máximo, o escudo segura todo golpe de frente da Floresta', () => {
+    const maisForte = Math.max(mundo.boss.investida.dano, ...Object.values(mundo.mobs).map((mob) => mob.dano * mundo.forcaDaRegiao.boss))
+    expect(limiteDoEscudo(atributoMaximo)).toBeGreaterThan(maisForte)
   })
 })

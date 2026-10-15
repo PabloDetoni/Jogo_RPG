@@ -293,6 +293,7 @@ Critérios de aceite:
 - O clique faz o ataque básico da classe do meu Líder, sem gastar mana.
 - Durante a esquiva eu não levo dano.
 - Encostado numa pedra, na mata ou na borda, o Líder para ou segue a parede devagar, sem nunca pular de lugar.
+- Com o Tanque, o escudo segura golpes de frente até um limite que cresce com a Força; um golpe mais forte rompe o escudo ("Escudo rompido!") e o Tanque leva o dano inteiro.
 - Posso fugir de mobs; eles desistem quando saio do território deles.
 - O XP de cada monstro é dividido entre os permanentes ativos.
 - Com o Arqueiro, segurar o clique carrega o arco: a flecha carregada vai mais longe, mais rápida e bate mais forte; carregar cheio rende mais que clicar rápido.
@@ -408,7 +409,7 @@ Critérios de aceite:
 
 Decisões tomadas durante a programação (outubro de 2026). Os critérios acima já estão com o texto novo:
 
-- **HU15, HU31, HU32, HU36 (ajustes na partida, 14/10):** mochila estilo inventário (no Reino, com a lixeira; na partida, no meio da tela, com o Líder parado e R no aliado que mais precisa), passar pelos aliados e o Líder nunca teletransportado.
+- **HU15, HU31, HU32, HU36 (ajustes na partida, 14/10):** escudo do Tanque que rompe com golpe forte, mochila estilo inventário (no Reino, com a lixeira; na partida, no meio da tela, com o Líder parado e R no aliado que mais precisa), passar pelos aliados e o Líder nunca teletransportado.
 - **HU10, HU14, HU15, HU32, HU35, HU36, HU43 (ajustes da versão final, 14/10):** Como jogar atualizado, tela cheia, descartar com a quantidade, arco que carrega, itens natural e dropado, descartar na partida e minijogos com rodadas por dia.
 - **HU08:** o convidado também tem "Sair do jogo"; sair recarrega a página.
 - **HU09:** o jogo também salva ao escolher a classe inicial e quando a aba fecha ou é escondida.
