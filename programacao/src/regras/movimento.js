@@ -76,13 +76,15 @@ function dentroDaArea(corpo, area, folga = 0) {
 // O mais pesado se mexe menos; quem é fixo (caído, boneco) não se mexe e o outro sai sozinho.
 // No mesmo ponto exato, cada par se afasta numa direção diferente, então ninguém fica parado em cima de ninguém.
 // Devolve uma velocidade { x, y } para cada corpo, na mesma ordem, nunca maior que a força.
-export function separacao(corpos, { folga, forca }) {
+// ignorarPar(i, j) (ajustes da partida, 14/10): o par não se separa (o Líder atravessando um aliado)
+export function separacao(corpos, { folga, forca }, ignorarPar = null) {
   const velocidades = corpos.map(() => ({ x: 0, y: 0 }))
   for (let i = 0; i < corpos.length; i++) {
     for (let j = i + 1; j < corpos.length; j++) {
       const a = corpos[i]
       const b = corpos[j]
       if (a.fixo && b.fixo) continue
+      if (ignorarPar?.(i, j)) continue
       const zona = a.raio + b.raio + folga
       const ate = distancia(a, b)
       if (ate >= zona) continue
@@ -254,6 +256,8 @@ export function desfazerSobreposicoes(corpos, paredes, area, voltas = 3, maximo 
         const a = corpos[i]
         const b = corpos[j]
         if (a.ignorar || b.ignorar || (a.fixo && b.fixo)) continue
+        // O Líder atravessando um aliado (ajustes da partida, 14/10): os dois não se desfazem um do outro
+        if ((a.lider && b.atravessavel) || (b.lider && a.atravessavel)) continue
         const pa = posicoes[i]
         const pb = posicoes[j]
         const entrouX = a.raio + b.raio - Math.abs(pa.x - pb.x)

@@ -378,7 +378,18 @@ export const combateDeTeste = {
   // correcaoMaximaPorQuadro px de correção (sair de dentro da parede ou de outro corpo). Quem anda sozinho escorrega
   // ao longo da parede a fatorDoEscorregar da velocidade; o deslize do anti-travamento anda a velocidadeDoDeslize.
   // PROVISÓRIO.
-  movimento: { velocidadeMaxima: 1200, correcaoMaximaPorQuadro: 8, fatorDoEscorregar: 0.7, velocidadeDoDeslize: 330 },
+  movimento: { velocidadeMaxima: 1200, correcaoMaximaPorQuadro: 12, fatorDoEscorregar: 0.7, velocidadeDoDeslize: 330 },
+  // Passar pelos aliados (ajustes da partida, 14/10; regras/passagemDoLider.js). PROVISÓRIO. O aliado no caminho do
+  // Líder começa a sair para o lado a "alcance" px do encontro, a "forca" × a velocidade de andar, pelo nível da IA (a
+  // avançada mais cedo e mais firme). folgaDoCaminho: a largura a mais do caminho; distanciaParaSair: quanto ao lado ele
+  // precisa caber para não estar encurralado; folgaParaVoltar: a colisão volta quando os corpos se separam por isso.
+  passagemDoLider: {
+    alcance: { basica: 60, media: 90, avancada: 130 },
+    forca: { basica: 0.8, media: 0.95, avancada: 1.1 },
+    folgaDoCaminho: 6,
+    distanciaParaSair: 34,
+    folgaParaVoltar: 4,
+  },
   // Corpo que colide (ajustes de 14/10, pedido do Pablo: os personagens se esbarravam demais): bem menor que o desenho,
   // no meio dele. Meio lado = fracaoDoTamanho × tamanho do desenho (40 → 12,8 px, um quadrado de 25,6 px). A área que
   // recebe golpes continua do tamanho do desenho (Entidade.retangulo). PROVISÓRIO.

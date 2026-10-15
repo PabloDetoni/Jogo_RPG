@@ -50,6 +50,7 @@ import BolaMagica from '../ataques/bolaMagica.js'
 import Escudo from '../ataques/escudo.js'
 import { golpeDeEspada } from '../ataques/espada.js'
 import Flecha from '../ataques/flecha.js'
+import { colisaoVolta, liderAtravessa, naFrenteDoLider, saidaDoAliado, velocidadeParaAbrir } from '../../regras/passagemDoLider.js'
 import { DesenhoDoArco, cargaAtual, comecarAPuxar, flechaAgora, horaDeSoltar, msDeRecargaDoAtaque, multiplicadorDaVelocidade, podePuxar, puxarParaADistancia, usaArco } from '../arco.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
 import Atirador from '../entidades/Atirador.js'
@@ -177,6 +178,7 @@ export default class CenaArena extends Phaser.Scene {
     // Andamento (5c): em combate, retorno com Q, fuga com F e o que a partida ganhou até agora
     this.ultimoDano = null // quando alguém do grupo causou ou recebeu dano pela última vez
     this.emCombate = false
+    this.atravessaveis = new Set() // aliados que o Líder atravessa agora (ajustes da partida, 14/10; regras/passagemDoLider.js)
     this.retorno = null // { msRestantes, interrompido } (regras/andamentoDaPartida.js)
     this.fuga = null // { msRestantes }
     this.msAtivos = 0 // tempo ativo: com dano nos últimos 5 s
@@ -781,6 +783,8 @@ export default class CenaArena extends Phaser.Scene {
   // quem anda sozinho e não sai do lugar tenta outro jeito (regras/movimento.js).
   moverTodos(agora, segundos) {
     const andantes = this.andantes()
+    // Passar pelos aliados (ajustes da partida, 14/10): quem sai da frente do Líder e quem ele atravessa
+    const abrirCaminho = this.planejarPassagem()
     const corpos = [...andantes, ...(this.boneco ? [this.boneco] : [])].map((entidade) => ({
       x: entidade.x,
       y: entidade.y,
@@ -788,7 +792,8 @@ export default class CenaArena extends Phaser.Scene {
       peso: entidade.peso,
       fixo: entidade.fixo,
     }))
-    const afastamentos = separacao(corpos, combateDeTeste.separacao)
+    const atravessa = (a, b) => (a.lider && this.atravessaveis.has(b)) || (b.lider && this.atravessaveis.has(a))
+    const afastamentos = separacao(corpos, combateDeTeste.separacao, (i, j) => i < andantes.length && j < andantes.length && atravessa(andantes[i], andantes[j]))
     this.encerrarSeparacaoSuave(andantes, agora)
     andantes.forEach((entidade, i) => {
       if (entidade.deslizando) return
@@ -802,12 +807,16 @@ export default class CenaArena extends Phaser.Scene {
       // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
       const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora) * multiplicadorDaVelocidade(entidade) // puxando o arco, mais devagar
       if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
+      // O aliado no caminho do Líder sai para o lado antes do encontro (o grupo "se abre como água")
+      if (!empurrado && abrirCaminho.has(entidade)) base = somar(base, abrirCaminho.get(entidade))
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
       // Os outros corpos encostados contam como parede: quem anda contra eles para ou escorrega para o lado,
       // em vez de empurrá-los (assim ninguém é espremido para dentro de uma pedra nem de outro corpo).
       // O Líder é a exceção com os aliados: ele pode empurrá-los, para nunca ficar preso atrás de um aliado
       // parado (a correção de sobreposição continua valendo).
-      const encostados = entidade.lider ? andantes.filter((outro) => !this.grupo.includes(outro)) : andantes
+      const encostados = entidade.lider
+        ? andantes.filter((outro) => !this.grupo.includes(outro))
+        : andantes.filter((outro) => !(outro.lider && this.atravessaveis.has(entidade)))
       const outros = this.corposEncostados(entidade, [entidade, ...encostados], agora)
       const paredes = this.paredesPerto(entidade)
       // Quem anda sozinho escorrega em tudo (ao longo da parede, mais devagar). O Líder (ajustes da partida, 14/10)
@@ -859,6 +868,8 @@ export default class CenaArena extends Phaser.Scene {
       raio: entidade.raio,
       fixo: entidade.fixo,
       ignorar: entidade.deslizando || entidade.separandoAte > agora,
+      lider: entidade.lider,
+      atravessavel: this.atravessaveis.has(entidade),
     }))
     const posicoes = desfazerSobreposicoes(corpos, paredes, this.area, 8)
     andantes.forEach((entidade, i) => {
@@ -888,6 +899,39 @@ export default class CenaArena extends Phaser.Scene {
     return retangulosNaCaixa(this.indiceDasParedes, { x: (x0 + x1) / 2, y: (y0 + y1) / 2, largura: x1 - x0 + folga * 2, altura: y1 - y0 + folga * 2 })
   }
 
+  // Passar pelos aliados (ajustes da partida, 14/10; regras/passagemDoLider.js). A cada quadro:
+  // - na fuga (F) e no retorno (Q), o Líder atravessa todos os aliados;
+  // - quem o Líder já atravessa continua assim até os dois se separarem (aí a colisão volta);
+  // - o aliado no caminho sai para o lado; se não tem para onde (encurralado), o Líder atravessa só ele.
+  // Devolve a velocidade para abrir caminho de cada aliado que sai da frente. Os mobs não entram: colidem sempre.
+  planejarPassagem() {
+    const lider = this.lider
+    const abrir = new Map()
+    const fugindoOuRetornando = Boolean(this.fuga || this.retorno)
+    const velocidade = lider.caido ? { x: 0, y: 0 } : lider.querida
+    for (const aliado of this.aliados) {
+      if (aliado.caido || aliado.deslizando || !this.grupo.includes(aliado)) {
+        this.atravessaveis.delete(aliado)
+        continue
+      }
+      const jaAtravessa = this.atravessaveis.has(aliado) && !colisaoVolta(lider, aliado)
+      const nivel = this.perfilDaIA(aliado).id
+      const noCaminho = naFrenteDoLider(lider, velocidade, aliado, combateDeTeste.passagemDoLider.alcance[nivel] ?? 90)
+      let lado = null
+      if (noCaminho && !fugindoOuRetornando && !jaAtravessa) {
+        const outros = this.andantes()
+          .filter((outro) => outro !== aliado && outro !== lider)
+          .map((outro) => ({ x: outro.x, y: outro.y, raio: outro.raio }))
+        lado = saidaDoAliado(lider, velocidade, aliado, { paredes: this.paredesPerto(aliado), area: this.area, outros })
+      }
+      const atravessa = liderAtravessa({ fugindoOuRetornando, encurralado: noCaminho && !lado }) || jaAtravessa
+      if (atravessa) this.atravessaveis.add(aliado)
+      else this.atravessaveis.delete(aliado)
+      if (lado && !atravessa) abrir.set(aliado, velocidadeParaAbrir(lider, aliado, lado, nivel))
+    }
+    return abrir
+  }
+
   // Quem já saiu do bolo do "Juntar todos" (ninguém mais em cima dele) volta a ter a batida dura
   encerrarSeparacaoSuave(andantes, agora) {
     const emCima = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < (a.raio + b.raio) * 0.94
@@ -903,6 +947,8 @@ export default class CenaArena extends Phaser.Scene {
   // e quem está deslizando para o ponto livre passa por todos.
   podemColidir(a, b) {
     if (a.deslizando || b.deslizando) return false
+    // O Líder atravessando um aliado (encurralado, ou na fuga e no retorno): sem colisão entre os dois
+    if ((a.lider && this.atravessaveis.has(b)) || (b.lider && this.atravessaveis.has(a))) return false
     const agora = this.agora
     if (a.separandoAte <= agora && b.separandoAte <= agora) return true
     return Math.hypot(a.x - b.x, a.y - b.y) > (a.raio + b.raio) * 0.94
@@ -996,6 +1042,19 @@ export default class CenaArena extends Phaser.Scene {
     if (membro.classe === 'tanque') membro.escudo?.empurrar()
     if (membro.lider) tocarEfeito(efeitoDoAtaque(membro.classe)) // som (Fase 4): só o ataque do Líder
     return true
+  }
+
+  // Só para os roteiros (npm run dev; ajustes da partida, 14/10): uma pedra nova no meio da partida (corredor, canto)
+  paredeDeTeste(pedra) {
+    if (!import.meta.env.DEV) return
+    const nova = { ...pedra, tipo: 'pedra' }
+    this.mapa = { ...this.mapa, obstaculos: [...this.mapa.obstaculos, nova] }
+    this.add.rectangle(nova.x, nova.y, nova.largura, nova.altura, coresDaArena.pedra).setStrokeStyle(2, coresDaArena.contorno).setDepth(nova.y)
+    this.obstaculos.add(this.add.zone(nova.x, nova.y, nova.largura, nova.altura))
+    this.retangulosDosObstaculos = [...this.mapa.obstaculos, ...(this.boneco ? [this.boneco.retangulo()] : [])]
+    this.indiceDasParedes = criarIndice(this.retangulosDosObstaculos)
+    this.indiceDasPedras = this.boneco ? criarIndice(this.mapa.obstaculos) : this.indiceDasParedes
+    this.navegador = new Navegador(this.area, this.retangulosDosObstaculos, this.indiceDasParedes)
   }
 
   // O máximo que um corpo pode andar num quadro (regras/movimento.js): o monitor dos roteiros usa (ajustes de 14/10)

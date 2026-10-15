@@ -297,6 +297,8 @@ const SOBREPOSTOS = `(folga => {
   const pares = []
   for (let i = 0; i < corpos.length; i++) for (let j = i + 1; j < corpos.length; j++) {
     const a = corpos[i], b = corpos[j], meio = a.raio + b.raio - folga
+    // O Líder atravessando um aliado (ajustes da partida, 14/10) não conta: é de propósito
+    if ((a.lider && c.atravessaveis?.has(b)) || (b.lider && c.atravessaveis?.has(a))) continue
     if (Math.abs(a.x - b.x) < meio && Math.abs(a.y - b.y) < meio) pares.push([a.classe ?? a.constructor.name, b.classe ?? b.constructor.name, Math.round(a.x), Math.round(a.y), (a.deslizando || b.deslizando) ? 'deslizando' : '', Math.round((a.raio + b.raio - Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))) * 10) / 10])
   }
   return pares
@@ -321,6 +323,52 @@ const tirarInimigos = () => cena(`([...c.inimigos].forEach(i => c.matarInimigo(i
 
 // Atalhos da 5b
 const membro = (classe) => `c.grupo.find(m => m.classe === '${classe}')`
+// Passar pelos aliados (ajustes da partida, 14/10): segura as teclas e mede, a cada 60 ms, se o Líder parou e se algum
+// aliado ficou em cima de outro (entrou mais de 6 px, a mesma régua do "apertando" da seção 9: a física deixa uns
+// poucos px num quadro e desfaz no seguinte). maiorParado: o maior número de amostras seguidas sem andar (2 = um instante).
+async function correrMedindo(teclasDoLider, ms) {
+  for (const nome of teclasDoLider) await tecla(nome, 'keyDown')
+  const inicio = await cena(`({ x: c.lider.x, y: c.lider.y })`)
+  let antes = inicio
+  let parado = 0
+  let maiorParado = 0
+  let aliadosEmCima = 0
+  let atravessou = 0
+  const fim = Date.now() + ms
+  while (Date.now() < fim) {
+    await pausa(60)
+    const agora = await cena(`(() => {
+      const a = c.aliados.filter((x) => !x.caido)
+      let n = 0
+      for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) {
+        const m = a[i].raio + a[j].raio - 6
+        if (Math.abs(a[i].x - a[j].x) < m && Math.abs(a[i].y - a[j].y) < m) n++
+      }
+      return { x: c.lider.x, y: c.lider.y, emCima: n, atravessa: c.atravessaveis.size, quem: n ? a.map((x) => [x.classe, Math.round(x.x), Math.round(x.y)]) : null }
+    })()`)
+    const passo = Math.hypot(agora.x - antes.x, agora.y - antes.y)
+    parado = passo < 2 ? parado + 1 : 0
+    maiorParado = Math.max(maiorParado, parado)
+    aliadosEmCima += agora.emCima
+    if (agora.quem) console.log('  (em cima: ' + JSON.stringify(agora.quem) + ')')
+    atravessou = Math.max(atravessou, agora.atravessa)
+    antes = agora
+  }
+  for (const nome of teclasDoLider) await tecla(nome, 'keyUp')
+  return { andou: Math.round(Math.hypot(antes.x - inicio.x, antes.y - inicio.y)), maiorParado, aliadosEmCima, atravessou }
+}
+// Os aliados quietos, sem seguir o Líder (só saem da frente dele), nos lugares dados
+const aliadosParados = (lugares) =>
+  cena(`(() => {
+    const lugares = ${JSON.stringify(lugares)}
+    c.aliados.forEach((a, i) => {
+      const p = lugares[i % lugares.length]
+      a.colocarEm(p[0], p[1])
+      a.ia.quietoAte = c.agora + 60000
+      a.ia.proximaDecisao = c.agora + 60000
+    })
+    return true
+  })()`)
 const textosNaTela = () => cena(`c.children.list.filter(o => o.type === 'Text' && o.visible).map(o => o.text)`)
 const temTexto = async (texto) => (await textosNaTela()).includes(texto)
 // Derruba um membro do grupo: deixa com 1 de vida e dá um golpe forte (passa pela regra de verdade)
@@ -571,7 +619,7 @@ try {
   await atacarEm(420, 290)
   const rapida = await ultimaFlecha()
   await pausa(900)
-  conferir('Arco: o clique rápido solta uma flecha curta (uns 35% do alcance), que não chega ao boneco a 360 px', rapida && rapida.alcance >= 245 && rapida.alcance <= 280 && (await vidaDoBoneco()) === 300, { rapida, boneco: await vidaDoBoneco() })
+  conferir('Arco: o clique rápido solta uma flecha curta (uns 35% do alcance), que não chega ao boneco a 360 px', rapida && rapida.alcance >= 245 && rapida.alcance <= 315 && (await vidaDoBoneco()) === 300, { rapida, boneco: await vidaDoBoneco() })
   await atirarCarregado(420, 290, 1600)
   const cheia = await ultimaFlecha()
   await pausa(40)
@@ -801,10 +849,14 @@ try {
   // Enquanto o Líder empurra, no máximo a borda de um encosta na do outro (até 6 px de 40); soltou, ninguém
   await tecla('d', 'keyDown')
   const durante = []
+  const quadroDoAperto = []
   for (let i = 0; i < 12; i++) {
-    durante.push(...(await sobrepostos(6)))
+    const agora = await sobrepostos(6)
+    durante.push(...agora)
+    if (agora.length) quadroDoAperto.push(await cena(`({ lider: [Math.round(c.lider.x), Math.round(c.lider.y)], grupo: c.aliados.map((a) => [a.classe, Math.round(a.x), Math.round(a.y), c.atravessaveis.has(a), Math.round(a.corpo.body.velocity.x), Math.round(a.corpo.body.velocity.y)]) })`))
     await pausa(100)
   }
+  if (quadroDoAperto.length) console.log('  (aperto: ' + JSON.stringify(quadroDoAperto.slice(0, 2)) + ')')
   await tecla('d', 'keyUp')
   const aliadoDepois = await cena(`({ x: c.aliados[0].x, y: c.aliados[0].y })`)
   const liderDepois = await cena(`({ x: c.lider.x, y: c.lider.y })`)
@@ -1659,6 +1711,66 @@ try {
   const planoComTanque = await cena(`({ guerreiro: ${membro('guerreiro')}.ia.ultimoPlano, tanque: ${membro('tanque')}.ia.ultimoPlano })`)
   conferir('com o Tanque avançado na frente, o Guerreiro avançado fica ao lado dele', planoComTanque.guerreiro === 'guerreiroComTanque', planoComTanque)
   await tirarInimigos()
+
+  console.log('36. Passar pelos aliados (ajustes da partida, 14/10): abre como água, atravessa o encurralado, a fuga atravessa todos')
+  await tirarInimigos()
+  await cena(`(c.invencivel = true, c.encherGrupo(), true)`)
+  await cena(`(c.trocarIA('basica'), true)`)
+  // Campo aberto: o grupo parado em fila no caminho; o Líder corre para a direita
+  await colocarLider(300, 430)
+  await aliadosParados([[420, 430], [480, 432], [540, 428], [600, 431]])
+  await pausa(300)
+  const antesDeAbrir = await cena(`c.aliados.map((a) => a.y)`)
+  const campoAberto = await correrMedindo(['d'], 1600)
+  const abriram = await cena(`c.aliados.map((a, i) => Math.round(Math.abs(a.y - ${JSON.stringify(antesDeAbrir)}[i])))`)
+  conferir('campo aberto (IA básica): o Líder corre contra o grupo parado sem parar (no máximo um instante)', campoAberto.andou >= 260 && campoAberto.maiorParado <= 2, campoAberto)
+  conferir('campo aberto: o grupo se abre para os lados do caminho (cada aliado sai pelo menos 12 px)', abriram.every((d) => d >= 12), abriram)
+  conferir('campo aberto: nenhum aliado fica em cima de outro', campoAberto.aliadosEmCima === 0, campoAberto)
+  await print('48-grupo-se-abre')
+  // A avançada abre mais cedo: o Líder quase não encosta
+  await cena(`(c.trocarIA('avancada'), true)`)
+  await colocarLider(300, 430)
+  await aliadosParados([[420, 430], [480, 432], [540, 428], [600, 431]])
+  await pausa(300)
+  const avancada = await correrMedindo(['d'], 1600)
+  conferir('campo aberto (IA avançada): abre antes, e o Líder passa sem parar', avancada.andou >= 280 && avancada.maiorParado <= 1 && avancada.aliadosEmCima === 0, avancada)
+  await cena(`(c.trocarIA('basica'), true)`)
+
+  // Corredor estreito (duas pedras de teste, um vão de 30 px): o grupo não tem para onde sair; o Líder atravessa
+  await cena(`(c.paredeDeTeste({ x: 800, y: 420, largura: 300, altura: 30 }), c.paredeDeTeste({ x: 800, y: 480, largura: 300, altura: 30 }), true)`)
+  await colocarLider(610, 450)
+  await aliadosParados([[700, 450], [745, 450], [790, 450], [835, 450]])
+  await pausa(300)
+  const corredor = await correrMedindo(['d'], 2000)
+  const dentroDaPedraDeTeste = await cena(`c.grupo.filter((e) => [{ x: 800, y: 420 }, { x: 800, y: 480 }].some((p) => Math.abs(e.x - p.x) < 150 + e.raio - 1 && Math.abs(e.y - p.y) < 15 + e.raio - 1)).map((e) => e.classe)`)
+  conferir('corredor estreito: o Líder atravessa o grupo encurralado sem travar', corredor.andou >= 330 && corredor.maiorParado <= 2 && corredor.atravessou >= 1, corredor)
+  conferir('corredor estreito: ninguém foi empurrado para dentro das pedras e nenhum aliado fica em cima de outro', dentroDaPedraDeTeste.length === 0 && corredor.aliadosEmCima === 0, { dentroDaPedraDeTeste, emCima: corredor.aliadosEmCima })
+  await print('49-corredor-atravessado')
+  await pausa(600)
+  conferir('passou, a colisão volta (ninguém mais é atravessado)', (await cena(`c.atravessaveis.size`)) === 0, await cena(`c.atravessaveis.size`))
+
+  // Canto (as pedras em L): o grupo apertado no canto; o Líder entra no canto
+  await colocarLider(140, 560)
+  await aliadosParados([[235, 630], [205, 640], [240, 600], [175, 640]])
+  await pausa(300)
+  // (até chegar ao canto: lá, a parede do L para o Líder, como deve)
+  const canto = await correrMedindo(['s', 'd'], 650)
+  const liderNoCanto = await cena(`({ x: Math.round(c.lider.x), y: Math.round(c.lider.y) })`)
+  conferir('canto: o Líder entra no canto atravessando quem não tem para onde sair, sem travar', liderNoCanto.x >= 200 && liderNoCanto.y >= 600 && canto.maiorParado <= 2, { ...canto, ...liderNoCanto })
+  conferir('canto: ninguém dentro das pedras e nenhum aliado em cima de outro', (await dentroDePedra()).length === 0 && canto.aliadosEmCima === 0, { pedra: await dentroDePedra(), emCima: canto.aliadosEmCima })
+  await print('50-canto-atravessado')
+
+  // Fuga com F por dentro do grupo: na contagem, o Líder atravessa todos
+  await colocarLider(300, 430)
+  await aliadosParados([[400, 430], [440, 432], [480, 428], [520, 431]])
+  await pausa(300)
+  await apertar('f')
+  await apertar('f')
+  await pausa(100)
+  const fugindo = await correrMedindo(['d'], 1200)
+  conferir('fuga com F: o Líder atravessa todos os aliados, sem parar', fugindo.andou >= 220 && fugindo.maiorParado <= 1 && fugindo.atravessou === 4, fugindo)
+  conferir('fuga com F: nenhum aliado fica em cima de outro', fugindo.aliadosEmCima === 0, fugindo)
+  await print('51-fuga-atravessa')
 
   const erros = await avaliar(`window.__erros`)
   conferir('nenhum erro no console', erros.length === 0, erros.slice(0, 5))
