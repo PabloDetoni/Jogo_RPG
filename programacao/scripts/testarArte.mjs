@@ -167,8 +167,12 @@ try {
     'o ícone do quadradinho tem 64 px (32 × 2) e fica nítido',
     await aba.avaliar(`(() => { const i = document.querySelector('.balcao-grade .slot img.slot-icone'); return i.getBoundingClientRect().width === 64 && getComputedStyle(i).imageRendering === 'pixelated' })()`),
   )
-  await aba.avaliar(`(() => { [...document.querySelectorAll('button.slot')].find((b) => b.getAttribute('aria-label').startsWith('Poção de vida')).click(); return true })()`)
-  await pausa(200)
+  // A grade com o item na mão (ajustes na partida, 14/10): o clique pega e o segundo põe de volta; o detalhe fica nele
+  const lugarDaPocao = await aba.avaliar(`[...document.querySelectorAll('.celula-da-grade')].findIndex((b) => (b.getAttribute('aria-label') ?? '').startsWith('Poção de vida'))`)
+  for (let vez = 0; vez < 2; vez++) {
+    await aba.avaliar(`(document.querySelectorAll('.celula-da-grade')[${lugarDaPocao}].click(), true)`)
+    await pausa(200)
+  }
   conferir('o detalhe do item mostra o ícone', (await aba.avaliar(`document.querySelectorAll('.detalhe-do-item .slot img.slot-icone').length`)) === 1)
   // A arte da interface: a moldura dos painéis e o fundo dos quadradinhos vêm das imagens de teste
   const interfaceComArte = await aba.avaliar(`(() => {

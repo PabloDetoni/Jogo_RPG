@@ -165,7 +165,7 @@ try {
       const meio = (a.x + a.largura / 2 + b.x - b.largura / 2) / 2
       const topo = Math.min(a.y - a.altura / 2, b.y - b.altura / 2)
       const base = Math.max(a.y + a.altura / 2, b.y + b.altura / 2)
-      if (!livre(meio, topo - 170) || !livre(meio, base + 130)) continue
+      if (!livre(meio, topo - 170) || !livre(meio, base + 130) || !livre(meio, base + 200)) continue
       if (!melhor || vao < melhor.vao) melhor = { vao: Math.round(vao), x: (a.x + a.largura / 2 + b.x - b.largura / 2) / 2, topo: Math.min(a.y - a.altura / 2, b.y - b.altura / 2), base: Math.max(a.y + a.altura / 2, b.y + b.altura / 2) }
     }
     return melhor
@@ -175,7 +175,8 @@ try {
     await colocarLider(corredor.x, corredor.topo - 90)
     for (const membro of [0, 1, 2, 3]) await cena(`(c.aliados[${membro}]?.colocarEm(${corredor.x} + (${membro} - 1.5) * 34, ${corredor.topo} - 150 - (${membro} % 2) * 30), true)`)
     await pausa(300)
-    await colocarLider(corredor.x, corredor.base + 120)
+    // O Líder bem depois da saída (200 px): quem para na distância normal de seguir (uns 130 px) já atravessou
+    await colocarLider(corredor.x, corredor.base + 200)
     await pausa(5000)
     const passaram = await cena(`c.aliados.map((a) => ({ classe: a.classe, passou: a.y > ${corredor.base}, distancia: Math.round(Math.hypot(a.x - c.lider.x, a.y - c.lider.y)), deslizou: !!a.deslizando }))`)
     conferir(`corredor estreito (${corredor.vao} px entre dois obstáculos): o grupo inteiro passa para o outro lado sem travar`, passaram.length === 4 && passaram.every((um) => um.passou && um.distancia < 260), { vao: corredor.vao, passaram })
