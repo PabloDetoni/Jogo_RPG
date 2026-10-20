@@ -20,6 +20,7 @@
     "conferir:site": "node scripts/conferirSiteComoConvidado.mjs",
     "testar:floresta": "node scripts/testarFloresta.mjs",
     "testar:paredes": "node scripts/testarParedes.mjs",
+    "testar:botoes": "node scripts/testarBotoes.mjs",
     "conferir:configuracao": "node scripts/conferirConfiguracao.mjs",
     "balanceamento": "node scripts/gerarBalanceamento.js"
   },

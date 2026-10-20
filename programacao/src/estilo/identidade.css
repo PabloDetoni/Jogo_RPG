@@ -129,9 +129,10 @@ body {
     inset 0 0.12cqw 0 rgb(255 230 160 / 0.14),
     0 0.25cqw 0 rgb(0 0 0 / 0.4);
   text-shadow: 0 0.1cqw 0 #000;
+  /* Nenhum estado do botão mexe em transform, margem, borda ou tamanho: o botão posicionado é centrado pelo
+     translate(-50%, -50%) do .posicionado, e trocar o transform o fazia pular para o lado ao clicar (Pablo, 20/10) */
   transition:
     filter 0.12s,
-    transform 0.08s,
     box-shadow 0.12s;
 }
 
@@ -145,10 +146,12 @@ body {
     0 0.25cqw 0 rgb(0 0 0 / 0.4);
 }
 
+/* Apertado: afunda pela sombra de dentro, sem sair do lugar */
 .botao:not(:disabled):active {
-  transform: translateY(0.12cqw);
+  filter: brightness(0.92);
   box-shadow:
     0 0 0 0.12cqw var(--contorno),
+    inset 0 0.18cqw 0.2cqw rgb(0 0 0 / 0.55),
     0 0.1cqw 0 rgb(0 0 0 / 0.4);
 }
 
