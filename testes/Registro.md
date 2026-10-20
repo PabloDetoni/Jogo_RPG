@@ -33,6 +33,7 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | Ajustes da versão final publicados no endereço principal | 14/10 | 884 passando | ok | a Vercel publicou o `2425a55` (deploy "success"); `conferir:configuracao`: tudo certo, com 1 aviso (a senha mínima de 8 no painel do Supabase) e o endereço principal com o último `main`; `testar:contas:publicado`: **54 de 54**; `conferir:site` (convidado): **11 de 11** | o teste à mão do Pablo é em paralelo (VF-01 a VF-20) | `2425a55` |
 | Ajustes na partida, partes 2, 3, 1 e 4 (teletransporte, passar pelos aliados, mochila estilo Minecraft, escudo contra golpe forte) | 14/10 | 920 passando (36 novos: salto máximo e `limitarPasso`, saída das paredes sem pular, passagem pelos aliados, item na mão, R no aliado que mais precisa, limite do escudo e os limites novos do balanceamento) | ok | `testar:paredes` (novo) 9 de 9 (100 pontos de parede; maior passo do Líder 13,9 px por quadro; nenhum outro corpo saltou); arena 254 de 254 (novas: seção 36, escudo contra golpe forte; seção 37, campo aberto, corredor, canto e fuga pelo grupo); `testar:floresta` 73 de 73 (60 FPS de média no pior cenário; nova: a investida do Boss rompe o escudo do Tanque do começo); `testar:reino` 68 de 68 (novas: grade com item na mão, lixeira, filtro que apaga, a MOCHILA no meio com o Líder parado, caixinha do item, E com o mouse, metade, jogar no chão, fechar devolve); `testar:arte` 39 de 39 | roteiros AP-01 a AP-11 | ramo local `ajustes-partida` |
 | Ajustes na partida publicados no endereço principal | 14/10 | 920 passando | ok | a Vercel publicou o `dd76b41` (deploy "success"); `conferir:configuracao`: tudo certo, com 1 aviso (a senha mínima de 8 no painel do Supabase) e o endereço principal com o último `main`; `testar:contas:publicado`: **54 de 54** | o teste à mão do Pablo é em paralelo (AP-01 a AP-11) | `dd76b41` |
+| Visual novo, partes A a D (Mago descartado e Guia de Arte refeito; o Reino e o Mapa com as imagens do Pablo e as áreas clicáveis; a identidade visual em todas as telas) | 20/10 | 920 passando | ok | `testar:reino` 84 de 84 (16 novas: as placas e os desenhos do Reino levam ao lugar certo com clique de verdade, o brilho, a legenda e o cursor ao passar o mouse, a área no mesmo lugar da imagem, o Mapa com cadeados, o contorno que acende, a Tundra que não abre, o castelo, a Fazenda e a Floresta, tudo em 1366×768 e em 1920×1080); arena 254 de 254; `testar:floresta` 73 de 73 (60 FPS); `testar:paredes` 9 de 9; `testar:arte` 39 de 39; prints de antes e depois das 36 telas (claro e escuro) | roteiros VN-01 a VN-07 | ramo local `visual-novo` |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -142,6 +143,20 @@ O que o TEST-007 conferiu: ranking sem login (6 abas), dois navegadores na mesma
 | "Todos contornam a pedra e chegam perto do Líder" falhou uma vez (um aliado a 164 px; o limite é 160) e passou na rodada seguinte. Movimento não mudou nesta parte. | `testar:navegador` | A conferência espera até 6 s os aliados chegarem (antes media num instante fixo de 3,5 s). |
 | "O retorno com Q mostra a Pedra de Retorno" falhou uma vez: um tiro inimigo ainda no ar deixava o grupo em combate, e o Q não começava. | `testar:arte` | O roteiro espera o grupo sair de combate antes de apertar Q, como o da arena. |
 | Os testes do save comparavam o objeto inteiro e não esperavam o campo novo `itensVistos`. | `npm test` | O progresso inicial tem `itensVistos: []`, e o estado só marca os vistos quando a ação mudou o progresso. |
+
+## 2l. Visual novo (20/10): o que foi achado e o que foi feito
+
+| O que aconteceu | Onde apareceu | O que foi feito |
+|---|---|---|
+| O Mago chibi (estilo escolhido sem consultar o Pablo) foi rejeitado. | Pablo | Descartado com o ramo `arte-mago`; Guia de Arte refeito; teste de estilo aprovado antes de qualquer personagem. |
+| A imagem do Reino em PNG tem 2,9 MB; com perda (WEBP), as bordas mudavam até 120 níveis de cor. | Conferência da imagem | WEBP sem perda (2,6 MB, pixel por pixel igual). |
+| O driver e os roteiros acham a tela pelo título visível; o Reino escondeu o título. | Driver | O título escondido mantém a classe `titulo` (os roteiros continuam achando "Reino"). |
+| O roteiro de prints procurava "Floresta" pelo texto exato, e o botão do mapa dizia "Floresta (Jogar)". | `npm run prints` | O texto escondido de cada lugar é só o nome; o detalhe vai no `title` e na placa. |
+| A ligadura "fi" da Pixelify Sans saía como outra letra ("ficam" virava "Acam"). | Prints | Ligaduras desligadas. |
+| O quadro de avisos da Guilda ficou com texto branco sobre pergaminho. | Prints | O quadro voltou a ser de madeira (tábuas em CSS). |
+| A barra de teste quebrava em mais linhas com a fonte em pixel. | Prints | A barra de teste e o painel DEV ficam na fonte simples. |
+| O print do Reino em 1920×1080 (PNG de mais de 4 MB) travou a conversa com o navegador. | `testar:reino` | Nessa seção, os prints saem em JPG. |
+| A seção nova fechava a dica da Forja antes da seção que confere a primeira visita. | `testar:reino` | A seção nova não fecha as dicas (elas não cobrem as áreas clicadas). |
 
 ## 2k. Ajustes na partida (14/10): o que foi achado e o que foi feito
 

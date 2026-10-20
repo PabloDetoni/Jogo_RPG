@@ -54,7 +54,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
 | UC26 | Iniciar partida | Associação | «include» UC27, UC29 e UC09; estendido por UC28 e UC30 | — | Abre o mapa, passa pela preparação e começa a partida. Da preparação dá para voltar ao Mapa ou ao Reino. |
-| UC27 | Selecionar bioma | Incluído por UC26 | — | — | Escolhe Floresta, Deserto, Tundra ou Vulcânico no mapa em ovo. |
+| UC27 | Selecionar bioma | Incluído por UC26 | — | — | Escolhe Floresta, Deserto, Tundra ou Vulcânico no mapa em ovo, clicando na região desenhada (o contorno acende e mostra o nome; os de fora do beta têm cadeado e "Em breve"); o castelo do Planalto volta ao Reino. |
 | UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil, entre as já descobertas; sem outra descoberta, a tela não aparece. |
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
 | UC30 | Preparar mochila da partida | «extend» de UC26 | — | Condição: o jogador quer levar itens | Leva itens da Mochila do Reino respeitando o limite de peso. |
@@ -78,6 +78,7 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 
 | Caso de uso | O que mudou |
 |---|---|
+| UC19, UC27, UC43 e o Reino | Visual novo (20/10): o Reino e o Mapa são as imagens do Pablo, com áreas clicáveis em cima do que está desenhado (no Reino, as placas; no Mapa, o contorno de cada região, o castelo e os minijogos do Planalto). Nenhum caso de uso foi criado ou removido. |
 | UC15, UC31, UC32, UC36 | Ajustes na partida (14/10): o escudo do Tanque rompe com golpe forte demais para a Força dele; a Mochila estilo inventário (na partida, no meio da tela, com o Líder parado; no Reino, com a lixeira); R usa no aliado que mais precisa do item; o Líder passa pelos aliados (abrem caminho; encurralado, passa por dentro; na fuga e no retorno, por todos); o Líder nunca é teletransportado. Nenhum caso de uso foi criado ou removido. |
 | UC10, UC14, UC15, UC31, UC32, UC35, UC36, UC43 | Ajustes da versão final (14/10): o Como jogar com os controles atuais; a tela cheia nas Configurações; descartar escolhendo a quantidade (também na mochila da partida); a tela de carregamento e o HUD translúcido; o arco que carrega do Arqueiro e o escudo do Tanque que não segura ataque em área; os itens natural e dropado; os minijogos com rodadas por dia. Nenhum caso de uso foi criado ou removido. |
 | UC08 | O convidado também encerra a sessão ("Sair do jogo"); sair recarrega a página. |

@@ -21,6 +21,38 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## VN. Visual novo (20/10)
+
+**VN-01 · O Reino igual à imagem**
+- Fazer: entre no Reino e compare com a imagem que você mandou.
+- Deve acontecer: a tela é a sua imagem, inteira, sem botões cinza por cima. No alto, uma faixa discreta com o apelido, o Líder, o ouro e a missão. O "?" fica ao lado da engrenagem.
+
+**VN-02 · As placas desenhadas clicam**
+- Fazer: passe o mouse em cada placa (Salão da Glória, Configurações, Guilda, Mercado, Forja, Mochila, JOGAR, Árvores de Habilidades) e clique em cada uma. Clique também na coroa, na engrenagem, no estandarte da Guilda, na banca do Mercado, na bigorna e na mochila desenhada.
+- Deve acontecer: ao passar o mouse, a placa clareia com um brilho dourado, o cursor vira a mãozinha e aparece embaixo para que o lugar serve ("missões e contratos"...). O clique leva ao lugar certo; o desenho em cima da placa também.
+
+**VN-03 · Tela cheia**
+- Fazer: clique em JOGAR (o jogo entra em tela cheia) e volte ao Reino. Repita o VN-02 em tela cheia.
+- Deve acontecer: as áreas continuam exatamente em cima das placas.
+
+**VN-04 · O Mapa igual à imagem**
+- Fazer: abra o Mapa e passe o mouse em cada região.
+- Deve acontecer: o contorno da região acende em dourado e aparece o nome. A Floresta diz "Jogar"; a Tundra, o Vulcânico e o Deserto têm cadeado e "Em breve" e não abrem. No Planalto: o castelo volta ao Reino; a Fazenda (campos e moinho), a Mina (entrada na montanha) e o Lago (com a cachoeira) mostram "Rodadas hoje" e abrem os minijogos.
+
+**VN-05 · O clique vale no formato da região**
+- Fazer: clique no mar, perto da borda da Floresta, e depois logo dentro dela.
+- Deve acontecer: no mar, nada; dentro da Floresta, abre a Preparação.
+
+**VN-06 · A identidade nas outras telas**
+- Fazer: passe pela Tela inicial, Login, Seleção, Guilda, Mercado, Forja, Mochila, Árvores, Salão da Glória, Preparação, Resumo, um minijogo, Configurações, Pausa e Como jogar, nos dois temas (Configurações → Tema).
+- Deve acontecer: botões em placas escuras com borda dourada; o botão principal de cada tela em vermelho e dourado; o título numa faixa vermelha; painéis de pergaminho (claro) ou madeira escura (escuro); a fonte em pixel. Tudo continua legível, e a trilha, as dicas, os verbos e as confirmações continuam lá.
+
+**VN-07 · Carregamento e partida**
+- Fazer: recarregue o site e comece uma partida.
+- Deve acontecer: as telas de carregamento ficam na noite azul, com o título na faixa vermelha e a barra dourada; o HUD da partida fica em placas escuras com borda dourada fina.
+
+---
+
 ## AP. Ajustes na partida (14/10)
 
 **AP-01 · O Líder nunca é teletransportado (Parte 2)**
