@@ -21,7 +21,7 @@ O jogo desenha a partida numa tela de 1600 × 900 px, que depois cresce ou encol
 
 | O quê | Tamanho do quadro | Por quê |
 |---|---|---|
-| Personagens (5 classes) | 48 × 48 px | A hitbox é 40 × 40: sobra uma margem para a arma e o cabelo |
+| Personagens (5 classes) | 68 × 68 px (boneco de 48) | A hitbox é 40 × 40; o PixelLab deixa a margem para a animação (Guia de Arte, 15/10) |
 | Monstros comuns | 48 × 48 px | Hitbox de 34 a 44 px |
 | Boss | 128 × 128 px | Bem maior que o grupo |
 | Tiles do chão | 32 × 32 px | Cabem 50 × 28 tiles na tela |
@@ -44,7 +44,10 @@ Arquivos (classe = `guerreiro`, `mago`, `tanque`, `sacerdote` ou `arqueiro`):
 
 - `<classe>-parado-<direção>.png`, `<classe>-andando-<direção>.png` e `<classe>-atacando-<direção>.png`, nas 4 direções (`baixo`, `cima`, `esquerda`, `direita`);
 - `<classe>-desmaiado.png` (uma direção só);
-- o retrato de 128 × 128, `retrato-<classe>.png` (aparece na Seleção de classe, no HUD da partida e na Preparação).
+- o retrato de 128 × 128, `retrato-<classe>.png` (aparece na Seleção de classe, nas cartas da Guilda e na Preparação);
+- o emblema da classe de 32 × 32, `classe-<classe>.png` (como os da Seleção de classe do protótipo; aparece no HUD da partida e nas listas, no lugar do quadradinho da cor; novo em 15/10).
+
+Pelo PixelLab (15/10, [Guia de Arte](Guia_de_Arte.md)), o boneco tem 48 px num quadro de 68 × 68 e vem em quadros soltos numerados (`mago-andando-baixo-1.png`, `-2`...), que o jogo junta sozinho; o jogo desenha o quadro 1:1.
 
 Exemplo do Guerreiro: `guerreiro-parado-baixo.png`, `guerreiro-andando-direita.png`, `guerreiro-atacando-cima.png`, `guerreiro-desmaiado.png` e `retrato-guerreiro.png`. Na partida, o Líder ganha um anel branco no chão; sem o `desmaiado`, o boneco tomba e escurece.
 
