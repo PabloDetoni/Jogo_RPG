@@ -100,7 +100,9 @@ export default class Personagem extends Entidade {
   // Na arte: caído, desmaiado; logo depois de atacar ou usar uma habilidade, o ataque, olhando para a mira
   animacaoDoMomento(agora, andando) {
     if (this.caido) return { animacao: 'desmaiado' }
-    if (this.inicioDoGolpe !== undefined && agora - this.inicioDoGolpe < msDoAtaqueNaTela) {
+    // O ataque fica na tela o tempo da animação da arte (o Mago mostra os 6 quadros do "fireball"), nunca menos que o mínimo
+    const msDoAtaque = Math.max(msDoAtaqueNaTela, this.boneco?.msDaAnimacao('atacando') ?? 0)
+    if (this.inicioDoGolpe !== undefined && agora - this.inicioDoGolpe < msDoAtaque) {
       return { animacao: 'atacando', olharPara: { x: Math.cos(this.anguloDaMira), y: Math.sin(this.anguloDaMira) }, desde: this.inicioDoGolpe }
     }
     return super.animacaoDoMomento(agora, andando)

@@ -3,7 +3,8 @@
 // recomprar, entrega depois de vender, abandonar sem ouro para a multa, arma de outra classe, permanente com temporário
 // ativo, recarregar e conferir), a Mochila, a Forja, as Árvores, a mochila da partida (Tab, E), missões, conquistas e um
 // minijogo. Prints em testes-do-navegador/reino/.
-import { resolve } from 'node:path'
+import { writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { abrirNavegador, criarConferencias, ligarVite, pausa } from './ferramentasDoNavegador.mjs'
 
 const PASTA = resolve('testes-do-navegador', 'reino')
@@ -140,6 +141,122 @@ try {
   await passo('Arqueiro')
   await passo('Escolher Arqueiro')
   await aba.esperarTela('Reino')
+
+  console.log('1b. Visual novo (20/10): o Reino e o Mapa ilustrados, com clique de verdade em 1366×768 e em 1920×1080')
+  await minimizarPainelDev()
+  // Um ponto da tela pela posição em % da imagem (a tela tem a proporção dela)
+  const pontoNaTela = (x, y) =>
+    aba.avaliar(`(() => { const t = document.querySelector('.tela').getBoundingClientRect(); return { x: t.left + t.width * ${x} / 100, y: t.top + t.height * ${y} / 100 } })()`)
+  // As dicas da primeira visita ficam abertas (a seção 7 confere a da Forja na primeira visita); elas não cobrem as
+  // áreas clicadas aqui
+  const sairDaTelaCheia = () => aba.avaliar(`(document.fullscreenElement && document.exitFullscreen(), true)`)
+  const destinos = [
+    ['guilda', 'Guilda'],
+    ['mercado', 'Mercado'],
+    ['forja', 'Forja'],
+    ['mochila', 'Mochila'],
+    ['arvores', 'Árvores de Habilidades'],
+    ['salaoGloria', 'Salão da Glória'],
+  ]
+  for (const [largura, altura] of [
+    [1366, 768],
+    [1920, 1080],
+  ]) {
+    const tamanho = `${largura}×${altura}`
+    await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: largura, height: altura, deviceScaleFactor: 1, mobile: false })
+    await pausa(500)
+    await irAoReino()
+    const reino = await aba.avaliar(`({
+      fundo: getComputedStyle(document.querySelector('.tela')).backgroundImage,
+      botoesAntigos: [...document.querySelectorAll('.botao')].filter((b) => ['Guilda', 'Mercado', 'Forja', 'Mochila', 'Jogar'].includes(b.textContent.trim())).length,
+      areas: [...document.querySelectorAll('button.lugar-placa')].map((b) => b.textContent.trim()),
+    })`)
+    conferir(
+      `${tamanho}: o Reino tem a imagem do Pablo de fundo e uma área (botão com nome) em cima de cada placa desenhada, sem os botões antigos`,
+      reino.fundo.includes('fundo-reino') && reino.botoesAntigos === 0 && reino.areas.length === 8 && reino.areas.includes('Jogar') && reino.areas.includes('Configurações'),
+      reino,
+    )
+    const naImagem = await aba.avaliar(`(() => {
+      const t = document.querySelector('.tela').getBoundingClientRect()
+      const r = document.querySelector('.lugar-desenhado-guilda .lugar-placa').getBoundingClientRect()
+      return { x: Math.round(((r.left - t.left) / t.width) * 1000) / 10, y: Math.round(((r.top - t.top) / t.height) * 1000) / 10 }
+    })()`)
+    conferir(`${tamanho}: a área cai no mesmo lugar da imagem (a placa da Guilda em 46,6% × 39,3%)`, Math.abs(naImagem.x - 46.6) < 0.3 && Math.abs(naImagem.y - 39.3) < 0.3, naImagem)
+    const chegou = []
+    for (const [id, nome] of destinos) {
+      await aba.clicarNoElemento(`.lugar-desenhado-${id} .lugar-placa`)
+      await pausa(450)
+      chegou.push(`${nome}: ${await aba.titulo()}`)
+        await irAoReino()
+    }
+    conferir(`${tamanho}: clicar em cada placa desenhada leva ao lugar dela`, chegou.every((linha) => linha.split(': ')[0] === linha.split(': ')[1]), chegou)
+    await aba.clicarNoElemento('.lugar-desenhado-salaoGloria .lugar-desenho')
+    await pausa(450)
+    const pelaCoroa = await aba.titulo()
+    await irAoReino()
+    await aba.clicarNoElemento('.lugar-desenhado-configuracoes .lugar-placa')
+    await pausa(300)
+    const configuracoes = await aba.avaliar(`!!document.querySelector('[role="dialog"][aria-label="Configurações"]')`)
+    await aba.apertar('esc')
+    await pausa(250)
+    conferir(`${tamanho}: o desenho em cima da placa também clica (a coroa leva ao Salão), e Configurações abre a janela`, pelaCoroa === 'Salão da Glória' && configuracoes, { pelaCoroa, configuracoes })
+    await aba.moverParaElemento('.lugar-desenhado-forja .lugar-placa')
+    await pausa(300)
+    const emCima = await aba.avaliar(`(() => {
+      const placa = document.querySelector('.lugar-desenhado-forja .lugar-placa')
+      const legenda = document.querySelector('.lugar-desenhado-forja .legenda-do-lugar')
+      return { brilho: getComputedStyle(placa).boxShadow, cursor: getComputedStyle(placa).cursor, legenda: getComputedStyle(legenda).opacity, texto: legenda.textContent }
+    })()`)
+    conferir(`${tamanho}: passar o mouse acende a placa (brilho dourado), mostra a legenda e o cursor de clique`, emCima.brilho !== 'none' && emCima.cursor === 'pointer' && emCima.legenda === '1', emCima)
+    await aba.moverMouse(5, 5)
+
+    // Mapa, pela placa JOGAR (a tela cheia entra nesse clique; aqui sai, para o tamanho ficar o da conferência)
+    await aba.clicarNoElemento('.lugar-desenhado-jogar .lugar-placa')
+    await pausa(600)
+    await sairDaTelaCheia()
+    await pausa(400)
+    const mapa = await aba.avaliar(`({ tela: document.querySelector('.tela .titulo')?.textContent, fundo: getComputedStyle(document.querySelector('.tela')).backgroundImage, cadeados: document.querySelectorAll('.regiao-bloqueada .cadeado').length })`)
+    conferir(`${tamanho}: JOGAR abre o Mapa com a imagem do Pablo; Tundra, Vulcânico e Deserto com cadeado e "Em breve"`, mapa.tela === 'Mapa' && mapa.fundo.includes('fundo-mapa') && mapa.cadeados === 3, mapa)
+    const floresta = await pontoNaTela(27, 70)
+    await aba.moverMouse(floresta.x, floresta.y)
+    await pausa(300)
+    const acesa = await aba.avaliar(`({ foco: document.querySelector('.regiao-em-foco .so-leitor')?.textContent, contornos: document.querySelectorAll('.contorno-aceso').length, placa: getComputedStyle(document.querySelector('.regiao-em-foco .placa-do-lugar')).opacity })`)
+    conferir(`${tamanho}: passar o mouse na Floresta acende o contorno dela e mostra o nome`, acesa.foco === 'Floresta' && acesa.contornos === 1 && acesa.placa === '1', acesa)
+    const tundra = await pontoNaTela(15, 30)
+    await aba.clicarNaTela(tundra.x, tundra.y)
+    await pausa(400)
+    const naTundra = await aba.titulo()
+    const castelo = await pontoNaTela(50, 45)
+    await aba.clicarNaTela(castelo.x, castelo.y)
+    await pausa(500)
+    const peloCastelo = await aba.titulo()
+    await aba.clicarNoElemento('.lugar-desenhado-jogar .lugar-placa')
+    await pausa(600)
+    await sairDaTelaCheia()
+    await pausa(300)
+    const fazenda = await pontoNaTela(41, 46)
+    await aba.clicarNaTela(fazenda.x, fazenda.y)
+    await pausa(500)
+    const pelaFazenda = await aba.titulo()
+    await passo('Voltar ao Mapa')
+    await pausa(300)
+    const pelaFloresta = await pontoNaTela(27, 70)
+    await aba.clicarNaTela(pelaFloresta.x, pelaFloresta.y)
+    await pausa(500)
+    const naFloresta = await aba.titulo()
+    conferir(
+      `${tamanho}: no Mapa, a Tundra (bloqueada) não abre; o castelo volta ao Reino; a Fazenda abre o minijogo; a Floresta abre a Preparação`,
+      naTundra === 'Mapa' && peloCastelo === 'Reino' && pelaFazenda === 'Minijogo da Fazenda' && naFloresta === 'Preparação',
+      { naTundra, peloCastelo, pelaFazenda, naFloresta },
+    )
+    await irAoReino()
+    // Em JPG: o print do Reino em PNG passa de 4 MB em 1920×1080 e trava a conversa com o navegador
+    const foto = await aba.cdp.enviar('Page.captureScreenshot', { format: 'jpeg', quality: 88 })
+    writeFileSync(join(PASTA, `00-reino-${largura}.jpg`), Buffer.from(foto.data, 'base64'))
+  }
+  await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
+  await pausa(400)
+  await abrirPainelDev()
 
   console.log('2. TEST-006, caso 1: comprar sem ouro')
   await passo('Mercado')

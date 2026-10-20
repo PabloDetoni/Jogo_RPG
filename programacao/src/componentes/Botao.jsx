@@ -6,6 +6,7 @@ export default function Botao({ em, onClick, desativado = false, selecionado, ch
   const classes = ['botao']
   if (em) classes.push('posicionado')
   if (em?.grande) classes.push('botao-grande')
+  if (em?.principal) classes.push('botao-principal')
 
   return (
     <button

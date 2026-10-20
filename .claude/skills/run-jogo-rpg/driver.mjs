@@ -44,10 +44,19 @@ try {
     } else if (nome === 'clicar') await aba.clicar(valor, false)
     else if (nome === 'tecla') await aba.apertar(valor)
     else if (nome === 'segurar') await aba.segurar([resto[0]], Number(resto[1]))
+    else if (nome === 'andarComPrint') {
+      // andarComPrint:<tecla>:<ms>:<print>: segura a tecla, tira o print ainda andando e solta
+      await aba.tecla(resto[0], 'keyDown')
+      await pausa(Number(resto[1]))
+      await aba.print(resto[2])
+      console.log(`  print em ${resolve(PASTA, resto[2] + '.png')}`)
+      await aba.tecla(resto[0], 'keyUp')
+    }
     else if (nome === 'mouse') await aba.clicarNaTela(Number(resto[0]), Number(resto[1]), resto[2] === 'direito' ? 'right' : 'left')
     else if (nome === 'clicarEm') await aba.clicarNoElemento(valor)
     else if (nome === 'direitoEm') await aba.clicarNoElemento(valor, 'right')
     else if (nome === 'passarEm') await aba.moverParaElemento(valor)
+    else if (nome === 'passarEmPonto') await aba.moverMouse(Number(resto[0]), Number(resto[1]))
     else if (nome === 'segurarMouse') {
       const [x, y, ms] = resto.map(Number)
       await aba.moverMouse(x, y)

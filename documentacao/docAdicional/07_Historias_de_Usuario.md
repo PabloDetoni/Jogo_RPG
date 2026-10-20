@@ -244,6 +244,7 @@ Como jogador, quero escolher o bioma para decidir onde vou jogar.
 
 Critérios de aceite:
 - Os biomas são separados; para trocar antes de começar, volto ao Mapa.
+- Clico na região desenhada no mapa; passando o mouse, o contorno acende e mostra o nome; os biomas de fora do beta aparecem com cadeado e "Em breve".
 - Requisitos atendidos: RF30, RF31.
 
 ### HU28 · Escolher ponto de partida (dificuldade) (UC28)
@@ -409,6 +410,7 @@ Critérios de aceite:
 
 Decisões tomadas durante a programação (outubro de 2026). Os critérios acima já estão com o texto novo:
 
+- **HU27 (visual novo, 20/10):** o mapa é a imagem do Pablo, e cada região clica no formato dela.
 - **HU15, HU31, HU32, HU36 (ajustes na partida, 14/10):** escudo do Tanque que rompe com golpe forte, mochila estilo inventário (no Reino, com a lixeira; na partida, no meio da tela, com o Líder parado e R no aliado que mais precisa), passar pelos aliados e o Líder nunca teletransportado.
 - **HU10, HU14, HU15, HU32, HU35, HU36, HU43 (ajustes da versão final, 14/10):** Como jogar atualizado, tela cheia, descartar com a quantidade, arco que carrega, itens natural e dropado, descartar na partida e minijogos com rodadas por dia.
 - **HU08:** o convidado também tem "Sair do jogo"; sair recarrega a página.

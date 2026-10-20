@@ -49,9 +49,12 @@ export const msDoAtaqueNaTela = 280
 
 // Quem tem desenho na partida: o tamanho na tela (px, o lado do quadro desenhado; a hitbox não muda) e as animações que a
 // lista pede (o desmaiado só numa direção). "usa": desenho emprestado de outro (os mobs da arena de teste).
+// Personagens (Guia de Arte, 15/10): o PixelLab põe o boneco de 48 px num quadro de 68 × 68 (sobra para a animação), e o
+// jogo desenha o quadro 1:1, sem esticar (pixel art esticada em 1,4× ou 0,7× borra).
 const animacoesDasClasses = ['parado', 'andando', 'atacando', 'desmaiado']
+export const quadroDosPersonagens = 68
 export const bonecos = {
-  ...Object.fromEntries(classes.map((classe) => [classe.id, { nome: classe.nome, tamanhoNaTela: 48, animacoes: animacoesDasClasses }])),
+  ...Object.fromEntries(classes.map((classe) => [classe.id, { nome: classe.nome, tamanhoNaTela: quadroDosPersonagens, animacoes: animacoesDasClasses }])),
   // Mobs da Floresta (PROVISÓRIO até a TASK-012) e o Boss
   lobo: { nome: 'Lobo', tamanhoNaTela: 48, animacoes: ['andando', 'aviso', 'atacando'] },
   aranha: { nome: 'Aranha', tamanhoNaTela: 44, animacoes: ['andando', 'aviso', 'atacando'] },
@@ -94,6 +97,9 @@ export const iconeDoItem = (id) => `item-${id}`
 export const iconeDoAtributo = (id) => `atributo-${id}`
 export const iconeDaHabilidade = (id) => `habilidade-${id}`
 export const retratoDaClasse = (classe) => `retrato-${classe}`
+// O emblema da classe (Guia de Arte, 15/10; como os da Seleção de classe do protótipo): nos lugares pequenos (o HUD da
+// partida, as listas), no lugar do quadradinho da cor; nos grandes fica o retrato
+export const iconeDaClasse = (classe) => `classe-${classe}`
 export const iconeDoOuro = 'ouro'
 export const iconeDaPedraDeRetorno = 'pedra-de-retorno'
 
@@ -119,7 +125,7 @@ export const cutsceneDeDerrota = { imagens: ['derrota-1', 'derrota-2', 'derrota-
 
 // Tamanho sugerido de cada grupo (para o npm run conferir:arte avisar de imagem estranha)
 export const tamanhosSugeridos = {
-  personagem: 48,
+  personagem: quadroDosPersonagens,
   mob: 48,
   boss: 128,
   tile: 32,
@@ -137,6 +143,7 @@ export function arteEsperada() {
   }
   grupos.push({ grupo: 'Personagens (faixas de animação)', tipo: 'personagem', nomes: classes.flatMap((classe) => nomesDoBoneco(classe.id)) })
   grupos.push({ grupo: 'Retratos das classes', tipo: 'retrato', nomes: classes.map((classe) => retratoDaClasse(classe.id)) })
+  grupos.push({ grupo: 'Ícones das classes (emblemas)', tipo: 'icone', nomes: classes.map((classe) => iconeDaClasse(classe.id)) })
   grupos.push({ grupo: 'Monstros da Floresta (faixas de animação)', tipo: 'mob', nomes: ['lobo', 'aranha', 'javali', 'cervo'].flatMap(nomesDoBoneco) })
   grupos.push({ grupo: 'Boss: Guardião da Floresta', tipo: 'boss', nomes: [...nomesDoBoneco('guardiao'), ...Object.values(arteDaFloresta.avisos)] })
   grupos.push({

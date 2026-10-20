@@ -100,7 +100,7 @@ describe('o que cada tela mostra', () => {
   it('Preparação: o Líder salvo vem selecionado', () => {
     const html = desenhar('preparacao', 'convidado')
     expect(html).toContain('aria-pressed="true">Tanque')
-    expect(html).toContain('aria-pressed="false">Mago')
+    expect(html).toMatch(/aria-pressed="false">(<img[^>]*>)?Mago/) // com a arte, o retrato vem antes do nome
   })
 
   it('Resumo: Retorno forçado em amarelo, com o bioma', () => {

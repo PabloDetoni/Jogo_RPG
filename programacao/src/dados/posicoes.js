@@ -1,6 +1,7 @@
 // Posições de tudo o que aparece nas telas, em porcentagem da caixa 16:9.
 // x vai de 0 (esquerda) a 100 (direita); y vai de 0 (topo) a 100 (base).
-// O número é o CENTRO do elemento. "grande: true" deixa o botão maior.
+// O número é o CENTRO do elemento. "grande: true" deixa o botão maior; "principal: true" pinta a ação principal da tela
+// (o vermelho e dourado do JOGAR, visual novo de 20/10; o "grande" também é principal).
 // Quando a arte entrar, ajuste só os números daqui.
 // Dentro das janelas (Configurações, Pausa, Como jogar) os botões ficam em coluna, sem posição.
 
@@ -19,7 +20,7 @@ export const posicoes = {
 
   // ---------- Acesso ----------
   telaInicial: {
-    iniciarJogo: { x: 50, y: 55 },
+    iniciarJogo: { x: 50, y: 55, grande: true }, // o botão principal (vermelho e dourado, como o JOGAR)
     comoJogar: { x: 50, y: 67 },
   },
   // Fase 2: as mensagens (e-mail confirmado, senha errada, conta em uso...) ficam logo abaixo do título
@@ -28,7 +29,7 @@ export const posicoes = {
     continuar: { x: 50, y: 27 }, // "Continuar como ...": a conta que o Supabase lembra neste navegador
     email: { x: 50, y: 36 },
     senha: { x: 50, y: 47 },
-    entrar: { x: 50, y: 57 },
+    entrar: { x: 50, y: 57, principal: true },
     reenviar: { x: 72, y: 57 }, // só com o e-mail ainda não confirmado (RF04)
     criarConta: { x: 38, y: 67 },
     esqueciSenha: { x: 62, y: 67 },
@@ -42,7 +43,7 @@ export const posicoes = {
     senha: { x: 50, y: 41 },
     apelido: { x: 50, y: 53 },
     regras: { x: 50, y: 63 },
-    criarConta: { x: 50, y: 73 },
+    criarConta: { x: 50, y: 73, principal: true },
     voltarAoLogin: { x: 10, y: 90 },
   },
   confirmeEmail: {
@@ -91,14 +92,23 @@ export const posicoes = {
   },
 
   // ---------- Reino ----------
+  // Reino (visual novo, 20/10): os botões vêm desenhados na imagem do fundo-reino (a do Pablo). Cada lugar tem uma área
+  // clicável invisível no retângulo da placa (x, y = canto de cima à esquerda; largura e altura; tudo em % da imagem, que
+  // tem a proporção da tela) e, quando há, no desenho em cima dela (a coroa, a engrenagem, o estandarte, a banca, a
+  // bigorna, a mochila, as espadas). Trocando a imagem, ajuste só estes números.
   reino: {
-    hud: { x: 50, y: 21 },
-    guilda: { x: 50, y: 41 },
-    mercado: { x: 29, y: 61 },
-    forja: { x: 74, y: 63 },
-    mochila: { x: 9, y: 83 },
-    jogar: { x: 50, y: 88, grande: true },
-    arvores: { x: 92, y: 86 },
+    faixa: { x: 50, y: 3.4 }, // apelido, Líder, ouro e missão (o que muda)
+    ajuda: { x: 83.4, y: 4.6 }, // o "?", ao lado da engrenagem
+    lugares: {
+      salaoGloria: { placa: { x: 1.4, y: 8.1, largura: 14.8, altura: 6.4 }, desenho: { x: 5, y: 1, largura: 7.6, altura: 7.2 } },
+      configuracoes: { placa: { x: 86.3, y: 8.1, largura: 12.9, altura: 6.2 }, desenho: { x: 89.8, y: 1.4, largura: 5.6, altura: 7 } },
+      guilda: { placa: { x: 46.6, y: 39.3, largura: 7.9, altura: 5.1 }, desenho: { x: 48.6, y: 33.4, largura: 3.8, altura: 6 } },
+      mercado: { placa: { x: 25.6, y: 58.3, largura: 6.6, altura: 4.6 }, desenho: { x: 27.4, y: 53.8, largura: 3.9, altura: 4.8 } },
+      forja: { placa: { x: 70.7, y: 60.5, largura: 6.4, altura: 4.7 }, desenho: { x: 72.2, y: 55.8, largura: 3.9, altura: 4.9 } },
+      mochila: { placa: { x: 3.3, y: 79.6, largura: 12.5, altura: 6.6 }, desenho: { x: 1.8, y: 63, largura: 11.8, altura: 16.4 } },
+      jogar: { placa: { x: 38.6, y: 83, largura: 22.8, altura: 9.3 }, desenho: { x: 48.6, y: 79.4, largura: 3, altura: 3.8 } },
+      arvores: { placa: { x: 85.5, y: 82, largura: 13.6, altura: 8.2 } },
+    },
   },
   guilda: {
     abas: { x: 50, y: 25 },
@@ -131,18 +141,23 @@ export const posicoes = {
   },
 
   // ---------- Mapa e partida ----------
+  // Mapa (visual novo, 20/10): a imagem do Pablo é o fundo-mapa. Cada lugar clica no formato dele: "contorno" são os
+  // pontos [x, y] do polígono em % da imagem (que tem a proporção da tela); "placa" é onde aparece o nome. Os biomas
+  // primeiro; os lugares do Planalto (o castelo e os minijogos) ficam por cima deles. Trocando a imagem, ajuste estes pontos.
   mapa: {
-    voltarAoReino: { x: 50, y: 47 },
-    planalto: { x: 50, y: 54 },
-    // Os minijogos com as rodadas de hoje embaixo (ajustes de 14/10)
-    fazenda: { x: 33, y: 48 },
-    lago: { x: 50, y: 36 },
-    mina: { x: 67, y: 48 },
-    tundra: { x: 20, y: 27 },
-    vulcanico: { x: 75, y: 27 },
-    floresta: { x: 26, y: 70 },
-    deserto: { x: 74, y: 73 },
-    arenaDeTeste: { x: 50, y: 86 }, // só no npm run dev
+    biomas: {
+      tundra: { contorno: [[3, 31], [5, 19], [10, 12], [20, 7], [33, 4], [44, 7], [48, 13], [48, 24], [44, 30], [39, 37], [34, 43], [23, 48], [11, 47], [5, 42]], placa: { x: 24, y: 27 } },
+      vulcanico: { contorno: [[50, 17], [56, 10], [64, 7], [73, 3], [80, 5], [87, 10], [92, 21], [95, 33], [93, 45], [86, 51], [76, 48], [67, 48], [61, 39], [55, 29]], placa: { x: 76, y: 28 } },
+      deserto: { contorno: [[67, 48], [76, 48], [86, 51], [92, 57], [95, 66], [93, 75], [86, 85], [77, 92], [65, 94], [55, 90], [52, 81], [53, 70], [59, 60]], placa: { x: 74, y: 72 } },
+      floresta: { contorno: [[5, 52], [10, 49], [23, 48], [34, 44], [38, 46], [43, 53], [49, 61], [53, 69], [52, 81], [48, 89], [40, 94], [28, 92], [19, 86], [12, 79], [7, 71], [5, 61]], placa: { x: 27, y: 70 } },
+    },
+    planalto: {
+      reino: { contorno: [[46.6, 38.5], [53.6, 38.5], [53.8, 50], [46.2, 50]], placa: { x: 50, y: 53.5 } },
+      fazenda: { contorno: [[37.4, 43], [41.8, 39.5], [46, 41.5], [46, 49], [41, 51.5], [37, 48.5]], placa: { x: 40, y: 54.5 } },
+      mina: { contorno: [[54.4, 41], [58.6, 38.6], [62, 42.5], [61.2, 49], [56.4, 50.5], [54.4, 47]], placa: { x: 59, y: 54.5 } },
+      lago: { contorno: [[44, 36], [48.2, 29.5], [52.2, 29], [56.2, 34.5], [55.2, 40], [46.2, 40.6]], placa: { x: 50, y: 25.5 } },
+    },
+    arenaDeTeste: { x: 8, y: 93 }, // só no npm run dev
   },
   // Usada pelas telas de Fazenda, Mina e Lago
   minijogo: {
@@ -181,6 +196,6 @@ export const posicoes = {
     resultado: { x: 50, y: 25 },
     detalhes: { x: 50, y: 55 },
     jogarNovamente: { x: 38, y: 88 },
-    voltarAoReino: { x: 62, y: 88 },
+    voltarAoReino: { x: 62, y: 88, principal: true },
   },
 }

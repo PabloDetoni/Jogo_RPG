@@ -20,7 +20,7 @@ export const dicasDasTelas = {
   guilda: 'Aceite uma missão no quadro ou contrate personagens para o seu grupo.',
   arvores: 'Distribua os pontos de atributo e aprenda habilidades de cada personagem.',
   salaoGloria: 'O ranking dos jogadores com conta, o seu histórico de partidas e as conquistas.',
-  mapa: 'Escolha um bioma para jogar (no beta, a Floresta) ou um minijogo do Planalto.',
+  mapa: 'Clique na Floresta para jogar. No Planalto, o castelo volta ao Reino e a fazenda, a mina e o lago abrem os minijogos.',
   fazenda: 'Minijogo: clique nas plantas maduras antes que murchem.',
   mina: 'Minijogo: clique 3 vezes em cada pedra para quebrar.',
   lago: 'Minijogo: quando a boia afundar, clique rápido.',
@@ -69,8 +69,8 @@ export const ajudaDasTelas = {
     'Minhas partidas (com conta) é o seu histórico. Conquistas mostra o progresso de cada uma e o que ela dá.',
   ],
   mapa: [
-    'Escolha onde ir. No beta, só a Floresta está aberta; os outros biomas aparecem bloqueados.',
-    'No Planalto, a Fazenda, a Mina e o Lago são minijogos rápidos: dão recursos e XP, sem taxa e sem contar como partida.',
+    'Clique num lugar do mapa (passe o mouse para ver o nome). No beta, só a Floresta (embaixo à esquerda) está aberta; a Tundra, o Vulcânico e o Deserto aparecem com cadeado.',
+    'No Planalto, no meio: o castelo volta ao Reino; a Fazenda (os campos e o moinho), a Mina (a entrada na montanha) e o Lago (com a cachoeira) são minijogos rápidos: dão recursos e XP, sem taxa e sem contar como partida, com algumas rodadas por dia.',
   ],
   pontoPartida: ['Escolha onde o grupo começa. Só as regiões que você já descobriu ficam liberadas; quanto mais longe, mais difícil e maior a taxa da fuga.'],
   preparacao: [

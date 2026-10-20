@@ -4,6 +4,27 @@ O padrão visual das telas do jogo, criado na Fase 4.5 (interface intuitiva, 11/
 
 A ideia: quem não programou o jogo tem que entender, só de olhar, o que cada tela faz e o que cada botão vai mudar. A Árvore de Habilidades foi a referência de clareza.
 
+## 0. Identidade visual (visual novo, 20/10/2026)
+
+A aparência de todas as telas vem das duas imagens do Pablo (o Reino e o mapa dos biomas), que são também os fundos dessas duas telas. O estilo dos personagens e dos cenários está no [Guia de Arte](Guia_de_Arte.md). Tudo isto é código (CSS e SVG, em `programacao/src/estilo/identidade.css`), sem imagem; a arte da interface (seção 7) continua podendo trocar cada peça por uma imagem.
+
+| Peça | Como é | Onde |
+|---|---|---|
+| **Placa** (botões, trilha, dica, avisos, plaquinhas de nome) | quase preta (`#0b0807` a `#2a1f18`), **borda dourada** `#f0a000` com um contorno escuro por fora, texto claro `#fff6d8` | os rótulos do Reino (Guilda, Mercado, Mochila...) |
+| **Botão principal** (a ação principal da tela: Iniciar jogo, Entrar, Criar conta, Escolher a classe, Começar partida, Voltar ao Reino do Resumo) | **vermelho** (`#d41a1a` a `#5e0000`) com borda dourada, letras maiúsculas e losangos dourados nos lados | o JOGAR do Reino |
+| **Título da tela** | uma **faixa vermelha** com borda dourada | o JOGAR e o "Hero Selection" da referência |
+| **Painéis** | tema claro: **pergaminho** (`#f4e6c0`) com borda bronze; tema escuro: **madeira escura** (`#201712`) com borda dourada | |
+| **Janelas** (Configurações, Pausa, Como jogar, a fuga...) | moldura dourada dupla, o título numa faixa vermelha, o fundo da tela escurecido | |
+| **Quadro de avisos da Guilda** | tábuas de madeira com os cartazes de pergaminho | |
+| **Escolhido ou ligado** (aba, filtro, Líder) | a placa vira **dourada** com texto escuro | |
+| **Ao passar o mouse** | a placa clareia e ganha um brilho dourado; ao clicar, afunda um pouco | |
+| **Fonte** | **Pixelify Sans** (licença livre OFL; arquivos em `src/assets/fontes/`), sem ligaduras (o "fi" da fonte sai trocado). A barra de teste e o painel `</> DEV` (só no `npm run dev`) ficam na fonte simples, mais estreita | |
+| **Fundo das telas sem imagem** | tema claro: pergaminho com luz no alto; tema escuro: a **noite azul** (`#2a3a64` a `#0b1124`), como a referência. Cada tela pode ganhar a imagem dela (`fundo-<tela>.png`, Lista de Arte e Som) | |
+| **HUD da partida** | grupos em placas escuras translúcidas com borda dourada fina | |
+| **Carregamento** (o site e a partida) | a noite azul, o título na faixa vermelha e a barra dourada | |
+
+**Telas ilustradas (o Reino e o Mapa).** A imagem ocupa a tela inteira, na mesma proporção, ampliada de forma suave (é ilustração, não pixel art em grade). No **Reino**, os botões vêm desenhados na imagem: em cima de cada um fica uma **área clicável invisível** (no retângulo da placa e no desenho em cima dela), que **acende** ao passar o mouse (brilho dourado e a placa um pouco mais clara) e mostra a legenda do lugar; o nome fica escondido para o teclado e o leitor de tela. Só a informação que muda (apelido, Líder, ouro, missão) é texto do jogo, numa faixa discreta no alto. No **Mapa**, cada lugar clica **no formato dele** (o contorno da região) e acende o contorno dourado com o nome numa placa; os biomas fora do beta mostram um cadeado e "Em breve". As posições ficam em `programacao/src/dados/posicoes.js` (`reino.lugares` e `mapa`), em % da imagem.
+
 ## 1. Regras gerais
 
 - **Cada ação tem cor e símbolo próprios, iguais no jogo todo.** O símbolo fica num quadradinho da cor da ação, antes do texto do botão.
@@ -19,7 +40,7 @@ A ideia: quem não programou o jogo tem que entender, só de olhar, o que cada t
 - **Na primeira vez em cada tela, uma dica curta e fechável diz para que ela serve** (ajustes de 14/10; textos em `dicasDasTelas`, `programacao/src/dados/ajuda.js`). "Entendi" ou Esc fecham; ela não volta sozinha naquele navegador.
 - **Toda tela tem um "?" no canto de cima**, ao lado de Configurações. Ele reabre a dica; a dica tem "Como funciona", a explicação completa (`ajudaDasTelas`). Esc fecha.
 - **Toda ação importante confirma o que aconteceu**, embaixo da tela, no formato "Você comprou 1 Poção de vida · −25 de ouro" (o verbo no passado, depois o que mudou, separado por ·).
-- **Imagens são só fundo e moldura.** Textos, números e botões são do código, por cima. Nenhum texto desenhado dentro da imagem.
+- **Imagens são só fundo e moldura.** Textos, números e botões são do código, por cima. Nenhum texto desenhado dentro da imagem, **menos nas telas ilustradas do Reino** (seção 0), em que os botões vêm desenhados e o código põe a área clicável em cima.
 - **Nada muda nas regras do jogo:** a interface só mostra e chama as mesmas regras de antes.
 
 ## 2. Cores e símbolos das ações
@@ -126,12 +147,13 @@ O tamanho dos cantos (a "fatia") fica em `programacao/src/dados/interface.js` (`
 
 ## 8. Temas claro e escuro
 
-As cores ficam em variáveis (`--painel`, `--boa`, `--ruim`, `--destaque`, `--quadro`, `--papel`), redefinidas no tema escuro. Algumas peças ficam iguais nos dois temas, porque imitam objetos:
+As cores ficam em variáveis (`--tela`, `--janela`, `--painel`, `--botao`, `--texto`, `--borda`, `--boa`, `--ruim`, `--destaque`, `--quadro`, `--papel`), redefinidas no tema escuro; as da identidade (`--ouro`, `--placa`, `--vermelho`, `--texto-da-placa`) são as mesmas nos dois (seção 0). Algumas peças ficam iguais nos dois temas, porque imitam objetos:
 - os cartazes de missão (papel claro sobre o quadro de cortiça);
 - as medalhas do ranking (ouro, prata e bronze).
 
 ## 9. Onde fica no código
 
 - **Componentes comuns:** `programacao/src/componentes/ui/` (Slot, GradeDeItens, GradeComMao com o useGradeComMao, FiltrosDeItens, BotaoDeAcao, Painel, Selo, Barra, Mudanca, Simbolo e a arte da interface na raiz).
+- **Identidade visual:** `programacao/src/estilo/identidade.css` (carregado depois do `index.css`; só a aparência) e a fonte em `programacao/src/assets/fontes/`.
 - **Contas puras da interface:** `programacao/src/regras/interface.js`, com testes (filtros, ordem, comparação antes e depois, de onde vem cada item, itens já vistos).
 - **Telas:** Mochila, Mercado, Forja, Guilda (missões e contratos), Preparação, mochila da partida (Tab), Salão da Glória e Reino.

@@ -96,6 +96,14 @@ export class DesenhoDoBoneco {
     return resultado
   }
 
+  // Quanto dura a animação (ms) na direção de baixo; null sem a imagem própria (o ataque dura o que a arte mostra)
+  msDaAnimacao(animacao) {
+    const escolha = this.escolha(animacao, 'baixo')
+    if (escolha?.animacao !== animacao) return null
+    const fase = this.cena.anims.get(escolha.chave)
+    return fase ? (fase.frames.length / Math.max(1, fase.frameRate)) * 1000 : null
+  }
+
   // Tem esta animação de verdade (não a da reserva)?
   tem(animacao) {
     return this.escolha(animacao, 'baixo')?.animacao === animacao
