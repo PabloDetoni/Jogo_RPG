@@ -140,18 +140,23 @@ export const posicoes = {
   },
 
   // ---------- Mapa e partida ----------
+  // Mapa (visual novo, 20/10): a imagem do Pablo é o fundo-mapa. Cada lugar clica no formato dele: "contorno" são os
+  // pontos [x, y] do polígono em % da imagem (que tem a proporção da tela); "placa" é onde aparece o nome. Os biomas
+  // primeiro; os lugares do Planalto (o castelo e os minijogos) ficam por cima deles. Trocando a imagem, ajuste estes pontos.
   mapa: {
-    voltarAoReino: { x: 50, y: 47 },
-    planalto: { x: 50, y: 54 },
-    // Os minijogos com as rodadas de hoje embaixo (ajustes de 14/10)
-    fazenda: { x: 33, y: 48 },
-    lago: { x: 50, y: 36 },
-    mina: { x: 67, y: 48 },
-    tundra: { x: 20, y: 27 },
-    vulcanico: { x: 75, y: 27 },
-    floresta: { x: 26, y: 70 },
-    deserto: { x: 74, y: 73 },
-    arenaDeTeste: { x: 50, y: 86 }, // só no npm run dev
+    biomas: {
+      tundra: { contorno: [[3, 31], [5, 19], [10, 12], [20, 7], [33, 4], [44, 7], [48, 13], [48, 24], [44, 30], [39, 37], [34, 43], [23, 48], [11, 47], [5, 42]], placa: { x: 24, y: 27 } },
+      vulcanico: { contorno: [[50, 17], [56, 10], [64, 7], [73, 3], [80, 5], [87, 10], [92, 21], [95, 33], [93, 45], [86, 51], [76, 48], [67, 48], [61, 39], [55, 29]], placa: { x: 76, y: 28 } },
+      deserto: { contorno: [[67, 48], [76, 48], [86, 51], [92, 57], [95, 66], [93, 75], [86, 85], [77, 92], [65, 94], [55, 90], [52, 81], [53, 70], [59, 60]], placa: { x: 74, y: 72 } },
+      floresta: { contorno: [[5, 52], [10, 49], [23, 48], [34, 44], [38, 46], [43, 53], [49, 61], [53, 69], [52, 81], [48, 89], [40, 94], [28, 92], [19, 86], [12, 79], [7, 71], [5, 61]], placa: { x: 27, y: 70 } },
+    },
+    planalto: {
+      reino: { contorno: [[46.6, 38.5], [53.6, 38.5], [53.8, 50], [46.2, 50]], placa: { x: 50, y: 53.5 } },
+      fazenda: { contorno: [[37.4, 43], [41.8, 39.5], [46, 41.5], [46, 49], [41, 51.5], [37, 48.5]], placa: { x: 40, y: 54.5 } },
+      mina: { contorno: [[54.4, 41], [58.6, 38.6], [62, 42.5], [61.2, 49], [56.4, 50.5], [54.4, 47]], placa: { x: 59, y: 54.5 } },
+      lago: { contorno: [[44, 36], [48.2, 29.5], [52.2, 29], [56.2, 34.5], [55.2, 40], [46.2, 40.6]], placa: { x: 50, y: 25.5 } },
+    },
+    arenaDeTeste: { x: 8, y: 93 }, // só no npm run dev
   },
   // Usada pelas telas de Fazenda, Mina e Lago
   minijogo: {

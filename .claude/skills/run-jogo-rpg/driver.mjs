@@ -56,6 +56,7 @@ try {
     else if (nome === 'clicarEm') await aba.clicarNoElemento(valor)
     else if (nome === 'direitoEm') await aba.clicarNoElemento(valor, 'right')
     else if (nome === 'passarEm') await aba.moverParaElemento(valor)
+    else if (nome === 'passarEmPonto') await aba.moverMouse(Number(resto[0]), Number(resto[1]))
     else if (nome === 'segurarMouse') {
       const [x, y, ms] = resto.map(Number)
       await aba.moverMouse(x, y)
