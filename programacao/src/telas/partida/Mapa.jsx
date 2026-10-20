@@ -64,12 +64,16 @@ export default function Mapa() {
     <Tela className="tela-ilustrada tela-mapa">
       {lugares.map((lugar) => (
         <div key={lugar.id} className={`${lugar.className}${emFoco === lugar.id ? ' regiao-em-foco' : ''}${lugar.bloqueado ? ' regiao-bloqueada' : ''}`}>
-          <button type="button" className="regiao-area" style={{ clipPath: recorte(lugar.area.contorno) }} onClick={lugar.aoAbrir} disabled={lugar.bloqueado} {...focar(lugar.id)}>
-            <span className="so-leitor">
-              {lugar.nome}
-              {lugar.detalhe ? ` (${lugar.detalhe})` : ''}
-              {lugar.motivo ? `: ${lugar.motivo}` : ''}
-            </span>
+          <button
+            type="button"
+            className="regiao-area"
+            style={{ clipPath: recorte(lugar.area.contorno) }}
+            onClick={lugar.aoAbrir}
+            disabled={lugar.bloqueado}
+            title={[lugar.nome, lugar.detalhe, lugar.rodadas, lugar.motivo].filter(Boolean).join(' · ')}
+            {...focar(lugar.id)}
+          >
+            <span className="so-leitor">{lugar.nome}</span>
           </button>
           <div className="placa-do-lugar posicionado" style={estiloPosicao(lugar.area.placa)} aria-hidden="true">
             {lugar.bloqueado && !lugar.rodadas && <Cadeado />}

@@ -1,0 +1,408 @@
+/* ==========================================================================
+   IDENTIDADE VISUAL (visual novo, 20/10/2026; Guia de Interface, seção 0)
+   A partir das imagens do Reino e do mapa do Pablo: placas escuras com borda dourada e texto claro (os rótulos do
+   Reino), o botão principal vermelho e dourado (o JOGAR), títulos numa faixa vermelha, painéis de pergaminho (tema
+   claro) ou madeira escura (tema escuro), janelas com moldura dourada e a fonte em pixel Pixelify Sans (OFL).
+   Vem depois do index.css e só troca a aparência: as classes, as posições e o comportamento continuam os mesmos. A arte
+   da interface (moldura-painel.png, botao.png...; componentes/ui/arteDaInterface.js) continua passando por cima disto.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fontes/pixelify-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fontes/pixelify-sans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+body {
+  font-family: 'Pixelify Sans', system-ui, 'Segoe UI', sans-serif;
+  /* A ligadura "fi" da fonte sai como outra letra: sem ligaduras */
+  font-variant-ligatures: none;
+  font-feature-settings:
+    'liga' 0,
+    'clig' 0;
+}
+
+/* Ferramentas de teste (só no npm run dev): continuam na fonte simples, mais estreita, para caber numa faixa */
+.barra-de-teste,
+.painel-dev,
+.painel-dev-mini {
+  font-family: system-ui, 'Segoe UI', sans-serif;
+}
+
+/* ---------- Cores ---------- */
+/* As da identidade (iguais nos dois temas) e as do tema claro: pergaminho e madeira clara, texto marrom-escuro */
+.moldura {
+  --ouro: #f0a000;
+  --ouro-claro: #f8c400;
+  --ouro-escuro: #9a5c00;
+  --placa: #0b0807;
+  --placa-alta: #2a1f18;
+  --texto-da-placa: #fff6d8;
+  --vermelho: #a80000;
+  --vermelho-claro: #d41a1a;
+  --vermelho-escuro: #5e0000;
+  --contorno: #1a110c;
+
+  --tela: #cdb98c;
+  --janela: #f4e6c0;
+  --painel: #f4e6c0;
+  --botao: #e6d09c;
+  --texto: #2b1d1a;
+  --borda: #8a5a14;
+  --fundo-da-grade: #e4cf9f;
+  --destaque: #c4520a;
+  --boa: #237032;
+  --ruim: #a61b1b;
+  /* O fundo das telas sem imagem: pergaminho com uma luz no alto (até os fundos de cada lugar chegarem) */
+  --fundo-sem-arte: radial-gradient(ellipse at 50% 0%, #efe0b6 0%, #d6c193 55%, #b89c66 100%);
+}
+
+/* Tema escuro: madeira e pedra escuras, texto claro, borda dourada (a noite do Taskbar Hero) */
+.moldura[data-tema='escuro'] {
+  --tela: #121a30;
+  --janela: #17110d;
+  --painel: #201712;
+  --botao: #2c211a;
+  --texto: #f6ecd2;
+  --borda: #b07a1e;
+  --fundo-da-grade: #120d0a;
+  --destaque: #f8c400;
+  --boa: #8ce99a;
+  --ruim: #ff9a9a;
+  --fundo-sem-arte: radial-gradient(ellipse at 50% 0%, #2a3a64 0%, #172240 50%, #0b1124 100%);
+}
+
+/* A partida tem as cores dela (o tema não muda a partida, Conceito §15): placas escuras no HUD */
+.tela-partida {
+  --botao: #2c211a;
+  --texto: #f6ecd2;
+  --borda: #b07a1e;
+}
+
+/* ---------- Tela ---------- */
+.tela:not(.tela-com-fundo):not(.tela-partida) {
+  background: var(--fundo-sem-arte);
+}
+
+/* O título de cada tela: uma faixa vermelha com borda dourada (como o "Hero Selection" e o JOGAR) */
+.titulo:not(.so-leitor) {
+  padding: 0.12em 1.1em 0.18em;
+  font-size: 2.6cqw;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--texto-da-placa);
+  background: linear-gradient(180deg, var(--vermelho-claro) 0%, var(--vermelho) 55%, var(--vermelho-escuro) 100%);
+  border: 0.22cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  box-shadow:
+    0 0 0 0.15cqw var(--contorno),
+    inset 0 0.18cqw 0 rgb(255 255 255 / 0.18),
+    0 0.35cqw 0 rgb(0 0 0 / 0.45);
+  text-shadow: 0 0.15cqw 0 var(--contorno);
+}
+
+.tela-com-fundo > .titulo {
+  text-shadow: 0 0.15cqw 0 var(--contorno);
+}
+
+/* ---------- Botões: placas escuras com borda dourada (os rótulos do Reino) ---------- */
+.botao {
+  font-family: inherit;
+  color: var(--texto-da-placa);
+  background: linear-gradient(180deg, var(--placa-alta) 0%, var(--placa) 100%);
+  border: 0.16cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  box-shadow:
+    0 0 0 0.12cqw var(--contorno),
+    inset 0 0.12cqw 0 rgb(255 230 160 / 0.14),
+    0 0.25cqw 0 rgb(0 0 0 / 0.4);
+  text-shadow: 0 0.1cqw 0 #000;
+  transition:
+    filter 0.12s,
+    transform 0.08s,
+    box-shadow 0.12s;
+}
+
+.botao:not(:disabled):hover,
+.botao:focus-visible {
+  outline: none;
+  filter: brightness(1.25);
+  box-shadow:
+    0 0 0 0.12cqw var(--contorno),
+    0 0 0.9cqw 0.1cqw rgb(255 196 40 / 0.55),
+    0 0.25cqw 0 rgb(0 0 0 / 0.4);
+}
+
+.botao:not(:disabled):active {
+  transform: translateY(0.12cqw);
+  box-shadow:
+    0 0 0 0.12cqw var(--contorno),
+    0 0.1cqw 0 rgb(0 0 0 / 0.4);
+}
+
+.botao:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+/* Escolhido ou ligado: a placa dourada com texto escuro */
+.botao[aria-pressed='true'],
+.botao[aria-selected='true'] {
+  color: var(--contorno);
+  background: linear-gradient(180deg, var(--ouro-claro) 0%, var(--ouro) 100%);
+  text-shadow: none;
+}
+
+/* O botão principal de cada tela (Iniciar jogo, Escolher a classe, Começar partida): o vermelho e dourado do JOGAR */
+.botao-grande,
+.botao-de-acao-grande,
+.botao-principal {
+  color: #fff;
+  background: linear-gradient(180deg, var(--vermelho-claro) 0%, var(--vermelho) 55%, var(--vermelho-escuro) 100%);
+  border: 0.22cqw solid var(--ouro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.botao-grande::before,
+.botao-grande::after,
+.botao-principal::before,
+.botao-principal::after {
+  content: '◆';
+  margin: 0 0.6em;
+  font-size: 0.6em;
+  color: var(--ouro-claro);
+  vertical-align: middle;
+}
+
+.botao-discreto {
+  background: transparent;
+  color: var(--texto);
+  border-color: var(--borda);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+/* O "?" de cada tela: um disco escuro com borda dourada */
+.botao-ajuda {
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+/* Botão de ação: a placa escura com a cor da ação na borda da esquerda e no símbolo (cada ação, a sua cor) */
+.botao-de-acao:not(.botao-de-acao-grande) {
+  border-left: 0.5em solid var(--cor-da-acao, var(--ouro));
+}
+
+/* ---------- Campos ---------- */
+.campo input,
+.campo select {
+  font-family: inherit;
+  color: var(--texto);
+  background: var(--fundo-da-grade);
+  border: 0.16cqw solid var(--borda);
+  border-radius: 0.25cqw;
+  box-shadow: inset 0 0.15cqw 0 rgb(0 0 0 / 0.25);
+}
+
+.campo input:focus-visible {
+  outline: 0.16cqw solid var(--ouro);
+}
+
+/* ---------- Janelas: moldura dourada dupla, título em faixa ---------- */
+.janela {
+  color: var(--texto);
+  background: var(--janela);
+  border: 0.22cqw solid var(--ouro);
+  border-radius: 0.4cqw;
+  box-shadow:
+    0 0 0 0.16cqw var(--contorno),
+    inset 0 0 0 0.3cqw var(--janela),
+    inset 0 0 0 0.42cqw color-mix(in srgb, var(--ouro) 55%, transparent),
+    0 0.8cqw 2cqw rgb(0 0 0 / 0.55);
+}
+
+.janela h2 {
+  align-self: center;
+  padding: 0.1em 1em 0.15em;
+  color: var(--texto-da-placa);
+  background: linear-gradient(180deg, var(--vermelho-claro) 0%, var(--vermelho) 55%, var(--vermelho-escuro) 100%);
+  border: 0.18cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  box-shadow: 0 0 0 0.12cqw var(--contorno);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0.12cqw 0 var(--contorno);
+}
+
+.janela-fundo {
+  background: rgb(8 6 12 / 0.55);
+}
+
+/* ---------- Painéis, grades, selos e barras ---------- */
+.painel {
+  color: var(--texto);
+  background: var(--painel);
+  border: 0.18cqw solid var(--borda);
+  border-radius: 0.4cqw;
+  box-shadow:
+    0 0 0 0.12cqw var(--contorno),
+    inset 0 0 0 0.2cqw color-mix(in srgb, var(--painel) 80%, #fff 20%),
+    0 0.4cqw 0.9cqw rgb(0 0 0 / 0.35);
+}
+
+.painel-titulo {
+  padding-bottom: 0.25em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-bottom: 0.14cqw solid color-mix(in srgb, var(--borda) 60%, transparent);
+}
+
+.grade {
+  border-color: var(--borda);
+  border-radius: 0.3cqw;
+  box-shadow: inset 0 0.2cqw 0.4cqw rgb(0 0 0 / 0.3);
+}
+
+.selo {
+  font-family: inherit;
+}
+
+.barra {
+  border-color: var(--borda);
+  box-shadow: inset 0 0.15cqw 0 rgb(0 0 0 / 0.3);
+}
+
+.barra-cheia {
+  background: linear-gradient(180deg, #5fd16f 0%, var(--boa) 100%);
+}
+
+.moldura[data-tema='escuro'] .barra-cheia {
+  background: linear-gradient(180deg, #4fbf5f 0%, #237032 100%);
+}
+
+.barra-alerta .barra-cheia {
+  background: linear-gradient(180deg, #ff6a6a 0%, #a61b1b 100%);
+}
+
+/* O quadro de avisos da Guilda: tábuas de madeira, com os cartazes de pergaminho pregados */
+.painel.quadro-de-avisos {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 3.2cqw, rgb(0 0 0 / 0.28) 3.2cqw 3.35cqw),
+    linear-gradient(180deg, #8a5a2c 0%, #6e4420 100%);
+  border-color: var(--ouro-escuro);
+}
+
+.moldura[data-tema='escuro'] .painel.quadro-de-avisos {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 3.2cqw, rgb(0 0 0 / 0.35) 3.2cqw 3.35cqw),
+    linear-gradient(180deg, #5c3a1c 0%, #3e2612 100%);
+}
+
+.quadro-de-avisos > .painel-titulo {
+  color: var(--texto-da-placa);
+  border-bottom-color: rgb(255 230 160 / 0.35);
+}
+
+/* ---------- Trilha, dica da primeira visita e avisos: placas ---------- */
+.trilha {
+  padding: 0.25em 0.9em;
+  color: var(--texto-da-placa);
+  background: rgb(11 8 7 / 0.78);
+  border: 0.12cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  opacity: 1;
+}
+
+.trilha-link {
+  color: var(--ouro-claro);
+}
+
+.dica-da-tela,
+.aviso {
+  color: var(--texto-da-placa);
+  background: linear-gradient(180deg, var(--placa-alta) 0%, var(--placa) 100%);
+  border: 0.16cqw solid var(--ouro);
+  border-left: 0.45em solid var(--ouro);
+  border-radius: 0.3cqw;
+  box-shadow:
+    0 0 0 0.12cqw var(--contorno),
+    0 0.6cqw 1.4cqw rgb(0 0 0 / 0.45);
+}
+
+.dica-da-tela .botao-discreto {
+  color: var(--texto-da-placa);
+  border-color: var(--ouro);
+}
+
+/* ---------- Tabelas (Salão da Glória, Resumo) ---------- */
+.tabela th {
+  color: var(--texto-da-placa);
+  background: linear-gradient(180deg, var(--placa-alta) 0%, var(--placa) 100%);
+  border-color: var(--ouro-escuro);
+  letter-spacing: 0.03em;
+}
+
+.tabela td {
+  border-color: color-mix(in srgb, var(--borda) 55%, transparent);
+}
+
+/* ---------- Partida: o HUD em placas escuras com borda dourada fina ---------- */
+.hud-grupo-do-canto,
+.hud-barra-de-acoes {
+  background: rgb(11 8 7 / 0.62);
+  border: 0.12cqw solid rgb(240 160 0 / 0.75);
+  border-radius: 0.4cqw;
+  box-shadow: 0 0 0 0.1cqw rgb(0 0 0 / 0.6);
+}
+
+.hud-espaco-anel {
+  filter: drop-shadow(0 0 0.1cqw #000);
+}
+
+/* ---------- Carregamento da partida: a noite azul, o título em faixa e a barra dourada ---------- */
+.carregando-a-partida {
+  color: var(--texto-da-placa);
+  background: radial-gradient(ellipse at 50% 30%, #2a3a64 0%, #121a30 55%, #070b18 100%);
+}
+
+.carregando-caixa h2 {
+  padding: 0.1em 1em 0.15em;
+  letter-spacing: 0.05em;
+  background: linear-gradient(180deg, var(--vermelho-claro) 0%, var(--vermelho) 55%, var(--vermelho-escuro) 100%);
+  border: 0.2cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  box-shadow: 0 0 0 0.12cqw var(--contorno);
+  text-shadow: 0 0.15cqw 0 var(--contorno);
+}
+
+.carregando-barra {
+  border: 0.16cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  background: var(--placa);
+}
+
+.carregando-barra-cheia {
+  background: linear-gradient(180deg, var(--ouro-claro), var(--ouro));
+}
+
+.carregando-dica {
+  border-left-color: var(--ouro);
+  background: rgb(11 8 7 / 0.55);
+}
+
+.carregando-caixa .botao {
+  color: var(--texto-da-placa);
+}

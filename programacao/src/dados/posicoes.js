@@ -1,6 +1,7 @@
 // Posições de tudo o que aparece nas telas, em porcentagem da caixa 16:9.
 // x vai de 0 (esquerda) a 100 (direita); y vai de 0 (topo) a 100 (base).
-// O número é o CENTRO do elemento. "grande: true" deixa o botão maior.
+// O número é o CENTRO do elemento. "grande: true" deixa o botão maior; "principal: true" pinta a ação principal da tela
+// (o vermelho e dourado do JOGAR, visual novo de 20/10; o "grande" também é principal).
 // Quando a arte entrar, ajuste só os números daqui.
 // Dentro das janelas (Configurações, Pausa, Como jogar) os botões ficam em coluna, sem posição.
 
@@ -19,7 +20,7 @@ export const posicoes = {
 
   // ---------- Acesso ----------
   telaInicial: {
-    iniciarJogo: { x: 50, y: 55 },
+    iniciarJogo: { x: 50, y: 55, grande: true }, // o botão principal (vermelho e dourado, como o JOGAR)
     comoJogar: { x: 50, y: 67 },
   },
   // Fase 2: as mensagens (e-mail confirmado, senha errada, conta em uso...) ficam logo abaixo do título
@@ -28,7 +29,7 @@ export const posicoes = {
     continuar: { x: 50, y: 27 }, // "Continuar como ...": a conta que o Supabase lembra neste navegador
     email: { x: 50, y: 36 },
     senha: { x: 50, y: 47 },
-    entrar: { x: 50, y: 57 },
+    entrar: { x: 50, y: 57, principal: true },
     reenviar: { x: 72, y: 57 }, // só com o e-mail ainda não confirmado (RF04)
     criarConta: { x: 38, y: 67 },
     esqueciSenha: { x: 62, y: 67 },
@@ -42,7 +43,7 @@ export const posicoes = {
     senha: { x: 50, y: 41 },
     apelido: { x: 50, y: 53 },
     regras: { x: 50, y: 63 },
-    criarConta: { x: 50, y: 73 },
+    criarConta: { x: 50, y: 73, principal: true },
     voltarAoLogin: { x: 10, y: 90 },
   },
   confirmeEmail: {
@@ -195,6 +196,6 @@ export const posicoes = {
     resultado: { x: 50, y: 25 },
     detalhes: { x: 50, y: 55 },
     jogarNovamente: { x: 38, y: 88 },
-    voltarAoReino: { x: 62, y: 88 },
+    voltarAoReino: { x: 62, y: 88, principal: true },
   },
 }
