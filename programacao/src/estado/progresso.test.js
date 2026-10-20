@@ -159,9 +159,15 @@ describe('normalizarPreferencias (RF18)', () => {
   })
 
   it('válidas ficam; inválidas voltam ao padrão', () => {
-    expect(normalizarPreferencias({ musica: false, som: true, mudo: true, tema: 'escuro' })).toEqual({ musica: false, som: true, mudo: true, tema: 'escuro', telaCheia: true, dicasVistas: [] })
+    expect(normalizarPreferencias({ musica: false, som: true, mudo: true, tema: 'escuro' })).toEqual({ musica: false, som: true, mudo: true, tema: 'escuro', telaCheia: true, animacoesDoCenario: true, dicasVistas: [] })
     expect(normalizarPreferencias({ musica: false, som: true, tema: 'escuro' }).mudo).toBe(false)
     expect(normalizarPreferencias({ musica: 'nao', som: 0, mudo: 'sim', tema: 'roxo' })).toEqual(preferenciasPadrao)
+  })
+
+  it('as animações do cenário (20/10): ligadas por padrão; desligadas ficam desligadas', () => {
+    expect(normalizarPreferencias({}).animacoesDoCenario).toBe(true)
+    expect(normalizarPreferencias({ animacoesDoCenario: false }).animacoesDoCenario).toBe(false)
+    expect(normalizarPreferencias({ animacoesDoCenario: 'não' }).animacoesDoCenario).toBe(true)
   })
 })
 

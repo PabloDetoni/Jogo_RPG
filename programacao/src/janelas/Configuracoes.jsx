@@ -1,6 +1,7 @@
 import Botao from '../componentes/Botao.jsx'
 import Janela from '../componentes/Janela.jsx'
 import { pedirTelaCheia, sairDaTelaCheia, telaCheiaSuportada } from '../componentes/telaCheia.js'
+import { useReduzirMovimento } from '../componentes/cenario/useReduzirMovimento.js'
 import { telas } from '../dados/telas.js'
 import { useJogo } from '../estado/contexto.js'
 
@@ -10,6 +11,7 @@ export default function Configuracoes() {
   const { estado, acoes } = useJogo()
   const { tipoJogador, preferencias, conta, nuvem } = estado
   const naPartida = telas[estado.tela].naPartida
+  const reduzirMovimento = useReduzirMovimento()
 
   return (
     <Janela titulo="Configurações">
@@ -68,6 +70,11 @@ export default function Configuracoes() {
           </Botao>
         )}
       </div>
+      {/* 20/10: as nuvens, bandeiras, fumaça e água do Reino e do Mapa */}
+      <Botao selecionado={preferencias.animacoesDoCenario} onClick={() => acoes.alternarPreferencia('animacoesDoCenario')}>
+        Animações do cenário: {preferencias.animacoesDoCenario ? 'ligadas' : 'desligadas'}
+      </Botao>
+      {reduzirMovimento && preferencias.animacoesDoCenario && <p className="dica-das-configuracoes">O computador pede menos movimento: o cenário fica parado.</p>}
 
       <Botao onClick={acoes.fecharJanela}>Fechar</Botao>
     </Janela>

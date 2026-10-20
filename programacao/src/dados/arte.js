@@ -16,6 +16,7 @@ import { atributos, classes } from './classes.js'
 import { arvoreDaClasse } from './arvores.js'
 import { acoes, arteDaAcao, arteDaInterface, arteDoLugar, arteDoTipoDeMissao, lugaresDoReino, tiposDeMissaoNaTela } from './interface.js'
 import { itens } from './itens.js'
+import { posicoes } from './posicoes.js'
 
 export const direcoes = ['baixo', 'cima', 'esquerda', 'direita']
 
@@ -120,6 +121,26 @@ export const fundosDasTelas = {
   resumo: 'fundo-resumo',
 }
 
+// O Reino e o Mapa em camadas (20/10; posições em dados/posicoes.js, em pixels da imagem original). Cada peça é um
+// arquivo próprio: trocando uma (do mesmo tamanho), só ela muda. Sem o fundo limpo, o Reino usa a imagem inteira
+// (fundo-reino); sem o oceano, o Mapa usa a dele (fundo-mapa); sem uma peça, a área de clique dela vira o retângulo.
+export const camadasDoReino = {
+  fundo: 'reino-fundo',
+  peca: (id) => `reino-${id}`,
+  nuvem: (i) => `reino-nuvem-${i + 1}`,
+  estandarte: (i) => `reino-estandarte-${i + 1}`,
+  flamula: (i) => `reino-flamula-${i + 1}`,
+  pasDoMoinho: 'reino-pas-do-moinho',
+  copa: 'reino-copa',
+  mascaraDoCeu: 'reino-mascara-ceu',
+  mascaraDaAgua: 'reino-mascara-agua',
+}
+export const camadasDoMapa = {
+  oceano: 'mapa-oceano',
+  lava: 'mapa-lava',
+  cachoeira: (i) => `mapa-cachoeira-${i + 1}`,
+}
+
 // Cutscene de derrota: as imagens em sequência e quanto tempo cada uma fica (ms)
 export const cutsceneDeDerrota = { imagens: ['derrota-1', 'derrota-2', 'derrota-3'], msPorImagem: 2200 }
 
@@ -152,6 +173,35 @@ export function arteEsperada() {
     nomes: ['grama-1', 'grama-2', 'grama-3', arteDaFloresta.flores, arteDaFloresta.mata, arteDaFloresta.arvore, arteDaFloresta.arbusto, arteDaFloresta.tronco, ...Object.values(arteDaFloresta.pedras)],
   })
   grupos.push({ grupo: 'Telas (fundos)', tipo: 'fundo', nomes: [...new Set([...Object.values(fundosDasTelas), ...cutsceneDeDerrota.imagens])] })
+  const reino = posicoes.reino
+  grupos.push({
+    grupo: 'Reino em camadas (fundo limpo, peças e animações)',
+    tipo: 'camada',
+    nomes: [
+      camadasDoReino.fundo,
+      ...Object.keys(reino.pecas).map(camadasDoReino.peca),
+      ...reino.animacoes.nuvens.map((_, i) => camadasDoReino.nuvem(i)),
+      ...reino.animacoes.estandartes.map((_, i) => camadasDoReino.estandarte(i)),
+      ...reino.animacoes.flamulas.map((_, i) => camadasDoReino.flamula(i)),
+      camadasDoReino.pasDoMoinho,
+      camadasDoReino.copa,
+      camadasDoReino.mascaraDoCeu,
+      camadasDoReino.mascaraDaAgua,
+    ],
+  })
+  const mapa = posicoes.mapa
+  grupos.push({
+    grupo: 'Mapa em camadas (oceano, biomas, Planalto e animações)',
+    tipo: 'camada',
+    nomes: [
+      camadasDoMapa.oceano,
+      mapa.base.peca,
+      ...Object.values(mapa.biomas).map((bioma) => bioma.peca),
+      ...Object.values(mapa.planalto).map((lugar) => lugar.peca),
+      camadasDoMapa.lava,
+      ...mapa.animacoes.cachoeiras.map((_, i) => camadasDoMapa.cachoeira(i)),
+    ],
+  })
   grupos.push({ grupo: 'Ícones: atributos, ouro e Pedra de Retorno', tipo: 'icone', nomes: [...atributos.map((atributo) => iconeDoAtributo(atributo.id)), iconeDoOuro, iconeDaPedraDeRetorno] })
   grupos.push({
     grupo: 'Ícones: habilidades do beta',
