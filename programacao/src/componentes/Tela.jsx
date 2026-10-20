@@ -19,7 +19,19 @@ const telasComTransicao = new Set(['reino', 'mapa', 'preparacao', 'partida', 're
 // configuracoesEm: outro lugar para o botão Configurações (na Partida, dentro da faixa do HUD).
 // imagemDeFundo: um fundo escolhido pela própria tela (a cutscene troca as imagens), no lugar do da lista.
 // dicaEm: outro lugar para a dica da primeira visita (na Partida, que não tem título, ela fica em cima da barra de ações).
-export default function Tela({ className = '', semTitulo = false, configuracoesEm = posicoes.cantos.configuracoes, imagemDeFundo = null, dicaEm = null, children }) {
+// Visual novo (20/10), para as telas desenhadas (o Reino): semCantos tira o Salão da Glória e as Configurações (os
+// botões vêm na imagem), tituloOculto deixa o título só para o leitor de tela e ajudaEm muda o lugar do "?".
+export default function Tela({
+  className = '',
+  semTitulo = false,
+  configuracoesEm = posicoes.cantos.configuracoes,
+  imagemDeFundo = null,
+  dicaEm = null,
+  semCantos = false,
+  tituloOculto = false,
+  ajudaEm = posicoes.cantos.ajuda,
+  children,
+}) {
   const { estado, acoes } = useJogo()
   const tela = telas[estado.tela]
   const fundo = imagemDeFundo ?? urlDaArte(fundoDaTela(chavesDaArte, estado.tela))
@@ -52,11 +64,14 @@ export default function Tela({ className = '', semTitulo = false, configuracoesE
           })}
         </nav>
       )}
-      {!semTitulo && (
-        <h1 className="titulo posicionado" style={estiloPosicao(posicoes.titulo)}>
-          {tela.nome}
-        </h1>
-      )}
+      {!semTitulo &&
+        (tituloOculto ? (
+          <h1 className="titulo so-leitor">{tela.nome}</h1>
+        ) : (
+          <h1 className="titulo posicionado" style={estiloPosicao(posicoes.titulo)}>
+            {tela.nome}
+          </h1>
+        ))}
 
       <ContextoDaTrilha.Provider value={setAba}>{children}</ContextoDaTrilha.Provider>
 
@@ -81,7 +96,7 @@ export default function Tela({ className = '', semTitulo = false, configuracoesE
         <button
           type="button"
           className="botao botao-ajuda posicionado"
-          style={estiloPosicao(posicoes.cantos.ajuda)}
+          style={estiloPosicao(ajudaEm)}
           onClick={() => (dica && !mostrarDica ? acoes.reabrirDica() : acoes.abrirJanela('ajuda'))}
           aria-label="Dica e como funciona esta tela"
           title="Dica e como funciona esta tela"
@@ -90,14 +105,16 @@ export default function Tela({ className = '', semTitulo = false, configuracoesE
         </button>
       )}
 
-      {!tela.soConfiguracoes && (
+      {!tela.soConfiguracoes && !semCantos && (
         <Botao em={posicoes.cantos.salaoGloria} onClick={() => acoes.irPara('salaoGloria')}>
           Salão da Glória
         </Botao>
       )}
-      <Botao em={configuracoesEm} onClick={() => acoes.abrirJanela('configuracoes')}>
-        Configurações
-      </Botao>
+      {!semCantos && (
+        <Botao em={configuracoesEm} onClick={() => acoes.abrirJanela('configuracoes')}>
+          Configurações
+        </Botao>
+      )}
     </div>
   )
 }

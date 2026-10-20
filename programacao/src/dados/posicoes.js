@@ -91,14 +91,23 @@ export const posicoes = {
   },
 
   // ---------- Reino ----------
+  // Reino (visual novo, 20/10): os botões vêm desenhados na imagem do fundo-reino (a do Pablo). Cada lugar tem uma área
+  // clicável invisível no retângulo da placa (x, y = canto de cima à esquerda; largura e altura; tudo em % da imagem, que
+  // tem a proporção da tela) e, quando há, no desenho em cima dela (a coroa, a engrenagem, o estandarte, a banca, a
+  // bigorna, a mochila, as espadas). Trocando a imagem, ajuste só estes números.
   reino: {
-    hud: { x: 50, y: 21 },
-    guilda: { x: 50, y: 41 },
-    mercado: { x: 29, y: 61 },
-    forja: { x: 74, y: 63 },
-    mochila: { x: 9, y: 83 },
-    jogar: { x: 50, y: 88, grande: true },
-    arvores: { x: 92, y: 86 },
+    faixa: { x: 50, y: 3.4 }, // apelido, Líder, ouro e missão (o que muda)
+    ajuda: { x: 83.4, y: 4.6 }, // o "?", ao lado da engrenagem
+    lugares: {
+      salaoGloria: { placa: { x: 1.4, y: 8.1, largura: 14.8, altura: 6.4 }, desenho: { x: 5, y: 1, largura: 7.6, altura: 7.2 } },
+      configuracoes: { placa: { x: 86.3, y: 8.1, largura: 12.9, altura: 6.2 }, desenho: { x: 89.8, y: 1.4, largura: 5.6, altura: 7 } },
+      guilda: { placa: { x: 46.6, y: 39.3, largura: 7.9, altura: 5.1 }, desenho: { x: 48.6, y: 33.4, largura: 3.8, altura: 6 } },
+      mercado: { placa: { x: 25.6, y: 58.3, largura: 6.6, altura: 4.6 }, desenho: { x: 27.4, y: 53.8, largura: 3.9, altura: 4.8 } },
+      forja: { placa: { x: 70.7, y: 60.5, largura: 6.4, altura: 4.7 }, desenho: { x: 72.2, y: 55.8, largura: 3.9, altura: 4.9 } },
+      mochila: { placa: { x: 3.3, y: 79.6, largura: 12.5, altura: 6.6 }, desenho: { x: 1.8, y: 63, largura: 11.8, altura: 16.4 } },
+      jogar: { placa: { x: 38.6, y: 83, largura: 22.8, altura: 9.3 }, desenho: { x: 48.6, y: 79.4, largura: 3, altura: 3.8 } },
+      arvores: { placa: { x: 85.5, y: 82, largura: 13.6, altura: 8.2 } },
+    },
   },
   guilda: {
     abas: { x: 50, y: 25 },
