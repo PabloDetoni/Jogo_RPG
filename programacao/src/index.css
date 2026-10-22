@@ -397,6 +397,12 @@ body {
   font-size: 1em;
 }
 
+.janela p.dica-das-configuracoes {
+  margin: 0.2em 0 0;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
 .janela p {
   margin: 0;
 }
@@ -1665,32 +1671,164 @@ body {
   border: 0;
 }
 
-/* Reino desenhado: a área clicável em cima da placa da imagem; ao passar o mouse (ou com o foco do teclado), a placa
-   acende (um brilho dourado em volta e a imagem embaixo um pouco mais clara) */
-.lugar-placa,
-.lugar-desenho {
+/* ---------- O Reino e o Mapa em camadas (20/10) ----------
+   A cena tem a proporção da imagem original; peças, placas e canvas ficam em % dela (posicoes.js, em pixels da
+   imagem). O clique nas peças é pelo desenho (CenaEmCamadas.jsx): elas mesmas não pegam o mouse. */
+.cena-em-camadas {
   position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.camada-animada {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.peca-da-cena {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  image-rendering: auto;
+  opacity: 0;
+  transition:
+    filter 0.15s,
+    opacity 0.25s;
+}
+
+/* As peças aparecem juntas, quando todas chegaram (as imagens do Pablo são grandes) */
+.cena-pronta .peca-da-cena {
+  opacity: 1;
+}
+
+/* Mouse em cima (ou o foco do teclado na placa): um contorno dourado brilhante em volta do desenho, pela
+   transparência da peça (não um retângulo). A peça não sai do lugar. */
+.peca-acesa {
+  filter: drop-shadow(0 0 0.08cqw #fff3b0) drop-shadow(0 0 0.08cqw #ffd84a) drop-shadow(0 0 0.1cqw #ffd84a)
+    drop-shadow(0 0 0.7cqw rgb(255 190 40 / 0.85)) brightness(1.06);
+}
+
+/* Fora do beta: as cores normais; com o mouse em cima, um contorno claro (não abre) */
+.peca-acesa.peca-bloqueada {
+  filter: drop-shadow(0 0 0.08cqw #f2eee6) drop-shadow(0 0 0.1cqw #d8d2c6) drop-shadow(0 0 0.5cqw rgb(230 226 214 / 0.7));
+}
+
+/* As pás do moinho (a peça 08, com o eixo no meio) giram devagar */
+.cena-animada .peca-que-gira {
+  animation: girar-as-pas var(--volta-das-pas, 20s) linear infinite;
+}
+
+@keyframes girar-as-pas {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* As placas do Reino (código, no lugar das da imagem): fundo escuro, borda dourada dupla, fonte em pixel */
+.placa-do-reino {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
-  background: transparent;
-  border: 0;
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff6d8;
+  background: linear-gradient(180deg, #2a1f18 0%, #0b0807 70%);
+  border: 0.16cqw solid #f0a000;
   border-radius: 0.5cqw;
+  box-shadow:
+    0 0 0 0.1cqw #1a110c,
+    inset 0 0 0 0.12cqw #6a4000,
+    inset 0 0 0 0.2cqw #0b0807,
+    0 0.25cqw 0 rgb(0 0 0 / 0.45);
+  text-shadow: 0 0.12cqw 0 #000;
   cursor: pointer;
   transition:
     box-shadow 0.15s,
-    backdrop-filter 0.15s;
+    filter 0.15s;
 }
 
-.lugar-desenhado:hover .lugar-placa,
-.lugar-placa:focus-visible {
+.placa-de-duas-linhas .placa-do-reino-nome {
+  max-width: 7em;
+  white-space: normal;
+  text-align: center;
+}
+
+.placa-do-reino-nome {
+  white-space: nowrap;
+}
+
+/* O JOGAR: o botão principal vermelho e dourado, com os losangos */
+.placa-do-reino-principal {
+  color: #fff;
+  background: linear-gradient(180deg, #d41a1a 0%, #a80000 55%, #5e0000 100%);
+  border-width: 0.24cqw;
+  border-radius: 0.9cqw;
+  letter-spacing: 0.08em;
+}
+
+.placa-do-reino-principal .placa-do-reino-nome::before,
+.placa-do-reino-principal .placa-do-reino-nome::after {
+  content: '◆';
+  margin: 0 0.9em;
+  font-size: 0.45em;
+  color: #f8c400;
+  vertical-align: middle;
+}
+
+.lugar-aceso .placa-do-reino,
+.placa-do-reino:hover,
+.placa-do-reino:focus-visible {
   outline: none;
+  filter: brightness(1.18);
   box-shadow:
-    0 0 0 0.18cqw rgb(255 222 110 / 0.95),
-    0 0 1.4cqw 0.35cqw rgb(255 196 40 / 0.6);
-  backdrop-filter: brightness(1.22) saturate(1.1);
+    0 0 0 0.1cqw #1a110c,
+    inset 0 0 0 0.12cqw #6a4000,
+    inset 0 0 0 0.2cqw #0b0807,
+    0 0 0 0.16cqw rgb(255 222 110 / 0.95),
+    0 0 1.3cqw 0.3cqw rgb(255 196 40 / 0.6);
 }
 
-.lugar-desenhado:hover .lugar-desenho {
-  backdrop-filter: brightness(1.15);
+/* O símbolo em cima da placa (a coroa, a engrenagem, a banca, a bigorna): numa plaquinha escura com borda dourada */
+.simbolo-da-placa {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #2a1f18 0%, #0b0807 70%);
+  border: 0.16cqw solid #f0a000;
+  border-radius: 22%;
+  box-shadow: 0 0 0 0.1cqw #1a110c;
+}
+
+.simbolo-da-placa .simbolo {
+  width: 80%;
+  height: 80%;
+}
+
+.simbolo-da-placa-bigorna,
+.simbolo-da-placa-engrenagem {
+  border-radius: 50%;
+}
+
+/* As espadas do JOGAR ficam soltas em cima da placa (sem plaquinha) */
+.simbolo-da-placa-espadas {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.simbolo-da-placa-espadas .simbolo {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0.1cqw 0 rgb(0 0 0 / 0.5));
 }
 
 /* A legenda de cada lugar ("missões e contratos"): aparece ao passar o mouse ou com o foco, numa plaquinha */
@@ -1707,61 +1845,45 @@ body {
   transition: opacity 0.15s;
 }
 
-.lugar-desenhado:hover .legenda-do-lugar,
+.lugar-aceso .legenda-do-lugar,
 .lugar-desenhado:focus-within .legenda-do-lugar {
   opacity: 1;
 }
 
-/* Mapa ilustrado (visual novo, 20/10): cada lugar é um botão do tamanho da tela recortado no contorno dele (clip-path:
-   o clique só vale dentro); o contorno em SVG acende ao passar o mouse ou com o foco, e a placa mostra o nome */
-.regiao-area {
+/* O oceano do Mapa: vai e volta um pouco (as ondas); por trás dele, o mesmo oceano parado (o fundo da tela) */
+.oceano-do-mapa {
   position: absolute;
   inset: 0;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
+  background-size: 100% 100%;
 }
 
+.cena-animada .oceano-do-mapa {
+  animation: ondas-do-oceano var(--periodo-das-ondas, 9s) ease-in-out infinite alternate;
+}
+
+@keyframes ondas-do-oceano {
+  from {
+    transform: translate(-0.3%, 0);
+  }
+  to {
+    transform: translate(0.3%, 0.2%);
+  }
+}
+
+/* "Reduzir movimento" do sistema: nada balança (o canvas também para, CamadaAnimada.jsx) */
+@media (prefers-reduced-motion: reduce) {
+  .cena-animada .peca-que-gira,
+  .cena-animada .oceano-do-mapa {
+    animation: none;
+  }
+}
+
+/* Os lugares do Mapa: o botão é só para o teclado e o leitor de tela (o mouse clica pelo desenho da peça) */
 .regiao-area:focus-visible {
   outline: none;
 }
 
-.regiao-em-foco .regiao-area:not(:disabled) {
-  background: rgb(255 240 190 / 0.12);
-}
-
-.regiao-area:disabled {
-  cursor: not-allowed;
-}
-
-.contornos-do-mapa {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.contorno-do-lugar {
-  fill: none;
-  stroke: transparent;
-  stroke-width: 3px;
-  stroke-linejoin: round;
-  transition: stroke 0.15s;
-}
-
-.contorno-aceso {
-  stroke: #ffd84a;
-  filter: drop-shadow(0 0 4px rgb(255 196 40 / 0.9));
-}
-
-.contorno-aceso.contorno-bloqueado {
-  stroke: #c8c0b0;
-  filter: none;
-}
-
-/* A placa com o nome do lugar: aparece ao passar o mouse; nos bloqueados (cadeado, "Em breve"), fica sempre */
+/* A placa com o nome do lugar: aparece ao passar o mouse ou com o foco (nos bloqueados, com o cadeado e "Em breve") */
 .placa-do-lugar {
   display: flex;
   flex-direction: column;
@@ -1781,17 +1903,12 @@ body {
   transition: opacity 0.15s;
 }
 
-.regiao-em-foco .placa-do-lugar,
-.regiao-do-mapa:not(.minijogo-no-mapa).regiao-bloqueada .placa-do-lugar {
+.regiao-em-foco .placa-do-lugar {
   opacity: 1;
 }
 
-.regiao-bloqueada:not(.regiao-em-foco) .placa-do-lugar {
-  opacity: 0.85;
-}
-
-.minijogo-no-mapa.regiao-bloqueada:not(.regiao-em-foco) .placa-do-lugar {
-  opacity: 0;
+.regiao-bloqueada .placa-do-lugar {
+  border-color: #c8c0b0;
 }
 
 .placa-do-lugar strong {

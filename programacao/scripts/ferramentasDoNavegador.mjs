@@ -80,6 +80,7 @@ const teclas = {
   espaco: { key: ' ', code: 'Space', vk: 32 },
   esc: { key: 'Escape', code: 'Escape', vk: 27 },
   um: { key: '1', code: 'Digit1', vk: 49 },
+  enter: { key: 'Enter', code: 'Enter', vk: 13, texto: String.fromCharCode(13) },
 }
 
 function conectar(urlWs) {
@@ -213,7 +214,8 @@ function criarAba(cdp, nome, pastaDosPrints) {
     },
     async tecla(nomeDaTecla, tipo) {
       const t = teclas[nomeDaTecla]
-      await cdp.enviar('Input.dispatchKeyEvent', { type: tipo, key: t.key, code: t.code, windowsVirtualKeyCode: t.vk, nativeVirtualKeyCode: t.vk })
+      // o Enter precisa do texto (o caractere 13) para o botão com foco receber o clique, como no teclado de verdade
+      await cdp.enviar('Input.dispatchKeyEvent', { type: tipo, key: t.key, code: t.code, windowsVirtualKeyCode: t.vk, nativeVirtualKeyCode: t.vk, ...(t.texto && tipo === 'keyDown' ? { text: t.texto } : {}) })
     },
     async apertar(nomeDaTecla) {
       await aba.tecla(nomeDaTecla, 'keyDown')

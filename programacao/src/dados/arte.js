@@ -16,6 +16,7 @@ import { atributos, classes } from './classes.js'
 import { arvoreDaClasse } from './arvores.js'
 import { acoes, arteDaAcao, arteDaInterface, arteDoLugar, arteDoTipoDeMissao, lugaresDoReino, tiposDeMissaoNaTela } from './interface.js'
 import { itens } from './itens.js'
+import { posicoes } from './posicoes.js'
 
 export const direcoes = ['baixo', 'cima', 'esquerda', 'direita']
 
@@ -120,6 +121,19 @@ export const fundosDasTelas = {
   resumo: 'fundo-resumo',
 }
 
+// O Reino e o Mapa em camadas, com as peças do Pablo (21/10; posições em dados/posicoes.js). Cada peça é um arquivo
+// próprio, cópia sem perda dos originais de documentacao/Telas (a Lista de Arte e Som diz de qual veio cada uma):
+// trocando uma pela mesma imagem com outro desenho, só ela muda. Sem o fundo (reino-fundo), o Reino usa a imagem
+// inteira (fundo-reino) e o clique vale no retângulo de cada lugar; sem o oceano, o Mapa usa a dele (fundo-mapa).
+export const camadasDoReino = {
+  fundo: 'reino-fundo',
+  peca: (id) => `reino-${id}`, // moinhoPas → reino-moinho-pas (o nome não liga para maiúsculas e hífen)
+  nuvem: (i) => `reino-nuvem-${i + 1}`,
+}
+export const camadasDoMapa = {
+  oceano: 'mapa-oceano',
+}
+
 // Cutscene de derrota: as imagens em sequência e quanto tempo cada uma fica (ms)
 export const cutsceneDeDerrota = { imagens: ['derrota-1', 'derrota-2', 'derrota-3'], msPorImagem: 2200 }
 
@@ -152,6 +166,24 @@ export function arteEsperada() {
     nomes: ['grama-1', 'grama-2', 'grama-3', arteDaFloresta.flores, arteDaFloresta.mata, arteDaFloresta.arvore, arteDaFloresta.arbusto, arteDaFloresta.tronco, ...Object.values(arteDaFloresta.pedras)],
   })
   grupos.push({ grupo: 'Telas (fundos)', tipo: 'fundo', nomes: [...new Set([...Object.values(fundosDasTelas), ...cutsceneDeDerrota.imagens])] })
+  const reino = posicoes.reino
+  grupos.push({
+    grupo: 'Reino em camadas (as peças do Pablo)',
+    tipo: 'camada',
+    nomes: [camadasDoReino.fundo, ...Object.keys(reino.pecas).map(camadasDoReino.peca), ...reino.animacoes.nuvens.lista.map((_, i) => camadasDoReino.nuvem(i))],
+  })
+  const mapa = posicoes.mapa
+  grupos.push({
+    grupo: 'Mapa em camadas (as peças do Pablo)',
+    tipo: 'camada',
+    nomes: [
+      camadasDoMapa.oceano,
+      ...Object.values(mapa.biomas).map((bioma) => bioma.peca),
+      ...Object.values(mapa.enfeites).map((enfeite) => enfeite.peca),
+      ...Object.values(mapa.planalto).map((lugar) => lugar.peca),
+      mapa.animacoes.fumaca.peca,
+    ],
+  })
   grupos.push({ grupo: 'Ícones: atributos, ouro e Pedra de Retorno', tipo: 'icone', nomes: [...atributos.map((atributo) => iconeDoAtributo(atributo.id)), iconeDoOuro, iconeDaPedraDeRetorno] })
   grupos.push({
     grupo: 'Ícones: habilidades do beta',

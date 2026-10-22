@@ -19,7 +19,7 @@ As imagens de outros jogos servem **só como referência de estilo**: nada de co
 - **Pixel art ilustrada**, com pixels visíveis de 3 a 4 px na tela, vista de cima em perspectiva suave (o Reino de cima e um pouco de lado; o mapa quase isométrico).
 - **Cores vivas e saturadas:** céu azul forte, verdes de vários tons, estandartes azuis com a flor-de-lis, telhados vermelhos e azuis, pedra cinza-azulada.
 - **Contorno escuro** nas formas grandes (muralha, prédios, árvores), sombra marcada embaixo e à direita.
-- **Placas de texto escuras com borda dourada** (Salão da Glória, Guilda, Mochila...) e o **botão principal vermelho com borda dourada** (o JOGAR). Na tela, essas placas e botões são feitos em código (Guia de Interface), menos no Reino, onde já vêm desenhados na imagem.
+- **Placas de texto escuras com borda dourada** (Salão da Glória, Guilda, Mochila...) e o **botão principal vermelho com borda dourada** (o JOGAR). Na tela, essas placas e botões são feitos em código (Guia de Interface), também no Reino (as peças do Pablo não têm placas; seção 7).
 - **Fundos das telas internas** (cada uma com o seu lugar: a Forja com fogo e bigorna, o Mercado com as bancas, a Guilda com o quadro de avisos): no mesmo estilo, **sem texto desenhado** (os botões são do código), com o centro mais calmo para os painéis ficarem por cima. Tamanho ideal 1920 × 1080; pelo PixelLab, que gera até 400 px de lado, sai em 400 × 225 e o jogo amplia (seção 5).
 
 ### Paleta das telas (tirada da imagem do Reino)
@@ -99,9 +99,56 @@ O trial gera **uma coisa por vez**. Os fundos saem em 400 × 225 e o jogo amplia
 
 O que o Pablo não aprovar volta para a fila da skill `gerar-arte`, com o comentário dele.
 
+## 7. O Reino e o Mapa em camadas, com as peças do Pablo (21/10/2026)
+
+O Reino e o Mapa são montados com **as peças que o Pablo fez**: um fundo e cada objeto separado, em
+`documentacao/Telas/reino_pixel_art/` e `mapa_pixel_art/`. Essas imagens são a fonte oficial: o jogo **só monta**
+(nada redesenhado, nenhuma cor ou forma mudada, nada gerado no PixelLab) e os originais não se mexem. As peças
+geradas no PixelLab e os recortes da imagem inteira, feitos em 20/10, foram **rejeitados** pelo Pablo e saíram do jogo.
+
+- **Cópias sem perda.** Cada peça vira um WEBP sem perda em `programacao/src/assets/arte/reino/` ou `mapa/`. Cada pixel
+  foi conferido igual ao do original. A Lista de Arte e Som (seção 4b) diz de qual original veio cada arquivo.
+- **Lugar e tamanho pela imagem principal.** A escala e a posição de cada peça são as que deixam a montagem mais
+  parecida com `ReinoRPG.png` e `MapaRPG.jpeg` (a menor diferença de cor nos pixels da peça). A medida da cena é o
+  fundo do Pablo: 1672 × 941 no Reino, 1920 × 1080 (o oceano) no Mapa. As posições ficam em `src/dados/posicoes.js`.
+  Três casos foram encaixados de outro jeito:
+  - **muralha:** pelo muro desenhado no fundo, para cobri-lo;
+  - **moinho:** as pás e o corpo vêm no mesmo quadro de 1254 × 1254, então foram encaixados juntos;
+  - **chão do Planalto:** pelo buraco do anel de montanhas.
+- **A muralha em duas.** A peça `04_muralhas` foi cortada em duas partes, sem mudar pixel: as duas juntas dão a imagem
+  original. A parte de trás fica atrás dos prédios; a da frente (as torres dos cantos, as paredes de baixo e o portão)
+  fica na frente do Mercado e da Forja, como na imagem principal.
+- **A mesma forma de escalar** em todas as peças da mesma tela (Guia de Interface): as peças grandes do Pablo ficam
+  menores na tela, e a redução suave mantém os detalhes sem serrilhar.
+- **Clique pelo desenho.** O clique e o contorno dourado vêm da transparência de cada peça. Os enfeites (castelo,
+  muralhas, estandarte e moinho no Reino; chão do Planalto e montanhas no Mapa) não abrem nada e tapam o que está atrás.
+- **Trocar uma peça.** Salve a imagem nova por cima da cópia, com o mesmo nome. Se o desenho mudar de tamanho ou de
+  lugar no quadro, a posição em `posicoes.js` precisa ser encaixada de novo.
+
+**Animações** (lentas e discretas; números em `src/dados/animacoesDoCenario.js`):
+- **No Reino:** as pás do moinho giram, a luz da lanterna do estandarte pisca de leve, a água do lago e da fonte brilha e
+  sai fumaça da Forja e de três chaminés.
+- **No Mapa:**
+  - a fumaça do vulcão (a peça 12) sobe devagar e nunca passa abaixo da cratera;
+  - a lava pulsa e a água da cachoeira do lago e das três cachoeiras da Floresta desce, as duas pela cor da própria peça;
+  - neva na Tundra, o vento passa pelas copas da Floresta e o oceano vai e volta.
+
+Tudo desliga pela opção das Configurações e pelo "reduzir movimento" do sistema.
+
+**As nuvens** (as peças `nuvem (1)` a `(3)`) andam devagar para a direita, no tamanho e na altura das nuvens da imagem
+principal. Elas aparecem só onde o fundo é céu: em cada coluna, de cima para baixo, até a primeira montanha ou copa.
+Assim passam atrás das montanhas e voltam por trás da copa da árvore do canto.
+
+**A Árvore de Habilidades** (`11_arvore`) é outra árvore, diferente da imagem principal. Ela foi encaixada pelo
+contorno da árvore de lá: o alto da copa, a base do tronco e o meio. A frente dela (`12_frente_arvore`: cerca, moitas
+e pedras) foi encaixada pelo próprio fundo e fica na frente da base.
+
+**Sem animação por enquanto:** bandeiras e árvores (o Pablo anima depois).
+
 ## Alterações
 
 | Quando | O quê |
 |---|---|
 | 15/10/2026 | Primeira versão (Mago chibi do protótipo da Seleção, contorno preto). **Rejeitada** pelo Pablo. |
+| 21/10/2026 | Seção 7: o Reino e o Mapa em camadas, montados com as peças do Pablo (as geradas no PixelLab e os recortes de 20/10 foram rejeitados e saíram); a muralha em duas partes, a Árvore de Habilidades e a frente dela, as nuvens e as animações (bandeiras e árvores ficam para o Pablo animar). |
 | 20/10/2026 | Refeito do zero: telas e cenários pelas imagens do Reino e do mapa (paleta tirada delas); personagens no estilo do Taskbar Hero (chibi pequeno, cabeça grande, olhos grandes, contorno fino marrom, 2 a 3 tons, cores um pouco dessaturadas com detalhes vivos), 48 px de altura, frente, costas e direita (esquerda espelhada), as 5 classes nas cores-assinatura; ordem de aprovação com o teste de estilo primeiro. |

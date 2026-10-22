@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { aplicarPreferencias, prepararAudio, tocarMusica } from './audio/gerenciador.js'
 import Avisos from './componentes/Avisos.jsx'
 import ControleDaTelaCheia from './componentes/ControleDaTelaCheia.jsx'
+import { preCarregarCenario } from './componentes/cenario/preCarregar.js'
 import PainelDev from './componentes/PainelDev.jsx'
 import { useJogo } from './estado/contexto.js'
 import ProvedorDoJogo from './estado/ProvedorDoJogo.jsx'
@@ -31,6 +32,8 @@ function Jogo() {
   useEffect(() => prepararAudio(), [])
   useEffect(() => aplicarPreferencias(estado.preferencias), [estado.preferencias])
   useEffect(() => tocarMusica(musicaDaTela(estado.tela)), [estado.tela])
+  // As imagens grandes do Reino e do Mapa chegam antes de a tela abrir (componentes/cenario/preCarregar.js)
+  useEffect(() => preCarregarCenario(estado.tela), [estado.tela])
 
   return (
     <>

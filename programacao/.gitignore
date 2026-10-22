@@ -34,3 +34,4 @@ dist-ssr
 
 # Originais do PixelLab (ZIPs e PNGs baixados), para refazer a arte sem gastar gerações (skill gerar-arte)
 arte-original
+__pycache__

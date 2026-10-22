@@ -92,22 +92,72 @@ export const posicoes = {
   },
 
   // ---------- Reino ----------
-  // Reino (visual novo, 20/10): os botões vêm desenhados na imagem do fundo-reino (a do Pablo). Cada lugar tem uma área
-  // clicável invisível no retângulo da placa (x, y = canto de cima à esquerda; largura e altura; tudo em % da imagem, que
-  // tem a proporção da tela) e, quando há, no desenho em cima dela (a coroa, a engrenagem, o estandarte, a banca, a
-  // bigorna, a mochila, as espadas). Trocando a imagem, ajuste só estes números.
+  // Reino em camadas com as peças do Pablo (21/10; documentacao/Telas/reino_pixel_art): tudo em PIXELS DO FUNDO DELE
+  // (reino-fundo, 1672 × 941; x, y = canto de cima à esquerda), que tem a proporção da tela: escala certo em qualquer
+  // tamanho e em tela cheia. Cada peça no lugar e no tamanho do objeto na imagem principal (ReinoRPG.png), achados pela
+  // menor diferença entre as duas (a imagem principal e o fundo quase coincidem: 1,001 × e 2 px para o lado).
+  // De baixo para cima: o fundo, as animações de trás, as peças, as animações da frente e as placas (código).
   reino: {
-    faixa: { x: 50, y: 3.4 }, // apelido, Líder, ouro e missão (o que muda)
-    ajuda: { x: 83.4, y: 4.6 }, // o "?", ao lado da engrenagem
-    lugares: {
-      salaoGloria: { placa: { x: 1.4, y: 8.1, largura: 14.8, altura: 6.4 }, desenho: { x: 5, y: 1, largura: 7.6, altura: 7.2 } },
-      configuracoes: { placa: { x: 86.3, y: 8.1, largura: 12.9, altura: 6.2 }, desenho: { x: 89.8, y: 1.4, largura: 5.6, altura: 7 } },
-      guilda: { placa: { x: 46.6, y: 39.3, largura: 7.9, altura: 5.1 }, desenho: { x: 48.6, y: 33.4, largura: 3.8, altura: 6 } },
-      mercado: { placa: { x: 25.6, y: 58.3, largura: 6.6, altura: 4.6 }, desenho: { x: 27.4, y: 53.8, largura: 3.9, altura: 4.8 } },
-      forja: { placa: { x: 70.7, y: 60.5, largura: 6.4, altura: 4.7 }, desenho: { x: 72.2, y: 55.8, largura: 3.9, altura: 4.9 } },
-      mochila: { placa: { x: 3.3, y: 79.6, largura: 12.5, altura: 6.6 }, desenho: { x: 1.8, y: 63, largura: 11.8, altura: 16.4 } },
-      jogar: { placa: { x: 38.6, y: 83, largura: 22.8, altura: 9.3 }, desenho: { x: 48.6, y: 79.4, largura: 3, altura: 3.8 } },
-      arvores: { placa: { x: 85.5, y: 82, largura: 13.6, altura: 8.2 } },
+    imagem: { largura: 1672, altura: 941 },
+    faixa: { x: 836, y: 32 }, // apelido, Líder, ouro e missão (o centro)
+    ajuda: { x: 1393.5, y: 43 }, // o "?", ao lado da engrenagem (o centro)
+    // As peças, da de cima para a de baixo (o clique vale na de cima). Enfeite: não abre nada e tapa o que está atrás.
+    // A muralha (04_muralhas) vem cortada em duas, sem mudar pixel: a de trás fica atrás dos prédios e a da frente (as
+    // torres dos cantos, as paredes de baixo e o portão) na frente. As pás e o corpo do moinho usam o mesmo quadro.
+    // A Árvore de Habilidades (11_arvore) é outra árvore, diferente da imagem principal: encaixada pelo contorno da de lá
+    // (o alto da copa, a base do tronco e o meio); a frente dela (12_frente_arvore: cerca, moitas e pedras) pelo fundo.
+    pecas: {
+      mochila: { x: 38, y: 591.3, largura: 190.2, altura: 168.3 },
+      frenteDaArvore: { x: 1140, y: 772, largura: 552.8, altura: 182.8, enfeite: true },
+      arvores: { x: 1402.5, y: 502, largura: 288.1, altura: 288.1 },
+      estandarte: { x: -97.9, y: 143.8, largura: 329, altura: 493.6, enfeite: true },
+      moinhoPas: { x: 257.7, y: 299.7, largura: 87, altura: 87, enfeite: true, gira: true },
+      moinhoCorpo: { x: 257.7, y: 299.7, largura: 87, altura: 87, enfeite: true },
+      muralhasFrente: { x: 272, y: 348, largura: 1142.4, altura: 472.8, enfeite: true },
+      forja: { x: 1080.8, y: 495.5, largura: 255.8, altura: 170.5 },
+      mercado: { x: 333.6, y: 435.5, largura: 454.3, altura: 302.8 },
+      guilda: { x: 689.2, y: 319.6, largura: 297.7, altura: 198.5 },
+      muralhasTras: { x: 272, y: 348, largura: 1142.4, altura: 472.8, enfeite: true },
+      castelo: { x: 825.1, y: 75.9, largura: 335.3, altura: 265.4, enfeite: true },
+    },
+    // As placas com os nomes (desenhadas em código no lugar das da imagem principal); "simbolo" é a plaquinha de cima
+    placas: {
+      salaoGloria: { x: 20, y: 77.9, largura: 249.7, altura: 53.9, simbolo: { nome: 'coroa', x: 79.9, y: 12, largura: 127.9, altura: 69.9 } },
+      configuracoes: { x: 1440.4, y: 75.9, largura: 219.8, altura: 57.9, simbolo: { nome: 'engrenagem', x: 1514.3, y: 12, largura: 65.9, altura: 65.9 } },
+      guilda: { x: 777.1, y: 369.6, largura: 121.9, altura: 38 },
+      mercado: { x: 429.5, y: 551.4, largura: 123.9, altura: 40, simbolo: { nome: 'banca', x: 459.5, y: 507.4, largura: 65.9, altura: 45.9 } },
+      forja: { x: 1180.7, y: 572.4, largura: 113.9, altura: 40, simbolo: { nome: 'bigorna', x: 1209.7, y: 525.4, largura: 49.9, altura: 49.9 } },
+      mochila: { x: 57.9, y: 751.2, largura: 205.8, altura: 57.9 },
+      jogar: { x: 647.3, y: 783.1, largura: 377.6, altura: 81.9, principal: true, simbolo: { nome: 'espadas', x: 809.1, y: 747.2, largura: 51.9, altura: 49.9 } },
+      arvores: { x: 1426.4, y: 773.1, largura: 227.7, altura: 71.9, linhas: 2 },
+    },
+    // As animações (dados/animacoesDoCenario.js tem as velocidades). Bandeiras e árvores ficam paradas (o Pablo anima
+    // depois).
+    animacoes: {
+      // As nuvens do Pablo (nuvem (1) a (3)), no tamanho e na altura das nuvens da imagem principal: andam devagar para
+      // a direita, só onde é céu (o fundo, de cima para baixo em cada coluna até a primeira montanha, copa ou neve,
+      // dentro da faixa "ceu"); saindo pela direita, voltam por trás da copa da árvore do canto (em "voltaEm")
+      nuvens: {
+        ceu: 200,
+        voltaEm: 700,
+        lista: [
+          { x: 686.2, y: -1.4, largura: 206.7, altura: 206.7 },
+          { x: 1286, y: 35.3, largura: 159.1, altura: 159.1 },
+          { x: 1178.9, y: -4.2, largura: 122.8, altura: 122.8 },
+        ],
+      },
+      lanterna: { x: 116.4, y: 294.2, raio: 30 }, // a luz da lanterna do estandarte
+      chamines: [
+        { x: 1269.8, y: 540.7, frente: true }, // a da Forja (na frente da peça)
+        { x: 232, y: 327 },
+        { x: 395, y: 269 },
+        { x: 565, y: 305 },
+      ],
+      // Onde procurar a água no fundo (os brilhos caem só nos pixels azuis de água dentro destas áreas)
+      agua: [
+        { x: 560, y: 222, largura: 800, altura: 130, quantos: 22 }, // o lago
+        { x: 800, y: 522, largura: 90, altura: 75, quantos: 6 }, // a fonte
+      ],
     },
   },
   guilda: {
@@ -141,23 +191,45 @@ export const posicoes = {
   },
 
   // ---------- Mapa e partida ----------
-  // Mapa (visual novo, 20/10): a imagem do Pablo é o fundo-mapa. Cada lugar clica no formato dele: "contorno" são os
-  // pontos [x, y] do polígono em % da imagem (que tem a proporção da tela); "placa" é onde aparece o nome. Os biomas
-  // primeiro; os lugares do Planalto (o castelo e os minijogos) ficam por cima deles. Trocando a imagem, ajuste estes pontos.
+  // Mapa em camadas com as peças do Pablo (21/10; documentacao/Telas/mapa_pixel_art): em PIXELS DO OCEANO DELE
+  // (mapa-oceano, 1920 × 1080, a imagem principal MapaRPG.jpeg vezes 1920/1466). Cada peça no lugar e no tamanho da
+  // imagem principal (pela menor diferença entre as duas); o chão do Planalto pelo buraco do anel de montanhas.
+  // De baixo para cima: o oceano (com as ondas), os 4 biomas, o chão do Planalto e o anel de montanhas (enfeites), os
+  // lugares do Planalto (o castelo volta ao Reino; Fazenda, Mina e Lago são os minijogos) e as animações.
+  // "placa" é o centro de onde aparece o nome ao passar o mouse.
   mapa: {
-    biomas: {
-      tundra: { contorno: [[3, 31], [5, 19], [10, 12], [20, 7], [33, 4], [44, 7], [48, 13], [48, 24], [44, 30], [39, 37], [34, 43], [23, 48], [11, 47], [5, 42]], placa: { x: 24, y: 27 } },
-      vulcanico: { contorno: [[50, 17], [56, 10], [64, 7], [73, 3], [80, 5], [87, 10], [92, 21], [95, 33], [93, 45], [86, 51], [76, 48], [67, 48], [61, 39], [55, 29]], placa: { x: 76, y: 28 } },
-      deserto: { contorno: [[67, 48], [76, 48], [86, 51], [92, 57], [95, 66], [93, 75], [86, 85], [77, 92], [65, 94], [55, 90], [52, 81], [53, 70], [59, 60]], placa: { x: 74, y: 72 } },
-      floresta: { contorno: [[5, 52], [10, 49], [23, 48], [34, 44], [38, 46], [43, 53], [49, 61], [53, 69], [52, 81], [48, 89], [40, 94], [28, 92], [19, 86], [12, 79], [7, 71], [5, 61]], placa: { x: 27, y: 70 } },
-    },
+    imagem: { largura: 1920, altura: 1080 },
+    // Os lugares do Planalto ficam por cima de tudo (o clique vale no de cima)
     planalto: {
-      reino: { contorno: [[46.6, 38.5], [53.6, 38.5], [53.8, 50], [46.2, 50]], placa: { x: 50, y: 53.5 } },
-      fazenda: { contorno: [[37.4, 43], [41.8, 39.5], [46, 41.5], [46, 49], [41, 51.5], [37, 48.5]], placa: { x: 40, y: 54.5 } },
-      mina: { contorno: [[54.4, 41], [58.6, 38.6], [62, 42.5], [61.2, 49], [56.4, 50.5], [54.4, 47]], placa: { x: 59, y: 54.5 } },
-      lago: { contorno: [[44, 36], [48.2, 29.5], [52.2, 29], [56.2, 34.5], [55.2, 40], [46.2, 40.6]], placa: { x: 50, y: 25.5 } },
+      reino: { x: 898.4, y: 413.9, largura: 146.4, altura: 130, peca: 'mapa-castelo', placa: { x: 971.8, y: 577.6 } },
+      mina: { x: 1039.9, y: 432.2, largura: 164, altura: 120.4, peca: 'mapa-mina', placa: { x: 1126.3, y: 589.4 } },
+      fazenda: { x: 707.2, y: 437.4, largura: 200.7, altura: 124.3, peca: 'mapa-fazenda', placa: { x: 805.5, y: 589.4 } },
+      lago: { x: 835.6, y: 319.6, largura: 245.3, altura: 170, peca: 'mapa-lago', placa: { x: 962.6, y: 309.1 } },
     },
-    arenaDeTeste: { x: 8, y: 93 }, // só no npm run dev
+    // O anel de montanhas e o chão do Planalto (sem clique: tapam o que está atrás)
+    enfeites: {
+      montanhas: { x: 623.4, y: 267.2, largura: 692, altura: 533.9, peca: 'mapa-montanhas' },
+      chao: { x: 707.5, y: 343.8, largura: 533.5, altura: 398, peca: 'mapa-planalto' },
+    },
+    biomas: {
+      deserto: { x: 916.8, y: 508.2, largura: 925.8, altura: 525.5, peca: 'mapa-bioma-deserto', placa: { x: 1421, y: 778 } },
+      floresta: { x: 52.4, y: 476.7, largura: 959, altura: 540.4, peca: 'mapa-bioma-floresta', placa: { x: 518.6, y: 757 } },
+      vulcanico: { x: 948.2, y: 57.6, largura: 928.9, altura: 612.5, peca: 'mapa-bioma-vulcanico', placa: { x: 1459, y: 302.5 } },
+      tundra: { x: 47.1, y: 15.7, largura: 891.9, altura: 542.9, peca: 'mapa-bioma-tundra', placa: { x: 461, y: 292.1 } },
+    },
+    animacoes: {
+      // A fumaça do vulcão (a peça 12): sai da cratera e passa da borda de cima, como na imagem principal; nada dela
+      // desce abaixo da cratera
+      fumaca: { x: 1490.4, y: -149.3, largura: 178.9, altura: 205, cratera: 75.3, peca: 'mapa-fumaca-do-vulcao' },
+      // Onde a água das cachoeiras desce (as faixas só aparecem nos pixels claros de água da peça)
+      cachoeiras: [
+        { peca: 'lago', x: 950.6, y: 346.5, largura: 17.1, altura: 35.9 },
+        { peca: 'floresta', x: 243, y: 786.9, largura: 44.8, altura: 63.5 },
+        { peca: 'floresta', x: 478.4, y: 865.4, largura: 37.4, altura: 82.2 },
+        { peca: 'floresta', x: 829.7, y: 841.5, largura: 44.8, altura: 71 },
+      ],
+    },
+    arenaDeTeste: { x: 8, y: 93 }, // só no npm run dev (em % da tela, como os botões)
   },
   // Usada pelas telas de Fazenda, Mina e Lago
   minijogo: {
