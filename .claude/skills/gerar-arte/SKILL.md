@@ -72,6 +72,7 @@ quadrado pela imagem (sem mexer em código). O PixelLab **gasta da conta do Pabl
 |---|---|---|---|
 | 0 | Teste: ícone da Poção de vida | 1 | gerado em 15/10 (fora do jogo; o estilo dos ícones vem com o lote de ícones) |
 | — | Mago chibi (estilo do protótipo) | 13 | **rejeitado** em 19/10 (estilo escolhido sem consultar); descartado |
+| — | Camadas do Reino e do Mapa (fundo limpo do Reino, fachadas atrás das placas, teste do castelo do Planalto) | 14 | feito em 20/10; **rejeitado** pelo Pablo em 21/10 ("ficaram feias"): o Reino e o Mapa usam as peças que ele fez (`documentacao/Telas`), e nada do PixelLab entrou |
 | 1 | Fundos das telas internas (estilo das imagens do Reino e do mapa) | 1 de teste + 1 por tela | proposto em 20/10; espera o ok do Pablo |
 | 2 | Teste de estilo de personagem (um boneco de frente, Taskbar Hero) | 1 a 2 | próximo pedido do Pablo |
 | 3 | As 5 classes (girar, animar, retrato, emblema) | 15 a 25 por classe | espera o teste aprovado e o ok do custo |
@@ -79,7 +80,13 @@ quadrado pela imagem (sem mexer em código). O PixelLab **gasta da conta do Pabl
 | 5 | Tiles e objetos da Floresta | a calcular | espera |
 | 6 | Ícones dos itens (40) | 40 | espera |
 
-Saldo em 20/10: 14 de 40 gerações usadas (sobram 26, mais o bônus diário de até 20).
+Saldo em 20/10 (depois das camadas): 28 de 40 gerações usadas (sobram 12, mais o bônus diário de até 20).
+
+**Custos achados em 20/10:** o "apagar e preencher" de verdade (`inpaint_image`) custa 10 a 25 gerações por pedaço e
+o do Pro Flash, 9; a edição Pixen (`edit_image_pixen`, até 256 px) custa 1: para apagar um objeto de uma cena grande,
+editar uma cópia reduzida da área e colar de volta só a área apagada. O
+`create_map_object` só aceita a imagem de referência colada no pedido (base64), sem endereço de upload.
 
 Comentários do Pablo sobre o que voltou para a fila:
+- Camadas (21/10): as peças geradas e os recortes "ficaram feias"; o Reino e o Mapa são montados com as peças dele (`documentacao/Telas/reino_pixel_art` e `mapa_pixel_art`), sem gerar nem mudar nada (a Árvore de Habilidades, a frente dela e as nuvens chegaram depois e também entraram). As bandeiras e as árvores ele anima depois.
 - Mago (19/10): "a aparência deles fosse um pouco melhor e mais estilizada", no estilo do Taskbar Hero; estilo novo no Guia de Arte.

@@ -1,4 +1,5 @@
-// Roteiro do Reino e do Mapa em camadas (pedido do Pablo em 20/10/2026). Uso: npm run testar:camadas
+// Roteiro do Reino e do Mapa em camadas (pedido do Pablo em 20/10/2026; com as peças dele desde 21/10).
+// Uso: npm run testar:camadas
 // O clique pelo formato da peça: clicar no meio de cada prédio e de cada bioma abre o lugar certo; clicar entre dois
 // objetos (ou no canto vazio do retângulo de uma peça) não abre nada; em 1366×768, em 1920×1080 e em tela cheia.
 // Também: o contorno dourado e a placa acesa com o mouse em cima (sem a peça sair do lugar), o teclado, as animações
@@ -18,30 +19,35 @@ async function desligar(codigo) {
 }
 const { estado, conferir, parar } = criarConferencias(() => desligar(1))
 
-// Pontos no meio do desenho de cada lugar, em pixels da imagem original (fora das placas)
+// Pontos no meio do desenho de cada lugar (fora das placas), em pixels do fundo do Reino (1672 × 941) e do oceano do
+// Mapa (1920 × 1080), conferidos com as peças do Pablo
+const tamanhoDoReino = { largura: 1672, altura: 941 }
+const tamanhoDoMapa = { largura: 1920, altura: 1080 }
 const noReino = {
-  guilda: { ponto: [833, 462], tela: 'Guilda' },
-  mercado: { ponto: [690, 600], tela: 'Mercado' },
-  forja: { ponto: [1150, 600], tela: 'Forja' },
-  mochila: { ponto: [110, 680], tela: 'Mochila' },
-  arvores: { ponto: [1550, 600], tela: 'Árvores de Habilidades' },
+  guilda: { ponto: [760, 440], tela: 'Guilda' },
+  mercado: { ponto: [641, 599], tela: 'Mercado' },
+  forja: { ponto: [1120, 610], tela: 'Forja' },
+  mochila: { ponto: [130, 670], tela: 'Mochila' },
+  arvores: { ponto: [1540, 600], tela: 'Árvores de Habilidades' },
 }
-// Chão entre os objetos e o canto vazio do retângulo de uma peça: não abre nada
+// Chão entre os objetos, o canto vazio do retângulo de uma peça e os enfeites: não abre nada
 const vaziosDoReino = {
   'a praça da fonte (entre o Mercado e a Forja)': [830, 545],
   'as casas entre a Guilda e a Forja': [1010, 640],
-  'o canto vazio do retângulo da Guilda': [730, 300],
+  'o canto vazio do retângulo da Guilda': [700, 335],
   'o castelo (só enfeite)': [990, 200],
+  'uma torre da muralha da frente (enfeite)': [476, 720],
+  'a frente da Árvore (as pedras, enfeite)': [1620, 900],
 }
 const noMapa = {
-  floresta: { ponto: [330, 560], tela: 'Preparação' },
-  reino: { ponto: [742, 372], tela: 'Reino' },
-  fazenda: { ponto: [612, 384], tela: 'Minijogo da Fazenda' },
-  mina: { ponto: [846, 378], tela: 'Minijogo da Mina' },
-  lago: { ponto: [740, 300], tela: 'Minijogo do Lago' },
+  floresta: { ponto: [432, 733], tela: 'Preparação' },
+  reino: { ponto: [972, 487], tela: 'Reino' },
+  fazenda: { ponto: [801, 503], tela: 'Minijogo da Fazenda' },
+  mina: { ponto: [1108, 495], tela: 'Minijogo da Mina' },
+  lago: { ponto: [969, 410], tela: 'Minijogo do Lago' },
 }
-const bloqueadosDoMapa = { tundra: [250, 200], vulcanico: [1050, 250], deserto: [1100, 600] }
-const vaziosDoMapa = { 'o oceano': [1440, 560], 'as montanhas do Planalto (entre a Floresta e o castelo)': [560, 420], 'o oceano entre a Floresta e o Deserto': [745, 790] }
+const bloqueadosDoMapa = { tundra: [327, 262], vulcanico: [1375, 327], deserto: [1441, 786] }
+const vaziosDoMapa = { 'o oceano': [1886, 733], 'as montanhas do Planalto (entre a Floresta e o castelo)': [733, 550], 'o oceano entre a Floresta e o Deserto': [976, 1035] }
 
 let aba = null
 const clicar = (texto, comeco = false) =>
@@ -62,12 +68,11 @@ const fecharDica = async () => {
 }
 const emTelaCheia = () => aba.avaliar(`!!document.fullscreenElement`)
 const sairDaTelaCheia = () => aba.avaliar(`(document.fullscreenElement && document.exitFullscreen(), true)`)
-// Um ponto da imagem original na tela (a cena tem a proporção da imagem)
+// Um ponto da cena na tela (a cena tem a proporção do fundo)
 const naTela = (x, y) =>
   aba.avaliar(`(() => {
     const cena = document.querySelector('.cena-em-camadas').getBoundingClientRect()
-    const largura = document.querySelector('.tela-reino') ? 1670 : 1466
-    const altura = document.querySelector('.tela-reino') ? 942 : 825
+    const { largura, altura } = document.querySelector('.tela-reino') ? ${JSON.stringify(tamanhoDoReino)} : ${JSON.stringify(tamanhoDoMapa)}
     return { x: cena.left + (cena.width * ${x}) / largura, y: cena.top + (cena.height * ${y}) / altura }
   })()`)
 const clicarNaImagem = async ([x, y]) => {
@@ -80,7 +85,9 @@ const passarNaImagem = async ([x, y]) => {
   await aba.moverMouse(p.x, p.y)
   await pausa(250)
 }
-const esperarMascaras = (quantas) => aba.esperar(`Number(document.querySelector('.cena-em-camadas')?.dataset.mascaras) >= ${quantas}`, `as máscaras das ${quantas} peças`, 15000)
+// As máscaras de todas as peças e a cena pronta (as peças aparecem juntas quando todas chegaram)
+const esperarMascaras = (quantas) =>
+  aba.esperar(`Number(document.querySelector('.cena-em-camadas')?.dataset.mascaras) >= ${quantas} && !!document.querySelector('.cena-pronta')`, `as máscaras das ${quantas} peças`, 20000)
 const irAoReino = async () => {
   if ((await aba.titulo()) !== 'Reino') {
     if (await clicar('Voltar ao Reino')) await pausa(250)
@@ -88,14 +95,14 @@ const irAoReino = async () => {
   }
   await aba.esperarTela('Reino')
   await fecharDica()
-  await esperarMascaras(6)
+  await esperarMascaras(12)
 }
 const irAoMapa = async () => {
   await aba.clicarNoElemento('.lugar-desenhado-jogar .lugar-placa')
   await pausa(600)
   await aba.esperarTela('Mapa')
   await fecharDica()
-  await esperarMascaras(9)
+  await esperarMascaras(10)
 }
 const canvasDeTras = `document.querySelector('.camada-animada')`
 
@@ -120,9 +127,10 @@ try {
     placas: [...document.querySelectorAll('.placa-do-reino')].map((b) => b.textContent.trim()),
     canvas: document.querySelectorAll('.tela-reino .camada-animada').length,
   })`)
+  const pecasDoReino = ['mochila', 'frenteDaArvore', 'arvores', 'estandarte', 'moinhoPas', 'moinhoCorpo', 'muralhasFrente', 'forja', 'mercado', 'guilda', 'muralhasTras', 'castelo']
   conferir(
-    'o Reino em camadas: o fundo limpo, as 6 peças (com o castelo), as 8 placas em código e os 2 canvas das animações',
-    camadas.fundo.includes('reino-fundo') && camadas.pecas.length === 6 && camadas.pecas.includes('castelo') && camadas.placas.length === 8 && camadas.canvas === 2,
+    'o Reino em camadas: o fundo do Pablo, as 12 peças dele na ordem (de cima para baixo), as 8 placas em código e os 2 canvas das animações (com as nuvens)',
+    camadas.fundo.includes('reino-fundo') && [...camadas.pecas].reverse().join() === pecasDoReino.join() && camadas.placas.length === 8 && camadas.canvas === 2,
     camadas,
   )
 
@@ -152,7 +160,7 @@ try {
       await clicarNaImagem(ponto)
       ficou.push({ onde, tela: await aba.titulo(), janela: await aba.avaliar(`document.querySelectorAll('[role=dialog]').length`) })
     }
-    conferir(`${modo}: clicar entre os objetos, no canto vazio do retângulo da Guilda ou no castelo não abre nada`, ficou.every((f) => f.tela === 'Reino' && f.janela === 0), ficou)
+    conferir(`${modo}: clicar entre os objetos, no canto vazio do retângulo da Guilda, no castelo, na muralha ou na frente da Árvore não abre nada`, ficou.every((f) => f.tela === 'Reino' && f.janela === 0), ficou)
 
     // Mouse em cima: o contorno dourado em volta do desenho, a placa acesa, a legenda e o cursor; nada sai do lugar
     const antes = await aba.avaliar(`(() => { const r = document.querySelector('.peca-forja').getBoundingClientRect(); return [r.x, r.y, r.width, r.height] })()`)
@@ -194,7 +202,7 @@ try {
       else if (chegou !== 'Mapa') {
         await passo('Voltar ao Mapa')
         await aba.esperarTela('Mapa')
-        await esperarMascaras(9)
+        await esperarMascaras(10)
       }
       if (modo !== 'tela cheia') await sairDaTelaCheia()
     }
@@ -202,6 +210,8 @@ try {
     const bloqueados = []
     for (const [id, ponto] of Object.entries(bloqueadosDoMapa)) {
       await passarNaImagem(ponto)
+      // a placa aparece com uma transição curta: espera ela terminar (no máximo 1 s)
+      await aba.esperar(`getComputedStyle(document.querySelector('.regiao-em-foco .placa-do-lugar')).opacity === '1'`, 'a placa do lugar aparecer', 1000).catch(() => {})
       const placa = await aba.avaliar(`(() => {
         const lugar = document.querySelector('.regiao-em-foco')
         return { nome: lugar?.querySelector('.so-leitor')?.textContent, cadeado: !!lugar?.querySelector('.cadeado'), emBreve: lugar?.textContent.includes('Em breve'), placa: lugar && getComputedStyle(lugar.querySelector('.placa-do-lugar')).opacity, cursor: document.querySelector('.cena-em-camadas').style.cursor }
@@ -253,14 +263,14 @@ try {
   const q1 = await quadro()
   await pausa(2500)
   const q2 = await quadro()
+  const pas = await aba.avaliar(`getComputedStyle(document.querySelector('.peca-moinhoPas')).animationName`)
+  conferir('ligadas: as pás do moinho (a peça 08) giram', pas === 'girar-as-pas', { pas })
   const custo = await aba.avaliar(`({ quadros: window.__cenario.quadros, msPorQuadro: Math.round((window.__cenario.ms / Math.max(1, window.__cenario.quadros)) * 100) / 100 })`)
   conferir('ligadas: o cenário do Reino mexe (dois quadros diferentes em 2,5 s)', q1 !== q2 && (await aba.avaliar(`${canvasDeTras}.dataset.ligada`)) === 'sim')
   conferir('não pesa: no máximo uns 30 quadros por segundo em cada uma das 2 camadas e menos de 4 ms por quadro', custo.quadros > 30 && custo.quadros <= 2 * 2.5 * 32 && custo.msPorQuadro < 4, custo)
-  // Os prints das animações para o relatório (uma sequência)
-  for (let i = 1; i <= 12; i++) {
-    await aba.print(`animacao-reino-${String(i).padStart(2, '0')}`)
-    await pausa(450)
-  }
+  // Um print do Reino animado (a sequência para o relatório sai do scripts/gravarAnimacoes.mjs: muitos prints seguidos
+  // às vezes travam a conversa com o navegador escondido)
+  await aba.print('reino-animado')
   await passo('Configurações')
   await passo('Animações do cenário', true)
   const botao = await aba.avaliar(`[...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.startsWith('Animações do cenário'))?.textContent`)
@@ -269,8 +279,8 @@ try {
   const p1 = await quadro()
   await pausa(1500)
   const p2 = await quadro()
-  const desligada = await aba.avaliar(`({ canvas: ${canvasDeTras}.dataset.ligada, balanco: getComputedStyle(document.querySelector('.peca-arvores')).animationName })`)
-  conferir('Configurações › "Animações do cenário: desligadas": o cenário fica parado (o canvas não muda e a Árvore não balança)', botao === 'Animações do cenário: desligadas' && p1 === p2 && desligada.canvas === 'nao' && desligada.balanco === 'none', { botao, desligada })
+  const desligada = await aba.avaliar(`({ canvas: ${canvasDeTras}.dataset.ligada, pas: getComputedStyle(document.querySelector('.peca-moinhoPas')).animationName })`)
+  conferir('Configurações › "Animações do cenário: desligadas": o cenário fica parado (o canvas não muda e as pás do moinho não giram)', botao === 'Animações do cenário: desligadas' && p1 === p2 && desligada.canvas === 'nao' && desligada.pas === 'none', { botao, desligada })
   await passo('Configurações')
   await passo('Animações do cenário', true)
   await aba.apertar('esc')
@@ -295,11 +305,8 @@ try {
   await pausa(2000)
   const m2 = await aba.avaliar(`document.querySelector('.tela-mapa .camada-animada').toDataURL().slice(-300)`)
   const ondas = await aba.avaliar(`getComputedStyle(document.querySelector('.oceano-do-mapa')).animationName`)
-  conferir('o Mapa mexe (lava, cachoeiras, neve, fumaça e vento no canvas; as ondas no oceano)', m1 !== m2 && ondas === 'ondas-do-oceano', { ondas })
-  for (let i = 1; i <= 12; i++) {
-    await aba.print(`animacao-mapa-${String(i).padStart(2, '0')}`)
-    await pausa(450)
-  }
+  conferir('o Mapa mexe (a fumaça do vulcão, a lava, as cachoeiras, a neve e o vento no canvas; as ondas no oceano)', m1 !== m2 && ondas === 'ondas-do-oceano', { ondas })
+  await aba.print('mapa-animado')
   const erros = await aba.avaliar(`window.__erros ?? []`)
   conferir('nenhum erro no console', erros.length === 0, erros)
 } catch (erro) {

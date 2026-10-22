@@ -7,7 +7,7 @@ import { useReduzirMovimento } from '../../componentes/cenario/useReduzirMovimen
 import CenaEmCamadas from '../../componentes/cenario/CenaEmCamadas.jsx'
 import { estiloNaImagem, pontoEmPorcentagem } from '../../componentes/cenario/naImagem.js'
 import SimboloDaPlaca from '../../componentes/cenario/SimboloDaPlaca.jsx'
-import { desenharReinoAtras, desenharReinoFrente, imagensDoReino, prepararReino } from '../../componentes/cenario/desenhoDoReino.js'
+import { desenharReinoAtras, desenharReinoFrente, imagensDaFrenteDoReino, imagensDoReino, prepararReino, prepararReinoFrente } from '../../componentes/cenario/desenhoDoReino.js'
 import { pedirTelaCheia } from '../../componentes/telaCheia.js'
 import { estiloPosicao } from '../../componentes/posicao.js'
 import { animacoesDoCenario } from '../../dados/animacoesDoCenario.js'
@@ -30,9 +30,14 @@ const nomes = {
   jogar: 'Jogar',
   arvores: 'Árvores de Habilidades',
 }
-const fundoLimpo = urlDaArte(camadasDoReino.fundo)
-// Sem o fundo limpo, as peças não aparecem (a imagem inteira já tem os objetos); a área de clique vira o retângulo
-const pecas = Object.entries(pos.pecas).map(([id, r]) => ({ id, ...r, url: fundoLimpo ? urlDaArte(camadasDoReino.peca(id)) : null, clicavel: id !== 'castelo' }))
+const fundo = urlDaArte(camadasDoReino.fundo)
+// As peças do Pablo, da de cima para a de baixo. Os enfeites (castelo, muralhas, estandarte, moinho e a frente da
+// Árvore) não abrem nada.
+// Sem o fundo dele, fica a imagem inteira (que já tem os objetos) e o clique vale no retângulo de cada lugar; com o
+// fundo, uma peça que falta some (a placa continua abrindo o lugar).
+const pecas = Object.entries(pos.pecas)
+  .map(([id, r]) => ({ id, ...r, url: fundo ? urlDaArte(camadasDoReino.peca(id)) : null, clicavel: !r.enfeite, className: r.gira ? 'peca-que-gira' : '' }))
+  .filter((peca) => (fundo ? peca.url : peca.clicavel))
 // O tamanho da letra da placa acompanha a altura dela (em % da largura da tela, cqw)
 const letraDaPlaca = (placa) => `${((placa.altura * (placa.linhas === 2 ? 0.3 : 0.42)) / pos.imagem.largura) * 100}cqw`
 // O símbolo (a plaquinha de cima) em % da placa
@@ -77,9 +82,10 @@ function PlacaDoReino({ id, acesa, aoAbrir, aoFocar }) {
   )
 }
 
-// Hub do jogo (RF19). Reino em camadas (20/10): o fundo limpo da imagem do Pablo, as peças (Guilda, Mercado, Forja,
-// Mochila, Árvore de Habilidades e o castelo, só enfeite), as animações discretas do cenário e as placas em código.
-// Clicar em qualquer parte visível de um objeto ou na placa dele abre o lugar (pelo formato da peça, não um retângulo).
+// Hub do jogo (RF19). Reino em camadas com as peças do Pablo (21/10): o fundo dele, as peças (Guilda, Mercado, Forja,
+// Mochila e Árvore de Habilidades; o castelo, as muralhas, o estandarte, o moinho e a frente da Árvore são enfeites),
+// as nuvens e as animações discretas do cenário e as placas em código. Clicar em qualquer parte visível de um objeto
+// ou na placa dele abre o lugar (pelo formato da peça).
 export default function Reino() {
   const { estado, acoes } = useJogo()
   const { tipoJogador, progresso } = estado
@@ -106,7 +112,7 @@ export default function Reino() {
   }
 
   return (
-    <Tela className="tela-ilustrada tela-reino" semCantos tituloOculto ajudaEm={pontoEmPorcentagem(pos.ajuda, pos.imagem)} imagemDeFundo={fundoLimpo}>
+    <Tela className="tela-ilustrada tela-reino" semCantos tituloOculto ajudaEm={pontoEmPorcentagem(pos.ajuda, pos.imagem)} imagemDeFundo={fundo}>
       <CenaEmCamadas
         imagem={pos.imagem}
         pecas={pecas}
@@ -114,9 +120,9 @@ export default function Reino() {
         aoFocar={setEmFoco}
         aoAbrir={(id) => abrir[id]?.()}
         className={`cena-do-reino${ligada ? ' cena-animada' : ''}`}
-        estilo={{ '--periodo-do-balanco': `${animacoesDoCenario.arvoreDeHabilidades.periodo}s` }}
-        atras={fundoLimpo && <CamadaAnimada imagem={pos.imagem} imagens={imagensDoReino} preparar={prepararReino} desenhar={desenharReinoAtras} ligada={ligada} className="camada-de-tras" />}
-        frente={fundoLimpo && <CamadaAnimada imagem={pos.imagem} imagens={imagensDoReino} preparar={prepararReino} desenhar={desenharReinoFrente} ligada={ligada} className="camada-da-frente" />}
+        estilo={{ '--volta-das-pas': `${60 / animacoesDoCenario.pasDoMoinho.voltasPorMinuto}s` }}
+        atras={fundo && <CamadaAnimada imagem={pos.imagem} imagens={imagensDoReino} preparar={prepararReino} desenhar={desenharReinoAtras} ligada={ligada} className="camada-de-tras" />}
+        frente={fundo && <CamadaAnimada imagem={pos.imagem} imagens={imagensDaFrenteDoReino} preparar={prepararReinoFrente} desenhar={desenharReinoFrente} ligada={ligada} className="camada-da-frente" />}
       >
         {Object.keys(pos.placas).map((id) => (
           <PlacaDoReino key={id} id={id} acesa={emFoco === id} aoAbrir={abrir[id]} aoFocar={setEmFoco} />

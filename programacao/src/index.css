@@ -1693,7 +1693,15 @@ body {
   pointer-events: none;
   user-select: none;
   image-rendering: auto;
-  transition: filter 0.15s;
+  opacity: 0;
+  transition:
+    filter 0.15s,
+    opacity 0.25s;
+}
+
+/* As peças aparecem juntas, quando todas chegaram (as imagens do Pablo são grandes) */
+.cena-pronta .peca-da-cena {
+  opacity: 1;
 }
 
 /* Mouse em cima (ou o foco do teclado na placa): um contorno dourado brilhante em volta do desenho, pela
@@ -1708,18 +1716,14 @@ body {
   filter: drop-shadow(0 0 0.08cqw #f2eee6) drop-shadow(0 0 0.1cqw #d8d2c6) drop-shadow(0 0 0.5cqw rgb(230 226 214 / 0.7));
 }
 
-/* A Árvore de Habilidades balança bem pouco (a base fica) */
-.cena-animada .peca-arvores {
-  transform-origin: 62% 100%;
-  animation: balanco-da-arvore var(--periodo-do-balanco, 8s) ease-in-out infinite alternate;
+/* As pás do moinho (a peça 08, com o eixo no meio) giram devagar */
+.cena-animada .peca-que-gira {
+  animation: girar-as-pas var(--volta-das-pas, 20s) linear infinite;
 }
 
-@keyframes balanco-da-arvore {
-  from {
-    transform: skewX(-0.45deg);
-  }
+@keyframes girar-as-pas {
   to {
-    transform: skewX(0.45deg);
+    transform: rotate(360deg);
   }
 }
 
@@ -1868,7 +1872,7 @@ body {
 
 /* "Reduzir movimento" do sistema: nada balança (o canvas também para, CamadaAnimada.jsx) */
 @media (prefers-reduced-motion: reduce) {
-  .cena-animada .peca-arvores,
+  .cena-animada .peca-que-gira,
   .cena-animada .oceano-do-mapa {
     animation: none;
   }

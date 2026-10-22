@@ -4,7 +4,7 @@ import { ehObjeto } from './validacao.js'
 // mudo (tecla M, a qualquer momento): silencia música e som sem mudar a escolha de cada um.
 // dicasVistas (ajustes de 14/10): as telas cuja dica da primeira visita já foi fechada neste navegador.
 // telaCheia (ajustes de 14/10): entrar em tela cheia nos cliques de Iniciar jogo, Jogar e Começar partida.
-// animacoesDoCenario (20/10): as nuvens, bandeiras, fumaça e água do Reino e do Mapa (o "reduzir movimento" do sistema
+// animacoesDoCenario (20/10): o moinho, a fumaça, a água, a lava e a neve do Reino e do Mapa (o "reduzir movimento" do sistema
 // também desliga, regras/cenario.js).
 export const preferenciasPadrao = { musica: true, som: true, mudo: false, tema: 'claro', telaCheia: true, animacoesDoCenario: true, dicasVistas: [] }
 

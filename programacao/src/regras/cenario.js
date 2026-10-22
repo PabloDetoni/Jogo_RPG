@@ -68,27 +68,12 @@ export function sorteioFixo(indice) {
   return x - Math.floor(x)
 }
 
-// Onde a nuvem está (x): anda para a direita e, saindo pela beira, volta pela outra. No tempo 0 está no lugar da imagem.
-export function posicaoDaNuvem(nuvem, segundos, velocidade, larguraDaImagem) {
-  const volta = larguraDaImagem + nuvem.largura
-  const andado = nuvem.x + nuvem.largura + velocidade * segundos
-  return (((andado % volta) + volta) % volta) - nuvem.largura
-}
-
-// Quanto um ponto do pano sai do lugar (px): "posicao" vai de 0 (onde está preso) a "comprimento" (a ponta solta, que
-// balança mais). Serve para o estandarte (preso em cima) e para a flâmula (presa no mastro).
-export function desvioDoPano(posicao, comprimento, segundos, { amplitude, periodo, ondas }, fase = 0) {
-  const solto = comprimento > 0 ? posicao / comprimento : 0
-  return amplitude * solto * Math.sin((2 * Math.PI * segundos) / periodo - ondas * 2 * Math.PI * solto + fase)
-}
-
-export function anguloDasPas(segundos, voltasPorMinuto) {
-  return ((segundos * voltasPorMinuto) / 60) * 2 * Math.PI
-}
-
-// A inclinação de um balanço suave (vai e volta), entre -maximo e +maximo
-export function balanco(segundos, maximo, periodo, fase = 0) {
-  return maximo * Math.sin((2 * Math.PI * segundos) / periodo + fase)
+// Onde a nuvem está (x): anda para a direita e, passando de "fim", volta antes de "inicio" (escondida atrás da copa).
+// No tempo 0 está no lugar da imagem.
+export function posicaoDaNuvem(nuvem, segundos, velocidade, inicio, fim) {
+  const volta = fim - inicio + nuvem.largura
+  const andado = nuvem.x - inicio + nuvem.largura + velocidade * segundos
+  return inicio - nuvem.largura + (((andado % volta) + volta) % volta)
 }
 
 // A luz da lanterna: tremula de leve (duas ondas lentas somadas), nunca apaga nem estoura
@@ -120,6 +105,18 @@ export function brilhoNaAgua(segundos, indice, { periodo, alfa }) {
 // A lava clareando e escurecendo (a força do brilho por cima dela, entre o mínimo e o máximo)
 export function pulsoDaLava(segundos, { periodo, minimo, maximo }) {
   return minimo + (maximo - minimo) * (0.5 - 0.5 * Math.cos((2 * Math.PI * segundos) / periodo))
+}
+
+// A fumaça do vulcão (a peça do Pablo): duas cópias que sobem devagar, uma depois da outra; cada uma aparece embaixo,
+// cresce um pouco e some em cima. "indice" é a cópia (0 ou 1). No tempo 0, a cópia 0 está inteira no lugar da imagem
+// (é o quadro parado) e a outra começa a aparecer; somadas, a fumaça nunca some nem fica mais forte que a peça.
+export function fumacaQueSobe(segundos, indice, { periodo, copias, subida, crescimento }) {
+  const p = (((segundos / periodo + 0.5 + indice / copias) % 1) + 1) % 1
+  return {
+    dy: subida * (0.5 - p),
+    escala: 1 + crescimento * (p - 0.5),
+    alfa: Math.sin(Math.PI * p),
+  }
 }
 
 // Um floco de neve dentro da área (x, y, largura, altura): cai devagar balançando e volta por cima

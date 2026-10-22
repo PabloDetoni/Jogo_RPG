@@ -172,8 +172,8 @@ try {
       areas: [...document.querySelectorAll('button.lugar-placa')].map((b) => b.textContent.trim()),
     })`)
     conferir(
-      `${tamanho}: o Reino tem a imagem do Pablo de fundo e uma área (botão com nome) em cima de cada placa desenhada, sem os botões antigos`,
-      reino.fundo.includes('fundo-reino') && reino.botoesAntigos === 0 && reino.areas.length === 8 && reino.areas.includes('Jogar') && reino.areas.includes('Configurações'),
+      `${tamanho}: o Reino tem o fundo limpo da imagem do Pablo e as 8 placas em código (botões com nome), sem os botões antigos`,
+      reino.fundo.includes('reino-fundo') && reino.botoesAntigos === 0 && reino.areas.length === 8 && reino.areas.includes('Jogar') && reino.areas.includes('Configurações'),
       reino,
     )
     const naImagem = await aba.avaliar(`(() => {
@@ -181,7 +181,7 @@ try {
       const r = document.querySelector('.lugar-desenhado-guilda .lugar-placa').getBoundingClientRect()
       return { x: Math.round(((r.left - t.left) / t.width) * 1000) / 10, y: Math.round(((r.top - t.top) / t.height) * 1000) / 10 }
     })()`)
-    conferir(`${tamanho}: a área cai no mesmo lugar da imagem (a placa da Guilda em 46,6% × 39,3%)`, Math.abs(naImagem.x - 46.6) < 0.3 && Math.abs(naImagem.y - 39.3) < 0.3, naImagem)
+    conferir(`${tamanho}: a placa cai no mesmo lugar da imagem (a da Guilda em 46,5% × 39,3%)`, Math.abs(naImagem.x - 46.5) < 0.3 && Math.abs(naImagem.y - 39.3) < 0.3, naImagem)
     const chegou = []
     for (const [id, nome] of destinos) {
       await aba.clicarNoElemento(`.lugar-desenhado-${id} .lugar-placa`)
@@ -190,7 +190,7 @@ try {
         await irAoReino()
     }
     conferir(`${tamanho}: clicar em cada placa desenhada leva ao lugar dela`, chegou.every((linha) => linha.split(': ')[0] === linha.split(': ')[1]), chegou)
-    await aba.clicarNoElemento('.lugar-desenhado-salaoGloria .lugar-desenho')
+    await aba.clicarNoElemento('.lugar-desenhado-salaoGloria .simbolo-da-placa')
     await pausa(450)
     const pelaCoroa = await aba.titulo()
     await irAoReino()
@@ -216,11 +216,11 @@ try {
     await sairDaTelaCheia()
     await pausa(400)
     const mapa = await aba.avaliar(`({ tela: document.querySelector('.tela .titulo')?.textContent, fundo: getComputedStyle(document.querySelector('.tela')).backgroundImage, cadeados: document.querySelectorAll('.regiao-bloqueada .cadeado').length })`)
-    conferir(`${tamanho}: JOGAR abre o Mapa com a imagem do Pablo; Tundra, Vulcânico e Deserto com cadeado e "Em breve"`, mapa.tela === 'Mapa' && mapa.fundo.includes('fundo-mapa') && mapa.cadeados === 3, mapa)
+    conferir(`${tamanho}: JOGAR abre o Mapa com a imagem do Pablo; Tundra, Vulcânico e Deserto com cadeado e "Em breve"`, mapa.tela === 'Mapa' && mapa.fundo.includes('mapa-oceano') && mapa.cadeados === 3, mapa)
     const floresta = await pontoNaTela(27, 70)
     await aba.moverMouse(floresta.x, floresta.y)
     await pausa(300)
-    const acesa = await aba.avaliar(`({ foco: document.querySelector('.regiao-em-foco .so-leitor')?.textContent, contornos: document.querySelectorAll('.contorno-aceso').length, placa: getComputedStyle(document.querySelector('.regiao-em-foco .placa-do-lugar')).opacity })`)
+    const acesa = await aba.avaliar(`({ foco: document.querySelector('.regiao-em-foco .so-leitor')?.textContent, contornos: document.querySelectorAll('.peca-acesa').length, placa: getComputedStyle(document.querySelector('.regiao-em-foco .placa-do-lugar')).opacity })`)
     conferir(`${tamanho}: passar o mouse na Floresta acende o contorno dela e mostra o nome`, acesa.foco === 'Floresta' && acesa.contornos === 1 && acesa.placa === '1', acesa)
     const tundra = await pontoNaTela(15, 30)
     await aba.clicarNaTela(tundra.x, tundra.y)
@@ -578,7 +578,7 @@ try {
     await aba.esperarTela('Mapa')
     if (i === 0) await passo('Lago')
   }
-  const semRodadas = await aba.avaliar(`(() => { const caixa = [...document.querySelectorAll('.minijogo-no-mapa')].find((c) => c.textContent.startsWith('Lago')); return { apagado: caixa?.querySelector('button')?.disabled ?? null, texto: caixa?.querySelector('.rodadas-do-dia')?.textContent ?? '' } })()`)
+  const semRodadas = await aba.avaliar(`(() => { const caixa = [...document.querySelectorAll('.minijogo-no-mapa')].find((c) => c.textContent.startsWith('Lago')); return { apagado: caixa?.querySelector('button')?.getAttribute('aria-disabled') === 'true', texto: caixa?.querySelector('.rodadas-do-dia')?.textContent ?? '' } })()`)
   conferir('sair no meio também gasta; depois das 3 do dia, o Lago fica apagado no Mapa ("0 de 3"), e a Mina continua com 3', semRodadas.apagado === true && semRodadas.texto.startsWith('Rodadas hoje: 0 de 3') && (await aba.texto()).includes('Rodadas hoje: 3 de 3'), semRodadas)
   await passo('Voltar ao Reino')
   await aba.esperarTela('Reino')

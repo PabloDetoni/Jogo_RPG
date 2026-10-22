@@ -1,7 +1,7 @@
 # Roteiros de teste à mão
 
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
-Atualizado em 14/10/2026, nos ajustes da versão final (seção VF). A cada parte nova, o Claude acrescenta as situações dela aqui.
+Atualizado em 21/10/2026, nas camadas do Reino e do Mapa com as peças do Pablo (seção CM). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
 ## Antes de começar (vale para todas)
 
@@ -18,6 +18,48 @@ Atualizado em 14/10/2026, nos ajustes da versão final (seção VF). A cada part
 7. **Para começar do zero:** no painel DEV, **Apagar progresso do convidado**.
 
 Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que mostrar. Se for diferente, anote como **falhou**.
+
+---
+
+## CM. O Reino e o Mapa em camadas (20/10; com as suas peças desde 21/10)
+
+Os VN-01 a VN-05 abaixo valiam para o Reino e o Mapa de antes (as áreas invisíveis); agora valem estes.
+
+**CM-01 · Os botões não saem do lugar**
+- Fazer: na Tela inicial, passe o mouse no "Como jogar", aperte e segure o botão do mouse em cima dele, solte fora; aperte Tab até ele; troque o tema nas Configurações. Repita em outras telas (Guilda, Mercado, Mapa) e no Reino.
+- Deve acontecer: nenhum botão se mexe (nem um pixel). Apertado, ele só escurece um pouco por dentro.
+
+**CM-02 · O Reino é montado com as suas peças**
+- Fazer: entre no Reino e compare com a `ReinoRPG.png` e com as peças de `documentacao/Telas/reino_pixel_art`.
+- Deve acontecer: o seu fundo, com o castelo, a Guilda, o Mercado, a Forja, a mochila, o estandarte, o moinho, a muralha, a Árvore de Habilidades (com a cerca e as pedras na frente) e as nuvens no lugar e no tamanho da imagem principal, com as cores e as formas das suas peças. A muralha da frente passa na frente do Mercado e da Forja; a Guilda fica na frente da muralha de trás. As placas são do jogo.
+
+**CM-03 · Clique pelo desenho no Reino**
+- Fazer: clique em qualquer parte da Guilda (uma torre, o portão), das bancas e das casas do Mercado, do telhado da Forja, da mochila e da copa da Árvore de Habilidades. Depois clique no chão entre eles (a praça da fonte, as casas do meio), no castelo, numa torre da muralha, no moinho e nas pedras na frente da Árvore.
+- Deve acontecer: cada parte visível dos cinco lugares abre o lugar dela; o chão, as casas do meio, o castelo, a muralha, o moinho e as pedras não abrem nada.
+
+**CM-04 · Mouse em cima no Reino**
+- Fazer: passe o mouse devagar sobre cada objeto e cada placa; depois aperte Tab até cada placa.
+- Deve acontecer: um contorno dourado brilhante aparece em volta do desenho do objeto (não um retângulo), a placa dele acende, aparece a legenda embaixo da placa e o cursor vira a mãozinha. O objeto não se mexe. Com o Tab, o mesmo; Enter abre.
+
+**CM-05 · Mapa com as suas peças**
+- Fazer: compare o Mapa com a `MapaRPG.jpeg`. Passe o mouse e clique em cada bioma, no castelo, na Fazenda, na Mina e no Lago; clique também no mar e nas montanhas cinzas em volta do Planalto.
+- Deve acontecer: as suas peças no lugar da imagem principal (o chão do Planalto preenche o anel de montanhas; a fumaça sai da cratera e passa da borda de cima). O contorno dourado acende em volta do desenho e aparece o nome. Floresta: "Jogar", abre a Preparação. Tundra, Vulcânico e Deserto: cores normais; com o mouse em cima, cadeado e "Em breve" (contorno claro), e o clique não abre. Castelo: volta ao Reino. Fazenda, Mina e Lago: "Rodadas hoje" e abrem os minijogos. Mar e montanhas: nada.
+
+**CM-06 · Tamanhos e tela cheia**
+- Fazer: repita o CM-03 e o CM-05 com a janela em 1366×768, maximizada em 1920×1080 e em tela cheia (o JOGAR entra nela).
+- Deve acontecer: igual em todos; nada fica deslocado, e as peças ficam nítidas (sem serrilhado).
+
+**CM-07 · Animações do cenário**
+- Fazer: fique uns 20 s olhando o Reino e o Mapa.
+- Deve acontecer: no Reino, as nuvens andam bem devagar (passando atrás das montanhas e da copa do canto), as pás do moinho giram devagar, a lanterna do estandarte pisca de leve, a água do lago e da fonte brilha e sai fumaça da Forja e de três chaminés. No Mapa: a fumaça do vulcão sobe devagar, a lava pulsa, a água das cachoeiras (a do lago e as três da Floresta) desce, neva na Tundra, uma luz fraca de vento passa pela Floresta e o mar vai e volta. Tudo lento; nada pisca forte. Bandeiras e árvores ficam paradas (você anima depois).
+
+**CM-08 · Desligar as animações**
+- Fazer: Configurações → "Animações do cenário: ligadas" (vira "desligadas"). Depois ligue de novo e, no Windows, ligue Configurações → Acessibilidade → Efeitos visuais → "Efeitos de animação" desligado (o "reduzir movimento").
+- Deve acontecer: desligadas, o cenário fica parado (do jeito das suas peças, com a fumaça do vulcão no lugar). Com o "reduzir movimento" do Windows, também parado, e as Configurações dizem "O computador pede menos movimento: o cenário fica parado."
+
+**CM-09 · Internet lenta**
+- Fazer: abra o site numa internet mais lenta (ou no celular roteado) e vá da Tela inicial até o Reino e depois ao Mapa.
+- Deve acontecer: as peças aparecem todas juntas (nunca uma a uma por cima do fundo); como elas já começam a carregar nas telas de entrada, o Reino normalmente já abre inteiro.
 
 ---
 

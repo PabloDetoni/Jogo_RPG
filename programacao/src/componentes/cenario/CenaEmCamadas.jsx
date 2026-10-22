@@ -2,19 +2,23 @@ import { useEffect, useRef, useState } from 'react'
 import { mascaraDaTransparencia, pecaNoPonto, pontoNaImagem } from '../../regras/cenario.js'
 import { estiloNaImagem } from './naImagem.js'
 
-
-// A máscara de cada peça, lida da transparência da imagem dela (numa grade com a metade do tamanho)
+// A máscara de cada peça, lida da transparência da imagem dela (numa grade com a metade do tamanho). "chegaram" guarda
+// os endereços das imagens que já chegaram (ou falharam): com todas, as peças aparecem juntas.
 const passoDaMascara = 2
 function useMascaras(pecas) {
   const [mascaras, setMascaras] = useState({})
+  const [chegaram, setChegaram] = useState(() => new Set())
   const chave = pecas.map((peca) => `${peca.id}:${peca.url ?? ''}`).join('|')
   useEffect(() => {
     let vivo = true
     for (const peca of pecas) {
       if (!peca.url) continue
+      const chegou = () => vivo && setChegaram((antes) => new Set(antes).add(peca.url))
       const imagem = new Image()
+      imagem.onerror = chegou
       imagem.onload = () => {
         if (!vivo) return
+        chegou()
         const largura = Math.max(1, Math.round(peca.largura / passoDaMascara))
         const altura = Math.max(1, Math.round(peca.altura / passoDaMascara))
         const tela = document.createElement('canvas')
@@ -36,7 +40,7 @@ function useMascaras(pecas) {
     // as peças só mudam quando muda o endereço de alguma imagem (a chave)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave])
-  return mascaras
+  return { mascaras, prontas: pecas.every((peca) => !peca.url || chegaram.has(peca.url)) }
 }
 
 // Uma cena em camadas (o Reino e o Mapa, 20/10): as peças (imagens com transparência, no lugar exato da imagem
@@ -46,7 +50,7 @@ function useMascaras(pecas) {
 // pecas: da de cima para a de baixo, { id, x, y, largura, altura, url, clicavel, bloqueado, className }.
 export default function CenaEmCamadas({ imagem, pecas, emFoco, aoFocar, aoAbrir, className = '', estilo = {}, atras = null, frente = null, children }) {
   const caixa = useRef(null)
-  const mascaras = useMascaras(pecas)
+  const { mascaras, prontas } = useMascaras(pecas)
   const [sobOMouse, setSobOMouse] = useState(null)
 
   const pecaDoEvento = (evento) => pecaNoPonto(pecas, pontoNaImagem(caixa.current.getBoundingClientRect(), evento.clientX, evento.clientY, imagem), mascaras)
@@ -73,7 +77,7 @@ export default function CenaEmCamadas({ imagem, pecas, emFoco, aoFocar, aoAbrir,
   return (
     <div
       ref={caixa}
-      className={`cena-em-camadas ${className}`}
+      className={`cena-em-camadas${prontas ? ' cena-pronta' : ''} ${className}`}
       style={{ ...estilo, cursor }}
       data-mascaras={Object.keys(mascaras).length}
       data-sob-o-mouse={sobOMouse ?? ''}

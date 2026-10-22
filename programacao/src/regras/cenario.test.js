@@ -3,13 +3,11 @@ import { animacoesDoCenario } from '../dados/animacoesDoCenario.js'
 import { posicoes } from '../dados/posicoes.js'
 import {
   animacoesLigadas,
-  anguloDasPas,
-  balanco,
   brilhoDaLanterna,
   brilhoNaAgua,
-  desvioDoPano,
   faixaDeVento,
   flocoDeNeve,
+  fumacaQueSobe,
   mascaraDaTransparencia,
   particulaDeFumaca,
   pecaNoPonto,
@@ -26,8 +24,8 @@ const alfasDoL = [255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255]
 describe('clique pelo formato da peça (camadas, 20/10)', () => {
   it('converte o ponto do mouse para pixels da imagem original, em qualquer tamanho de tela', () => {
     const imagem = posicoes.reino.imagem
-    expect(pontoNaImagem({ left: 0, top: 0, width: 1366, height: 768 }, 683, 384, imagem)).toEqual({ x: 835, y: 471 })
-    expect(pontoNaImagem({ left: 100, top: 50, width: 1920, height: 1080 }, 1060, 590, imagem)).toEqual({ x: 835, y: 471 })
+    expect(pontoNaImagem({ left: 0, top: 0, width: 1366, height: 768 }, 683, 384, imagem)).toEqual({ x: 836, y: 470.5 })
+    expect(pontoNaImagem({ left: 100, top: 50, width: 1920, height: 1080 }, 1060, 590, imagem)).toEqual({ x: 836, y: 470.5 })
   })
 
   it('a máscara vem da transparência: só o desenho vale, e a folga engorda um ponto em volta', () => {
@@ -61,17 +59,19 @@ describe('clique pelo formato da peça (camadas, 20/10)', () => {
     expect(pecaNoPonto(pecas.slice(0, 1), { x: 35, y: 5 }, vazioNoMeio)).toBe(null)
   })
 
-  it('as peças do Reino e do Mapa ficam dentro das imagens, e as clicáveis não se cobrem pelo retângulo inteiro', () => {
-    for (const [imagem, grupos] of [
-      [posicoes.reino.imagem, [posicoes.reino.pecas, posicoes.reino.placas]],
-      [posicoes.mapa.imagem, [posicoes.mapa.planalto, posicoes.mapa.biomas, { base: posicoes.mapa.base }]],
-    ]) {
-      for (const grupo of grupos) {
-        for (const [id, r] of Object.entries(grupo)) {
-          expect(r.x >= 0 && r.y >= 0 && r.x + r.largura <= imagem.largura && r.y + r.altura <= imagem.altura, id).toBe(true)
-        }
-      }
+  it('as placas e os lugares do Mapa ficam dentro das imagens; as peças do Reino aparecem (a Árvore passa um pouco da beira)', () => {
+    const { reino, mapa } = posicoes
+    const dentro = (r, imagem) => r.x >= 0 && r.y >= 0 && r.x + r.largura <= imagem.largura && r.y + r.altura <= imagem.altura
+    const aparece = (r, imagem) => r.x < imagem.largura && r.y < imagem.altura && r.x + r.largura > 0 && r.y + r.altura > 0
+    const meioDentro = (r, imagem) => dentro({ x: r.x + r.largura / 2, y: r.y + r.altura / 2, largura: 0, altura: 0 }, imagem)
+    for (const [id, r] of Object.entries(reino.pecas)) expect(r.enfeite ? aparece(r, reino.imagem) : aparece(r, reino.imagem) && meioDentro(r, reino.imagem), id).toBe(true)
+    for (const [id, r] of Object.entries(reino.placas)) expect(dentro(r, reino.imagem), id).toBe(true)
+    for (const grupo of [mapa.planalto, mapa.biomas, mapa.enfeites]) {
+      for (const [id, r] of Object.entries(grupo)) expect(dentro(r, mapa.imagem), id).toBe(true)
     }
+    expect(aparece(mapa.animacoes.fumaca, mapa.imagem)).toBe(true)
+    // as pás e o corpo do moinho usam o mesmo quadro (as pás giram em volta do meio, o eixo)
+    expect(reino.pecas.moinhoPas).toEqual({ ...reino.pecas.moinhoCorpo, gira: true })
   })
 })
 
@@ -83,31 +83,22 @@ describe('animações do cenário: lentas, suaves e respeitando o "reduzir movim
     expect(animacoesLigadas(true, true)).toBe(false)
   })
 
-  it('a nuvem começa no lugar da imagem, anda devagar e volta pela outra beira', () => {
-    const nuvem = { x: 993, largura: 136 }
+  it('a nuvem começa no lugar da imagem, anda devagar e, passando da direita, volta por trás da copa', () => {
+    const { voltaEm, lista } = posicoes.reino.animacoes.nuvens
+    const L = posicoes.reino.imagem.largura
     const { velocidade } = animacoesDoCenario.nuvens
-    expect(posicaoDaNuvem(nuvem, 0, velocidade, 1670)).toBeCloseTo(993)
-    expect(posicaoDaNuvem(nuvem, 10, velocidade, 1670) - 993).toBeCloseTo(10 * velocidade)
+    const nuvem = lista[1]
+    expect(posicaoDaNuvem(nuvem, 0, velocidade, voltaEm, L)).toBeCloseTo(nuvem.x)
+    expect(posicaoDaNuvem(nuvem, 10, velocidade, voltaEm, L) - nuvem.x).toBeCloseTo(10 * velocidade)
     expect(velocidade).toBeLessThanOrEqual(4) // bem devagar: menos de 4 px por segundo
-    const depoisDaBeira = posicaoDaNuvem(nuvem, (1670 - 993 + 10) / velocidade, velocidade, 1670)
-    expect(depoisDaBeira).toBeLessThan(0) // saiu pela direita, voltou pela esquerda
+    const depoisDaBeira = posicaoDaNuvem(nuvem, (L - nuvem.x + 10) / velocidade, velocidade, voltaEm, L)
+    expect(depoisDaBeira).toBeLessThan(voltaEm) // saiu pela direita, voltou atrás da copa
+    for (const n of lista) expect(posicaoDaNuvem(n, 0, velocidade, voltaEm, L)).toBeCloseTo(n.x)
   })
 
-  it('o pano preso não sai do lugar; a ponta solta balança no máximo a amplitude (pouco)', () => {
-    const p = animacoesDoCenario.estandartes
-    for (let t = 0; t < 10; t += 0.37) {
-      expect(Math.abs(desvioDoPano(0, 60, t, p))).toBe(0) // (o zero pode vir com sinal)
-      expect(Math.abs(desvioDoPano(60, 60, t, p))).toBeLessThanOrEqual(p.amplitude + 1e-9)
-    }
-    expect(p.amplitude).toBeLessThanOrEqual(2)
-    expect(animacoesDoCenario.flamulas.amplitude).toBeLessThanOrEqual(2)
-  })
-
-  it('moinho devagar, balanço pequeno, lanterna sem piscar forte', () => {
-    expect(anguloDasPas(60, animacoesDoCenario.pasDoMoinho.voltasPorMinuto)).toBeCloseTo(2 * Math.PI * animacoesDoCenario.pasDoMoinho.voltasPorMinuto)
-    expect(animacoesDoCenario.pasDoMoinho.voltasPorMinuto).toBeLessThanOrEqual(6)
+  it('moinho devagar, lanterna sem piscar forte', () => {
+    expect(animacoesDoCenario.pasDoMoinho.voltasPorMinuto).toBeLessThanOrEqual(6) // uma volta a cada 10 s ou mais
     for (let t = 0; t < 20; t += 0.11) {
-      expect(Math.abs(balanco(t, 1.6, 7))).toBeLessThanOrEqual(1.6)
       const luz = brilhoDaLanterna(t, animacoesDoCenario.lanterna)
       expect(luz).toBeGreaterThanOrEqual(0)
       expect(luz).toBeLessThanOrEqual(0.35) // nunca estoura
@@ -125,6 +116,25 @@ describe('animações do cenário: lentas, suaves e respeitando o "reduzir movim
       }
     }
     expect(particulaDeFumaca(0, 0, f).alfa).toBe(0)
+  })
+
+  it('a fumaça do vulcão: no tempo 0 é a peça parada; depois sobe devagar, nunca some e nunca fica mais forte', () => {
+    const f = animacoesDoCenario.fumacaDoVulcao
+    expect(fumacaQueSobe(0, 0, f)).toEqual({ dy: 0, escala: 1, alfa: 1 })
+    expect(fumacaQueSobe(0, 1, f).alfa).toBeCloseTo(0)
+    for (let t = 0; t < f.periodo * 2; t += 0.3) {
+      const copias = Array.from({ length: f.copias }, (_, i) => fumacaQueSobe(t, i, f))
+      // as cópias juntas (uma por cima da outra) cobrem quase como a peça: nunca some
+      const cobre = 1 - copias.reduce((resto, copia) => resto * (1 - copia.alfa), 1)
+      expect(cobre).toBeGreaterThan(0.85)
+      for (const copia of copias) {
+        expect(copia.alfa >= 0 && copia.alfa <= 1).toBe(true)
+        expect(Math.abs(copia.dy)).toBeLessThanOrEqual(f.subida / 2 + 1e-9)
+        expect(Math.abs(copia.escala - 1)).toBeLessThanOrEqual(f.crescimento / 2 + 1e-9)
+      }
+    }
+    // sobe: um pouco depois, a cópia 0 está mais alta (dy menor)
+    expect(fumacaQueSobe(1, 0, f).dy).toBeLessThan(0)
   })
 
   it('brilho da água, lava e vento ficam nos limites; a neve cai dentro da área', () => {

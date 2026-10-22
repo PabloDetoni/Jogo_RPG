@@ -1,0 +1,19 @@
+REINO — PEÇAS PADRONIZADAS EM PIXEL ART
+
+01_castelo.png — castelo do alto da colina
+02_guilda.png — prédio da guilda
+03_forja.png — forja, versão final com telhado escuro
+04_muralhas.png — anel de muralhas com centro transparente
+05_mercado.png — mercado
+06_mochila.png — mochila
+07_estandarte_luminaria.png — estandarte, suporte e luminária
+08_moinho_pas.png — pás separadas, com o eixo no centro
+09_moinho_corpo.png — corpo do moinho, sem pás
+10_fundo_reino.png — cenário de fundo vazio
+
+Os arquivos 01 a 09 têm transparência PNG. O arquivo 10 é opaco.
+A última imagem enviada, ReinoRPG(8).png, foi usada como referência e permanece sem alteração.
+
+Para redimensionar preservando os blocos da pixel art, use o filtro vizinho mais próximo (nearest neighbor).
+
+Os prompts de edição estão em prompts_utilizados.txt. Foram usadas edições pela ferramenta image_gen integrada.

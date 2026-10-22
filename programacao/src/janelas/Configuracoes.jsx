@@ -70,7 +70,7 @@ export default function Configuracoes() {
           </Botao>
         )}
       </div>
-      {/* 20/10: as nuvens, bandeiras, fumaça e água do Reino e do Mapa */}
+      {/* 20/10: o moinho, a fumaça, a água, a lava e a neve do Reino e do Mapa */}
       <Botao selecionado={preferencias.animacoesDoCenario} onClick={() => acoes.alternarPreferencia('animacoesDoCenario')}>
         Animações do cenário: {preferencias.animacoesDoCenario ? 'ligadas' : 'desligadas'}
       </Botao>

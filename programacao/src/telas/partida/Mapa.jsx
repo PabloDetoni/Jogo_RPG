@@ -32,11 +32,12 @@ function Cadeado() {
   )
 }
 
-// Mapa em ovo (RF30). Em camadas (20/10): o oceano (com ondas), o Planalto, os 4 biomas recortados da imagem do Pablo
-// e, por cima, os lugares do Planalto. Cada lugar clica no formato do desenho dele e, com o mouse em cima (ou o foco do
-// teclado), ganha o contorno dourado e a placa com o nome. Tundra, Vulcânico e Deserto ficam com as cores normais e só
-// ao passar o mouse mostram o cadeado e "Em breve" (não abrem). O castelo volta ao Reino; Fazenda, Mina e Lago são os
-// minijogos (RF54), com as rodadas de hoje; sem rodadas, a placa diz o motivo e o lugar não abre.
+// Mapa em ovo (RF30). Em camadas com as peças do Pablo (21/10): o oceano (com ondas), os 4 biomas, o chão do Planalto
+// e o anel de montanhas (enfeites) e, por cima, os lugares do Planalto. Cada lugar clica no formato do desenho dele e,
+// com o mouse em cima (ou o foco do teclado), ganha o contorno dourado e a placa com o nome. Tundra, Vulcânico e
+// Deserto ficam com as cores normais e só ao passar o mouse mostram o cadeado e "Em breve" (não abrem). O castelo volta
+// ao Reino; Fazenda, Mina e Lago são os minijogos (RF54), com as rodadas de hoje; sem rodadas, a placa diz o motivo e
+// o lugar não abre.
 export default function Mapa() {
   const { estado, acoes } = useJogo()
   const agora = useAgora()
@@ -62,8 +63,9 @@ export default function Mapa() {
     const bioma = biomas.find((b) => b.id === id)
     return { id, ...r, nome: bioma.nome, bloqueado: !bioma.noBeta, detalhe: bioma.noBeta ? 'Jogar' : 'Em breve', aoAbrir: () => acoes.escolherBioma(id) }
   })
-  // Da peça de cima para a de baixo: os lugares do Planalto, a base dele (sem clique) e os biomas
-  const lugares = [...doPlanalto, { id: 'planalto', ...pos.base, clicavel: false }, ...dosBiomas]
+  // Da peça de cima para a de baixo: os lugares do Planalto, o anel de montanhas e o chão (sem clique) e os biomas
+  const enfeites = Object.entries(pos.enfeites).map(([id, r]) => ({ id, ...r, clicavel: false }))
+  const lugares = [...doPlanalto, ...enfeites, ...dosBiomas]
   const pecas = lugares.map((lugar) => ({ ...lugar, url: oceano ? urlDaArte(lugar.peca) : null }))
   const abrir = (id) => lugares.find((lugar) => lugar.id === id)?.aoAbrir?.()
 

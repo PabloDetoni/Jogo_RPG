@@ -99,12 +99,57 @@ Um monstro com uma imagem só (`lobo.png`) também serve: ela vale para tudo.
 | Tela inicial e Narrativa | `fundo-inicio.png` | Com o nome do jogo (quando o grupo decidir o nome) |
 | Login, criar conta, senha e apelido | `fundo-acesso.png` | |
 | Seleção de classe | `fundo-selecao.png` | O pentágono e os botões ficam por cima, pelo código |
-| Reino | `fundo-reino.png` | Já existe em `documentacao/Telas/ReinoRPG.png`. Falta corrigir a muralha e tirar da imagem os nomes desenhados (os botões são do código) |
-| Mapa | `fundo-mapa.png` | O mapa em ovo (seção 3) |
+| Reino | `fundo-reino` (a imagem inteira do Pablo) | Desde 21/10 o Reino é montado com as peças do Pablo (seção 4b); a imagem inteira só aparece se faltar o fundo dele |
+| Mapa | `fundo-mapa` (a imagem inteira do Pablo) | Desde 21/10 o Mapa é montado com as peças do Pablo (seção 4b); a imagem inteira só aparece se faltar o oceano |
 | Cutscene de derrota | `derrota-1.png` a `derrota-3.png` | 3 imagens em sequência (2,2 s cada; a última fica): o grupo caindo, a Pedra de Retorno brilhando, o Reino |
 | Resumo | `fundo-resumo.png` | Opcional |
 
 Qualquer outra tela também pode ter fundo: `fundo-` seguido do nome da tela no código (`fundo-mercado.png`, `fundo-guilda.png`, `fundo-forja.png`...). Sem a imagem, a tela continua cinza. Com ela, o título da tela ganha uma sombra, para dar para ler em cima da imagem.
+
+## 4b. O Reino e o Mapa em camadas, com as peças do Pablo (21/10/2026)
+
+As peças são do Pablo (`documentacao/Telas/reino_pixel_art/` e `mapa_pixel_art/`, a fonte oficial; os originais não
+se mexem). No jogo ficam as cópias em WEBP **sem perda**: cada pixel foi conferido igual ao do original. Os arquivos
+somam uns 14 MB no Reino e uns 10 MB no Mapa, e o jogo os carrega antes de a tela abrir. A posição e o tamanho de cada peça ficam em
+`src/dados/posicoes.js`, achados pela imagem principal (`ReinoRPG.png` e `MapaRPG.jpeg`). As peças geradas no PixelLab
+e os recortes de 20/10 foram rejeitados pelo Pablo e saíram do jogo.
+
+| Arquivo no jogo (`src/assets/arte/`) | Veio de (`documentacao/Telas/`) | Onde entra |
+|---|---|---|
+| `reino/reino-fundo.webp` | `reino_pixel_art/10_fundo_reino.png` | O fundo do Reino (o tamanho dele, 1672 × 941, é a medida da cena) |
+| `reino/reino-castelo.webp` | `reino_pixel_art/01_castelo.png` | O castelo do alto da colina (enfeite, sem clique) |
+| `reino/reino-guilda.webp` | `reino_pixel_art/02_guilda.png` | A Guilda (abre a Guilda) |
+| `reino/reino-forja.webp` | `reino_pixel_art/03_forja.png` | A Forja (abre a Forja) |
+| `reino/reino-muralhas-tras.webp` e `reino-muralhas-frente.webp` | `reino_pixel_art/04_muralhas.png` | O anel de muralhas, cortado em duas partes **sem mudar pixel** (as duas juntas dão a imagem original): a de trás fica atrás dos prédios; a da frente (as torres dos cantos, as paredes de baixo e o portão) fica na frente do Mercado e da Forja. Enfeite |
+| `reino/reino-mercado.webp` | `reino_pixel_art/05_mercado.png` | O Mercado (abre o Mercado) |
+| `reino/reino-mochila.webp` | `reino_pixel_art/06_mochila.png` | A Mochila (abre a Mochila) |
+| `reino/reino-estandarte.webp` | `reino_pixel_art/07_estandarte_luminaria.png` | O estandarte com a lanterna (enfeite; a luz da lanterna pisca de leve) |
+| `reino/reino-moinho-pas.webp` | `reino_pixel_art/08_moinho_pas.png` | As pás do moinho (giram devagar) |
+| `reino/reino-moinho-corpo.webp` | `reino_pixel_art/09_moinho_corpo.png` | O corpo do moinho (enfeite; as pás usam o mesmo quadro) |
+| `reino/reino-arvores.webp` | `reino_pixel_art/11_arvore.png` | A Árvore de Habilidades (abre as Árvores; é outra árvore, encaixada pelo contorno da árvore da imagem principal) |
+| `reino/reino-frente-da-arvore.webp` | `reino_pixel_art/12_frente_arvore.png` | A cerca, as moitas e as pedras na frente da Árvore (enfeite) |
+| `reino/reino-nuvem-1.webp` a `-3.webp` | `reino_pixel_art/nuvem (1).png` a `nuvem (3).png` | As nuvens (andam devagar, só no céu: passam atrás das montanhas e da copa do canto) |
+| `mapa/mapa-oceano.webp` | `mapa_pixel_art/01_oceano_1920x1080.png` | O oceano (vai e volta devagar; o tamanho dele, 1920 × 1080, é a medida da cena) |
+| `mapa/mapa-bioma-floresta.webp` | `mapa_pixel_art/02_floresta.png` | A Floresta (abre a partida) |
+| `mapa/mapa-bioma-tundra.webp` | `mapa_pixel_art/03_tundra.png` | A Tundra (bloqueada: cadeado e "Em breve") |
+| `mapa/mapa-bioma-vulcanico.webp` | `mapa_pixel_art/04_vulcanico_sem_fumaca.png` | O Vulcânico (bloqueado) |
+| `mapa/mapa-bioma-deserto.webp` | `mapa_pixel_art/05_deserto.png` | O Deserto (bloqueado) |
+| `mapa/mapa-planalto.webp` | `mapa_pixel_art/06_planalto_chao.png` | O chão do Planalto (enfeite) |
+| `mapa/mapa-montanhas.webp` | `mapa_pixel_art/07_cadeia_montanhas.png` | O anel de montanhas em volta do Planalto (enfeite) |
+| `mapa/mapa-castelo.webp` | `mapa_pixel_art/08_castelo.png` | O castelo do Planalto (volta ao Reino) |
+| `mapa/mapa-fazenda.webp` | `mapa_pixel_art/09_fazenda.png` | A Fazenda (minijogo) |
+| `mapa/mapa-mina.webp` | `mapa_pixel_art/10_mina.png` | A Mina (minijogo) |
+| `mapa/mapa-lago.webp` | `mapa_pixel_art/11_lago_cachoeira.png` | O Lago (minijogo) |
+| `mapa/mapa-fumaca-do-vulcao.webp` | `mapa_pixel_art/12_fumaca_vulcao.png` | A fumaça do vulcão (sobe devagar; parada, fica no lugar) |
+
+Não entram no jogo: `ReinoRPG.png` e `MapaRPG.jpeg` (as imagens principais, guia da posição e do tamanho; continuam
+como `fundo-reino` e `fundo-mapa` só se faltar o fundo ou o oceano), `LEIA-ME.txt` e `prompts_utilizados.txt`.
+
+**Sem animação por enquanto:** as bandeiras e as árvores balançando (o Pablo vai animar depois).
+
+As placas com os nomes e os símbolos delas (coroa, engrenagem, banca, bigorna, espadas), o caminho das nuvens, a fumaça das chaminés, a luz
+da lanterna, os brilhos na água, a lava pulsando, a água das cachoeiras, a neve e o vento são **código** (não são
+arquivos): a lava e a água das cachoeiras saem da cor das próprias peças.
 
 ## 5. Ícones (TASK-116)
 

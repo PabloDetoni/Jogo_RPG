@@ -121,24 +121,17 @@ export const fundosDasTelas = {
   resumo: 'fundo-resumo',
 }
 
-// O Reino e o Mapa em camadas (20/10; posições em dados/posicoes.js, em pixels da imagem original). Cada peça é um
-// arquivo próprio: trocando uma (do mesmo tamanho), só ela muda. Sem o fundo limpo, o Reino usa a imagem inteira
-// (fundo-reino); sem o oceano, o Mapa usa a dele (fundo-mapa); sem uma peça, a área de clique dela vira o retângulo.
+// O Reino e o Mapa em camadas, com as peças do Pablo (21/10; posições em dados/posicoes.js). Cada peça é um arquivo
+// próprio, cópia sem perda dos originais de documentacao/Telas (a Lista de Arte e Som diz de qual veio cada uma):
+// trocando uma pela mesma imagem com outro desenho, só ela muda. Sem o fundo (reino-fundo), o Reino usa a imagem
+// inteira (fundo-reino) e o clique vale no retângulo de cada lugar; sem o oceano, o Mapa usa a dele (fundo-mapa).
 export const camadasDoReino = {
   fundo: 'reino-fundo',
-  peca: (id) => `reino-${id}`,
+  peca: (id) => `reino-${id}`, // moinhoPas → reino-moinho-pas (o nome não liga para maiúsculas e hífen)
   nuvem: (i) => `reino-nuvem-${i + 1}`,
-  estandarte: (i) => `reino-estandarte-${i + 1}`,
-  flamula: (i) => `reino-flamula-${i + 1}`,
-  pasDoMoinho: 'reino-pas-do-moinho',
-  copa: 'reino-copa',
-  mascaraDoCeu: 'reino-mascara-ceu',
-  mascaraDaAgua: 'reino-mascara-agua',
 }
 export const camadasDoMapa = {
   oceano: 'mapa-oceano',
-  lava: 'mapa-lava',
-  cachoeira: (i) => `mapa-cachoeira-${i + 1}`,
 }
 
 // Cutscene de derrota: as imagens em sequência e quanto tempo cada uma fica (ms)
@@ -175,31 +168,20 @@ export function arteEsperada() {
   grupos.push({ grupo: 'Telas (fundos)', tipo: 'fundo', nomes: [...new Set([...Object.values(fundosDasTelas), ...cutsceneDeDerrota.imagens])] })
   const reino = posicoes.reino
   grupos.push({
-    grupo: 'Reino em camadas (fundo limpo, peças e animações)',
+    grupo: 'Reino em camadas (as peças do Pablo)',
     tipo: 'camada',
-    nomes: [
-      camadasDoReino.fundo,
-      ...Object.keys(reino.pecas).map(camadasDoReino.peca),
-      ...reino.animacoes.nuvens.map((_, i) => camadasDoReino.nuvem(i)),
-      ...reino.animacoes.estandartes.map((_, i) => camadasDoReino.estandarte(i)),
-      ...reino.animacoes.flamulas.map((_, i) => camadasDoReino.flamula(i)),
-      camadasDoReino.pasDoMoinho,
-      camadasDoReino.copa,
-      camadasDoReino.mascaraDoCeu,
-      camadasDoReino.mascaraDaAgua,
-    ],
+    nomes: [camadasDoReino.fundo, ...Object.keys(reino.pecas).map(camadasDoReino.peca), ...reino.animacoes.nuvens.lista.map((_, i) => camadasDoReino.nuvem(i))],
   })
   const mapa = posicoes.mapa
   grupos.push({
-    grupo: 'Mapa em camadas (oceano, biomas, Planalto e animações)',
+    grupo: 'Mapa em camadas (as peças do Pablo)',
     tipo: 'camada',
     nomes: [
       camadasDoMapa.oceano,
-      mapa.base.peca,
       ...Object.values(mapa.biomas).map((bioma) => bioma.peca),
+      ...Object.values(mapa.enfeites).map((enfeite) => enfeite.peca),
       ...Object.values(mapa.planalto).map((lugar) => lugar.peca),
-      camadasDoMapa.lava,
-      ...mapa.animacoes.cachoeiras.map((_, i) => camadasDoMapa.cachoeira(i)),
+      mapa.animacoes.fumaca.peca,
     ],
   })
   grupos.push({ grupo: 'Ícones: atributos, ouro e Pedra de Retorno', tipo: 'icone', nomes: [...atributos.map((atributo) => iconeDoAtributo(atributo.id)), iconeDoOuro, iconeDaPedraDeRetorno] })
