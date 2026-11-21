@@ -15,7 +15,8 @@ import { relogio } from './formato.js'
 // - em cima à direita: o minimapa, a região e a mochila (o botão Configurações fica logo acima);
 // - embaixo no meio: a barra de ações (clique, esquiva, 1, 2 e 3), com a recarga em volta de cada ícone.
 // Recebe a "situação" que o Phaser manda 8 vezes por segundo pela ponte.
-export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta' }) {
+// aoTeletransportar (só no npm run dev, RF61): o clique no minimapa manda o grupo para aquele ponto do mapa
+export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta', aoTeletransportar }) {
   const estilo = { '--barra-de-baixo': emCqw(faixaDeBaixo) }
   if (!situacao) {
     return (
@@ -71,7 +72,7 @@ export default function HudDaPartida({ situacao, mudo = false, bioma = 'floresta
       {/* O minimapa (parte 3d), a região atual (RF53; no domínio do Boss, em destaque, porque a taxa sobe ali, RF48) e a
           mochila. Uma linha para cada; o texto inteiro da região fica na dica do mouse */}
       <div className={`hud-minimapa hud-grupo-do-canto${situacao.minimapa ? ' hud-minimapa-ativo' : ''}`} aria-label="Minimapa">
-        {situacao.minimapa ? <Minimapa bioma={bioma} minimapa={situacao.minimapa} /> : <span>Minimapa</span>}
+        {situacao.minimapa ? <Minimapa bioma={bioma} minimapa={situacao.minimapa} aoClicar={aoTeletransportar} /> : <span>Minimapa</span>}
         <span className={`hud-regiao${situacao.regiao?.dominioDeBoss ? ' hud-regiao-boss' : ''}`} title={`Região: ${situacao.regiao?.nome ?? '—'}`}>
           {situacao.regiao?.nome ?? 'Região: —'}
         </span>

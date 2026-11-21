@@ -62,6 +62,10 @@ function BotoesDeTeste({ ponte, situacao }) {
       <div className="grupo-de-teste">
         <BotaoDeTeste onClick={() => mandar({ tipo: 'encherGrupo' })}>Encher grupo</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'juntarTodos' })}>Juntar todos</BotaoDeTeste>
+        {/* RF61: 1× → 3× → 6× (o grupo inteiro); T + clique no mapa ou clique no minimapa teletransportam */}
+        <BotaoDeTeste onClick={() => mandar({ tipo: 'superVelocidade' })} selecionado={(situacao?.superVelocidade ?? 1) > 1}>
+          Super velocidade: {situacao?.superVelocidade ?? 1}×
+        </BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'criarInimigo', inimigo: 'mobVermelho' })}>Criar mob vermelho</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'criarInimigo', inimigo: 'atirador' })}>Criar atirador</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'recarregarHabilidades' })}>Recarregar habilidades</BotaoDeTeste>
@@ -82,7 +86,7 @@ function BotoesDeTeste({ ponte, situacao }) {
         <BotaoDeTeste onClick={() => mandar({ tipo: 'subirNivel' })}>Subir nível</BotaoDeTeste>
         <BotaoDeTeste onClick={() => mandar({ tipo: 'ganharOuro' })}>+{combateDeTeste.testes.ouroDoBotao} de ouro</BotaoDeTeste>
       </div>
-      <p className="dica-de-teclas">{teclas} · Invencível vale só para o Líder</p>
+      <p className="dica-de-teclas">{teclas} · Invencível vale só para o Líder · T + clique (ou clique no minimapa) teletransporta</p>
     </div>
   )
 }

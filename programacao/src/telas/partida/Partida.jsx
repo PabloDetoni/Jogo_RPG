@@ -203,7 +203,13 @@ export default function Partida() {
   return (
     <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes} dicaEm={pos.dica}>
       <ArenaDaPartida key={tentativa} ponte={ponte} grupo={grupo} partida={partida} aoFalhar={falhou} />
-      <HudDaPartida situacao={situacao} mudo={estado.preferencias.mudo} bioma={bioma} />
+      <HudDaPartida
+        situacao={situacao}
+        mudo={estado.preferencias.mudo}
+        bioma={bioma}
+        // Só no npm run dev (RF61): clicar no minimapa teletransporta o grupo
+        aoTeletransportar={import.meta.env.DEV ? (ponto) => ponte.avisar('comando', { tipo: 'teletransportar', ponto }) : undefined}
+      />
       <AvisosDaPartida situacao={situacao} mensagens={mensagens} />
       <BarraDeTeste ponte={ponte} situacao={situacao} />
       {mochilaAberta && (

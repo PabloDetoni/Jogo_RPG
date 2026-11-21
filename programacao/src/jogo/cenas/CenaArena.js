@@ -43,7 +43,8 @@ import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, ite
 import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
-import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, saltoMaximoPorQuadro, separacao, tirarDasParedes } from '../../regras/movimento.js'
+import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, separacao, tirarDasParedes } from '../../regras/movimento.js'
+import { multiplicadorQueVale, saltoMaximoComDev } from '../../regras/opcoesDeDev.js'
 import { criarIndice, retangulosEntre, retangulosNaCaixa, retangulosPerto } from '../../regras/vizinhanca.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
@@ -239,6 +240,7 @@ export default class CenaArena extends Phaser.Scene {
     // Clique: o ataque da classe. O Arqueiro (ajustes de 14/10) puxa o arco enquanto segura e atira ao soltar
     this.input.on('pointerdown', (ponteiro) => {
       if (!ponteiro.leftButtonDown() || this.lider.caido || this.mochilaAberta) return
+      if (import.meta.env.DEV && this.teclaDeTeletransporte?.isDown) return // T + clique: teletransporte (só no dev)
       if (usaArco(this.lider)) {
         if (podePuxar(this.lider, this.agora)) comecarAPuxar(this.lider, this.agora)
       } else this.usarAtaque(this.lider, this.anguloDaMira)
@@ -249,6 +251,13 @@ export default class CenaArena extends Phaser.Scene {
     this.input.on('pointerup', soltarDoLider)
     this.input.on('pointerupoutside', soltarDoLider)
     this.desenhoDoArco = new DesenhoDoArco(this)
+    // Super velocidade e teletransporte (RF61): só no npm run dev. Dentro do if, o import() some do jogo publicado
+    this.superVelocidade = 1
+    if (import.meta.env.DEV) {
+      import('../opcoesDeDev.js').then(({ ligarOpcoesDeDev }) => {
+        if (this.sys?.isActive?.() !== false) ligarOpcoesDeDev(this)
+      })
+    }
 
     const pararDeOuvir = [
       this.ponte.ouvir('comando', (comando) => this.executarComando(comando)),
@@ -818,6 +827,11 @@ export default class CenaArena extends Phaser.Scene {
       // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
       const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora) * multiplicadorDaVelocidade(entidade) // puxando o arco, mais devagar
       if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
+      // Super velocidade (só no npm run dev; RF61): o grupo anda mais rápido para testar o mapa grande
+      if (import.meta.env.DEV && this.superVelocidade > 1 && this.grupo.includes(entidade)) {
+        const vezes = multiplicadorQueVale(this.superVelocidade, true)
+        base = { x: base.x * vezes, y: base.y * vezes }
+      }
       // O aliado no caminho do Líder sai para o lado antes do encontro (o grupo "se abre como água")
       if (!empurrado && abrirCaminho.has(entidade)) base = somar(base, abrirCaminho.get(entidade))
       if (entidade.andaSozinho && !empurrado) base = this.destravar(entidade, base, agora, segundos)
@@ -1069,8 +1083,9 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // O máximo que um corpo pode andar num quadro (regras/movimento.js): o monitor dos roteiros usa (ajustes de 14/10)
+  // (com a super velocidade do dev, a trava cresce junto; no jogo publicado é sempre a de verdade: regras/opcoesDeDev.js)
   saltoMaximoPorQuadro(ms) {
-    return saltoMaximoPorQuadro(ms)
+    return saltoMaximoComDev(ms, { dev: import.meta.env.DEV, multiplicador: this.superVelocidade })
   }
 
   // ---------- Arco que carrega (Arqueiro; ajustes de 14/10, jogo/arco.js) ----------
@@ -1692,6 +1707,9 @@ export default class CenaArena extends Phaser.Scene {
     if (comando.tipo === 'encherGrupo') this.encherGrupo()
     if (comando.tipo === 'criarInimigo') this.criarInimigoLonge(comando.inimigo)
     if (comando.tipo === 'juntarTodos') this.juntarTodos()
+    // Opções de desenvolvedor (RF61): o arquivo delas só carrega no npm run dev (jogo/opcoesDeDev.js)
+    if (comando.tipo === 'superVelocidade') this.opcoesDeDev?.trocarSuperVelocidade(comando.multiplicador)
+    if (comando.tipo === 'teletransportar') this.opcoesDeDev?.teletransportar(comando.ponto)
     if (comando.tipo === 'recarregarHabilidades') this.recarregarHabilidades()
     if (comando.tipo === 'alternarInvencivel') this.invencivel = !this.invencivel
     if (comando.tipo === 'derrubarAliado') this.derrubar(this.aliados.find((aliado) => !aliado.caido))
@@ -1922,6 +1940,7 @@ export default class CenaArena extends Phaser.Scene {
       perdidos: this.perdidos.map((perdido) => perdido.classe),
       houveDesmaio: this.houveDesmaio,
       invencivel: this.invencivel,
+      superVelocidade: import.meta.env.DEV ? this.superVelocidade : 1,
       aliadosAjudam: this.aliadosAjudam,
       iaForcada: this.iaForcada,
       // O foco só existe na IA avançada: o HUD mostra "Foco!" quando algum aliado de pé está nela

@@ -80,6 +80,7 @@ const teclas = {
   espaco: { key: ' ', code: 'Space', vk: 32 },
   esc: { key: 'Escape', code: 'Escape', vk: 27 },
   um: { key: '1', code: 'Digit1', vk: 49 },
+  t: { key: 't', code: 'KeyT', vk: 84 },
   enter: { key: 'Enter', code: 'Enter', vk: 13, texto: String.fromCharCode(13) },
 }
 

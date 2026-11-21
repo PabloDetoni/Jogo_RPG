@@ -1021,6 +1021,12 @@ body {
   border: 1px solid rgb(255 255 255 / 0.35);
 }
 
+/* Só no npm run dev (RF61): o minimapa pega o clique (teletransporte); o HUD em volta continua sem pegar */
+.minimapa-clicavel {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
 /* Mochila da partida cheia (Fase 3) */
 .hud-mochila-cheia {
   color: #ffd27a;
