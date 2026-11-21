@@ -93,7 +93,9 @@ export default class Entidade {
     this.boneco?.sprite.destroy()
     this.boneco = DesenhoDoBoneco.criar(this.cena, id)
     if (this.boneco) this.visual.add(this.boneco.sprite)
-    this.quadrado.setVisible(!this.boneco)
+    // Sem a imagem: o boneco de quadradinho (personagens, RNF15) ou o quadrado (mobs)
+    this.quadrado.setVisible(!this.boneco && !this.desenhoEmCodigo)
+    this.desenhoEmCodigo?.definirVisivel(!this.boneco)
   }
 
   definirCor(cor) {
@@ -105,6 +107,7 @@ export default class Entidade {
   destacar(cor) {
     this.quadrado.setFillStyle(cor ?? this.cor)
     this.boneco?.preencher(cor)
+    if (this.desenhoEmCodigo) this.desenhoEmCodigo.destaque = cor ?? null
   }
 
   // Pisca branco por um instante ao levar um golpe
@@ -160,11 +163,13 @@ export default class Entidade {
     }
     const velocidade = this.corpo.body?.velocity
     const andando = velocidade && Math.hypot(velocidade.x, velocidade.y) > 20
-    const balancar = andando && !this.boneco
+    // O boneco de quadradinho tem o balanço dele (pernas, braços); só o quadrado estica e achata
+    const balancar = andando && !this.boneco && !this.desenhoEmCodigo
     this.balanco = balancar ? this.balanco + delta * 0.024 : 0
     const onda = balancar ? Math.sin(this.balanco) * 0.08 : 0
     const pulinho = balancar ? Math.abs(Math.sin(this.balanco)) * 3 : 0
     if (this.boneco) this.atualizarBoneco(agora, andando, velocidade)
+    else this.desenhoEmCodigo?.atualizar(agora, delta, Boolean(andando), velocidade ?? { x: 0, y: 0 })
 
     this.visual.setPosition(this.x, this.y - pulinho)
     this.visual.setScale((1 + onda) * this.escalaExtra.x, (1 - onda) * this.escalaExtra.y)
