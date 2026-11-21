@@ -1,9 +1,13 @@
 ---
 name: gerar-arte
-description: Gerar arte do Jogo RPG pelo PixelLab (MCP "pixellab") e pôr no jogo - personagem, animação nova de ataque, monstro, item, tile, retrato, ícone ou fundo de tela. Use quando o Pablo pedir "gerar arte", "anime o ataque novo do Mago", "faça o ícone do item X", "o lobo precisa de sprite", ou mandar seguir a fila de arte.
+description: FORA DE USO POR ENQUANTO (Pablo, 20/11/2026 - a pixel art fica para o final; não gerar nada no PixelLab sem o Pablo pedir com todas as letras). Gerar arte do Jogo RPG pelo PixelLab (MCP "pixellab") e pôr no jogo - personagem, animação nova de ataque, monstro, item, tile, retrato, ícone ou fundo de tela. Use quando o Pablo pedir "gerar arte", "anime o ataque novo do Mago", "faça o ícone do item X", "o lobo precisa de sprite", ou mandar seguir a fila de arte.
 ---
 
 # Gerar arte pelo PixelLab
+
+> **Fora de uso por enquanto (20/11/2026).** A pixel art fica para o final do projeto; até lá os personagens são
+> bonecos de quadradinho em código (`dados/bonecos.js`). A arte aprovada está em `documentacao/arte-aprovada/`. Só usar
+> esta skill quando o Pablo pedir explicitamente para voltar a gerar arte.
 
 A arte entra no jogo sozinha: o arquivo salvo em `programacao/src/assets/arte/` com o nome da Lista de Arte e Som troca o
 quadrado pela imagem (sem mexer em código). O PixelLab **gasta da conta do Pablo**: confira o saldo antes e depois.

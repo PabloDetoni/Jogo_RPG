@@ -48,13 +48,23 @@ As imagens de outros jogos servem **só como referência de estilo**: nada de co
 
 ### As 5 classes (as cores-assinatura do jogo continuam)
 
-**Correção facial mais recente — rodada 3 (12/11/2026):** usar o rosto do Tanque antigo escolhido na imagem anexada por Pablo: olhos escuros verticais discretos, sem branco, e pele com cantos suavizados/queixo afunilado. Substitui os olhos largos em L da rodada 2. Rosto do Tanque recuperado exatamente; Sacerdote/Arqueiro adaptados às próprias cores. Mago preservado integralmente, roupa do Sacerdote preservada; nova frente fechada do elmo e dobras do Tanque. Saída em `programacao/arte-original/classes-pablo-32-r3-2026-11-12/finais/`, ainda aguardando avaliação. Não alterar novamente partes aprovadas sem pedido do Pablo.
+**Estado final (21/11/2026):**
 
-**Instrução mais recente do Pablo (12/11/2026, após avaliar o teste 64):** voltar a **32 × 32 por personagem**. A imagem própria com o reino continua sendo a referência principal; Mago, Guerreiro, Tanque e Arqueiro 64 servem de base, mantendo o elmo fechado; o Sacerdote 64 foi rejeitado e deve voltar ao capuz, cabelo, túnica e cajado da referência original. Olhos escuros em L **sem branco**, sem boca nem bochechas. Contorno escuro em todas as peças sólidas, exceto a ponta luminosa do cajado do Mago; espada mantém contorno. Arqueiro com arco simples, sem corda desenhada nem flecha armada. Revisar os cinco juntos até Pablo mandar parar de alterar uma classe; depois preservar essa classe exatamente. A nova saída está em `programacao/arte-original/classes-pablo-32-r2-2026-11-12/finais/`, ainda para avaliação. Esta instrução substitui o tamanho e os olhos do teste 64 descrito no registro abaixo.
+- **Aprovados e congelados:** o **Mago** e o **Tanque** da rodada 4 das miniaturas **32 × 32** (14/11/2026). Cópias
+  exatas em `documentacao/arte-aprovada/` (com README); não mudar nenhum pixel deles sem o Pablo pedir.
+- **Em avaliação:** Guerreiro, Sacerdote e Arqueiro (rodada 5, 32 × 32). Os testes em 16 × 16 e 64 × 64 de 12 a
+  15/11 ficaram só como estudo (pastas em `programacao/arte-original/`, fora do git; relatórios em `testes/2026-11-*.md`).
+- **Referência principal:** a imagem própria do Pablo com as cinco classes
+  (`programacao/arte-original/classes-pablo-2026-11-08/referencia-pablo.png`). Todas masculinas por enquanto, cabeça
+  grande, tronco e membros curtos, olhos escuros sem branco, **sem boca nem bochechas**, contorno escuro em todas as
+  peças sólidas, elmo do Guerreiro fechado, Sacerdote de capuz branco com cruz, Arqueiro com arco simples sem corda.
+- **A pixel art fica para o final** (decisão do Pablo, 20/11/2026). Até lá, os personagens do jogo são **bonecos de
+  quadradinho desenhados em código** (RNF15: cabeça grande, corpo, pernas e braços, a arma de cada classe; receitas em
+  `programacao/src/dados/bonecos.js`). Quando a imagem final existir, ela substitui o boneco inteiro, sem mexer no
+  código.
+- A skill `gerar-arte` (PixelLab) está **fora de uso por enquanto**.
 
-**Direção atual — teste concluído em 12/11/2026:** a referência aprovada é a imagem própria dos cinco personagens fornecida por Pablo Detoni, preservada em `programacao/arte-original/classes-pablo-2026-11-08/referencia-pablo.png`. As versões grandes já existem nessa referência; produzir as pequenas mantendo sua identidade. Todas masculinas por enquanto, cabeça grande, tronco e membros curtos, olhos legíveis, **sem boca nem bochechas marcadas** (substitui o pedido anterior de sorriso). Pablo autorizou testar **64 × 64 por personagem** para preservar detalhes. Tanque maior, Guerreiro segundo, Mago/Sacerdote próximos, Arqueiro menor. Os cinco PNGs corrigidos e a folha estão em `programacao/arte-original/classes-pablo-64-final-2026-11-12/`; ainda aguardam aprovação visual, sem mudança no tamanho configurado do jogo. [Relatório](../testes/2026-11-12-personagens-64.md).
-
-**A roupa do teste segue a nova referência, substituindo a proposta visual da tabela abaixo:** Mago azul-arroxeado e dourado, cajado azul luminoso; Guerreiro com armadura cinza/dourada, elmo totalmente fechado, capa e penacho vermelhos; Tanque com cabelo castanho, armadura azul/dourada e escudo com emblema dourado; Sacerdote com capuz branco de borda dourada, túnica branca, faixa azul e cruz legível no cajado; Arqueiro com capuz verde, couro marrom, arco e aljava. As cores-assinatura do HUD continuam inalteradas. Variantes femininas e animações são etapas posteriores.
+**A roupa segue a referência do Pablo e substitui a proposta visual da tabela abaixo:** Mago azul-arroxeado e dourado, cajado azul luminoso; Guerreiro com armadura cinza/dourada, elmo totalmente fechado, capa e penacho vermelhos; Tanque com cabelo castanho, armadura azul/dourada e escudo com emblema dourado; Sacerdote com capuz branco de borda dourada, túnica branca, faixa azul e cruz legível no cajado; Arqueiro com capuz verde, couro marrom, arco e aljava. As cores-assinatura do HUD continuam inalteradas. Variantes femininas e animações são etapas posteriores.
 
 | Classe | Aparência | Cor-assinatura (HUD) |
 |---|---|---|
@@ -157,28 +167,8 @@ e pedras) foi encaixada pelo próprio fundo e fica na frente da base.
 
 | Quando | O quê |
 |---|---|
-| 12/11/2026 — rodada 32 r3 | Rosto antigo do Tanque explicitamente selecionado por Pablo recuperado pixel a pixel; olhos pequenos verticais substituem os L largos. Mago e roupa do Sacerdote preservados; elmo fechado com pequenos respiros e dobras do Tanque. |
-| 12/11/2026 — rodada 32 r2 | Pedido posterior ao teste 64: novas miniaturas 32 × 32, olhos escuros em L sem branco, contornos, Sacerdote refeito a partir da referência original e arco sem corda. Preservar classes individualmente quando Pablo mandar parar de alterá-las. |
-| 12/11/2026 | Referência própria aprovada do Pablo para as cinco classes; teste em 64 × 64 autorizado, masculino, sem boca/bochechas, elmo fechado e capuz branco/cruz. Roupas seguem a nova imagem, sem alterar cores do HUD. Lote final de poses estáticas revisado e entregue para avaliação, ainda externo ao jogo. |
+| 21/11/2026 | Estado final na seção 3 (as anotações repetidas de 12 a 15/11 saíram daqui; ficam nos relatórios). A pixel art fica para o final; antes vêm os bonecos de quadradinho em código (RNF15). |
+| 12 a 15/11/2026 | Miniaturas 32 × 32 (rodadas 2 a 5), testes 16 × 16 e 64 × 64. **Mago e Tanque 32 × 32 (rodada 4) aprovados** em 14/11 e copiados para `documentacao/arte-aprovada/`; os outros três seguem em avaliação. Detalhes de cada rodada nos relatórios `testes/2026-11-*.md`. |
 | 15/10/2026 | Primeira versão (Mago chibi do protótipo da Seleção, contorno preto). **Rejeitada** pelo Pablo. |
 | 21/10/2026 | Seção 7: o Reino e o Mapa em camadas, montados com as peças do Pablo (as geradas no PixelLab e os recortes de 20/10 foram rejeitados e saíram); a muralha em duas partes, a Árvore de Habilidades e a frente dela, as nuvens e as animações (bandeiras e árvores ficam para o Pablo animar). |
 | 20/10/2026 | Refeito do zero: telas e cenários pelas imagens do Reino e do mapa (paleta tirada delas); personagens no estilo do Taskbar Hero (chibi pequeno, cabeça grande, olhos grandes, contorno fino marrom, 2 a 3 tons, cores um pouco dessaturadas com detalhes vivos), 48 px de altura, frente, costas e direita (esquerda espelhada), as 5 classes nas cores-assinatura; ordem de aprovação com o teste de estilo primeiro. |
-
-**14/11/2026 — Miniaturas 32 × 32, rodada 4:** Mago recebeu o padrão facial do Tanque e simplificação de tons; Guerreiro recebeu fenda em T no elmo; Sacerdote recebeu ajuste de cabelo/cobertura e cajado afastado; Arqueiro recebeu arco inclinado. Tanque intacto, roupa inferior do Sacerdote preservada. Arquivos em `programacao/arte-original/classes-pablo-32-r4-2026-11-14/finais/`. Ainda em avaliação, sem integração; zero gerações adicionais. Relatório: `testes/2026-11-14-personagens-32-r4.md`.
-
-**14/11/2026 — Miniaturas, rodada 5:** Mago e Tanque da rodada 4 aprovados pelo Pablo e congelados (arquivos idênticos). Corrigidos somente: frente do elmo com leve orientação à direita; Sacerdote com cabeça anterior restaurada, lateral da roupa fechada e cajado dourado junto à mão; arco do Arqueiro aproximado, corpo e rosto intactos. Saída `programacao/arte-original/classes-pablo-32-r5-2026-11-14/finais/`. Três correções ainda em avaliação; sem integração e sem gerações adicionais. Relatório `testes/2026-11-14-personagens-32-r5.md`.
-
-**15/11/2026 — Teste simplificado 16 × 16:** por pedido do Pablo, cinco miniaturas redesenhadas em grade nativa, com 9–12 cores, divisão marcada entre cabeça, tronco, braços e pés e equipamentos de cada classe. Versões 32 × 32 e aprovações anteriores preservadas. Saída `programacao/arte-original/classes-pablo-16-2026-11-15/finais/`; relatório `testes/2026-11-15-personagens-16.md`. Teste em avaliação, sem integração; zero gerações adicionais.
-
-**15/11/2026 — Refinamento 16 × 16 (rodada 2):** cinco variantes redesenhadas com silhuetas, sombras, rostos e equipamentos mais definidos; 10–13 cores por classe. Chapéu curvo, elmo sombreado, emblema no escudo, capuz branco/cruz dourada e arco sem corda. Saída `programacao/arte-original/classes-pablo-16-r2-2026-11-15/finais/`, relatório `testes/2026-11-15-personagens-16-r2.md`. Arquivos 16/32 anteriores preservados. Avaliação pendente; sem integração, custo zero.
-
-**15/11/2026 — Comandos 64 × 64 corrigidos:** matrizes enviadas por Pablo convertidas para cinco comandos completos no mesmo formato pixel-matrix. Pé do Tanque, elmo fechado/dourado vertical, cobertura/cajado do Sacerdote, furos do Arqueiro e contornos externos. Mago preservado em todos os pixels existentes, apenas contorno adicional. Comandos e PNGs conferidos: 4096/4096 pixels iguais por classe. Saída programacao/arte-original/classes-64-comandos-corrigidos-2026-11-15; relatório testes/2026-11-15-comandos-personagens-64.md. Custo zero; sem integração.
-
-
-**15/11/2026 — Tanque 64 × 64 em avaliação:** perna posterior reconstruída da lateral do tecido azul até a bota, com canela sombreada pela borda do escudo e sola na mesma linha da outra bota. Prévia 8×, PNG e comando novos em `programacao/arte-original/tanque-64-perna-2026-11-15/`. A próxima edição de arte é a cobertura e o cajado do Sacerdote, após a avaliação do Pablo.
-
-**15/11/2026 — Revisão do Sacerdote 64 × 64:** Pablo liberou a revisão do Sacerdote após avaliar a perna do Tanque. A cobertura branca ganhou uma curva baixa com borda dourada legível e o cajado agora tem uma haste dourada contínua junto à mão. Prévia 8×, PNG transparente e JSON em `programacao/arte-original/sacerdote-64-cobertura-cajado-2026-11-15/`. A edição do Sacerdote segue em avaliação. Relatório em `testes/2026-11-15-sacerdote-64.md`.
-
-**15/11/2026 — Sacerdote 64 × 64, revisão 2:** cajado redesenhado com meia-lua aberta, cruz de centro frio e brilho superior dourado. Dobra e friso separam a boina branca do cabelo. Tons quentes corrigem o cinza ao redor dos olhos. Entrega em `programacao/arte-original/sacerdote-64-cajado-meia-lua-2026-11-15/`. [Relatórios e conferências](testes/2026-11-15-sacerdote-64-r2.md).
-
-**15/11/2026 — Sacerdote com cetro antigo:** a pose aprovada por Pablo foi convertida para 64 × 64. O cetro segue o recorte original, com haste fina, meia-lua assimétrica, encaixe na mão, cruz de núcleo azul e brilho superior inclinado. PNG, prévia e comando em `programacao/arte-original/sacerdote-64-cetro-antigo-2026-11-15/`. Relatório: `testes/2026-11-15-sacerdote-64-cetro-antigo.md`.

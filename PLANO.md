@@ -1,8 +1,13 @@
-# Plano até a entrega (03/12/2026)
+# Plano até a entrega (dezembro de 2026, sem data fixa)
 
 Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5a + parte 5b (`e0c8d93`), parte 5b.1 (`55a6025`) e parte 5c (`5dcd43f`) no GitHub. Desde 08/10 o trabalho segue em **modo contínuo** (regras no CLAUDE.md).
 
 ## Onde parei
+
+- **Agora (21/11/2026): Partes 0 a 3 da mensagem de 20/11** (`mensagens-claude/2026-11-20-para-o-claude-code-partes-0-a-3.md`), no ramo local **`jogo-dezembro`** (saído do `main`). Plano logo abaixo. Depois da Parte 3, parar e escrever `mensagens-claude/2026-11-XX-relatorio-partes-0-a-3.md`.
+  - **Prazo (Pablo, 20/11):** entrega em dezembro, sem data fixa. **Não existe congelamento em 22/11**; as datas de 22/11 e 03/12 foram inventadas e saíram daqui e do CLAUDE.md.
+  - **Área do Desenvolvedor (D1):** parada no ramo `area-dev` (`ff0718c`). **Nunca vai para o `main`.** O SQL 003 não roda agora.
+  - Os arquivos do Pablo que estavam sem commit vieram para o ramo novo em `8cdf10c` (conferidos um a um); os do Codex (`AGENTS.md`, `.agents/`, `.codex/`) foram apagados (o Pablo parou de usar).
 
 - **15/11/2026 — Sacerdote com cetro antigo:** a pose aprovada por Pablo foi convertida para 64 × 64. O cetro segue o recorte original, com haste fina, meia-lua assimétrica, encaixe na mão, cruz de núcleo azul e brilho superior inclinado. PNG, prévia e comando em `programacao/arte-original/sacerdote-64-cetro-antigo-2026-11-15/`. Relatório: `testes/2026-11-15-sacerdote-64-cetro-antigo.md`.
 
@@ -33,7 +38,7 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 - **Fase 3 terminada (09/10) e publicada no endereço principal (10/10):** 3a a 3h feitas (Floresta com câmera, regiões, mobs com território, minimapa e áreas com XP, Ponto de partida, coleta com E, drops e mochila da partida, o Guardião da Floresta e o TEST-005). 660 testes; `testar:navegador` 226 de 226; `testar:floresta` 65 de 65; 60 FPS no pior cenário. Documentação: RF31, RF32, RF35, RF39, RF40, RF42, RF48, RF53, UC28, UC34, UC35, "Alterações do projeto", Balanceamento (seção do mundo), lista de arte, CLAUDE.md e `testes/` (roteiros FL-01 a FL-12).
 - **Fase 3 aprovada pelo Pablo em 10/10** no endereço principal. Ele apagou o padrão antigo das prévias no Supabase; o ramo `fase-3` foi apagado do GitHub.
 - **Ritmo novo (Pablo, 10/10, no CLAUDE.md):** sem esperar o teste dele entre as fases. No fim de cada fase: todos os testes → junta no `main` → confere o endereço principal (`conferir:configuracao` e `testar:contas:publicado`) → os dois relatórios com o "Teste visual" → segue direto. Ele testa em paralelo; problema que ele mandar para tudo e vem primeiro (corrigir, publicar, continuar). Parar só para o que só ele faz (adiantando o resto) ou decisão do grupo que mude regra.
-- **O que falta, em ordem:** Fase 4 (4a a 4m, abaixo; minijogos se couberem antes de 22/11) → arte e som (sistema pronto para receber os arquivos; avisar quando for a hora da arte) → Fase 5 (TEST-008, TEST-009, TEST-010, problemas conhecidos, prints das telas, DOC-006) → Fase 6 (TASK-131 e lembrar o Pablo de apagar TesteA e TesteB do ranking).
+- **O que falta, em ordem:** Fase 4 (4a a 4m, abaixo) → arte e som (sistema pronto para receber os arquivos; avisar quando for a hora da arte) → Fase 5 (TEST-008, TEST-009, TEST-010, problemas conhecidos, prints das telas, DOC-006) → Fase 6 (TASK-131 e lembrar o Pablo de apagar TesteA e TesteB do ranking).
 - **Esperando o Pablo (sem travar nada):** confirmar a proposta do "Painel do Mestre" (seção abaixo). Até lá, ele fica de fora.
 - **Fase 4 terminada e publicada (10/10)** no endereço principal (`17f14d9`): partes 4a a 4m. 792 testes; arena 227 de 227; Floresta 68 de 68 (61 FPS); Reino 30 de 30 (novo, com o TEST-006); contas no site 54 de 54. Relatório do grupo: https://claude.ai/code/artifact/d5be35fd-8af7-40ba-9bfd-2a0a4c19c52c. O teste do Pablo é em paralelo (roteiros RE-01 a RE-16).
 - **Arte: o jogo está pronto para receber as imagens (10/10, ramo local `arte`).** Partes A1 a A5 feitas (plano abaixo): as imagens salvas em `programacao/src/assets/arte/` com o nome da Lista de Arte e Som entram sozinhas; o que falta continua quadrado ou cinza. `npm run conferir:arte` mostra o que chegou e o que falta (0 de 221 hoje); `npm run testar:arte` confere tudo com imagens de teste (36 de 36). **Avisado o Pablo: é a hora de gerar a arte no PixelLab** (passo a passo no fim da Lista de Arte e Som). O som já estava pronto desde a Fase 4 (falta só ele mandar os arquivos).
@@ -54,6 +59,18 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
   - aprovar ou mudar a proposta do escudo do Tanque contra golpes fortes (abaixo, na parte 10).
 - **Depois: Fase 5** (polimento e testes): TEST-008, TEST-009, TEST-010, os problemas conhecidos, os prints das telas como protótipos (o `npm run prints` já existe) e o DOC-006.
 - **Fase 5** (polimento e testes), sem esperar a arte: a arte entra quando chegar, sem mexer no código. A arte não vai sozinha para o `main`: entra junto com a próxima publicação (a regra é publicar no fim de cada fase; aqui não muda nada no que se vê, então vai com a Fase 5).
+
+### Plano das Partes 0 a 3 (mensagem de 20/11/2026; ramo local `jogo-dezembro`)
+
+Publicar no endereço principal no fim de **cada** parte, com o relatório do grupo em página com prints.
+
+- **Parte 0 · arrumação, consertos e documentação planejada.**
+  - 0a: apagar os ramos locais já juntados (`git branch -d`, nunca o `area-dev`); `documentacao/arte-aprovada/` (Mago e Tanque 32 × 32, rodada 4, com README); Guia de Arte com o estado final; CLAUDE.md sem as datas e mais curto; skill `verify` com `testar:botoes`, `testar:camadas` e as intermitentes; `gerar-arte` "fora de uso por enquanto".
+  - 0b: tela cheia no Edge escondido (conferir que o pedido foi feito e seguir; as conferências do Reino e das camadas voltam a rodar); semente fixa dos mobs no modo de teste e esperas por condição nos instáveis; fila `partidasParaRegistrar` guardada na cópia local da conta (`salvadorLocal.js`) e mandada no próximo login, com teste; `supabase/004_apelido_de_conta_nao_confirmada.sql` (não rodar) e o passo a passo no README.
+  - 0c: RF56 a RF62, RNF15, UC44 a UC49 e histórias como "planejado (11/2026)"; os RFs alterados com a mudança marcada "planejado"; "Alterações do projeto" e matriz; diagrama de casos de uso `02_*` novo (Jogador e Desenvolvedor, pacotes por área, "Extra") e de atividades de Acesso `03_*` pelo `conta/fluxo.js`, PNGs com o mesmo nome.
+- **Parte 1 · opções de dev (só no `npm run dev`):** super velocidade 1×/3×/6× na barra de teste (exceção de dev à trava `saltoMaximoPorQuadro`, com teste provando que o jogo de verdade continua travado); teletransporte pelo minimapa e "T + clique" (Líder e grupo em `lugarLivre`, câmera junto); conferência no `conferir:configuracao` de que nada disso existe no site.
+- **Parte 2 · bonecos de quadradinho (só os 5 personagens):** receitas em `dados/bonecos.js`; regra pura do braço e da virada (`regras/bonecos.js`) com testes; desenho em `jogo/entidades/` (cabeça grande, corpo, saia, pernas e braços, balanço, andar, atacar, caído; espada, cajado, cetro com orbe, escudo e arco com a corda esticando). Hitbox igual; `usarArte` continua trocando tudo. FPS no pior cenário da Floresta antes e depois.
+- **Parte 3 · base do balanceamento:** dano pelo atributo (`efeitoDoAtributo`, curva 1,5: Força na espada, escudo e arco; Inteligência na bola e no meteoro; Sabedoria na cura); velocidade 170 + 1,5 × Agilidade; dano baixo da aura do Sacerdote; imunidade só contra o mesmo atacante; simulador puro `regras/simulador.js` + `npm run simular`; tabela para os níveis 1, 5, 10, 20 e 30; Balanceamento.md e "Alterações do projeto". Números novos provisórios em `balanceamento.js`.
 
 ### Plano da troca pelas peças do Pablo (pedido do Pablo em 21/10/2026; ramo local `camadas`)
 
@@ -535,9 +552,9 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 | 2 · Contas e Salão da Glória (etapas 8 e 9) | 28/10 a 08/11 | TASK-091 a TASK-098, TEST-007, TASK-100 a TASK-102 |
 | 3 · Mundo da Floresta (etapa 6) | 09 a 15/11 | TASK-060 a TASK-065, TEST-005 |
 | 4 · Reino com dados (etapa 7) | 09 a 22/11 | TASK-070, TASK-072 a TASK-078, TASK-047, TASK-103, TASK-105, TASK-080 e TASK-081 |
-| **Congelamento** | 22/11 | Nenhuma funcionalidade nova depois disso |
+| ~~Congelamento~~ | — | Cancelado pelo Pablo em 20/11: a entrega é em dezembro, sem data fixa |
 | 5 · Polimento e testes | 23 a 29/11 | TEST-006, TEST-008, TEST-009, DOC-006, arte integrada (TASK-111, TASK-115), protótipos (TASK-121 a TASK-123), correção de bugs |
-| 6 · Entrega | 30/11 a 03/12 | TEST-010, TASK-131 e, se confirmadas, TASK-130 e TASK-132 |
+| 6 · Entrega | dezembro (sem data fixa) | TEST-010, TASK-131 e, se confirmadas, TASK-130 e TASK-132 |
 
 **Em paralelo, com vocês:**
 - conteúdo (TASK-010 a TASK-016) até 19/10;
