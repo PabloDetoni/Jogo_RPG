@@ -7,6 +7,7 @@ import {
   deveVoltar,
   direcaoDeRecuo,
   inimigoMaisForte,
+  alvosDosAliados,
   inimigosPerto,
   maisProximo,
   passagemParaOLider,
@@ -30,6 +31,16 @@ describe('com quem lutar', () => {
   it('só inimigos vivos e perto do Líder', () => {
     const inimigos = [{ x: 100, y: 0 }, { x: 900, y: 0 }, { x: 50, y: 0, morto: true }]
     expect(inimigosPerto(inimigos, lider, 380)).toEqual([{ x: 100, y: 0 }])
+  })
+
+  it('o mob não hostil (o cervo) só vira alvo dos aliados depois de provocado (RF36)', () => {
+    const lobo = { x: 100, y: 0, config: { hostil: true } }
+    const cervo = { x: 120, y: 0, config: { hostil: false } }
+    expect(alvosDosAliados([lobo, cervo], lider, 380)).toEqual([lobo])
+    const cervoBravo = { ...cervo, perseguindo: true }
+    expect(alvosDosAliados([lobo, cervoBravo], lider, 380)).toEqual([lobo, cervoBravo])
+    // sem ficha (boneco de treino, mob da arena): vale como hostil
+    expect(alvosDosAliados([{ x: 10, y: 0 }], lider, 380)).toHaveLength(1)
   })
 
   it('Guerreiro: o mais próximo dele', () => {

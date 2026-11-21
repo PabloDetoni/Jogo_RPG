@@ -17,6 +17,13 @@ export function inimigosPerto(inimigos, lider, raioDeCombate) {
   return vivos(inimigos).filter((inimigo) => distancia(inimigo, lider) <= raioDeCombate)
 }
 
+// Os alvos dos aliados: os inimigos perto do Líder, menos o mob não hostil (o cervo) que ninguém provocou. Ele "só
+// reage se for atacado" (RF36): os aliados não começam a briga sozinhos; se o Líder bater nele, ele passa a perseguir
+// e vira alvo. (Parte 0b, 21/11: os aliados atacavam o cervo, que revidava no Líder.)
+export function alvosDosAliados(inimigos, lider, raioDeCombate) {
+  return inimigosPerto(inimigos, lider, raioDeCombate).filter((inimigo) => inimigo.config?.hostil !== false || inimigo.perseguindo)
+}
+
 export function maisProximo(de, lista) {
   let melhor = null
   for (const item of lista) if (!melhor || distancia(de, item) < distancia(de, melhor)) melhor = item

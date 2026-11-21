@@ -1,60 +1,91 @@
 @startuml Atividades_Acesso
+' Diagrama de Atividades - Acesso ao jogo. Refeito em 21/11/2026 a partir do código
+' (programacao/src/conta/fluxo.js, regras/contas.js escolherProgressoNoLogin, ProvedorDoJogo.jsx).
+' PNG: java -jar plantuml.jar 03_Diagrama_Atividades_Acesso.puml (sai "Atividades_Acesso.png"; renomear para 03_...)
 title Diagrama de Atividades — Acesso ao jogo
 start
 :Abrir a Tela Inicial\n(nome, apresentação, Como jogar,\nIniciar jogo, Ranking, Configurações);
 note right
   Ranking, Como jogar e Configurações
-  (som e tema) podem ser abertos aqui, sem conta.
+  (som e tema) abrem aqui, sem conta.
 end note
 :Clicar em "Iniciar jogo";
 if (Como quer jogar?) then (convidado)
+  if (Outra aba deste navegador já está\njogando como convidado?) then (sim)
+    #mistyrose:Avisar "o jogo já está aberto como convidado\nem outra aba" (fechar a outra e tentar de novo);
+    stop
+  endif
   if (Já existe progresso de convidado neste navegador?) then (sim)
-    :Carregar o progresso de convidado do navegador\n(partida não terminada é apagada);
+    :Carregar o progresso do convidado\n(partida não terminada é descartada, com aviso);
   else (não)
     :Exibir a narrativa inicial;
     :Escolher a classe inicial\n(cria o primeiro personagem, que é o primeiro Líder);
+    :Salvar no navegador;
   endif
 else (com conta)
+  if (O navegador lembra a conta?) then (sim)
+    :Oferecer "Continuar como ...";
+  endif
   if (Já tem conta?) then (não)
     repeat
-      :Preencher e-mail, senha e apelido;
-      backward:Mostrar o que está errado;
+      :Preencher e-mail, senha (8+) e apelido;
+      backward:Mostrar o que está errado\n("apelido em uso" antes de cadastrar);
     repeat while (Dados válidos e apelido livre?) is (não) not (sim)
     :Criar a conta e enviar o e-mail de confirmação;
+    note right
+      Criada pelo convidado: o navegador
+      guarda a marca para passar o progresso
+      dele no primeiro login.
+    end note
     :Jogador confirma o e-mail pelo link recebido;
   endif
   repeat
-    :Informar e-mail e senha;
+    :Informar e-mail e senha\n(ou "Continuar como ...");
     if (Esqueceu a senha?) then (sim)
-      :Enviar link de recuperação para o e-mail da conta;
-      :Jogador redefine a senha pelo link;
+      :Enviar link de recuperação;
+      :Jogador cria a senha nova pelo link\n(o jogo volta ao Login);
     endif
-  repeat while (Credenciais válidas?) is (não) not (sim)
-  if (E-mail confirmado?) then (não)
-    #lightyellow:Avisar e oferecer o reenvio\ndo e-mail de confirmação;
+  repeat while (Credenciais válidas e e-mail confirmado?) is (não: mostrar o motivo\ne oferecer o reenvio da confirmação) not (sim)
+  if (Outra aba deste navegador já está\nnuma conta?) then (sim)
+    #mistyrose:Avisar que só uma aba por navegador\npode estar numa conta;
     stop
   endif
-  if (Conta já tem sessão ativa?) then (sim)
-    #mistyrose:Notificar "conta em uso"\n(outra máquina ou outra aba);
+  if (A conta deu sinal em outro lugar\nnos últimos 3 minutos?) then (sim)
+    #mistyrose:Notificar "conta em uso"\n(sai do Supabase só nesta aba);
     stop
   endif
-  :Criar sessão ativa e iniciar o heartbeat (a cada 1 min);
-  if (Primeiro acesso da conta?) then (sim)
-    if (Conta criada a partir do modo convidado?) then (sim)
-      :Transferir todo o progresso do convidado para a conta;
-      :Salvar progresso no Supabase;
-    else (não)
-      :Exibir a narrativa inicial;
-      :Escolher a classe inicial\n(cria o primeiro personagem, que é o primeiro Líder);
-    endif
-  else (não)
-    if (Há progresso no navegador com a mesma versão do banco?) then (sim)
-      :Recuperar o progresso do navegador\n(partida não terminada é apagada);
-    else (não)
-      :Carregar o progresso do Supabase;
-    endif
+  :Abrir a sessão única desta aba\n(sinal a cada 1 minuto);
+  if (A conta já tem apelido?) then (não)
+    repeat
+      :Escolher o apelido\n(primeiro login de conta sem apelido);
+    repeat while (Apelido válido e livre?) is (não) not (sim)
   endif
+  :Carregar o save do banco e a cópia deste navegador;
+  if (Qual progresso vale?) then (banco)
+    if (A cópia do navegador partiu da\nmesma versão do banco?) then (sim)
+      :Usar a cópia do navegador\n(e enviar ao banco se for mais nova);
+    else (não)
+      :Usar o progresso do banco;
+    endif
+  elseif (só a cópia do navegador) then
+    :Usar a cópia do navegador e enviar ao banco;
+  elseif (conta criada pelo convidado,\nprimeiro login aqui) then
+    :Passar todo o progresso do convidado para a conta;
+    :Enviar ao banco;
+    :Só depois de o banco aceitar,\napagar o save do convidado;
+  else (nenhum: conta nova)
+    :Exibir a narrativa inicial;
+    :Escolher a classe inicial;
+    :Salvar no navegador e no banco;
+  endif
+  :Partidas guardadas sem internet neste navegador\nvão para o histórico e o ranking;
 endif
 #palegreen:Entrar no Reino;
+note right
+  Conta banida (Área do Desenvolvedor, extra):
+  só existe no ramo da Área do Desenvolvedor,
+  fora do beta. Ali, a entrada para com o aviso
+  do banimento antes de abrir a sessão.
+end note
 stop
 @enduml

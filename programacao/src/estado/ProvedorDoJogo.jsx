@@ -101,6 +101,14 @@ export default function ProvedorDoJogo({ children }) {
     if (estado.pedidosAoBanco > 0) fluxo.enviarAoBanco()
   }, [estado.pedidosAoBanco, fluxo])
 
+  // Conta: a fila das partidas terminadas fica guardada neste navegador até ir para o banco, para não se perder se a
+  // aba fechar sem internet (Parte 0b, 21/11); no próximo login aqui, ela volta e sobe
+  const filaDePartidas = estado.partidasParaRegistrar
+  const perfilDaFila = estado.perfilLocal
+  useEffect(() => {
+    if (perfilDaFila === 'conta') fluxo.salvador?.guardarPartidas(filaDePartidas)
+  }, [filaDePartidas, perfilDaFila, fluxo])
+
   // Conta: partidas terminadas vão para o histórico e o ranking (TASK-100)
   const partidasNaFila = estado.partidasParaRegistrar.length
   useEffect(() => {

@@ -368,19 +368,27 @@ export default class CenaArena extends Phaser.Scene {
     return inimigo
   }
 
+  // A semente do sorteio de onde os mobs e os recursos nascem: nova a cada partida (RF31). Só no npm run dev, os
+  // roteiros do navegador podem fixar uma (window.__sementeDeTeste), para o mesmo mapa sair igual em toda rodada
+  // (Parte 0b, 21/11: as conferências que dependiam do sorteio falhavam de vez em quando)
+  sementeDoSorteio(qual) {
+    const fixa = import.meta.env.DEV ? globalThis.__sementeDeTeste : undefined
+    return Number.isInteger(fixa) ? fixa + qual : Math.floor(Math.random() * 2 ** 31)
+  }
+
   // A cada partida o bioma reinicia (RF31): os mobs nascem em lugares novos, nunca perto do início de uma região
   // (o grupo nunca nasce com mob perto, RF32)
   povoarMundo() {
     const { nascimento } = mundo
     const proibidos = this.mapa.regioes.map((regiao) => ({ ...regiao.inicio, raio: nascimento.longeDosInicios }))
-    const sorteio = criarSorteio(Math.floor(Math.random() * 2 ** 31))
+    const sorteio = criarSorteio(this.sementeDoSorteio(1))
     const mobs = espalharMobs(this.mapa.regioes, this.mapa.populacao, { proibidos, distanciaEntreMobs: nascimento.distanciaEntreMobs, margem: nascimento.margem }, sorteio)
     for (const mob of mobs) this.criarMobDoMundo(mob.tipo, mob.regiao, mob)
   }
 
   // Recursos no chão de cada região (o bioma reinicia a cada partida, RF31), num lugar livre e longe uns dos outros
   espalharRecursos() {
-    const sorteio = criarSorteio(Math.floor(Math.random() * 2 ** 31))
+    const sorteio = criarSorteio(this.sementeDoSorteio(2))
     const pontos = espalharMobs(this.mapa.regioes, this.mapa.recursos, { distanciaEntreMobs: 160, margem: 90 }, sorteio)
     for (const ponto of pontos) {
       const item = itemDoCatalogo(ponto.tipo)
@@ -1101,9 +1109,23 @@ export default class CenaArena extends Phaser.Scene {
       else if (membro.lider) {
         if (membro.puxando.msParaSoltar === null && !this.input.activePointer.leftButtonDown()) this.soltarFlecha(membro, this.anguloDaMira)
       } else if (!temInimigo) membro.puxando = null
-      else if (horaDeSoltar(membro, agora)) this.soltarFlecha(membro, membro.anguloDaMira)
+      else if (horaDeSoltar(membro, agora) && !this.pedraNoTiroDoArco(membro)) this.soltarFlecha(membro, membro.anguloDaMira)
     }
     this.desenhoDoArco.atualizar(this.grupo, this.lider, this.anguloDaMira, agora)
+  }
+
+  // A IA que respeita a linha de tiro (média, avançada e a básica sem errar) começou a puxar com a linha livre, mas o
+  // arco só solta depois: se agora há pedra entre o Arqueiro e o alvo, ele segura a flecha (e a IA vai para outro
+  // lugar) até a linha abrir. Sem alvo vivo, desiste do tiro. (Parte 0b, 21/11: a flecha batia na pedra de vez em quando.)
+  pedraNoTiroDoArco(membro) {
+    const tiro = membro.ia?.tiroDoArco
+    if (!tiro?.respeitaLinha || !tiro.alvo) return false
+    if (tiro.alvo.morto) {
+      membro.puxando = null
+      return true
+    }
+    const folga = combateDeTeste.ia.folgaDaLinhaDeTiro[membro.classe] ?? 0
+    return !linhaLivre(membro, tiro.alvo, this.pedrasEntre(membro, tiro.alvo, folga), folga)
   }
 
   // A habilidade dá para usar agora? (para a IA decidir; não avisa nada)

@@ -8,6 +8,7 @@ import {
   deveVoltar,
   direcaoDeRecuo,
   inimigoMaisForte,
+  alvosDosAliados,
   inimigosPerto,
   maisProximo,
   passagemParaOLider,
@@ -45,7 +46,7 @@ export function pensarAliados(cena, agora) {
     caido.ia.parado = false
   }
   const dePe = aliados.filter((aliado) => !aliado.caido)
-  const inimigos = inimigosPerto(cena.inimigos, lider, ia.raioDeCombate)
+  const inimigos = alvosDosAliados(cena.inimigos, lider, ia.raioDeCombate)
   const ajudas = cena.tarefasDeAjuda(dePe)
   const formacao =
     inimigos.length > 0
@@ -360,6 +361,8 @@ function atirarDeLonge(aliado, plano, contexto) {
   const podeAtirar = livre || !plano.respeitaLinha
   // O Arqueiro puxa o arco o bastante para a distância (ajustes de 14/10; a IA decide quanto) e solta sozinho
   if (podeAtirar && distancia(aliado, alvo) <= plano.alcance) {
+    // o arco solta um tempo depois de começar a puxar: a cena confere a linha de tiro de novo na hora de soltar
+    if (arqueiro) aliado.ia.tiroDoArco = { alvo, respeitaLinha: Boolean(plano.respeitaLinha) }
     if (arqueiro) cena.puxarArcoDoAliado(aliado, distancia(aliado, alvo))
     else cena.usarAtaque(aliado, aliado.anguloDaMira)
   }

@@ -110,13 +110,15 @@ export function criarFluxoDaConta({
     salvador = criarSalvadorDaConta(armazenamento, usuario.id)
     const lido = salvador.carregar()
     const local = lido.situacao === 'carregado' ? lido : null
+    // Partidas terminadas sem internet numa entrada anterior neste navegador: voltam para a fila e sobem agora
+    const partidasGuardadas = salvador.lerPartidas()
     const marca = lerJson(chaves.transferirConvidado)
     const convidado = marca?.conta === usuario.id ? lerConvidado() : null
 
     const escolha = escolherProgressoNoLogin({ local, banco, convidado })
     if (escolha.de !== 'novo') salvador.comecarCom({ progresso: escolha.progresso, versao: escolha.versao, versaoNoBanco: escolha.versaoNoBanco })
     versaoAceita = escolha.versaoNoBanco
-    despachar({ tipo: 'entrarNaConta', conta: { id: usuario.id, email: usuario.email, apelido }, escolha })
+    despachar({ tipo: 'entrarNaConta', conta: { id: usuario.id, email: usuario.email, apelido }, escolha, partidasGuardadas })
     medirHora()
 
     if (escolha.enviar) {
@@ -194,7 +196,11 @@ export function criarFluxoDaConta({
         if (!resposta.ok) break
         quantas++
       }
-      if (quantas > 0) despachar({ tipo: 'partidasRegistradas', quantas })
+      if (quantas > 0) {
+        // a cópia guardada neste navegador fica só com as que faltam (mesmo se a aba fechar logo depois)
+        salvador?.guardarPartidas(fila.slice(quantas))
+        despachar({ tipo: 'partidasRegistradas', quantas })
+      }
     } finally {
       registrando = false
     }

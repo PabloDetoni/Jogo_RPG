@@ -182,6 +182,13 @@ describe('contas (Fase 2: RF03, RF10, RF11)', () => {
     const e = fazer(inicio(), { tipo: 'irPara', destino: 'login' }, { tipo: 'entrarNaConta', conta, escolha: { de: 'banco', progresso: doBanco } })
     expect(e).toMatchObject({ tipoJogador: 'conta', perfilLocal: 'conta', conta, tela: 'reino' })
     expect(e.progresso).toBe(doBanco)
+    expect(e.partidasParaRegistrar).toEqual([])
+  })
+
+  it('entrar com partidas guardadas neste navegador (sem internet antes): elas voltam para a fila (Parte 0b)', () => {
+    const guardada = { bioma: 'floresta', resultado: 'vitoria', pontuacao: 9 }
+    const e = fazer(inicio(), { tipo: 'entrarNaConta', conta, escolha: { de: 'banco', progresso: doBanco }, partidasGuardadas: [guardada] })
+    expect(e.partidasParaRegistrar).toEqual([guardada])
   })
 
   it('primeiro acesso da conta: narrativa e escolha da classe (RF07); escolher envia ao banco', () => {

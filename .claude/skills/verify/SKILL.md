@@ -47,4 +47,5 @@ Conhecidas até 21/11/2026:
 - arena: "aperto 6 px" e "área suja 50 ms" (tempo de quadro); "IA avançada: Arqueiro e Mago não atiram na pedra"; "EM RECARGA" (o print sai entre dois quadros); "corredor estreito"; "mobs no Tanque"; "campo aberto" (sorteio dos mobs);
 - Floresta: território do lobo quando o lado escolhido cai perto do limite; a mira do Arqueiro com diferença de 0,001 rad; "não achei um cervo vivo" (sorteio);
 - Reino e camadas: a **tela cheia** não funciona no Edge escondido ("Document not active"); os roteiros conferem só que o pedido foi feito (desde a Parte 0b de 21/11).
+- arena com o notebook **na bateria**: o `testar:navegador` desenha no processador (SwiftShader) e cai para uns 18 FPS (no `main` também); as conferências de tempo falham. Rode com `NAVEGADOR_GPU=1` (placa de vídeo).
 Se falhar duas vezes seguidas, é defeito: investigue. Quando uma delas for consertada, tire da lista.

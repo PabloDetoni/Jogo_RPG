@@ -109,6 +109,8 @@ const canvasDeTras = `document.querySelector('.camada-animada')`
 try {
   navegador = await abrirNavegador('camadas', PASTA)
   aba = await navegador.novaAba('aba1')
+  // a tela cheia de mentira (o Edge escondido não entra na de verdade): ver simularTelaCheia
+  await aba.simularTelaCheia()
   console.log(`Site: ${vite.site}`)
   await aba.abrir(vite.site)
   await passo('Iniciar jogo')
@@ -143,7 +145,7 @@ try {
       await irAoMapa()
       await clicarNaImagem(noMapa.reino.ponto)
       await irAoReino()
-      conferir('tela cheia: o JOGAR entrou nela e o castelo do Mapa voltou ao Reino ainda nela', await emTelaCheia())
+      conferir('tela cheia: o JOGAR pediu a tela cheia dentro do clique (no Edge escondido, a de mentira) e o castelo do Mapa voltou ao Reino ainda nela', (await emTelaCheia()) && (await aba.avaliar(`window.__telaCheia.noClique > 0`)), await aba.avaliar(`window.__telaCheia`))
     }
     await pausa(400)
     const abriu = []
