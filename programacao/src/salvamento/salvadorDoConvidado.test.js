@@ -212,4 +212,40 @@ describe('cópia local da conta (Fase 2; RF09, RF11)', () => {
     // recarregar a página: a cópia lembra as duas versões
     expect(nav.abrirAba().carregar()).toMatchObject({ situacao: 'carregado', versao: 8, versaoNoBanco: 8 })
   })
+
+  it('guarda a fila das partidas que ainda não foram para o banco, numa chave própria da conta (Parte 0b)', () => {
+    const nav = navegadorDaConta()
+    const aba = nav.abrirAba()
+    const partida = { bioma: 'floresta', resultado: 'vitoria', pontuacao: 10 }
+    expect(aba.lerPartidas()).toEqual([])
+    expect(aba.guardarPartidas([partida, partida])).toBe(true)
+    expect(JSON.parse(nav.storage.dados.get(chaves.partidasDaConta('conta-1')))).toHaveLength(2)
+    // recarregar a página: a fila continua lá; o save não muda
+    expect(nav.abrirAba().lerPartidas()).toEqual([partida, partida])
+    expect(nav.storage.dados.has(chaves.conta('conta-1'))).toBe(false)
+    // fila vazia apaga a chave
+    expect(aba.guardarPartidas([])).toBe(true)
+    expect(nav.storage.dados.has(chaves.partidasDaConta('conta-1'))).toBe(false)
+  })
+
+  it('fila estragada ou de formato estranho não trava: volta vazia ou só com as partidas que fazem sentido', () => {
+    const nav = navegadorDaConta()
+    nav.storage.dados.set(chaves.partidasDaConta('conta-1'), '{isso não é json')
+    expect(nav.abrirAba().lerPartidas()).toEqual([])
+    nav.storage.dados.set(chaves.partidasDaConta('conta-1'), JSON.stringify({ nao: 'lista' }))
+    expect(nav.abrirAba().lerPartidas()).toEqual([])
+    nav.storage.dados.set(chaves.partidasDaConta('conta-1'), JSON.stringify([null, 3, [1], { bioma: 'floresta' }]))
+    expect(nav.abrirAba().lerPartidas()).toEqual([{ bioma: 'floresta' }])
+  })
+
+  it('apagar a cópia da conta também apaga a fila guardada; o convidado não tem fila', () => {
+    const nav = navegadorDaConta()
+    const aba = nav.abrirAba()
+    aba.guardarPartidas([{ bioma: 'floresta' }])
+    aba.apagar()
+    expect(nav.storage.dados.has(chaves.partidasDaConta('conta-1'))).toBe(false)
+    const convidado = criarSalvadorDoConvidado(criarArmazenamento(storageFalso()))
+    expect(convidado.guardarPartidas([{ bioma: 'floresta' }])).toBe(false)
+    expect(convidado.lerPartidas()).toEqual([])
+  })
 })

@@ -1,6 +1,6 @@
 # Descrição dos Casos de Uso
 
-Ator único: **Jogador**. Banco de dados, navegador e IA dos aliados são partes internas do sistema e não aparecem como atores.
+Atores: **Jogador** e, desde o planejamento de 11/2026, **Desenvolvedor** (só nas opções de desenvolvedor, no simulador e na Área do Desenvolvedor, que é extra). Banco de dados, navegador e IA dos aliados são partes internas do sistema e não aparecem como atores.
 
 Regras de leitura do diagrama: no «include», o caso base **sempre** executa o caso incluído (a seta aponta para o incluído). No «extend», o caso extensor só acontece **quando a condição é verdadeira** (a seta sai da extensão e aponta para o caso base).
 
@@ -38,12 +38,12 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
 | UC15 | Gerenciar Mochila | Associação | — | — | Vê itens, função, descrição e peso; mexe nos itens com o mouse, como num inventário (pegar a pilha, a metade, pôr, trocar); descarta pela lixeira ou escolhendo a quantidade (1, várias ou todas), sempre com confirmação. |
-| UC16 | Negociar no Mercado | Associação | — | — | Compra, vende e troca itens com NPCs. |
-| UC17 | Gerenciar equipamentos (Forja) | Associação | Estendido por UC18 | — | Equipa os personagens e compra e vende equipamentos. |
+| UC16 | Negociar no Mercado | Associação | — | — | Compra, vende e troca itens com NPCs. **Planejado (11/2026):** começa pela conversa com o comerciante («include» UC45). |
+| UC17 | Gerenciar equipamentos (Forja) | Associação | Estendido por UC18 | — | Equipa os personagens e compra e vende equipamentos. **Planejado (11/2026):** começa pela conversa com o ferreiro («include» UC45). |
 | UC18 | Fabricar equipamento | «extend» de UC17 | — | Condição: possuir os materiais e o ouro da receita | Fabrica um equipamento a partir de uma receita. |
 | UC19 | Gerenciar personagens (Árvores de Habilidades) | Associação | Estendido por UC20 | — | Distribui atributos, evolui habilidades e escolhe as 3 ativas de cada personagem. |
 | UC20 | Redefinir atributos | «extend» de UC19 | — | Condição: possuir o pergaminho de redefinição | Devolve os pontos de atributo de um personagem para redistribuir. |
-| UC21 | Gerenciar missões (Guilda) | Associação | Estendido por UC22, UC23 e UC24 | — | Mostra a missão ativa, o progresso e o quadro de missões. |
+| UC21 | Gerenciar missões (Guilda) | Associação | Estendido por UC22, UC23 e UC24 | — | Mostra a missão ativa, o progresso e o quadro de missões. **Planejado (11/2026):** começa pela conversa com o mestre da Guilda («include» UC45). |
 | UC22 | Aceitar missão | «extend» de UC21 | — | Condição: não há missão ativa | Pega uma missão do quadro. |
 | UC23 | Entregar missão | «extend» de UC21 | — | Condição: objetivo cumprido no momento da entrega | Entrega a missão e recebe a recompensa. |
 | UC24 | Abandonar missão | «extend» de UC21 | — | Condição: há missão ativa | Cancela a missão pagando a multa. |
@@ -55,13 +55,13 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 |---|---|---|---|---|---|
 | UC26 | Iniciar partida | Associação | «include» UC27, UC29 e UC09; estendido por UC28 e UC30 | — | Abre o mapa, passa pela preparação e começa a partida. Da preparação dá para voltar ao Mapa ou ao Reino. |
 | UC27 | Selecionar bioma | Incluído por UC26 | — | — | Escolhe Floresta, Deserto, Tundra ou Vulcânico no mapa em ovo, clicando no desenho do bioma (o contorno dourado acende em volta dele e mostra o nome; os de fora do beta mostram o cadeado e "Em breve" ao passar o mouse e não abrem); o castelo do Planalto volta ao Reino. |
-| UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil, entre as já descobertas; sem outra descoberta, a tela não aparece. |
+| UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil, entre as já descobertas; sem outra descoberta, a tela não aparece. **Planejado (11/2026): substituído pelo UC44 (Viajar de Caravana).** |
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
 | UC30 | Preparar mochila da partida | «extend» de UC26 | — | Condição: o jogador quer levar itens | Leva itens da Mochila do Reino respeitando o limite de peso. |
-| UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos, com uma IA que melhora com o nível de cada personagem (básica, média e avançada), sem que um nível atrapalhe o outro. O Sacerdote cura sempre que alguém não está com a vida cheia. Só o Líder esquiva. Começa com uma tela de carregamento (progresso real e uma dica); o HUD é translúcido, em grupos nos cantos. |
-| UC32 | Combater monstros | «extend» de UC31 | Estendido por UC33 e UC34 | Condição: há mob hostil por perto | Luta em tempo real: o clique faz o ataque básico da classe do Líder (o Arqueiro segura o clique para carregar o arco e solta para atirar); a esquiva não deixa levar dano durante o avanço; há knockback e breve imunidade. O escudo do Tanque segura só golpes e tiros de frente, até um limite pela Força dele (acima, rompe e ele leva o dano inteiro); ataques em área o atingem. O Líder nunca é teletransportado ao encostar em pedra, mata ou borda. |
+| UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos, com uma IA que melhora com o nível de cada personagem (básica, média e avançada), sem que um nível atrapalhe o outro. O Sacerdote cura sempre que alguém não está com a vida cheia. Só o Líder esquiva. Começa com uma tela de carregamento (progresso real e uma dica); o HUD é translúcido, em grupos nos cantos. **Planejado (11/2026):** mapa fixo maior, zonas neutras e animais pacíficos. |
+| UC32 | Combater monstros | «extend» de UC31 | Estendido por UC33 e UC34 | Condição: há mob hostil por perto | Luta em tempo real: o clique faz o ataque básico da classe do Líder (o Arqueiro segura o clique para carregar o arco e solta para atirar); a esquiva não deixa levar dano durante o avanço; há knockback e breve imunidade. O escudo do Tanque segura só golpes e tiros de frente, até um limite pela Força dele (acima, rompe e ele leva o dano inteiro); ataques em área o atingem. O Líder nunca é teletransportado ao encostar em pedra, mata ou borda. **Planejado (11/2026):** os mobs novos, cada um na sua área, e os grupos do acampamento e do forte goblin. |
 | UC33 | Usar habilidade | «extend» de UC32 | — | Condição: mana e recarga disponíveis | Usa uma das 3 habilidades ativas com as teclas 1, 2 e 3. |
-| UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele; cada ataque é avisado no chão antes do golpe. |
+| UC34 | Enfrentar Boss | «extend» de UC32 | — | Condição: o grupo está no domínio de um Boss | Luta contra um Boss, com taxas maiores dentro do domínio dele; cada ataque é avisado no chão antes do golpe. **Planejado (11/2026):** o Boss da Floresta passa a ser o Ogro. |
 | UC35 | Explorar e coletar recursos | «extend» de UC31 | — | — | Revela o minimapa (a primeira vez em cada área dá XP) e coleta materiais e itens com E. Os recursos do mapa ficam até alguém pegar; o que cai de monstro ou é descartado some em 30 s. |
 | UC36 | Usar item | «extend» de UC31 | — | Condição: há item na mochila da partida | Abre a Mochila no meio da tela (Tab, sem pausar; o Líder fica parado), mexe nos itens com o mouse e, com o mouse num consumível, usa em si (E) ou no aliado que mais precisa (R); clicar fora da janela com item na mão joga o item no chão perto do Líder (some em 30 s). |
 | UC37 | Levantar aliado desmaiado | «extend» de UC31 | — | Condição: aliado desmaiado dentro dos 30 s e área limpa (nenhum inimigo vivo perto dele) | Levanta um aliado com a ajuda de 5 segundos: basta ficar parado perto, sem tecla. |
@@ -70,14 +70,28 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC40 | Fugir com a Pedra de Retorno | «extend» de UC31 | — | Condição: o jogador confirma a fuga | Foge com o grupo inteiro em 5 segundos, mesmo em combate, pagando a taxa de fuga. Confirmada, não se cancela. |
 | UC41 | Encerrar partida | Incluído por UC31 | «include» UC42 e UC09 | — | Define o resultado e calcula taxa, ouro, XP e pontuação. O nível ganho vale a partir da partida seguinte. |
 | UC42 | Visualizar resumo da partida | Incluído por UC41 | — | — | Mostra o resumo e permite jogar de novo sem recarregar a página. |
-| UC43 | Jogar minijogo do Planalto | Associação | Condição: sobra rodada hoje | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. Cada minijogo tem 3 rodadas por dia (provisório), que renovam à meia-noite de Brasília. |
+| UC43 | Jogar minijogo do Planalto | Associação | Condição: sobra rodada hoje | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. Cada minijogo tem 3 rodadas por dia (provisório), que renovam à meia-noite de Brasília. **Planejado (11/2026):** a pesca visual no Lago. |
+
+## Planejado (11/2026)
+
+Casos de uso novos, ainda não feitos (planejamento de 11/2026). Passam para a seção da área quando forem programados.
+
+| Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
+|---|---|---|---|---|---|
+| UC44 | Viajar de Caravana | «extend» de UC26 | — | Condição: o jogador quer nascer mais à frente e tem o ouro | Escolhe a zona neutra onde nascer (perto da região fácil, da média, da difícil ou do fim) e paga o preço, que cresce com a distância. Substitui o UC28. Se a partida cair, o ouro volta. |
+| UC45 | Conversar com NPC | Incluído por UC16, UC17 e UC21 | — | — | O NPC se apresenta na primeira visita (tutorial) e diz uma fala aleatória nas outras; o menu leva à ação da tela ou a "Ir embora". |
+| UC46 | Usar opções de desenvolvedor | Associação (Desenvolvedor) | — | Condição: o jogo está no `npm run dev` | Na partida, liga a super velocidade (1×, 3×, 6×) e se teletransporta clicando no minimapa ou com "T + clique" no mapa. Não existe no site publicado. |
+| UC47 | Simular balanceamento | Associação (Desenvolvedor) | — | — | Roda o simulador (`npm run simular`) com um grupo de nível X contra a região Y e lê o tempo até cada um cair, o dano dado e recebido, quantos mobs dá para enfrentar e o XP e o ouro por minuto. |
+| UC48 | Acessar a Área do Desenvolvedor (extra) | Associação (Desenvolvedor) | Estendido por UC49 | Condição: conta de desenvolvedor, com a segunda etapa de verificação | Entra na Área do Desenvolvedor (auditoria e consultas). **Extra**, fora do beta; fica num pacote separado no diagrama. |
+| UC49 | Banir e desbanir conta (extra) | «extend» de UC48 | — | Condição: a conta escolhida existe | Bloqueia ou libera uma conta, com o motivo registrado. **Extra**, só se essa parte da Área do Desenvolvedor for feita. |
 
 ## Alterações do projeto
 
-Decisões tomadas durante a programação (outubro de 2026). As descrições acima já estão com o texto novo; nenhum caso de uso foi criado ou removido, e os relacionamentos do diagrama não mudaram.
+Decisões tomadas durante a programação (outubro de 2026). As descrições acima já estão com o texto novo; até o planejamento de 11/2026 nenhum caso de uso foi criado ou removido (os UC44 a UC49 são planejados; o UC28 será substituído pelo UC44).
 
 | Caso de uso | O que mudou |
 |---|---|
+| UC16, UC17, UC21, UC28, UC31, UC32, UC34, UC43, **UC44 a UC49** | Planejamento de 11/2026 (mensagem de 20/11): casos de uso novos e mudanças marcados "planejado (11/2026)" (Caravana no lugar do Ponto de partida, NPCs no Mercado, na Forja e na Guilda, mapa maior com o Ogro, pesca visual, opções de desenvolvedor, simulador e a Área do Desenvolvedor como extra). Entra o ator **Desenvolvedor**. |
 | UC19, UC27, UC43 e o Reino | Visual novo (20/10): o Reino e o Mapa são as imagens do Pablo, com áreas clicáveis em cima do que está desenhado (no Reino, as placas; no Mapa, o contorno de cada região, o castelo e os minijogos do Planalto). Nenhum caso de uso foi criado ou removido. |
 | UC19, UC27, UC43 e o Reino | Camadas (20/10; com as peças do Pablo desde 21/10): o Reino e o Mapa são montados em camadas (o fundo e as peças que o Pablo fez, com transparência, e as placas em código); o jogador clica no desenho do lugar (o prédio, a mochila, a árvore, o bioma) ou na placa dele, e o lugar acende com um contorno dourado ao passar o mouse. Os fluxos dos casos de uso não mudam. |
 | UC15, UC31, UC32, UC36 | Ajustes na partida (14/10): o escudo do Tanque rompe com golpe forte demais para a Força dele; a Mochila estilo inventário (na partida, no meio da tela, com o Líder parado; no Reino, com a lixeira); R usa no aliado que mais precisa do item; o Líder passa pelos aliados (abrem caminho; encurralado, passa por dentro; na fuga e no retorno, por todos); o Líder nunca é teletransportado. Nenhum caso de uso foi criado ou removido. |

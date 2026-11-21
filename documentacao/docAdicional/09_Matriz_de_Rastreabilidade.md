@@ -19,26 +19,26 @@ Liga cada caso de uso ao requisito funcional, à história de usuário e ao diag
 | UC13 Visualizar conquistas | RF17 | HU13 | — |
 | UC14 Configurar preferências | RF14, RF18 | HU14 | Acesso (03) |
 | UC15 Gerenciar Mochila | RF19, RF20 | HU15 | — |
-| UC16 Negociar no Mercado | RF19, RF21 | HU16 | — |
-| UC17 Gerenciar equipamentos (Forja) | RF19, RF22 | HU17 | — |
+| UC16 Negociar no Mercado | RF19, RF21, RF57 (planejado) | HU16 | — |
+| UC17 Gerenciar equipamentos (Forja) | RF19, RF22, RF57 (planejado) | HU17 | — |
 | UC18 Fabricar equipamento | RF23 | HU18 | — |
 | UC19 Gerenciar personagens (Árvores de Habilidades) | RF19, RF24, RF55 | HU19 | — |
 | UC20 Redefinir atributos | RF25 | HU20 | — |
-| UC21 Gerenciar missões (Guilda) | RF19, RF26 | HU21 | Guilda (05) |
+| UC21 Gerenciar missões (Guilda) | RF19, RF26, RF57 (planejado) | HU21 | Guilda (05) |
 | UC22 Aceitar missão | RF26 | HU22 | Guilda (05) |
 | UC23 Entregar missão | RF27, RF50 | HU23 | Guilda (05) |
 | UC24 Abandonar missão | RF28 | HU24 | Guilda (05) |
 | UC25 Contratar personagem (Guilda) | RF19, RF29 | HU25 | Guilda (05) |
 | UC26 Iniciar partida | RF30, RF34, RF10 | HU26 | Partida (04) |
 | UC27 Selecionar bioma | RF30, RF31 | HU27 | Partida (04) |
-| UC28 Escolher ponto de partida (dificuldade) | RF32 | HU28 | Partida (04) |
+| UC28 Escolher ponto de partida (dificuldade) — será substituído pelo UC44 | RF32 | HU28 | Partida (04) |
 | UC29 Selecionar Líder | RF33 | HU29 | Partida (04) |
 | UC30 Preparar mochila da partida | RF33 | HU30 | Partida (04) |
-| UC31 Jogar partida | RF34, RF35, RF42, RF53 | HU31 | Partida (04) |
-| UC32 Combater monstros | RF36, RF37, RF50, RF55 | HU32 | Partida (04) |
+| UC31 Jogar partida | RF34, RF35, RF42, RF53, RF58 e RF59 (planejados) | HU31 | Partida (04) |
+| UC32 Combater monstros | RF36, RF37, RF50, RF55, RF59 e RF60 (planejados) | HU32 | Partida (04) |
 | UC33 Usar habilidade | RF38 | HU33 | Partida (04) |
 | UC34 Enfrentar Boss | RF39 | HU34 | Partida (04) |
-| UC35 Explorar e coletar recursos | RF31, RF40, RF50 | HU35 | Partida (04) |
+| UC35 Explorar e coletar recursos | RF31, RF40, RF50, RF58 (planejado) | HU35 | Partida (04) |
 | UC36 Usar item | RF41 | HU36 | Partida (04) |
 | UC37 Levantar aliado desmaiado | RF42, RF43 | HU37 | Partida (04) |
 | UC38 Pausar partida | RF37, RF44 | HU38 | Partida (04) |
@@ -47,9 +47,15 @@ Liga cada caso de uso ao requisito funcional, à história de usuário e ao diag
 | UC41 Encerrar partida | RF12, RF47, RF48, RF49, RF50, RF52 | HU41 | Partida (04) |
 | UC42 Visualizar resumo da partida | RF51 | HU42 | Partida (04) |
 | UC43 Jogar minijogo do Planalto | RF54, RF50 | HU43 | Partida (04) |
+| UC44 Viajar de Caravana (planejado) | RF56 | HU44 | Partida (04), quando for feito |
+| UC45 Conversar com NPC (planejado) | RF57 | HU45 | — |
+| UC46 Usar opções de desenvolvedor (planejado) | RF61 | HU46 | — |
+| UC47 Simular balanceamento (planejado) | RF62 | HU47 | — |
+| UC48 Acessar a Área do Desenvolvedor (extra) | — (extra, fora do beta) | HU48 | — |
+| UC49 Banir e desbanir conta (extra) | — (extra, fora do beta) | HU49 | — |
 
 Resumo da conferência:
 
-- Casos de uso: 43 · requisitos funcionais: 55 · requisitos não funcionais: 14 · histórias: 43.
+- Casos de uso: 49 · requisitos funcionais: 62 · requisitos não funcionais: 15 · histórias: 49. Desde o planejamento de 11/2026, os UC44 a UC49, os RF56 a RF62, o RNF15 e as HU44 a HU49 estão marcados "planejado (11/2026)"; o UC28 e o RF32 serão substituídos pelo UC44 e pelo RF56 quando a Caravana existir.
 - Casos de uso que aparecem em algum diagrama de atividades: 34 de 43. Os demais são telas de consulta ou gerenciamento do Reino, sem fluxo com decisões que precise de diagrama próprio.
-- Requisitos sem caso de uso: nenhum. Casos de uso sem requisito: nenhum.
+- Requisitos sem caso de uso: nenhum. Casos de uso sem requisito: só o UC48 e o UC49, que são extras (Área do Desenvolvedor) e ficam fora do beta.

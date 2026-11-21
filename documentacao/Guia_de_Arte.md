@@ -48,6 +48,24 @@ As imagens de outros jogos servem **só como referência de estilo**: nada de co
 
 ### As 5 classes (as cores-assinatura do jogo continuam)
 
+**Estado final (21/11/2026):**
+
+- **Aprovados e congelados:** o **Mago** e o **Tanque** da rodada 4 das miniaturas **32 × 32** (14/11/2026). Cópias
+  exatas em `documentacao/arte-aprovada/` (com README); não mudar nenhum pixel deles sem o Pablo pedir.
+- **Em avaliação:** Guerreiro, Sacerdote e Arqueiro (rodada 5, 32 × 32). Os testes em 16 × 16 e 64 × 64 de 12 a
+  15/11 ficaram só como estudo (pastas em `programacao/arte-original/`, fora do git; relatórios em `testes/2026-11-*.md`).
+- **Referência principal:** a imagem própria do Pablo com as cinco classes
+  (`programacao/arte-original/classes-pablo-2026-11-08/referencia-pablo.png`). Todas masculinas por enquanto, cabeça
+  grande, tronco e membros curtos, olhos escuros sem branco, **sem boca nem bochechas**, contorno escuro em todas as
+  peças sólidas, elmo do Guerreiro fechado, Sacerdote de capuz branco com cruz, Arqueiro com arco simples sem corda.
+- **A pixel art fica para o final** (decisão do Pablo, 20/11/2026). Até lá, os personagens do jogo são **bonecos de
+  quadradinho desenhados em código** (RNF15: cabeça grande, corpo, pernas e braços, a arma de cada classe; receitas em
+  `programacao/src/dados/bonecos.js`). Quando a imagem final existir, ela substitui o boneco inteiro, sem mexer no
+  código.
+- A skill `gerar-arte` (PixelLab) está **fora de uso por enquanto**.
+
+**A roupa segue a referência do Pablo e substitui a proposta visual da tabela abaixo:** Mago azul-arroxeado e dourado, cajado azul luminoso; Guerreiro com armadura cinza/dourada, elmo totalmente fechado, capa e penacho vermelhos; Tanque com cabelo castanho, armadura azul/dourada e escudo com emblema dourado; Sacerdote com capuz branco de borda dourada, túnica branca, faixa azul e cruz legível no cajado; Arqueiro com capuz verde, couro marrom, arco e aljava. As cores-assinatura do HUD continuam inalteradas. Variantes femininas e animações são etapas posteriores.
+
 | Classe | Aparência | Cor-assinatura (HUD) |
 |---|---|---|
 | Guerreiro | armadura leve, espada e **capa azul** | azul |
@@ -149,6 +167,8 @@ e pedras) foi encaixada pelo próprio fundo e fica na frente da base.
 
 | Quando | O quê |
 |---|---|
+| 21/11/2026 | Estado final na seção 3 (as anotações repetidas de 12 a 15/11 saíram daqui; ficam nos relatórios). A pixel art fica para o final; antes vêm os bonecos de quadradinho em código (RNF15). |
+| 12 a 15/11/2026 | Miniaturas 32 × 32 (rodadas 2 a 5), testes 16 × 16 e 64 × 64. **Mago e Tanque 32 × 32 (rodada 4) aprovados** em 14/11 e copiados para `documentacao/arte-aprovada/`; os outros três seguem em avaliação. Detalhes de cada rodada nos relatórios `testes/2026-11-*.md`. |
 | 15/10/2026 | Primeira versão (Mago chibi do protótipo da Seleção, contorno preto). **Rejeitada** pelo Pablo. |
 | 21/10/2026 | Seção 7: o Reino e o Mapa em camadas, montados com as peças do Pablo (as geradas no PixelLab e os recortes de 20/10 foram rejeitados e saíram); a muralha em duas partes, a Árvore de Habilidades e a frente dela, as nuvens e as animações (bandeiras e árvores ficam para o Pablo animar). |
 | 20/10/2026 | Refeito do zero: telas e cenários pelas imagens do Reino e do mapa (paleta tirada delas); personagens no estilo do Taskbar Hero (chibi pequeno, cabeça grande, olhos grandes, contorno fino marrom, 2 a 3 tons, cores um pouco dessaturadas com detalhes vivos), 48 px de altura, frente, costas e direita (esquerda espelhada), as 5 classes nas cores-assinatura; ordem de aprovação com o teste de estilo primeiro. |

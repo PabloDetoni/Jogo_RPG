@@ -12,7 +12,7 @@ const usuario = { id: 'u1', email: 'a@b.com' }
 const progressoDoBanco = { ...progressoInicial(), personagens: [novoPersonagem('tanque')], lider: 'tanque', ouro: 300 }
 
 // Um "navegador" de teste: o fluxo com um serviço falso, o estado do jogo de verdade e um localStorage falso
-function montar({ servico: mudancas = {}, trava = 'ok', convidado = null } = {}) {
+function montar({ servico: mudancas = {}, trava = 'ok', convidado = null, storage: storageDoNavegador = null } = {}) {
   const servico = {
     disponivel: true,
     entrar: vi.fn(async () => ({ ok: true, usuario })),
@@ -31,7 +31,8 @@ function montar({ servico: mudancas = {}, trava = 'ok', convidado = null } = {})
     cadastrar: vi.fn(async () => ({ ok: true, conta: { id: 'novo' } })),
     ...mudancas,
   }
-  const storage = storageFalso()
+  // storage: o mesmo navegador de um teste anterior (fechar a aba e entrar de novo depois)
+  const storage = storageDoNavegador ?? storageFalso()
   const armazenamento = criarArmazenamento(storage)
   let estado = criarEstadoInicial(preferenciasPadrao)
   const soltar = vi.fn()
@@ -208,6 +209,35 @@ describe('save no banco durante o jogo (RF10, RNF06)', () => {
     estado.partidasParaRegistrar.push(partida, partida)
     await t.fluxo.registrarPartidas(t.estado().partidasParaRegistrar)
     expect(t.estado().partidasParaRegistrar).toHaveLength(1)
+  })
+
+  it('partida terminada sem internet: fica guardada neste navegador, sobrevive a fechar a aba e sobe no próximo login (Parte 0b)', async () => {
+    const partida = { bioma: 'floresta', resultado: 'vitoria', pontuacao: 120, ouro: 40, monstros: 3, tempo_ativo: 90, tempo_total: 100 }
+    const semRede = montar({ servico: { registrarPartida: vi.fn(async () => ({ ok: false, codigo: 'semConexao' })) } })
+    await semRede.fluxo.entrar({ email: 'a@b.com', senha: 'senha1234' })
+    // o ProvedorDoJogo guarda a fila a cada mudança; o envio falha (sem internet)
+    semRede.fluxo.salvador.guardarPartidas([partida])
+    await semRede.fluxo.registrarPartidas([partida])
+    expect(JSON.parse(semRede.storage.dados.get(chaves.partidasDaConta('u1')))).toEqual([partida])
+
+    // a aba fechou; depois, com internet, a mesma conta entra de novo neste navegador
+    const depois = montar({ storage: semRede.storage })
+    await depois.fluxo.entrar({ email: 'a@b.com', senha: 'senha1234' })
+    expect(depois.estado().partidasParaRegistrar).toEqual([partida])
+    await depois.fluxo.registrarPartidas(depois.estado().partidasParaRegistrar)
+    expect(depois.servico.registrarPartida).toHaveBeenCalledWith(partida)
+    expect(depois.estado().partidasParaRegistrar).toEqual([])
+    expect(depois.storage.dados.has(chaves.partidasDaConta('u1'))).toBe(false)
+  })
+
+  it('a fila guardada é de cada conta: outra conta no mesmo navegador não recebe as partidas da primeira', async () => {
+    const partida = { bioma: 'floresta', resultado: 'derrota', pontuacao: 0, ouro: 0, monstros: 0, tempo_ativo: 5, tempo_total: 5 }
+    const primeira = montar()
+    await primeira.fluxo.entrar({ email: 'a@b.com', senha: 'senha1234' })
+    primeira.fluxo.salvador.guardarPartidas([partida])
+    const outra = montar({ storage: primeira.storage, servico: { entrar: vi.fn(async () => ({ ok: true, usuario: { id: 'u2', email: 'c@d.com' } })) } })
+    await outra.fluxo.entrar({ email: 'c@d.com', senha: 'senha1234' })
+    expect(outra.estado().partidasParaRegistrar).toEqual([])
   })
 })
 

@@ -11,5 +11,9 @@ export function criarSalvadorDoConvidado(armazenamento, agora = () => new Date()
 
 // A cópia local do save de uma conta (Fase 2): mesmas regras, chave da conta
 export function criarSalvadorDaConta(armazenamento, idDaConta, agora = () => new Date()) {
-  return criarSalvadorLocal(armazenamento, { chave: chaves.conta(idDaConta), chaveCorrompida: chaves.contaCorrompida(idDaConta), perfil: 'conta' }, agora)
+  return criarSalvadorLocal(
+    armazenamento,
+    { chave: chaves.conta(idDaConta), chaveCorrompida: chaves.contaCorrompida(idDaConta), chaveDasPartidas: chaves.partidasDaConta(idDaConta), perfil: 'conta' },
+    agora,
+  )
 }

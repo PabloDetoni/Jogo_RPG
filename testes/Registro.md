@@ -1,5 +1,19 @@
 # Registro dos testes
 
+**15/11/2026 — ARTE-SACERDOTE-CETRO:** inspeção visual em 1× e 8×. Importador do Ateliê e equivalência dos 4.096 pixels RGBA do comando com o PNG conferidos. [Relatório](2026-11-15-sacerdote-64-cetro-antigo.md).
+
+**15/11/2026 — ARTE-SACERDOTE-64-R2:** comparação visual com a referência em 1× e 8×, equivalência dos 4.096 pixels RGBA entre JSON e PNG e importação pelo núcleo do Ateliê. [Relatório](2026-11-15-sacerdote-64-r2.md).
+
+**15/11/2026 — ARTE-SACERDOTE-64:** revisão visual em 1× e 8× sobre fundo claro e escuro. Conferidos os 4.096 pixels RGBA do JSON, do PNG e da composição pelo núcleo do Ateliê. Ampliação 8× conferida pixel a pixel. [Relatório](2026-11-15-sacerdote-64.md).
+
+**15/11/2026 — ARTE-TANQUE-64:** conferidos 4.096 pixels RGBA entre o JSON e o PNG nativo e os blocos de 8 × 8 da prévia. Revisão visual em 1× e 8× sobre fundos claro e escuro. Solas na linha y=62. [Relatório](2026-11-15-tanque-64-perna.md).
+
+**12/11/2026 — Miniaturas 32, rodada 3:** rosto do Tanque 60/60 pixels iguais ao recorte preferido da referência anexada; Mago integralmente idêntico, roupa do Sacerdote e corpo/equipamento do Arqueiro preservados. Dimensões, alpha, alinhamento e igualdade entre folha/individuais conferidos. Inspeções antes/depois dos rostos e elmo. [Relatório](2026-11-12-personagens-32-r3.md). Zero gerações adicionais.
+
+**12/11/2026 — Miniaturas 32 × 32, rodada 2:** 5/5 PNGs e células da folha idênticos, alpha binário, pés na linha 31 e alturas 29/30/31/29/26 (Mago/Guerreiro/Tanque/Sacerdote/Arqueiro). Inspeções ampliadas sucessivas de rostos e equipamentos; nenhum componente solto de um ou dois pixels. Sem integração ou testes do jogo. [Relatório](2026-11-12-personagens-32-r2.md).
+
+**12/11/2026 — Arte das cinco classes:** cinco PNGs 64 × 64 e folha 320 × 64 conferidos, transparência binária, pés alinhados e alturas ordenadas; folha idêntica pixel a pixel aos individuais, sem componentes soltos de um ou dois pixels. Revisão visual concluída. Sem teste do jogo, pois o lote ainda é externo. [Relatório e avaliação visual](2026-11-12-personagens-64.md).
+
 Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda no fim de cada uma), os problemas achados e o que foi feito, e os testes à mão (o Pablo e o grupo marcam aqui). As situações de teste à mão estão em [Roteiros.md](Roteiros.md).
 
 ## 1. Cada parte
@@ -37,6 +51,7 @@ Tudo o que já foi testado: os testes automáticos de cada parte (o Claude roda 
 | Visual novo publicado no endereço principal | 20/10 | 920 passando | ok | a Vercel publicou o `a7f4b58` (deploy "success"); o projeto do Supabase estava **pausado** (plano grátis, sem uso por alguns dias; o endereço sumia e as contas e o ranking não respondiam, o convidado jogava normal): reativado pela conexão do Supabase; depois, `conferir:configuracao` tudo certo (1 aviso, a senha mínima no painel) com o endereço principal no último `main`, e `testar:contas:publicado` **54 de 54** (a primeira rodada, com o banco recém-acordado, perdeu 3 conferências por lentidão; a segunda pegou a conta A ainda presa) | roteiros VN-01 a VN-07 | `a7f4b58` |
 | Camadas do Reino e do Mapa com as peças do Pablo (as geradas e os recortes de 20/10 rejeitados e tirados; as 27 imagens dele no jogo, sem perda, com a Árvore de Habilidades, a frente dela e as nuvens; muralha em duas; animações com as peças dele; botões parados) | 21 e 22/10 | 932 passando (novos: a fumaça do vulcão que sobe e as nuvens que voltam por trás da copa; tirados os testes das animações sem peça) | ok | `testar:camadas` **34 de 34** (clique pelo desenho no meio de cada prédio, da Árvore, de cada bioma e lugar, e nada entre os objetos, em 1366×768, 1920×1080 e tela cheia; contorno, teclado, animações, opção e "reduzir movimento"); `testar:reino` 84 de 84; `testar:botoes` 52 de 52; `testar:floresta` 73 de 73; `testar:paredes` 9 de 9; `testar:arte` 39 de 39; `conferir:arte` acha as 27 peças. `testar:navegador` (arena): 253 de 254 nas últimas rodadas; as falhas variam ("EM RECARGA", o corredor estreito, os mobs no Tanque) e são de tempo. **Comparado com o código de antes destas mudanças:** na partida, o tempo de cada quadro é o mesmo (60 por segundo) e nenhuma animação do cenário continua rodando; o "EM RECARGA" falhou também no código de antes (o segundo aperto chega 0,6 s depois do primeiro) | o Pablo, com as imagens dele lado a lado (CM-01 a CM-09) | (este) |
 | Camadas com as peças do Pablo publicadas no endereço principal | 22/10 | 932 passando | ok | a Vercel publicou o `8008ce1` (deploy "success" no GitHub; o código publicado já tem as peças novas); `testar:contas:publicado` **54 de 54**. O `conferir:configuracao` ficou dizendo "ainda não começou" mesmo depois do deploy pronto: descompasso dele com a API do GitHub, a olhar | o Pablo, no site | `8008ce1` |
+| Parte 0 (ramo `jogo-dezembro`): tela cheia de mentira no Edge escondido, semente fixa dos mobs nos roteiros, arco da IA conferindo a linha ao soltar, aliados sem atacar o cervo, fila de partidas guardada no navegador, SQL 004, documentação planejada e diagramas 02 e 03 | 21/11 | 939 passando (8 novos) | ok | arena 254 de 254 (pela placa de vídeo: na bateria, o SwiftShader cai para 18 FPS também no `main`); Floresta 73 de 73 (60 FPS, mínimo 50); Reino 84 de 84 (antes parava em 50 de 53); camadas 34 de 34; paredes 9 de 9; botões 52 de 52; arte 39 de 39 | — | (ver o commit da Parte 0) |
 
 ## 2. Problemas achados na parte 5c e o que foi feito
 
@@ -389,3 +404,15 @@ As 202 conferências cobrem as partes 5a a 5c. As novas da 5c:
 - **Tecla M:** liga e desliga em combate e fica salva; digitando num campo, não muta.
 - **Crítico:** número "CRÍTICO" e mensagem no HUD.
 - **HUD:** cabe em 1366×768, com e sem o grupo cheio, e na janela menor.
+
+**14/11/2026 — Miniaturas 32 × 32, rodada 4:** Mago recebeu o padrão facial do Tanque e simplificação de tons; Guerreiro recebeu fenda em T no elmo; Sacerdote recebeu ajuste de cabelo/cobertura e cajado afastado; Arqueiro recebeu arco inclinado. Tanque intacto, roupa inferior do Sacerdote preservada. Arquivos em `programacao/arte-original/classes-pablo-32-r4-2026-11-14/finais/`. Ainda em avaliação, sem integração; zero gerações adicionais. Relatório: `testes/2026-11-14-personagens-32-r4.md`.
+
+**14/11/2026 — Miniaturas, rodada 5:** Mago e Tanque da rodada 4 aprovados pelo Pablo e congelados (arquivos idênticos). Corrigidos somente: frente do elmo com leve orientação à direita; Sacerdote com cabeça anterior restaurada, lateral da roupa fechada e cajado dourado junto à mão; arco do Arqueiro aproximado, corpo e rosto intactos. Saída `programacao/arte-original/classes-pablo-32-r5-2026-11-14/finais/`. Três correções ainda em avaliação; sem integração e sem gerações adicionais. Relatório `testes/2026-11-14-personagens-32-r5.md`.
+
+**15/11/2026 — Teste simplificado 16 × 16:** por pedido do Pablo, cinco miniaturas redesenhadas em grade nativa, com 9–12 cores, divisão marcada entre cabeça, tronco, braços e pés e equipamentos de cada classe. Versões 32 × 32 e aprovações anteriores preservadas. Saída `programacao/arte-original/classes-pablo-16-2026-11-15/finais/`; relatório `testes/2026-11-15-personagens-16.md`. Teste em avaliação, sem integração; zero gerações adicionais.
+
+**15/11/2026 — Refinamento 16 × 16 (rodada 2):** cinco variantes redesenhadas com silhuetas, sombras, rostos e equipamentos mais definidos; 10–13 cores por classe. Chapéu curvo, elmo sombreado, emblema no escudo, capuz branco/cruz dourada e arco sem corda. Saída `programacao/arte-original/classes-pablo-16-r2-2026-11-15/finais/`, relatório `testes/2026-11-15-personagens-16-r2.md`. Arquivos 16/32 anteriores preservados. Avaliação pendente; sem integração, custo zero.
+
+15/11/2026 — Reparo do Mago 64 enviado por Pablo: quatro pixels transparentes do chapéu preenchidos, outros 4092 intactos; PNG e documento .atelie.json conferidos pixel a pixel. Saída programacao/arte-original/mago-64-reparo-2026-11-15. Relatório testes/2026-11-15-mago-64-reparo.md. Zero gerações; sem integração.
+
+**15/11/2026 — Comandos 64 × 64 corrigidos:** matrizes enviadas por Pablo convertidas para cinco comandos completos no mesmo formato pixel-matrix. Pé do Tanque, elmo fechado/dourado vertical, cobertura/cajado do Sacerdote, furos do Arqueiro e contornos externos. Mago preservado em todos os pixels existentes, apenas contorno adicional. Comandos e PNGs conferidos: 4096/4096 pixels iguais por classe. Saída programacao/arte-original/classes-64-comandos-corrigidos-2026-11-15; relatório testes/2026-11-15-comandos-personagens-64.md. Custo zero; sem integração.

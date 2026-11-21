@@ -300,7 +300,8 @@ function atualizarSemConquistas(estado, acao) {
         progresso: escolha.progresso ?? progressoInicial(),
         partidaAtual: null,
         mensagemDoAcesso: null,
-        partidasParaRegistrar: [],
+        // as partidas que ficaram guardadas neste navegador sem internet (Parte 0b) voltam para a fila
+        partidasParaRegistrar: Array.isArray(acao.partidasGuardadas) ? acao.partidasGuardadas : [],
         nuvem: { situacao: 'ok', mensagem: null },
       }
       if (escolha.partidaDescartada) novo = comAviso(novo, avisoPartidaDescartada)

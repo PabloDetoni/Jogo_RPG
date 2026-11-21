@@ -406,10 +406,66 @@ Critérios de aceite:
 - Cada minijogo tem rodadas por dia (3, provisório), que renovam à meia-noite de Brasília; a tela mostra quantas sobram e quando renova.
 - Requisitos atendidos: RF54, RF50.
 
+### HU44 · Viajar de Caravana (UC44) — planejado (11/2026)
+
+Como jogador, quero pagar uma Caravana para nascer mais à frente no bioma, para não refazer o começo toda vez.
+
+Critérios de aceite:
+- Escolho a zona neutra (perto da região fácil, da média, da difícil ou do fim) e vejo o preço antes de pagar.
+- O preço cresce com a distância; sem ouro, o botão diz quanto falta.
+- Nunca nasço dentro de uma região com mobs.
+- Se a partida cair, o ouro da Caravana volta.
+- Requisitos atendidos: RF56.
+
+### HU45 · Conversar com NPC (UC45) — planejado (11/2026)
+
+Como jogador, quero conversar com o comerciante, o ferreiro e o mestre da Guilda, para entender o que cada lugar faz.
+
+Critérios de aceite:
+- Na primeira visita, o NPC se apresenta e explica o lugar; nas outras, diz uma fala aleatória.
+- O menu leva direto à ação (comprar, equipar, missões) ou a "Ir embora".
+- Requisitos atendidos: RF57.
+
+### HU46 · Usar opções de desenvolvedor (UC46) — planejado (11/2026)
+
+Como desenvolvedor, quero andar mais rápido e me teletransportar na partida, para testar o mapa grande sem perder tempo.
+
+Critérios de aceite:
+- A barra de teste tem 1×, 3× e 6×; o jogo de verdade continua sem saltos de lugar.
+- Clicar no minimapa (ou "T + clique" no mapa) leva o Líder e o grupo para o ponto livre mais próximo, com a câmera junto.
+- Nada disso existe no site publicado.
+- Requisitos atendidos: RF61.
+
+### HU47 · Simular balanceamento (UC47) — planejado (11/2026)
+
+Como desenvolvedor, quero simular um grupo contra uma região, para acertar os números sem jogar horas.
+
+Critérios de aceite:
+- Escolho o nível, a região e as classes; vejo o tempo até cada um cair, o dano dado e recebido, quantos mobs dá para enfrentar e o XP e o ouro por minuto.
+- O resultado é o mesmo toda vez que rodo com os mesmos dados.
+- Requisitos atendidos: RF62.
+
+### HU48 · Acessar a Área do Desenvolvedor (UC48) — extra, planejado (11/2026)
+
+Como desenvolvedor, quero uma área protegida para consultar o jogo, para acompanhar contas e partidas.
+
+Critérios de aceite:
+- Só contas de desenvolvedor entram, com uma segunda etapa de verificação.
+- Fica fora do beta.
+
+### HU49 · Banir e desbanir conta (UC49) — extra, planejado (11/2026)
+
+Como desenvolvedor, quero bloquear uma conta que trapaceia, para manter o ranking justo.
+
+Critérios de aceite:
+- O motivo fica registrado; a conta banida vê o aviso ao entrar.
+- Só se essa parte da Área do Desenvolvedor for feita.
+
 ## Alterações do projeto
 
 Decisões tomadas durante a programação (outubro de 2026). Os critérios acima já estão com o texto novo:
 
+- **HU44 a HU49 (planejamento de 11/2026):** histórias novas, ainda não feitas (Caravana, NPCs, opções de desenvolvedor, simulador e, como extra, a Área do Desenvolvedor). A HU28 (ponto de partida) será substituída pela HU44 quando a Caravana existir; HU16, HU17 e HU21 passarão a começar pela conversa com o NPC; HU31, HU32 e HU34 ganharão o mapa maior, os mobs novos e o Ogro; HU43, a pesca visual.
 - **HU27 (visual novo, 20/10):** o mapa é a imagem do Pablo, e cada região clica no formato dela.
 - **HU27 (camadas, 20/10; peças do Pablo desde 21/10):** cada bioma é uma peça que o Pablo fez: o clique vale no desenho de cada um; Tundra, Vulcânico e Deserto ficam com as cores normais e mostram o cadeado e "Em breve" só ao passar o mouse.
 - **HU15, HU31, HU32, HU36 (ajustes na partida, 14/10):** escudo do Tanque que rompe com golpe forte, mochila estilo inventário (no Reino, com a lixeira; na partida, no meio da tela, com o Líder parado e R no aliado que mais precisa), passar pelos aliados e o Líder nunca teletransportado.

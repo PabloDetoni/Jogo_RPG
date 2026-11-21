@@ -1,15 +1,45 @@
-# Plano até a entrega (03/12/2026)
+# Plano até a entrega (dezembro de 2026, sem data fixa)
 
 Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5a + parte 5b (`e0c8d93`), parte 5b.1 (`55a6025`) e parte 5c (`5dcd43f`) no GitHub. Desde 08/10 o trabalho segue em **modo contínuo** (regras no CLAUDE.md).
 
 ## Onde parei
+
+- **Agora (21/11/2026): Partes 0 a 3 da mensagem de 20/11** (`mensagens-claude/2026-11-20-para-o-claude-code-partes-0-a-3.md`), no ramo local **`jogo-dezembro`** (saído do `main`). Plano logo abaixo. Depois da Parte 3, parar e escrever `mensagens-claude/2026-11-XX-relatorio-partes-0-a-3.md`.
+  - **Prazo (Pablo, 20/11):** entrega em dezembro, sem data fixa. **Não existe congelamento em 22/11**; as datas de 22/11 e 03/12 foram inventadas e saíram daqui e do CLAUDE.md.
+  - **Área do Desenvolvedor (D1):** parada no ramo `area-dev` (`ff0718c`). **Nunca vai para o `main`.** O SQL 003 não roda agora.
+  - Os arquivos do Pablo que estavam sem commit vieram para o ramo novo em `8cdf10c` (conferidos um a um); os do Codex (`AGENTS.md`, `.agents/`, `.codex/`) foram apagados (o Pablo parou de usar).
+  - **Parte 0:** 0a feita (`c46c562`). 0b: tela cheia de mentira nos roteiros do Edge escondido (Reino volta a 84 conferências), semente fixa dos mobs no dev (`window.__sementeDeTeste`, `SEMENTE=sorteio` desliga), o arco da IA confere a linha de tiro de novo ao soltar, lobo e cervo vivos no roteiro da Floresta, fila `partidasParaRegistrar` guardada no navegador (`jogo-rpg:conta:<id>:partidas`), SQL 004 escrito (perfil criado só na confirmação do e-mail; **o Pablo roda**, passo a passo em `programacao/supabase/README.md`). 0c: RF56 a RF62, RNF15, UC44 a UC49, HU44 a HU49 e a matriz como "planejado (11/2026)"; diagramas 02 e 03 refeitos.
+
+- **15/11/2026 — Sacerdote com cetro antigo:** a pose aprovada por Pablo foi convertida para 64 × 64. O cetro segue o recorte original, com haste fina, meia-lua assimétrica, encaixe na mão, cruz de núcleo azul e brilho superior inclinado. PNG, prévia e comando em `programacao/arte-original/sacerdote-64-cetro-antigo-2026-11-15/`. Relatório: `testes/2026-11-15-sacerdote-64-cetro-antigo.md`.
+
+- **15/11/2026 — Sacerdote 64 × 64, revisão 2:** cajado redesenhado com meia-lua aberta, cruz de centro frio e brilho superior dourado. Dobra e friso separam a boina branca do cabelo. Tons quentes corrigem o cinza ao redor dos olhos. Entrega em `programacao/arte-original/sacerdote-64-cajado-meia-lua-2026-11-15/`. [Relatórios e conferências](testes/2026-11-15-sacerdote-64-r2.md).
+
+- **15/11/2026 — Revisão do Sacerdote 64 × 64:** Pablo liberou a revisão do Sacerdote após avaliar a perna do Tanque. A cobertura branca ganhou uma curva baixa com borda dourada legível e o cajado agora tem uma haste dourada contínua junto à mão. Prévia 8×, PNG transparente e JSON em `programacao/arte-original/sacerdote-64-cobertura-cajado-2026-11-15/`. A edição do Sacerdote segue em avaliação. Relatório em `testes/2026-11-15-sacerdote-64.md`.
+
+- **15/11/2026 — Tanque 64 × 64 em avaliação:** perna posterior reconstruída da lateral do tecido azul até a bota, com canela sombreada pela borda do escudo e sola na mesma linha da outra bota. Prévia 8×, PNG e comando novos em `programacao/arte-original/tanque-64-perna-2026-11-15/`. A próxima edição de arte é a cobertura e o cajado do Sacerdote, após a avaliação do Pablo. [Relatórios técnico e do grupo](testes/2026-11-15-tanque-64-perna.md).
+
+- **15/11/2026 — Comandos 64 × 64 corrigidos:** matrizes enviadas por Pablo convertidas para cinco comandos completos no mesmo formato pixel-matrix. Pé do Tanque, elmo fechado/dourado vertical, cobertura/cajado do Sacerdote, furos do Arqueiro e contornos externos. Mago preservado em todos os pixels existentes, apenas contorno adicional. Comandos e PNGs conferidos: 4096/4096 pixels iguais por classe. Saída programacao/arte-original/classes-64-comandos-corrigidos-2026-11-15; relatório testes/2026-11-15-comandos-personagens-64.md. Custo zero; sem integração.
+
+- **15/11/2026 — Refinamento 16 × 16 (rodada 2):** cinco variantes redesenhadas com silhuetas, sombras, rostos e equipamentos mais definidos; 10–13 cores por classe. Chapéu curvo, elmo sombreado, emblema no escudo, capuz branco/cruz dourada e arco sem corda. Saída `programacao/arte-original/classes-pablo-16-r2-2026-11-15/finais/`, relatório `testes/2026-11-15-personagens-16-r2.md`. Arquivos 16/32 anteriores preservados. Avaliação pendente; sem integração, custo zero.
+
+- **15/11/2026 — Teste simplificado 16 × 16:** por pedido do Pablo, cinco miniaturas redesenhadas em grade nativa, com 9–12 cores, divisão marcada entre cabeça, tronco, braços e pés e equipamentos de cada classe. Versões 32 × 32 e aprovações anteriores preservadas. Saída `programacao/arte-original/classes-pablo-16-2026-11-15/finais/`; relatório `testes/2026-11-15-personagens-16.md`. Teste em avaliação, sem integração; zero gerações adicionais.
+
+- **14/11/2026 — Miniaturas, rodada 5:** Mago e Tanque da rodada 4 aprovados pelo Pablo e congelados (arquivos idênticos). Corrigidos somente: frente do elmo com leve orientação à direita; Sacerdote com cabeça anterior restaurada, lateral da roupa fechada e cajado dourado junto à mão; arco do Arqueiro aproximado, corpo e rosto intactos. Saída `programacao/arte-original/classes-pablo-32-r5-2026-11-14/finais/`. Três correções ainda em avaliação; sem integração e sem gerações adicionais. Relatório `testes/2026-11-14-personagens-32-r5.md`.
+
+- **14/11/2026 — Miniaturas 32 × 32, rodada 4:** Mago recebeu o padrão facial do Tanque e simplificação de tons; Guerreiro recebeu fenda em T no elmo; Sacerdote recebeu ajuste de cabelo/cobertura e cajado afastado; Arqueiro recebeu arco inclinado. Tanque intacto, roupa inferior do Sacerdote preservada. Arquivos em `programacao/arte-original/classes-pablo-32-r4-2026-11-14/finais/`. Ainda em avaliação, sem integração; zero gerações adicionais. Relatório: `testes/2026-11-14-personagens-32-r4.md`.
+
+- **Miniaturas 32 × 32, rodada 3 (12/11/2026):** rosto antigo do Tanque selecionado por Pablo restaurado e conferido contra a imagem anexada; rostos de Sacerdote/Arqueiro adaptados, elmo fechado corrigido e dobras do Tanque realçadas. Mago e roupa do Sacerdote preservados. Pasta `programacao/arte-original/classes-pablo-32-r3-2026-11-12/finais/`; [relatórios e conferências](testes/2026-11-12-personagens-32-r3.md). Custo zero, sem integração. Esta referência facial substitui os olhos largos em L da rodada 2.
+
+- **Nova rodada 32 × 32 (12/11/2026):** por pedido explícito, as cinco miniaturas voltam a 32 × 32; referência principal é a imagem própria com reino, elmo fechado da versão 64 e Sacerdote refeito. Olhos escuros em L sem branco, contornos e arco sem corda. Saída em `programacao/arte-original/classes-pablo-32-r2-2026-11-12/finais/`; [relatórios e conferências](testes/2026-11-12-personagens-32-r2.md). Seis gerações, correções pontuais gratuitas. Ainda sem integração. Congelar uma classe apenas quando Pablo mandar parar de alterá-la, preservando seus pixels nas rodadas seguintes.
+
+- **Teste das cinco classes em 64 × 64 concluído em 12/11/2026:** baseado na imagem própria aprovada do Pablo; cinco PNGs transparentes, folha conjunta e prévia ampliada em `programacao/arte-original/classes-pablo-64-final-2026-11-12/`. Ainda aguardam avaliação do teste antes de integrar/animar. Relatório técnico e do grupo: [personagens 64](testes/2026-11-12-personagens-64.md). 10 gerações no lote anterior; finalização pontual gratuita, sem commit ou publicação.
 
 - **Fase 2 aprovada pelo Pablo em 09/10** e publicada: o `main` é o jogo público em `https://jogo-rpg-six.vercel.app` (as variáveis do Supabase valem em Production e Preview). Relatório do grupo: https://claude.ai/artifact/7Wj2tXqwcjaffBpyusPjrD.
 - **Regra de publicação (Pablo, 09/10, no CLAUDE.md; troca a das prévias por ramo):** um endereço só, `https://jogo-rpg-six.vercel.app`, que mostra sempre o `main`; a Vercel só publica o `main` (`programacao/vercel.json`). Ramos só locais. No fim de cada fase: todos os testes → com tudo passando, junta no `main` e push → confere o endereço principal (`conferir:configuracao` e `testar:contas:publicado`) → relatórios. Nunca publicar com teste falhando; se quebrar no site, `git revert` na hora e avisar.
 - **Fase 3 terminada (09/10) e publicada no endereço principal (10/10):** 3a a 3h feitas (Floresta com câmera, regiões, mobs com território, minimapa e áreas com XP, Ponto de partida, coleta com E, drops e mochila da partida, o Guardião da Floresta e o TEST-005). 660 testes; `testar:navegador` 226 de 226; `testar:floresta` 65 de 65; 60 FPS no pior cenário. Documentação: RF31, RF32, RF35, RF39, RF40, RF42, RF48, RF53, UC28, UC34, UC35, "Alterações do projeto", Balanceamento (seção do mundo), lista de arte, CLAUDE.md e `testes/` (roteiros FL-01 a FL-12).
 - **Fase 3 aprovada pelo Pablo em 10/10** no endereço principal. Ele apagou o padrão antigo das prévias no Supabase; o ramo `fase-3` foi apagado do GitHub.
 - **Ritmo novo (Pablo, 10/10, no CLAUDE.md):** sem esperar o teste dele entre as fases. No fim de cada fase: todos os testes → junta no `main` → confere o endereço principal (`conferir:configuracao` e `testar:contas:publicado`) → os dois relatórios com o "Teste visual" → segue direto. Ele testa em paralelo; problema que ele mandar para tudo e vem primeiro (corrigir, publicar, continuar). Parar só para o que só ele faz (adiantando o resto) ou decisão do grupo que mude regra.
-- **O que falta, em ordem:** Fase 4 (4a a 4m, abaixo; minijogos se couberem antes de 22/11) → arte e som (sistema pronto para receber os arquivos; avisar quando for a hora da arte) → Fase 5 (TEST-008, TEST-009, TEST-010, problemas conhecidos, prints das telas, DOC-006) → Fase 6 (TASK-131 e lembrar o Pablo de apagar TesteA e TesteB do ranking).
+- **O que falta, em ordem:** Fase 4 (4a a 4m, abaixo) → arte e som (sistema pronto para receber os arquivos; avisar quando for a hora da arte) → Fase 5 (TEST-008, TEST-009, TEST-010, problemas conhecidos, prints das telas, DOC-006) → Fase 6 (TASK-131 e lembrar o Pablo de apagar TesteA e TesteB do ranking).
 - **Esperando o Pablo (sem travar nada):** confirmar a proposta do "Painel do Mestre" (seção abaixo). Até lá, ele fica de fora.
 - **Fase 4 terminada e publicada (10/10)** no endereço principal (`17f14d9`): partes 4a a 4m. 792 testes; arena 227 de 227; Floresta 68 de 68 (61 FPS); Reino 30 de 30 (novo, com o TEST-006); contas no site 54 de 54. Relatório do grupo: https://claude.ai/code/artifact/d5be35fd-8af7-40ba-9bfd-2a0a4c19c52c. O teste do Pablo é em paralelo (roteiros RE-01 a RE-16).
 - **Arte: o jogo está pronto para receber as imagens (10/10, ramo local `arte`).** Partes A1 a A5 feitas (plano abaixo): as imagens salvas em `programacao/src/assets/arte/` com o nome da Lista de Arte e Som entram sozinhas; o que falta continua quadrado ou cinza. `npm run conferir:arte` mostra o que chegou e o que falta (0 de 221 hoje); `npm run testar:arte` confere tudo com imagens de teste (36 de 36). **Avisado o Pablo: é a hora de gerar a arte no PixelLab** (passo a passo no fim da Lista de Arte e Som). O som já estava pronto desde a Fase 4 (falta só ele mandar os arquivos).
@@ -30,6 +60,18 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
   - aprovar ou mudar a proposta do escudo do Tanque contra golpes fortes (abaixo, na parte 10).
 - **Depois: Fase 5** (polimento e testes): TEST-008, TEST-009, TEST-010, os problemas conhecidos, os prints das telas como protótipos (o `npm run prints` já existe) e o DOC-006.
 - **Fase 5** (polimento e testes), sem esperar a arte: a arte entra quando chegar, sem mexer no código. A arte não vai sozinha para o `main`: entra junto com a próxima publicação (a regra é publicar no fim de cada fase; aqui não muda nada no que se vê, então vai com a Fase 5).
+
+### Plano das Partes 0 a 3 (mensagem de 20/11/2026; ramo local `jogo-dezembro`)
+
+Publicar no endereço principal no fim de **cada** parte, com o relatório do grupo em página com prints.
+
+- **Parte 0 · arrumação, consertos e documentação planejada.**
+  - 0a: apagar os ramos locais já juntados (`git branch -d`, nunca o `area-dev`); `documentacao/arte-aprovada/` (Mago e Tanque 32 × 32, rodada 4, com README); Guia de Arte com o estado final; CLAUDE.md sem as datas e mais curto; skill `verify` com `testar:botoes`, `testar:camadas` e as intermitentes; `gerar-arte` "fora de uso por enquanto".
+  - 0b: tela cheia no Edge escondido (conferir que o pedido foi feito e seguir; as conferências do Reino e das camadas voltam a rodar); semente fixa dos mobs no modo de teste e esperas por condição nos instáveis; fila `partidasParaRegistrar` guardada na cópia local da conta (`salvadorLocal.js`) e mandada no próximo login, com teste; `supabase/004_apelido_de_conta_nao_confirmada.sql` (não rodar) e o passo a passo no README.
+  - 0c: RF56 a RF62, RNF15, UC44 a UC49 e histórias como "planejado (11/2026)"; os RFs alterados com a mudança marcada "planejado"; "Alterações do projeto" e matriz; diagrama de casos de uso `02_*` novo (Jogador e Desenvolvedor, pacotes por área, "Extra") e de atividades de Acesso `03_*` pelo `conta/fluxo.js`, PNGs com o mesmo nome.
+- **Parte 1 · opções de dev (só no `npm run dev`):** super velocidade 1×/3×/6× na barra de teste (exceção de dev à trava `saltoMaximoPorQuadro`, com teste provando que o jogo de verdade continua travado); teletransporte pelo minimapa e "T + clique" (Líder e grupo em `lugarLivre`, câmera junto); conferência no `conferir:configuracao` de que nada disso existe no site.
+- **Parte 2 · bonecos de quadradinho (só os 5 personagens):** receitas em `dados/bonecos.js`; regra pura do braço e da virada (`regras/bonecos.js`) com testes; desenho em `jogo/entidades/` (cabeça grande, corpo, saia, pernas e braços, balanço, andar, atacar, caído; espada, cajado, cetro com orbe, escudo e arco com a corda esticando). Hitbox igual; `usarArte` continua trocando tudo. FPS no pior cenário da Floresta antes e depois.
+- **Parte 3 · base do balanceamento:** dano pelo atributo (`efeitoDoAtributo`, curva 1,5: Força na espada, escudo e arco; Inteligência na bola e no meteoro; Sabedoria na cura); velocidade 170 + 1,5 × Agilidade; dano baixo da aura do Sacerdote; imunidade só contra o mesmo atacante; simulador puro `regras/simulador.js` + `npm run simular`; tabela para os níveis 1, 5, 10, 20 e 30; Balanceamento.md e "Alterações do projeto". Números novos provisórios em `balanceamento.js`.
 
 ### Plano da troca pelas peças do Pablo (pedido do Pablo em 21/10/2026; ramo local `camadas`)
 
@@ -511,9 +553,9 @@ Como as etapas 3 e 4 já estão prontas, ganhamos cerca de duas semanas em rela�
 | 2 · Contas e Salão da Glória (etapas 8 e 9) | 28/10 a 08/11 | TASK-091 a TASK-098, TEST-007, TASK-100 a TASK-102 |
 | 3 · Mundo da Floresta (etapa 6) | 09 a 15/11 | TASK-060 a TASK-065, TEST-005 |
 | 4 · Reino com dados (etapa 7) | 09 a 22/11 | TASK-070, TASK-072 a TASK-078, TASK-047, TASK-103, TASK-105, TASK-080 e TASK-081 |
-| **Congelamento** | 22/11 | Nenhuma funcionalidade nova depois disso |
+| ~~Congelamento~~ | — | Cancelado pelo Pablo em 20/11: a entrega é em dezembro, sem data fixa |
 | 5 · Polimento e testes | 23 a 29/11 | TEST-006, TEST-008, TEST-009, DOC-006, arte integrada (TASK-111, TASK-115), protótipos (TASK-121 a TASK-123), correção de bugs |
-| 6 · Entrega | 30/11 a 03/12 | TEST-010, TASK-131 e, se confirmadas, TASK-130 e TASK-132 |
+| 6 · Entrega | dezembro (sem data fixa) | TEST-010, TASK-131 e, se confirmadas, TASK-130 e TASK-132 |
 
 **Em paralelo, com vocês:**
 - conteúdo (TASK-010 a TASK-016) até 19/10;
@@ -598,3 +640,5 @@ Todas as decisões abaixo já estão nos Requisitos, nos Casos de Uso, nas Hist�
 4. O roteiro rápido continua funcionando: Tela inicial → convidado → Reino → Começar partida → Resumo.
 5. Se a tarefa mudou uma regra ou uma tela, o CLAUDE.md e o documento afetado são atualizados junto, e a mudança entra na seção "Alterações do projeto" do documento.
 6. Os commits ficam com o Pablo (decisão 2), com mensagem clara.
+
+15/11/2026 — Reparo do Mago 64 enviado por Pablo: quatro pixels transparentes do chapéu preenchidos, outros 4092 intactos; PNG e documento .atelie.json conferidos pixel a pixel. Saída programacao/arte-original/mago-64-reparo-2026-11-15. Relatório testes/2026-11-15-mago-64-reparo.md. Zero gerações; sem integração.

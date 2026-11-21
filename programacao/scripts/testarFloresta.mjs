@@ -259,7 +259,7 @@ try {
   await cena(`(c.invencivel = true, true)`)
   // Vida de sobra para o lobo do teste: os aliados atacam quem persegue o Líder e, com a vida normal, às vezes o matavam
   // antes da conferência (o lobo sumia da lista e a conferência dava erro)
-  const lobo = await cena(`(() => { const l = c.inimigos.find((i) => i.tipo === 'lobo' && i.regiao === 'facil'); l.__teste = true; l.vida = l.vidaMaxima = 1e6; return { x: Math.round(l.x), y: Math.round(l.y), casa: l.casaFixa, territorio: l.config.raioDoTerritorio } })()`)
+  const lobo = await cena(`(() => { const l = c.inimigos.find((i) => i.tipo === 'lobo' && i.regiao === 'facil' && !i.morto) ?? c.criarMobDoMundo('lobo', 'facil', (() => { const r = c.mapa.regioes.find((u) => u.id === 'facil'); return { x: r.inicio.x + 900, y: r.inicio.y } })()); l.__teste = true; l.vida = l.vidaMaxima = 1e6; return { x: Math.round(l.x), y: Math.round(l.y), casa: l.casaFixa, territorio: l.config.raioDoTerritorio } })()`)
   // Só o lobo do teste por perto (os outros mobs atacariam no meio)
   await cena(`(c.inimigos.filter((i) => !i.__teste && Math.hypot(i.x - ${lobo.x}, i.y - ${lobo.y}) < 2200).forEach((i) => c.matarInimigo(i)), true)`)
   await colocarLider(lobo.x - 220, lobo.y)
@@ -286,12 +286,20 @@ try {
   await cena(`(c.inimigos.filter((i) => i.__teste).forEach((i) => c.matarInimigo(i)), true)`)
 
   console.log('9. Passar por um mob não hostil (o cervo)')
-  const cervo = await cena(`(() => { const v = c.inimigos.find((i) => i.tipo === 'cervo' && !i.morto); v.__cervo = true; return { x: Math.round(v.x), y: Math.round(v.y) } })()`)
+  // (se as seções de antes não deixaram nenhum cervo vivo, nasce um na região Fácil, como no sorteio do mapa)
+  const cervo = await cena(`(() => {
+    let v = c.inimigos.find((i) => i.tipo === 'cervo' && !i.morto)
+    if (!v) { const r = c.mapa.regioes.find((u) => u.dificuldade === 'facil'); v = c.criarMobDoMundo('cervo', r.id, { x: r.inicio.x + 500, y: r.inicio.y }) }
+    // vida de sobra, como o lobo de teste: nada de fora (um tiro perdido) derruba o cervo antes das conferências
+    v.__cervo = true
+    v.vida = v.vidaMaxima = 1e6
+    return { x: Math.round(v.x), y: Math.round(v.y) }
+  })()`)
   await cena(`(c.inimigos.filter((i) => !i.__cervo && Math.hypot(i.x - ${cervo.x}, i.y - ${cervo.y}) < 1200).forEach((i) => c.matarInimigo(i)), true)`)
   await cena(`(c.invencivel = false, c.lider.vida = c.lider.vidaMaxima, true)`)
   await colocarLider(cervo.x - 90, cervo.y)
   await pausa(3000)
-  const passou = await cena(`({ persegue: c.inimigos.find((i) => i.__cervo).perseguindo, vida: c.lider.vida, maxima: c.lider.vidaMaxima })`)
+  const passou = await cena(`({ persegue: c.inimigos.find((i) => i.__cervo).perseguindo, apanhou: c.inimigos.find((i) => i.__cervo).vida < 1e6, vida: c.lider.vida, maxima: c.lider.vidaMaxima })`)
   conferir('passando ao lado do cervo, ele não ataca', !passou.persegue && passou.vida === passou.maxima, passou)
   await cena(`(c.invencivel = true, c.acertar(c.inimigos.find((i) => i.__cervo), 5, c.lider, 0, c.lider), true)`)
   await pausa(300)

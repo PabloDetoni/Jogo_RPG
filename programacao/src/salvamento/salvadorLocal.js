@@ -7,8 +7,10 @@ import { escreverArquivoDeSave, lerArquivoDeSave, versaoDoArquivo } from './arqu
 // armazenamento: vem de armazenamento.js, ou é null quando o navegador não deixa guardar nada.
 // chave e chaveCorrompida: onde o save fica (salvamento/chaves.js). perfil: quem este salvador grava
 // ('convidado' ou 'conta'); um salvamento pedido para outro perfil é ignorado.
+// chaveDasPartidas (só da conta): onde fica a fila das partidas terminadas que ainda não foram para o banco
+// (partidasParaRegistrar). Sem internet, ela sobrevive a fechar a aba e vai no próximo login (Parte 0b, 21/11).
 // agora: devolve a data atual (dá para trocar nos testes).
-export function criarSalvadorLocal(armazenamento, { chave, chaveCorrompida, perfil }, agora = () => new Date()) {
+export function criarSalvadorLocal(armazenamento, { chave, chaveCorrompida, chaveDasPartidas = null, perfil }, agora = () => new Date()) {
   let versao = 0 // versão já gravada por esta aba
   let versaoNoBanco = 0 // só da conta: a versão do Supabase de onde esta cópia partiu (RF11)
   let ultimoConteudo = null // o que foi gravado por último, para não gravar de novo sem mudança
@@ -128,6 +130,26 @@ export function criarSalvadorLocal(armazenamento, { chave, chaveCorrompida, perf
     gravar({ versao, salvoEm: agora().toISOString(), progresso, partidaEmAndamento: null, versaoNoBanco })
   }
 
+  // Conta: guarda a fila das partidas que ainda não foram para o banco (vazia = apaga). Devolve true se guardou.
+  function guardarPartidas(fila) {
+    if (!chaveDasPartidas || !armazenamento) return false
+    if (!Array.isArray(fila) || fila.length === 0) return armazenamento.apagar(chaveDasPartidas).ok
+    return armazenamento.gravar(chaveDasPartidas, JSON.stringify(fila)).ok
+  }
+
+  // Conta: a fila guardada (no login). Nunca lança erro: sem fila, ilegível ou estragada, devolve [].
+  function lerPartidas() {
+    if (!chaveDasPartidas || !armazenamento) return []
+    const lido = armazenamento.ler(chaveDasPartidas)
+    if (!lido.ok || !lido.valor) return []
+    try {
+      const fila = JSON.parse(lido.valor)
+      return Array.isArray(fila) ? fila.filter((partida) => partida && typeof partida === 'object' && !Array.isArray(partida)) : []
+    } catch {
+      return []
+    }
+  }
+
   // Painel de desenvolvimento (e a passagem do convidado para a conta): apaga o save e para de salvar nesta aba.
   function apagar() {
     bloqueado = true
@@ -137,6 +159,7 @@ export function criarSalvadorLocal(armazenamento, { chave, chaveCorrompida, perf
     if (armazenamento) {
       armazenamento.apagar(chave)
       armazenamento.apagar(chaveCorrompida)
+      if (chaveDasPartidas) armazenamento.apagar(chaveDasPartidas)
     }
     atualizarInfo({ versao: null, salvoEm: null })
   }
@@ -147,6 +170,8 @@ export function criarSalvadorLocal(armazenamento, { chave, chaveCorrompida, perf
     marcarNoBanco,
     comecarCom,
     apagar,
+    guardarPartidas,
+    lerPartidas,
     get versao() {
       return versao
     },

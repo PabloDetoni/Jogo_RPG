@@ -5,7 +5,7 @@ description: Como o Claude trabalha no modo contínuo do Jogo RPG (pedido do Pab
 
 # Modo contínuo
 
-O Claude programa o resto do jogo até a entrega (03/12/2026) sem esperar o ok de cada parte nem o teste do Pablo
+O Claude programa o resto do jogo até a entrega (dezembro de 2026, sem data fixa) sem esperar o ok de cada parte nem o teste do Pablo
 entre as fases. Se a sessão acabar no meio, o Pablo manda "Continue o modo contínuo de onde parou": ler o
 **"Onde parei"** no topo do `PLANO.md` e seguir.
 
@@ -50,5 +50,6 @@ Não esperar: criar conteúdo provisório coerente com o Conceito, em arquivos d
 
 - Nada pode travar o jogo (personagem preso, tela que não abre, save estragado). Testar esses casos em cada fase.
 - Tudo o que é de teste (barra de teste, painel DEV, Subir nível, +300 de ouro) existe só no `npm run dev`.
-- Congelamento em 22/11: depois disso, só correção, testes e documentação.
+- Não há congelamento (o de 22/11 foi cancelado pelo Pablo em 20/11).
+- A Área do Desenvolvedor (D1, ramo `area-dev`) nunca vai para o `main`.
 - Na Fase 5: prints de todas as telas em `documentacao/` como protótipos atualizados (TASK-121 a TASK-123).

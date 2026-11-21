@@ -130,6 +130,8 @@ const irAoReino = async () => {
 try {
   navegador = await abrirNavegador('reino', PASTA)
   aba = await navegador.novaAba('aba1')
+  // a tela cheia de mentira (o Edge escondido não entra na de verdade): ver simularTelaCheia
+  await aba.simularTelaCheia()
   console.log(`Site: ${vite.site}`)
   await aba.abrir(vite.site)
 
@@ -469,7 +471,7 @@ try {
   await pausa(800)
   conferir('a partida começa com as 2 poções na mochila da partida', await cena(`c.mochila.itens.some((i) => i.id === 'pocaoDeVida' && i.quantidade === 2)`))
   // Tela cheia (ajustes de 14/10): entra no clique de Começar partida, com o X discreto no canto
-  conferir('o clique em Começar partida entra em tela cheia, com o X para sair', (await emTelaCheia()) && (await aba.avaliar(`!!document.querySelector('.sair-da-tela-cheia')`)))
+  conferir('o clique em Começar partida pede a tela cheia dentro do clique (no Edge escondido, a de mentira) e mostra o X para sair', (await emTelaCheia()) && (await aba.avaliar(`!!document.querySelector('.sair-da-tela-cheia') && window.__telaCheia.noClique > 0`)), await aba.avaliar(`window.__telaCheia`))
   // (no início do bioma não há mob por perto: fora de combate, o Esc pausa)
   await aba.esperar(`!${CENA}.emCombate`, 'estar fora de combate', 9000)
   await aba.avaliar(`(document.exitFullscreen(), true)`)

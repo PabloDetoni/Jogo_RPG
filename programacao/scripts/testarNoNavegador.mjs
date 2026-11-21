@@ -96,8 +96,9 @@ const navegador = spawn(
     '--headless=new',
     `--remote-debugging-port=${PORTA_DO_NAVEGADOR}`,
     `--user-data-dir=${perfil}`,
-    '--enable-unsafe-swiftshader',
-    '--use-angle=swiftshader',
+    // Desenha no processador (SwiftShader), como o roteiro foi ajustado. Com o notebook na bateria ele cai para uns 18 FPS
+    // e as conferências de tempo falham: NAVEGADOR_GPU=1 usa a placa de vídeo (Parte 0b, 21/11)
+    ...(process.env.NAVEGADOR_GPU === '1' ? ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=default'] : ['--enable-unsafe-swiftshader', '--use-angle=swiftshader']),
     '--no-first-run',
     '--no-default-browser-check',
     '--window-size=1366,768',
@@ -1247,6 +1248,8 @@ try {
   await irAteAPartida(false)
   await clicar('Encher grupo')
   await pausa(300)
+  // (as habilidades em recarga: a Ressurreição do Sacerdote levantaria um caído antes da conferência)
+  await cena(`(c.aliados.forEach((a) => (a.ultimoUsoDaHabilidade = [c.agora, c.agora, c.agora])), true)`)
   for (let i = 0; i < 4; i++) await clicar('Derrubar aliado')
   await pausa(300)
   conferir('o botão "Derrubar aliado" derruba um aliado de pé por vez', await cena(`c.aliados.every(a => a.caido)`))
@@ -1503,6 +1506,8 @@ try {
   await pausa(300)
   await apertar('f')
   await apertar('f')
+  // (as habilidades em recarga: a Ressurreição do Sacerdote levantaria um caído antes da conferência)
+  await cena(`(c.aliados.forEach((a) => (a.ultimoUsoDaHabilidade = [c.agora, c.agora, c.agora])), true)`)
   for (let i = 0; i < 4; i++) await clicar('Derrubar aliado')
   const fotoDaDerrotaNaFuga = await fotoDoFim()
   conferir('a fuga continua com os aliados caídos', await cena(`!!c.fuga && !c.terminou`))

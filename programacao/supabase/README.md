@@ -5,6 +5,31 @@ Todo o SQL do jogo fica nesta pasta, em arquivos numerados. Cada um é rodado **
 | Arquivo | O que cria | Fase |
 |---|---|---|
 | `001_contas.sql` | perfis (apelido), sessão única, saves com versão, partidas e o ranking público | Fase 2 |
+| `002_hora_do_servidor.sql` | a hora do servidor, para as rodadas diárias dos minijogos da conta | ajustes de 14/10 · **rodado** |
+| `003_...` | Área do Desenvolvedor (D1): **só existe no ramo `area-dev`** e **não roda agora** | parada |
+| `004_apelido_de_conta_nao_confirmada.sql` | o apelido de quem nunca confirmou o e-mail não fica mais preso | Parte 0b (21/11) · **falta rodar** |
+
+## Rodar o 004 (para o Pablo)
+
+O que ele resolve: hoje o apelido é reservado no **cadastro**. Quem se cadastra e nunca confirma o e-mail deixa o
+apelido preso para sempre. Com o 004, o apelido só é reservado quando a conta **confirma o e-mail**; os já presos de
+contas nunca confirmadas são soltos.
+
+1. Abra o painel do Supabase do jogo → **SQL Editor** → **New query**.
+2. Abra o arquivo `programacao/supabase/004_apelido_de_conta_nao_confirmada.sql`, copie **tudo** e cole.
+3. Clique em **Run**. Deve aparecer "Success. No rows returned" (ou o número de perfis presos que foram soltos).
+4. Conferir (opcional), numa query nova:
+   ```sql
+   select tgname from pg_trigger where tgrelid = 'auth.users'::regclass and not tgisinternal;
+   ```
+   Tem que listar `ao_criar_conta` e `ao_confirmar_conta`.
+5. Teste de verdade (opcional): crie uma conta com um apelido novo e **não** confirme o e-mail; numa aba anônima, a tela
+   Criar conta tem que aceitar o mesmo apelido. Confirmando a primeira conta depois, ela entra normalmente; se o apelido
+   já tiver sido pego, o jogo pede outro no primeiro login.
+6. Avise o Claude que rodou (ele marca no PLANO.md e nesta tabela). Arquivo rodado não se edita mais.
+
+O 004 não apaga contas, saves nem partidas: só perfis de contas que **nunca confirmaram** o e-mail (essas contas nem
+conseguem entrar no jogo).
 
 ## O que há no `001_contas.sql`
 

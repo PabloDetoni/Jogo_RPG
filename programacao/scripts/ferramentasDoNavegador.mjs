@@ -150,6 +150,10 @@ export async function abrirNavegador(nome, pastaDosPrints) {
       await cdp.enviar('Page.enable')
       await cdp.enviar('Runtime.enable')
       await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
+      // Semente fixa do sorteio dos mobs e dos recursos (só vale no npm run dev; CenaArena.sementeDoSorteio): o mesmo mapa
+      // em toda rodada do roteiro. SEMENTE=sorteio volta ao sorteio de verdade; SEMENTE=<número> troca a semente.
+      const semente = process.env.SEMENTE === 'sorteio' ? null : Number.parseInt(process.env.SEMENTE ?? '20261121', 10)
+      if (Number.isInteger(semente)) await cdp.enviar('Page.addScriptToEvaluateOnNewDocument', { source: `window.__sementeDeTeste = ${semente}` })
       return criarAba(cdp, `${nome}/${rotulo}`, pastaDosPrints)
     },
     async fechar() {
@@ -181,6 +185,38 @@ function criarAba(cdp, nome, pastaDosPrints) {
         await pausa(80)
       }
       throw new Error(`(${nome}) cansou de esperar ${oQue}`)
+    },
+    // O Edge escondido não entra em tela cheia de verdade ("Document not active", Edge 157). Para os roteiros seguirem,
+    // a API do navegador vira uma de mentira, em todas as páginas desta aba: o pedido só vale dentro de um clique de
+    // verdade (como no navegador), fica contado em window.__telaCheia e o jogo recebe o "fullscreenchange" de sempre.
+    async simularTelaCheia() {
+      const script = `(() => {
+        const estado = (window.__telaCheia = { pedidos: 0, noClique: 0, foraDoClique: 0, saidas: 0 })
+        let elemento = null
+        const avisar = () => queueMicrotask(() => document.dispatchEvent(new Event('fullscreenchange')))
+        Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => elemento })
+        Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => true })
+        Element.prototype.requestFullscreen = function () {
+          estado.pedidos++
+          if (!navigator.userActivation?.isActive) {
+            estado.foraDoClique++
+            return Promise.reject(new TypeError('Permissions check failed'))
+          }
+          estado.noClique++
+          elemento = this
+          avisar()
+          return Promise.resolve()
+        }
+        document.exitFullscreen = function () {
+          if (!elemento) return Promise.reject(new TypeError('Document not active'))
+          estado.saidas++
+          elemento = null
+          avisar()
+          return Promise.resolve()
+        }
+      })()`
+      await cdp.enviar('Page.addScriptToEvaluateOnNewDocument', { source: script })
+      await aba.avaliar(`${script}, true`).catch(() => {})
     },
     titulo: () => aba.avaliar(`document.querySelector('.tela .titulo')?.textContent ?? ''`),
     texto: () => aba.avaliar(`document.body.innerText`),
