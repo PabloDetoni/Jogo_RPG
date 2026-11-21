@@ -1,5 +1,40 @@
 # Roteiros de teste à mão
 
+## ARTE-SACERDOTE-CETRO — Cetro da referência original
+
+1. No Ateliê, abra **IA → Mais opções → Colar ou abrir**. Abra `sacerdote-selecao-cetro-antigo.json` e clique em **Criar desenho com isto**.
+2. Confira a grade transparente de 64 × 64, o rosto e a túnica da pose aprovada, a haste que passa atrás da mão e as pontas assimétricas do cetro.
+
+## ARTE-SACERDOTE-64-R2 — Meia-lua, boina e olhos
+
+1. Em **IA → Mais opções → Colar ou abrir**, abra `sacerdote-selecao-r2.json` e selecione **Criar desenho com isto**.
+2. Confira a ponta dourada acima da cruz de núcleo azul-claro, as duas pontas da meia-lua e as aberturas entre elas e a haste.
+3. Confira o friso sob a boina branca e a pele junto aos olhos em 1× e ampliado.
+
+## ARTE-SACERDOTE-64 — Cobertura e cajado
+
+1. Abra **IA → Mais opções → Colar ou abrir** e selecione `sacerdote-selecao.json`.
+2. Clique em **Criar desenho com isto**. Confira a grade de 64 × 64 e o fundo transparente.
+3. Em 1× e ampliado, confira a curva baixa da cobertura branca, o friso dourado acima do cabelo e a haste do cajado acima e abaixo da mão.
+
+## ARTE-TANQUE-64 — Perna posterior do Tanque
+
+1. No Ateliê, abra **IA → Mais opções → Colar ou abrir** e selecione `tanque-selecao.json`.
+2. Clique em **Criar desenho com isto**. O quadro deve ter 64 × 64 pixels e fundo transparente.
+3. Compare o desenho em 1× e ampliado. A canela deve surgir da sombra junto ao escudo, afunilar no tornozelo e chegar à bota virada para a direita. As solas devem terminar na linha 62 (contagem a partir de zero).
+
+## ARTE-32-R3 — Rostos e elmo (12/11/2026)
+
+Abrir `programacao/arte-original/classes-pablo-32-r3-2026-11-12/finais/previa-8x.png`. Conferir rosto do Tanque contra `../referencia-rosto-tanque.png`, padrão de olhos pequenos no Sacerdote/Arqueiro, elmo sem furo amplo e dobras do Tanque. Comparar Mago e roupa do Sacerdote à rodada 2: devem permanecer iguais. [Relatório](2026-11-12-personagens-32-r3.md).
+
+## ARTE-32-R2 — Cinco miniaturas (12/11/2026)
+
+Abrir `programacao/arte-original/classes-pablo-32-r2-2026-11-12/finais/previa-8x.png` e `cinco-personagens.png`. Comparar à referência do reino: conferir olhos escuros em L sem branco, elmo fechado, contornos, capuz branco/cabelo/faixa azul do Sacerdote, cajados e arco aberto sem corda/flecha armada. Avaliar cada classe e registrar quais devem ficar congeladas, sem alterações posteriores. Resultado ainda externo ao jogo; [relatório](2026-11-12-personagens-32-r2.md).
+
+## ARTE-64 — Avaliar cinco sprites externos (12/11/2026)
+
+Abrir `programacao/arte-original/classes-pablo-64-final-2026-11-12/previa-5x.png` e a referência própria do Pablo. Conferir chapéu/cajado do Mago, elmo fechado/espada do Guerreiro, escudo do Tanque, capuz branco/cruz do Sacerdote e capuz verde/arco/aljava do Arqueiro. Conferir rostos sem boca ou bochechas, pés alinhados e Tanque maior que Guerreiro, seguido de Mago/Sacerdote e Arqueiro. Abrir também `cinco-personagens.png` em tamanho real. São imagens externas ainda não integradas; não usar o site público para este teste. Registrar aprovação ou ajustes no [relatório](2026-11-12-personagens-64.md).
+
 Situações para testar o jogo, passo a passo. Cada uma tem um código para anotar o resultado no [Registro.md](Registro.md).
 Atualizado em 21/10/2026, nas camadas do Reino e do Mapa com as peças do Pablo (seção CM). A cada parte nova, o Claude acrescenta as situações dela aqui.
 
@@ -972,3 +1007,12 @@ Antes: o SQL rodado e as URLs configuradas no Supabase (`documentacao/Supabase_p
 **H-02 · Janela menor**
 - Fazer: diminua a janela do navegador.
 - Deve acontecer: o jogo encolhe junto (16:9), o HUD continua cabendo, e a mira continua certa.
+`r`nARTE-32-R4: abrir previa-8x.png da rodada 4; comparar olhos do Mago/Tanque, visor T, cabelo e cajado do Sacerdote, arco inclinado. Confirmar roupa inferior do Sacerdote e Tanque preservados. Aprovação estética é do Pablo.
+
+ARTE-32-R5: abrir a prévia da rodada 5 e conferir a leve virada do visor do cavaleiro, continuidade da roupa/cabeça do Sacerdote e cajado dourado junto à mão, arco próximo da mão do Arqueiro. Mago e Tanque devem permanecer idênticos à rodada 4 aprovada.
+
+ARTE-16: abrir previa-16x.png da versão de 15/11. Conferir cabeça/tronco, braços, separação dos pés e equipamentos das cinco classes. Avaliar também os PNGs individuais no tamanho nativo; esta variante não substitui automaticamente os desenhos 32 × 32.
+
+ARTE-16-R2: conferir previa-4x.png e previa-16x.png na rodada 2: rosto e classe reconhecíveis na menor, contornos e separação dos pés na maior. Conferir chapéu, elmo/espada, emblema do escudo, capuz/cajado e arco sem corda.
+
+ARTE-COMANDOS-64: importar um bloco pixel-matrix por vez no Ateliê e comparar com a prévia. Conferir pé, máscara, capuz/cajado, contornos e rosto intacto do Mago. Importação na interface ainda não executada pelo agente.
