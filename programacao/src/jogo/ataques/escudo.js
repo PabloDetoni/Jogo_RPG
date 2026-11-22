@@ -27,7 +27,8 @@ export default class Escudo {
   atualizar() {
     const angulo = this.dono.anguloDaMira
     this.angulo = angulo
-    this.forma.setVisible(this.ativo)
+    // Com o boneco de quadradinho (RNF15), o escudo é desenhado na mão do Tanque; esta forma fica só para o bloqueio
+    this.forma.setVisible(this.ativo && !(this.dono.desenhoEmCodigo && !this.dono.boneco))
     const distancia = config.distanciaDoEscudo + this.avanco.distancia
     // Tremor (escudo rompido): balança de lado e gira um pouco, só no desenho (o bloqueio usa o ângulo da mira)
     const balanco = this.tremor.forca > 0 ? Math.sin(this.cena.agora / 16) * this.tremor.forca : 0

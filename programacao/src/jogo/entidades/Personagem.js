@@ -4,6 +4,7 @@ import { msDoAtaqueNaTela } from '../../dados/arte.js'
 import { corDaClasse } from '../../dados/classes.js'
 import { habilidadesNasTeclas } from '../../regras/habilidadesDaArvore.js'
 import { camadas } from '../efeitos.js'
+import BonecoDeQuadradinho from './BonecoDeQuadradinho.js'
 import Entidade, { BarraDeVida } from './Entidade.js'
 
 const { tamanho } = combateDeTeste.personagem
@@ -24,6 +25,10 @@ const marcas = [
 export default class Personagem extends Entidade {
   constructor(cena, membro, x, y) {
     super(cena, { x, y, tamanho, cor: corDaClasse(membro.classe) })
+    // O boneco de quadradinho da classe (RNF15, Parte 2): no lugar do quadrado, até a pixel art chegar
+    this.desenhoEmCodigo = new BonecoDeQuadradinho(cena, this)
+    this.visual.add(this.desenhoEmCodigo.grafico)
+    this.quadrado.setVisible(false)
     this.contornoEscuro = cena.add.rectangle(0, 0, tamanho + 10, tamanho + 10).setStrokeStyle(2, coresDaArena.contorno)
     this.contornoDoLider = cena.add.rectangle(0, 0, tamanho - 4, tamanho - 4).setStrokeStyle(5, 0xffffff)
     this.marca = cena.add.rectangle(0, 0, tamanho + 18, tamanho + 18).setVisible(false)
@@ -91,9 +96,11 @@ export default class Personagem extends Entidade {
     this.peso = membro.lider ? combateDeTeste.separacao.pesoDoLider : 1
     this.andaSozinho = !membro.lider
     if (!this.caido) this.definirCor(corDaClasse(membro.classe))
-    this.contornoEscuro.setVisible(this.lider && !this.boneco)
-    this.contornoDoLider.setVisible(this.lider && !this.boneco)
-    this.anelDoLider.setVisible(this.lider && Boolean(this.boneco))
+    // Com o boneco (de quadradinho ou a imagem), o Líder tem o anel branco no chão; o contorno é só do quadrado
+    const comBoneco = Boolean(this.boneco || this.desenhoEmCodigo)
+    this.contornoEscuro.setVisible(this.lider && !comBoneco)
+    this.contornoDoLider.setVisible(this.lider && !comBoneco)
+    this.anelDoLider.setVisible(this.lider && comBoneco)
     this.mira.setVisible(this.lider && !this.caido)
   }
 
@@ -175,6 +182,7 @@ export default class Personagem extends Entidade {
     this.corpo.body.setImmovable(true)
     this.definirCor(0x777777)
     this.mira.setVisible(false)
+    this.anelDoLider.setVisible(false) // o anel tombaria junto com o desenho
     // Com a imagem de desmaiado, ela já mostra o personagem caído; sem ela, o desenho tomba e escurece
     const comImagemDeDesmaiado = this.boneco?.tem('desmaiado')
     this.boneco?.escurecer(comImagemDeDesmaiado ? null : 0x8a8a8a)
@@ -190,6 +198,7 @@ export default class Personagem extends Entidade {
     this.definirCor(corDaClasse(this.classe))
     this.boneco?.escurecer(null)
     this.mira.setVisible(this.lider)
+    this.anelDoLider.setVisible(this.lider && Boolean(this.boneco || this.desenhoEmCodigo))
     this.textoDoDesmaio.setVisible(false)
     this.anelDaAjuda.clear()
     this.travamento = null
