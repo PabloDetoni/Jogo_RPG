@@ -4,14 +4,16 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 ## Onde parei
 
+- **Partes 0 a 3 feitas e publicadas (22/11/2026). PARADO, esperando o teste do Pablo e a próxima mensagem** (mapa grande, mobs novos, Caravana, NPCs e pesca). Relatório final: `mensagens-claude/2026-11-22-relatorio-partes-0-a-3.md` (com as perguntas). Páginas do grupo: Parte 2 https://claude.ai/artifact/R5VAm1XTKXkhQ7du6XaAJR; Parte 3 https://claude.ai/artifact/SRhTCSGSHBNyxyVgmZob7K.
+  - **Esperando o Pablo:** rodar o `programacao/supabase/004_apelido_de_conta_nao_confirmada.sql` (passo a passo no README de `supabase/`) e responder as perguntas da seção 9 do relatório.
 - **Agora (21/11/2026): Partes 0 a 3 da mensagem de 20/11** (`mensagens-claude/2026-11-20-para-o-claude-code-partes-0-a-3.md`), no ramo local **`jogo-dezembro`** (saído do `main`). Plano logo abaixo. Depois da Parte 3, parar e escrever `mensagens-claude/2026-11-XX-relatorio-partes-0-a-3.md`.
   - **Prazo (Pablo, 20/11):** entrega em dezembro, sem data fixa. **Não existe congelamento em 22/11**; as datas de 22/11 e 03/12 foram inventadas e saíram daqui e do CLAUDE.md.
   - **Área do Desenvolvedor (D1):** parada no ramo `area-dev` (`ff0718c`). **Nunca vai para o `main`.** O SQL 003 não roda agora.
   - Os arquivos do Pablo que estavam sem commit vieram para o ramo novo em `8cdf10c` (conferidos um a um); os do Codex (`AGENTS.md`, `.agents/`, `.codex/`) foram apagados (o Pablo parou de usar).
   - **Parte 0 publicada** (`96e9947` no `main`; site conferido: `conferir:configuracao` tudo certo, contas 54 de 54). Relatório do grupo: https://claude.ai/artifact/1SuACNcG3J2M5U5pbREY51.
   - **Parte 1 publicada** (`3c4071b` no `main`, 22/11): `conferir:configuracao` tudo certo (com a conferência nova: o site não tem a super velocidade nem o teletransporte), contas 54 de 54. Roteiros no commit `81132c4`: arena 254, Floresta 77 (FPS 60, mínimo 55), Reino 84, camadas 34, paredes 9, botões 52, arte 39. Relatório do grupo: https://claude.ai/artifact/QLTt6PME9N282yRxhWRLz4.
-  - **Parte 2 feita** (`bd3859b`, os bonecos): roteiros rodando na cópia do commit; depois publicar e fazer o relatório com as fotos e a animação.
-  - **Parte 3 feita** (`69706c3`, `e0e13e6`, `495234c`, `6361520`): atributos no dano, na cura e na velocidade, dano baixo da aura, imunidade por atacante, simulador (`npm run simular`) e o Balanceamento.md. Falta: os roteiros, publicar, o relatório do grupo e o relatório final `mensagens-claude/2026-11-22-relatorio-partes-0-a-3.md`.
+  - **Parte 2 publicada** (`5cb80b3` no `main`): todos os roteiros passando no commit `bd3859b`; FPS no pior cenário 60 antes e depois (mínimo 55 → 54).
+  - **Parte 3 publicada** (`7da5785` no `main`): atributos no dano, na cura e na velocidade, dano baixo da aura, imunidade por atacante e o simulador (`npm run simular`); todos os roteiros passando; contas no site 54 de 54.
   - Os arquivos do Codex voltaram em 22/11 (o aplicativo do Codex, aberto, recria cópias do CLAUDE.md): apagados de novo e postos num `.gitignore` na raiz.
   - **Parte 0:** 0a feita (`c46c562`). 0b: tela cheia de mentira nos roteiros do Edge escondido (Reino volta a 84 conferências), semente fixa dos mobs no dev (`window.__sementeDeTeste`, `SEMENTE=sorteio` desliga), o arco da IA confere a linha de tiro de novo ao soltar, lobo e cervo vivos no roteiro da Floresta, fila `partidasParaRegistrar` guardada no navegador (`jogo-rpg:conta:<id>:partidas`), SQL 004 escrito (perfil criado só na confirmação do e-mail; **o Pablo roda**, passo a passo em `programacao/supabase/README.md`). 0c: RF56 a RF62, RNF15, UC44 a UC49, HU44 a HU49 e a matriz como "planejado (11/2026)"; diagramas 02 e 03 refeitos.
 
