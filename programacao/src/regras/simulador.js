@@ -1,4 +1,4 @@
-import { atributoMaximo, combateDeTeste, critico, mundo, pontosDeAtributoPorNivel } from '../dados/balanceamento.js'
+import { atributoMaximo, combateDeTeste, critico, mundo } from '../dados/balanceamento.js'
 import { atributosIniciaisDaClasse } from '../dados/classes.js'
 import { floresta } from '../dados/mundo/floresta.js'
 import { simulador as configDoSimulador } from '../dados/simulador.js'
