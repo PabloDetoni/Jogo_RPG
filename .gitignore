@@ -1,0 +1,5 @@
+# Codex: o Pablo parou de usar (11/2026). O aplicativo, se estiver aberto, recria estas cópias automáticas do
+# CLAUDE.md e das skills; elas nunca vão para o git. (O resto do que o git ignora fica em programacao/.gitignore.)
+AGENTS.md
+.agents/
+.codex/

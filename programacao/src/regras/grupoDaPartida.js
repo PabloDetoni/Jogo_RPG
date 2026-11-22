@@ -44,6 +44,11 @@ function numerosDoMembro(atributosSemEquipamento, equipamento = {}, arvore = {})
   }
 }
 
+// Um membro com os atributos dados (o simulador de balanceamento, regras/simulador.js): os mesmos números da partida
+export function membroComAtributos(classe, atributos, nivel = nivelInicial) {
+  return { classe, nivel, xp: 0, ...numerosDoMembro(atributos, {}, { classe }), lider: false, temporario: false }
+}
+
 // Membro criado só na memória da partida (barra de teste); nunca vai para o save
 export function membroDeTeste(classe, lider = false) {
   return { classe, nivel: nivelInicial, xp: 0, ...numerosDoMembro(atributosIniciaisDaClasse(classe), {}, { classe }), lider, temporario: true, deTeste: true }

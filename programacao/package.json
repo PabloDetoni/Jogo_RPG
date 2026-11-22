@@ -23,7 +23,8 @@
     "testar:botoes": "node scripts/testarBotoes.mjs",
     "testar:camadas": "node scripts/testarCamadas.mjs",
     "conferir:configuracao": "node scripts/conferirConfiguracao.mjs",
-    "balanceamento": "node scripts/gerarBalanceamento.js"
+    "balanceamento": "node scripts/gerarBalanceamento.js",
+    "simular": "node scripts/simular.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
