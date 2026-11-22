@@ -38,9 +38,19 @@ export default class Aura {
       vida: personagem.caido ? 0 : personagem.vida,
       vidaMaxima: personagem.vidaMaxima,
     }))
-    for (const { id: personagem, vida, curado } of curaDaAura(membros, this.dono, config.raio, config.curaPorPulso * (this.dono.multiplicadorDeCura ?? 1))) {
+    // A cura pela Sabedoria (Parte 3) e pela passiva de cura
+    const cura = config.curaPorPulso * (this.dono.multiplicadorDeCura ?? 1) * (this.dono.fatorDeCura ?? 1)
+    for (const { id: personagem, vida, curado } of curaDaAura(membros, this.dono, config.raio, cura)) {
       personagem.vida = vida
       numeroFlutuante(this.cena, personagem.x, personagem.y - 34, `+${curado}`, coresDaArena.numeroDeCura, 22)
+    }
+    // Dano baixo nos inimigos dentro da aura (Parte 3, provisório), pela Sabedoria; o bicho não hostil que ninguém
+    // provocou (o cervo) não é atingido
+    const dano = (config.danoPorPulso ?? 0) * (this.dono.fatorDeDano ?? 1)
+    if (dano <= 0) return
+    for (const alvo of this.cena.alvosDoJogador()) {
+      if (alvo.config?.hostil === false && !alvo.perseguindo) continue
+      if (Math.hypot(alvo.x - this.dono.x, alvo.y - this.dono.y) <= config.raio + alvo.tamanho / 2) this.cena.acertar(alvo, dano, this.dono, 0, this.dono)
     }
   }
 

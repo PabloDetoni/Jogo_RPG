@@ -79,6 +79,10 @@ export default class Personagem extends Entidade {
     this.chanceDeCritico = membro.chanceDeCritico ?? 0 // pela Agilidade (regras/combate.js)
     // Força e Agilidade: o arco do Arqueiro (ajustes de 14/10, regras/arco.js) usa as duas
     this.forca = membro.forca ?? 0
+    // Parte 3 (11/2026): o dano da arma e a cura pelo atributo, e a velocidade pela Agilidade (regras/atributos.js)
+    this.fatorDeDano = membro.fatorDeDano ?? 1
+    this.fatorDeCura = membro.fatorDeCura ?? 1
+    this.velocidade = membro.velocidade ?? combateDeTeste.personagem.velocidade
     this.agilidade = membro.agilidade ?? 0
     this.puxando = null
     this.defesa = membro.defesa ?? 0 // do equipamento (Fase 4): tira uma parte do dano recebido
@@ -144,7 +148,7 @@ export default class Personagem extends Entidade {
     this.barra.atualizar(this.x, topo - 16, this.vida / this.vidaMaxima)
     this.barraDeMana.atualizar(this.x, topo - 10, this.mana / this.manaMaxima)
     // Caído fica apagado; imune depois de apanhar, pisca
-    const imune = agora < this.fimDaImunidade
+    const imune = agora < Math.max(this.fimDaImunidade, this.fimDoPiscarDeDano ?? 0)
     this.visual.setAlpha(this.caido ? 0.7 : imune && Math.floor(agora / 60) % 2 ? 0.35 : 1)
     const marca = this.caido ? null : marcas.find(({ efeito }) => this[efeito])
     this.marca.setVisible(Boolean(marca))

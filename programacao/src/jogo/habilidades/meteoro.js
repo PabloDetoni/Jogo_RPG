@@ -39,7 +39,7 @@ export default class Meteoro {
   explodir() {
     const area = { ...this.ponto, raio: this.h.raio }
     for (const alvo of this.cena.alvosDoJogador()) {
-      if (circuloTocaRetangulo(area, alvo.retangulo())) this.cena.acertar(alvo, this.h.dano, this.ponto, this.h.empurrao, this.dono)
+      if (circuloTocaRetangulo(area, alvo.retangulo())) this.cena.acertar(alvo, this.h.dano * (this.dono?.fatorDeDano ?? 1), this.ponto, this.h.empurrao, this.dono) // Inteligência (Parte 3)
     }
     const onda = this.cena.add
       .circle(this.ponto.x, this.ponto.y, this.h.raio, this.cor, 0.5)

@@ -20,8 +20,20 @@ export const atributoMaximo = 100
 
 // Força do efeito de um atributo: efeito = atributoMaximo × (valor ÷ atributoMaximo) ^ expoente.
 // Expoente 1: atributo 100 vale o dobro do 50. Acima de 1, os valores altos valem cada vez mais.
-// Nada usa isso ainda; o combate entra na etapa 5.
+// Usada no dano, na cura e na velocidade desde a Parte 3 (11/2026): atributosNoCombate, logo abaixo.
 export const curvaDosAtributos = { expoente: 1.5 }
+
+// Atributos no combate (Parte 3 de 11/2026, PROVISÓRIO; Conceito §6). O dano de cada arma e a força da cura vêm do
+// atributo da classe pela curva acima: fator = (1 + efeito(valor) / escala) ÷ (1 + efeito(valor inicial da classe) / escala).
+// No valor inicial da classe o fator é 1 (o nível 1 continua como era); com 50, perto de 2; com 100, perto de 3,7.
+// danoPelaClasse: qual atributo cada classe usa no dano (o Arqueiro já usa a Força no arco, regras/arco.js).
+// Velocidade de andar: base + porPontoDeAgilidade × Agilidade (o grupo começa entre ~180 e ~205 px/s).
+export const atributosNoCombate = {
+  escala: 30,
+  danoPelaClasse: { guerreiro: 'forca', tanque: 'forca', mago: 'inteligencia', sacerdote: 'sabedoria', arqueiro: null },
+  curaPelaSabedoria: true,
+  velocidade: { base: 170, porPontoDeAgilidade: 1.5 },
+}
 
 // Mochila da partida: capacidade = soma da Força do grupo × este valor (RF33)
 export const capacidadePorPontoDeForca = 2
@@ -435,7 +447,8 @@ export const combateDeTeste = {
     // Aura de cura (regra do Pablo de 08/10: cura sem pausa enquanto alguém estiver ferido): a recarga é igual à
     // duração, então uma aura nova sai assim que a anterior acaba, sem pausa e sem duas ao mesmo tempo. 5 por pulso a
     // cada 0,5 s = 10 de vida por segundo. Não gasta mana (é o ataque de clique, RF36).
-    sacerdote: { raio: 150, curaPorPulso: 5, msEntrePulsos: 500, msDeDuracao: 3000, recargaMs: 3000 },
+    // danoPorPulso (Parte 3 de 11/2026, PROVISÓRIO): a aura também machuca de leve os inimigos dentro dela
+    sacerdote: { raio: 150, curaPorPulso: 5, danoPorPulso: 3, msEntrePulsos: 500, msDeDuracao: 3000, recargaMs: 3000 },
     tanque: {
       larguraDoEscudo: 70,
       espessuraDoEscudo: 16,

@@ -319,7 +319,7 @@ try {
   await passo('Encher grupo')
   await pausa(600)
   const caidos = await cena(`(() => {
-    const derrubar = (m) => { m.vida = 1; m.fimDaImunidade = 0; c.membroLevaGolpe(m, 999, { x: m.x - 10, y: m.y }, 0) }
+    const derrubar = (m) => { m.vida = 1; m.fimDaImunidade = 0, m.imunidades = null; c.membroLevaGolpe(m, 999, { x: m.x - 10, y: m.y }, 0) }
     const arqueiro = c.lider
     const mago = c.grupo.find((m) => m.classe === 'mago')
     // Ninguém levanta ninguém durante a conferência (sem ajuda e sem mana para a Ressurreição)

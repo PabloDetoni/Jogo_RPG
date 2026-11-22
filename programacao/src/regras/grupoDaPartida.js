@@ -2,6 +2,7 @@ import { combateDeTeste, contratos, critico } from '../dados/balanceamento.js'
 import { atributosIniciaisDaClasse, classes } from '../dados/classes.js'
 import { equipamentoDosTemporarios } from '../dados/forja.js'
 import { nivelInicial } from '../dados/regras.js'
+import { fatorDeCura, fatorDeDanoDaClasse, velocidadePelaAgilidade } from './atributos.js'
 import { chanceDeCritico } from './combate.js'
 import { atributosComEquipamento, bonusDoEquipamento } from './equipamento.js'
 import { manaMaxima, manaPorSegundo } from './habilidades.js'
@@ -30,6 +31,10 @@ function numerosDoMembro(atributosSemEquipamento, equipamento = {}, arvore = {})
     reducaoDeRecarga,
     forca: atributos.forca ?? 0, // a capacidade da mochila da partida sai da Força do grupo (RF33); o dano do arco também
     agilidade: atributos.agilidade ?? 0, // o tempo para carregar o arco (ajustes de 14/10, regras/arco.js)
+    // Parte 3 (11/2026): o dano da arma e a cura pelo atributo, e a velocidade de andar pela Agilidade (regras/atributos.js)
+    fatorDeDano: fatorDeDanoDaClasse(arvore.classe, atributos),
+    fatorDeCura: fatorDeCura(atributos),
+    velocidade: velocidadePelaAgilidade(atributos.agilidade),
     vidaMaxima: Math.round(vidaMaximaPelaVitalidade(atributos.vitalidade) * (1 + passivas.vida)),
     manaMaxima: manaMaxima(atributos.inteligencia),
     manaPorSegundo: manaPorSegundo(atributos.sabedoria) * (1 + passivas.mana),

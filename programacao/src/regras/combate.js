@@ -180,3 +180,19 @@ export function velocidadeParaSeguir(posicao, alvo, velocidadeMaxima, raioDeCheg
   const velocidade = ate < raioDeChegada ? (velocidadeMaxima * ate) / raioDeChegada : velocidadeMaxima
   return { x: (dx / ate) * velocidade, y: (dy / ate) * velocidade }
 }
+
+// ---------- Imunidade por atacante (Parte 3 de 11/2026, decisão do Pablo) ----------
+// Depois de apanhar, quem é do grupo fica imune por um instante só contra QUEM bateu: cercado por vários, cada um
+// acerta (cercado volta a ser perigoso). imunidades: um Map atacante → até quando (o relógio da cena).
+
+export function imuneContra(imunidades, atacante, agora) {
+  return Boolean(imunidades) && agora < (imunidades.get(atacante) ?? 0)
+}
+
+// Marca a imunidade contra esse atacante e esquece as que já acabaram. Devolve o mesmo Map (ou um novo, se não havia).
+export function registrarImunidade(imunidades, atacante, agora, ms) {
+  const mapa = imunidades ?? new Map()
+  for (const [quem, ate] of mapa) if (ate <= agora) mapa.delete(quem)
+  mapa.set(atacante, agora + ms)
+  return mapa
+}

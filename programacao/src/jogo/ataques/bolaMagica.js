@@ -40,7 +40,7 @@ export default class BolaMagica extends Projetil {
     const centro = { x: this.x, y: this.y }
     const area = { ...centro, raio: config.raioDaExplosao }
     for (const alvo of this.cena.alvosDoJogador()) {
-      if (circuloTocaRetangulo(area, alvo.retangulo())) this.cena.acertar(alvo, config.dano, centro, config.empurrao, this.dono)
+      if (circuloTocaRetangulo(area, alvo.retangulo())) this.cena.acertar(alvo, config.dano * (this.dono?.fatorDeDano ?? 1), centro, config.empurrao, this.dono) // Inteligência (Parte 3)
     }
     const onda = this.cena.add
       .circle(centro.x, centro.y, config.raioDaExplosao, coresDaArena.bolaMagica, 0.5)

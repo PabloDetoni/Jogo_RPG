@@ -374,7 +374,7 @@ const textosNaTela = () => cena(`c.children.list.filter(o => o.type === 'Text' &
 const temTexto = async (texto) => (await textosNaTela()).includes(texto)
 // Derruba um membro do grupo: deixa com 1 de vida e dá um golpe forte (passa pela regra de verdade)
 const derrubar = (expr) =>
-  cena(`(() => { const m = ${expr}; m.vida = 1; m.fimDaImunidade = 0; c.membroLevaGolpe(m, 999, { x: m.x - 10, y: m.y }, 0); return m.caido })()`)
+  cena(`(() => { const m = ${expr}; m.vida = 1; m.fimDaImunidade = 0, m.imunidades = null; c.membroLevaGolpe(m, 999, { x: m.x - 10, y: m.y }, 0); return m.caido })()`)
 const tituloDaTela = () => avaliar(`document.querySelector('.tela .titulo')?.textContent ?? ''`)
 
 // Atalhos da 5c
@@ -727,7 +727,7 @@ try {
   await cena(`(c.liderLevaGolpe(50, { x: c.lider.x - 10, y: c.lider.y }, 100), true)`)
   conferir('invencível não perde vida', (await cena(`c.lider.vida`)) === vidaInvencivel)
   await clicar('Invencível: sim')
-  await cena(`(c.lider.fimDaImunidade = 0, c.liderLevaGolpe(10, { x: c.lider.x - 10, y: c.lider.y }, 100), true)`)
+  await cena(`(c.lider.fimDaImunidade = 0, c.lider.imunidades = null, c.liderLevaGolpe(10, { x: c.lider.x - 10, y: c.lider.y }, 100), true)`)
   conferir('desligado o Invencível, o golpe tira vida', (await cena(`c.lider.vida`)) === vidaInvencivel - 10, { antes: vidaInvencivel, depois: await cena(`c.lider.vida`) })
   await tirarInimigos()
 
@@ -1727,7 +1727,7 @@ try {
   // Um golpe de frente (o inimigo 120 px na mira), com o Líder sem a imunidade de quem acabou de apanhar
   const golpeDeFrente = (dano, tipo = 'golpe') =>
     cena(`(() => {
-      c.lider.fimDaImunidade = 0
+      c.lider.fimDaImunidade = 0, c.lider.imunidades = null
       c.lider.vida = c.lider.vidaMaxima
       const vida = c.lider.vida
       const r = c.inimigoAcerta({ x: c.lider.x + 120, y: c.lider.y, empurrar() {} }, c.lider, ${dano}, 0, '${tipo}')
@@ -1753,7 +1753,7 @@ try {
   // Projétil no escudo: o mesmo limite
   const tiro = (dano) =>
     cena(`(() => {
-      c.lider.fimDaImunidade = 0
+      c.lider.fimDaImunidade = 0, c.lider.imunidades = null
       c.lider.vida = c.lider.vidaMaxima
       const vida = c.lider.vida
       const { x, y } = c.lider.escudo.retangulo()
