@@ -200,6 +200,10 @@ async function conferirSite(endereco, nome) {
   else falta(`${nome}: faltam as variáveis do Supabase`, 'Vercel → Settings → Environment Variables: VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (marcadas para Production), depois Redeploy')
   if (codigo.includes('Invencível vale só')) falta(`${nome} mostra a barra de teste`, 'me avise: no jogo publicado ela não deveria existir')
   else ok(`${nome} não tem a barra de teste nem o painel DEV`)
+  // Parte 1 (21/11, RF61): a super velocidade e o teletransporte só existem no npm run dev
+  const opcoesDeDev = ['Opções de desenvolvedor: teletransporte e super velocidade', 'Super velocidade', 'minimapa-clicavel', 'teclaDeTeletransporte'].filter((marca) => codigo.includes(marca))
+  if (opcoesDeDev.length > 0) falta(`${nome} tem as opções de desenvolvedor (${opcoesDeDev.join(', ')})`, 'me avise: a super velocidade e o teletransporte não deveriam existir no jogo publicado')
+  else ok(`${nome} não tem a super velocidade nem o teletransporte`)
 }
 await conferirSite(VERCEL, 'o endereço principal')
 

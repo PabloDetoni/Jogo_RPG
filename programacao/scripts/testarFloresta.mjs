@@ -334,6 +334,56 @@ try {
   conferir('as áreas visitadas foram descobertas e deram XP (RF40)', exploracao.novas.includes('clareiraDasFlores') && exploracao.xp > 0, exploracao)
   conferir('o minimapa revelou só por onde o grupo passou', exploracao.reveladas > 20 && exploracao.reveladas < exploracao.total * 0.6, { reveladas: exploracao.reveladas, total: exploracao.total })
   await aba.print('07-minimapa')
+
+  console.log('11b. Opções de desenvolvedor (RF61, só no npm run dev): super velocidade e teletransporte')
+  await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - 900, i.y - 1800) < 1600).forEach((i) => c.matarInimigo(i)), true)`)
+  const andarParaADireita = async () => {
+    await colocarLider(600, 1800)
+    await pausa(300)
+    const antes = await cena(`c.lider.x`)
+    await aba.segurar(['d'], 500)
+    return Math.round((await cena(`c.lider.x`)) - antes)
+  }
+  const em1x = await andarParaADireita()
+  await aba.clicar('Super velocidade', false)
+  await pausa(200)
+  const em3x = await andarParaADireita()
+  conferir('Super velocidade 3×: o Líder anda bem mais longe no mesmo tempo', (await cena(`c.superVelocidade`)) === 3 && em3x > em1x * 2.2, { em1x, em3x })
+  await aba.clicar('Super velocidade', false)
+  await pausa(200)
+  const travas = await cena(`({ vezes: c.superVelocidade, dev: c.saltoMaximoPorQuadro(1000 / 60) })`)
+  await aba.clicar('Super velocidade', false)
+  await pausa(200)
+  const travaNormal = await cena(`c.saltoMaximoPorQuadro(1000 / 60)`)
+  conferir('6×: a trava do maior passo cresce só no dev; de volta a 1×, é a de sempre', travas.vezes === 6 && travas.dev > travaNormal * 3 && (await cena(`c.superVelocidade`)) === 1, { ...travas, normal: travaNormal })
+  // Clique no minimapa: o grupo vai para o lugar livre mais perto do ponto, com a câmera junto
+  const alvoDoDev = await cena(`(() => { const r = c.mapa.regioes.find((u) => u.id === 'media'); return { x: Math.round(r.inicio.x), y: Math.round(r.inicio.y), largura: c.mapa.tamanho.largura, altura: c.mapa.tamanho.altura } })()`)
+  const noMinimapa = await aba.avaliar(`(() => { const r = document.querySelector('.minimapa').getBoundingClientRect(); return { x: r.left + r.width * ${alvoDoDev.x} / ${alvoDoDev.largura}, y: r.top + r.height * ${alvoDoDev.y} / ${alvoDoDev.altura} } })()`)
+  await aba.clicarNaTela(noMinimapa.x, noMinimapa.y)
+  await pausa(400)
+  const depoisDoMinimapa = await cena(`(() => {
+    const dentro = (e) => c.paredesPerto(e, 100).some((p) => Math.abs(e.x - p.x) * 2 < p.largura + 2 * e.raio - 4 && Math.abs(e.y - p.y) * 2 < p.altura + 2 * e.raio - 4)
+    const cam = c.cameras.main
+    return {
+      lider: Math.round(Math.hypot(c.lider.x - ${alvoDoDev.x}, c.lider.y - ${alvoDoDev.y})),
+      grupo: Math.round(Math.max(...c.aliados.map((a) => Math.hypot(a.x - c.lider.x, a.y - c.lider.y)))),
+      dentroDeParede: c.grupo.filter(dentro).length,
+      camera: Math.round(Math.hypot(cam.midPoint.x - c.lider.x, cam.midPoint.y - c.lider.y)),
+    }
+  })()`)
+  conferir('clique no minimapa: o Líder e o grupo vão para o ponto (lugar livre), com a câmera junto', depoisDoMinimapa.lider < 160 && depoisDoMinimapa.grupo < 220 && depoisDoMinimapa.dentroDeParede === 0 && depoisDoMinimapa.camera < 200, depoisDoMinimapa)
+  await aba.print('07b-teletransporte-minimapa')
+  // T + clique no mapa: vai para o ponto clicado, sem atacar
+  const antesDoT = await cena(`({ x: c.lider.x, y: c.lider.y, vezes: c.teletransportes ?? 0 })`)
+  const naTelaDoT = await naTela(antesDoT.x + 320, antesDoT.y)
+  await aba.tecla('t', 'keyDown')
+  await pausa(80)
+  await aba.clicarNaTela(naTelaDoT.x, naTelaDoT.y)
+  await pausa(80)
+  await aba.tecla('t', 'keyUp')
+  await pausa(300)
+  const depoisDoT = await cena(`({ dx: Math.round(c.lider.x - ${antesDoT.x}), vezes: c.teletransportes ?? 0, puxando: !!c.lider.puxando })`)
+  conferir('T + clique: o grupo vai para o ponto clicado e o clique não vira ataque', depoisDoT.vezes === antesDoT.vezes + 1 && Math.abs(depoisDoT.dx - 320) < 120 && !depoisDoT.puxando, depoisDoT)
   // Volta ao Reino com Q (num lugar sem mobs, fora de combate; a contagem é adiantada)
   await colocarLider(400, 1800)
   await cena(`(c.inimigos.filter((i) => i.perseguindo || Math.hypot(i.x - 400, i.y - 1800) < 1500).forEach((i) => c.matarInimigo(i)), c.ultimoDano = -999999, true)`)

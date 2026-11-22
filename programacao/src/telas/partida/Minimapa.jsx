@@ -3,11 +3,13 @@ import { mundo } from '../../dados/balanceamento.js'
 import { coresDaDificuldade, coresDoMinimapa } from '../../dados/mundo/minimapa.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { decodificarNevoa, regiaoEm } from '../../regras/mundo.js'
+import { pontoDoMinimapa } from '../../regras/opcoesDeDev.js'
 
 // Minimapa da partida (Fase 3, RF40), no quadro do HUD. Começa escuro e revela por onde o grupo passa; cada parte
 // descoberta aparece na cor da dificuldade da região (a mata fechada, em verde-escuro). Mostra o Líder, os aliados e o
 // pedaço que está na tela. A cena manda a névoa e as posições 8 vezes por segundo (minimapa = situacao.minimapa).
-export default function Minimapa({ bioma, minimapa }) {
+// aoClicar (só no npm run dev, RF61): recebe o ponto do mapa onde o minimapa foi clicado (teletransporte)
+export default function Minimapa({ bioma, minimapa, aoClicar }) {
   const tela = useRef(null)
   const mapa = useMemo(() => mapaDoBioma(bioma), [bioma])
   const { celula } = mundo.minimapa
@@ -52,5 +54,22 @@ export default function Minimapa({ bioma, minimapa }) {
     desenho.fillRect(minimapa.lider.x * ex - 2.5, minimapa.lider.y * ey - 2.5, 5, 5)
   }, [minimapa, mapa, cores, colunas, linhas, celula])
 
-  return <canvas ref={tela} className="minimapa" width={180} height={90} aria-label="Minimapa da partida" />
+  if (!import.meta.env.DEV || !aoClicar) return <canvas ref={tela} className="minimapa" width={180} height={90} aria-label="Minimapa da partida" />
+  const clicar = (evento) => {
+    const caixa = evento.currentTarget.getBoundingClientRect()
+    const ponto = pontoDoMinimapa({ x: evento.clientX - caixa.left, y: evento.clientY - caixa.top }, { largura: caixa.width, altura: caixa.height }, mapa.tamanho)
+    if (ponto) aoClicar(ponto)
+  }
+  return (
+    <canvas
+      ref={tela}
+      className="minimapa minimapa-clicavel"
+      width={180}
+      height={90}
+      aria-label="Minimapa da partida (teste: clique para se teletransportar)"
+      title="Teste: clique para levar o grupo até aqui"
+      onMouseDown={(evento) => evento.preventDefault()}
+      onClick={clicar}
+    />
+  )
 }

@@ -265,7 +265,8 @@ export const combateDeTeste = {
   hud: { msDaMensagem: 2500, mensagensNoMaximo: 3, msParaJuntar: 300 },
   // Botões de teste (5c). "+ouro" soma ao ouro ganho na partida (para chegar à Grande Vitória sem jogar horas).
   // Teste do foco: o Líder fica com esta fração da vida (abaixo do limite do foco) por msPreso, com mobs perto.
-  testes: { ouroDoBotao: 300, foco: { vidaDoLider: 0.25, msPreso: 20000, mobs: 3, distancia: 300 } },
+  // superVelocidade (RF61, Parte 1 de 11/2026, só no npm run dev): o botão da barra de teste passa por estes multiplicadores
+  testes: { ouroDoBotao: 300, foco: { vidaDoLider: 0.25, msPreso: 20000, mobs: 3, distancia: 300 }, superVelocidade: { multiplicadores: [1, 3, 6] } },
   // Líder e aliados. Imunidade: tempo sem levar dano depois de apanhar (RF36)
   personagem: { tamanho: 40, velocidade: 220, msDeImunidade: 500, msDeEmpurrao: 150 },
   // Esquiva (Espaço): avanço curto, sem gastar mana e sem levar dano durante o avanço
