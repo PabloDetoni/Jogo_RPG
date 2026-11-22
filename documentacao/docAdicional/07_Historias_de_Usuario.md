@@ -426,7 +426,7 @@ Critérios de aceite:
 - O menu leva direto à ação (comprar, equipar, missões) ou a "Ir embora".
 - Requisitos atendidos: RF57.
 
-### HU46 · Usar opções de desenvolvedor (UC46) — planejado (11/2026)
+### HU46 · Usar opções de desenvolvedor (UC46) — feito (11/2026)
 
 Como desenvolvedor, quero andar mais rápido e me teletransportar na partida, para testar o mapa grande sem perder tempo.
 
@@ -436,7 +436,7 @@ Critérios de aceite:
 - Nada disso existe no site publicado.
 - Requisitos atendidos: RF61.
 
-### HU47 · Simular balanceamento (UC47) — planejado (11/2026)
+### HU47 · Simular balanceamento (UC47) — feito (11/2026)
 
 Como desenvolvedor, quero simular um grupo contra uma região, para acertar os números sem jogar horas.
 

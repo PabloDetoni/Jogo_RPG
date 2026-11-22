@@ -66,7 +66,7 @@ export default class Escudo {
     this.cena.tweens.add({ targets: this.avanco, distancia: 24, duration: 70, yoyo: true, ease: 'Quad.Out' })
     for (const alvo of this.cena.alvosDoJogador()) {
       if (noArco(this.dono, this.angulo, config.alcanceDoEmpurrao + alvo.tamanho / 2, config.aberturaDoBloqueioGraus, alvo)) {
-        this.cena.acertar(alvo, config.dano, this.dono, config.empurrao, this.dono)
+        this.cena.acertar(alvo, config.dano * (this.dono.fatorDeDano ?? 1), this.dono, config.empurrao, this.dono) // Força (Parte 3)
       }
     }
     this.dono.deformar(1.1, 0.9, 50, 120)

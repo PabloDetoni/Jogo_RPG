@@ -498,7 +498,7 @@ try {
   conferir('o Boss nasce no domínio dele, e "Muito difícil" é a entrada do domínio', boss.noDominio && boss.liderNoDominio, boss)
   conferir('no domínio do Boss, a barra de vida grande aparece no HUD', await aba.avaliar(`!!document.querySelector('.barra-do-boss')`))
   // Ataque avisado: o pisão perto do Líder, sem Invencível
-  await cena(`(c.invencivel = false, c.lider.vida = c.lider.vidaMaxima, c.lider.fimDaImunidade = 0, c.inimigos.filter((i) => !i.ehBoss).forEach((i) => c.matarInimigo(i)), true)`)
+  await cena(`(c.invencivel = false, c.lider.vida = c.lider.vidaMaxima, c.lider.fimDaImunidade = 0, c.lider.imunidades = null, c.inimigos.filter((i) => !i.ehBoss).forEach((i) => c.matarInimigo(i)), true)`)
   await cena(`(() => { c.lider.colocarEm(c.boss.x - 140, c.boss.y); c.boss.alvo = c.lider; c.boss.estado = 'perseguindo'; c.boss.comecarAtaque('pisao', c.agora); return true })()`)
   const durante = await cena(`({ aviso: !!c.boss.aviso, vida: c.lider.vida, maxima: c.lider.vidaMaxima, estado: c.boss.estado })`)
   conferir('antes do golpe, a marca aparece no chão e ninguém leva dano ainda', durante.aviso && durante.vida === durante.maxima && durante.estado === 'avisando', durante)
@@ -507,14 +507,14 @@ try {
   await pausa(150)
   const depoisDoGolpe = await cena(`({ vida: c.lider.vida, maxima: c.lider.vidaMaxima, aviso: !!c.boss.aviso })`)
   conferir('quem ficou na marca leva o golpe, e a marca some', depoisDoGolpe.vida < depoisDoGolpe.maxima && !depoisDoGolpe.aviso, depoisDoGolpe)
-  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0; c.boss.ultimoAtaque = null; c.boss.comecarAtaque('pisao', c.agora); c.lider.colocarEm(c.boss.x - 420, c.boss.y); return true })()`)
+  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0, c.lider.imunidades = null; c.boss.ultimoAtaque = null; c.boss.comecarAtaque('pisao', c.agora); c.lider.colocarEm(c.boss.x - 420, c.boss.y); return true })()`)
   await aba.esperar(`${CENA}.boss.estado !== 'avisando'`, 'o golpe', 4000)
   await pausa(150)
   conferir('quem sai da marca antes do golpe não leva dano', await cena(`c.lider.vida === c.lider.vidaMaxima`))
   // Tanque (ajustes de 14/10): o escudo segura golpes e tiros de frente, mas o pisão é em área e atinge mesmo de frente
   await aba.clicar('Tanque')
   await pausa(300)
-  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0; c.boss.ultimoAtaque = null; c.lider.colocarEm(c.boss.x - 140, c.boss.y); return true })()`)
+  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0, c.lider.imunidades = null; c.boss.ultimoAtaque = null; c.lider.colocarEm(c.boss.x - 140, c.boss.y); return true })()`)
   // Mira no Boss: o escudo fica virado para ele
   const mira = await naTela(await cena(`c.boss.x`), await cena(`c.boss.y`))
   await aba.moverMouse(mira.x, mira.y)
@@ -528,7 +528,7 @@ try {
   // Escudo contra golpe forte (ajustes na partida, 14/10): a investida do Boss (40) passa do limite do Tanque do começo
   // (Força 15: 32,5) e rompe o escudo; o Tanque leva o dano inteiro
   await pausa(700)
-  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0; c.boss.ultimoAtaque = null; c.lider.colocarEm(c.boss.x - 300, c.boss.y); return true })()`)
+  await cena(`(() => { c.lider.vida = c.lider.vidaMaxima; c.lider.fimDaImunidade = 0, c.lider.imunidades = null; c.boss.ultimoAtaque = null; c.lider.colocarEm(c.boss.x - 300, c.boss.y); return true })()`)
   const miraDaInvestida = await naTela(await cena(`c.boss.x`), await cena(`c.boss.y`))
   await aba.moverMouse(miraDaInvestida.x, miraDaInvestida.y)
   await pausa(300)

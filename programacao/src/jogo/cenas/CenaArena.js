@@ -25,7 +25,7 @@ import {
   somarXpDoAbate,
   xpParaOProximoNivel,
 } from '../../regras/andamentoDaPartida.js'
-import { aplicarDano, circuloTocaRetangulo, golpeNoEscudo, fracaoDaRecarga, podeUsar, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
+import { aplicarDano, circuloTocaRetangulo, golpeNoEscudo, fracaoDaRecarga, imuneContra, podeUsar, registrarImunidade, retangulosSeTocam, rolarCritico, vagaNaFormacao, velocidadeDoMovimento, vetorDeEmpurrao } from '../../regras/combate.js'
 import { comoPeloResultado, pontuacaoBase } from '../../regras/fimDaPartida.js'
 import { areaLimpa, avancarAjuda, escolherAjudantes, estaAjudando, fimPorDesmaio, segundosRestantes, vidaAoLevantar } from '../../regras/desmaio.js'
 import { classesQueFaltam, membroDeTeste, trocarClasseDoLider } from '../../regras/grupoDaPartida.js'
@@ -767,7 +767,7 @@ export default class CenaArena extends Phaser.Scene {
       }
       return
     }
-    lider.andar(velocidadeDoMovimento(dx, dy, personagem.velocidade))
+    lider.andar(velocidadeDoMovimento(dx, dy, lider.velocidade ?? personagem.velocidade)) // pela Agilidade (Parte 3)
   }
 
   // Para onde o Líder mira: o ângulo e o ponto do mouse (o Meteoro cai nele, até o alcance)
@@ -1368,12 +1368,12 @@ export default class CenaArena extends Phaser.Scene {
 
   // Projétil que bate no escudo de um Tanque: segura até o limite pela Força; acima, rompe e o Tanque leva o dano
   // inteiro. O projétil acaba no escudo nos dois casos.
-  projetilNoEscudo(escudo, dano, origem, forcaDoEmpurrao, x, y) {
+  projetilNoEscudo(escudo, dano, origem, forcaDoEmpurrao, x, y, atacante = null) {
     if (golpeNoEscudo({ escudoAtivo: escudo.ativo, tipo: 'projetil', naFrente: true, dano, forca: escudo.dono.forca }) !== 'rompido') {
       this.mostrarBloqueado(x, y)
       return
     }
-    if (this.membroLevaGolpe(escudo.dono, dano, origem, forcaDoEmpurrao) === 'acertou') this.escudoRompido(escudo)
+    if (this.membroLevaGolpe(escudo.dono, dano, origem, forcaDoEmpurrao, atacante ?? origem) === 'acertou') this.escudoRompido(escudo)
   }
 
   // "Escudo rompido!" em cima do escudo, que treme; e o aviso no HUD (a primeira vez que se vê, para entender)
@@ -1388,10 +1388,15 @@ export default class CenaArena extends Phaser.Scene {
 
   // Quem é do grupo leva o golpe (Líder ou aliado). Não leva quem está caído ou imune depois de apanhar;
   // o Líder também não leva esquivando ou com o Invencível ligado. Frágil leva mais; provocando, menos.
-  membroLevaGolpe(membro, dano, origem, forcaDoEmpurrao) {
+  // atacante (Parte 3): quem bateu. A imunidade depois de apanhar vale só contra ele (cercado volta a ser perigoso);
+  // a imunidade geral (fimDaImunidade, a da Ressurreição) continua valendo contra todos.
+  membroLevaGolpe(membro, dano, origem, forcaDoEmpurrao, atacante = origem) {
     const agora = this.agora
     const protegido =
-      membro.caido || agora < membro.fimDaImunidade || (membro.lider && (this.invencivel || agora < this.fimDaEsquiva))
+      membro.caido ||
+      agora < membro.fimDaImunidade ||
+      imuneContra(membro.imunidades, atacante, agora) ||
+      (membro.lider && (this.invencivel || agora < this.fimDaEsquiva))
     if (protegido) return 'protegido'
     let danoFinal = dano
     if (membro.fragil) danoFinal *= 1 + desmaio.danoExtraFragil
@@ -1404,7 +1409,8 @@ export default class CenaArena extends Phaser.Scene {
     numeroFlutuante(this, membro.x, membro.y - membro.tamanho * 0.6, `-${danoFeito}`, membro.lider ? coresDaArena.danoNoLider : '#ffc2c2', membro.lider ? 26 : 20)
     particulas(this, membro.x, membro.y, membro.cor, 8, 200)
     membro.empurrar(vetorDeEmpurrao(origem, membro, forcaDoEmpurrao), personagem.msDeEmpurrao)
-    membro.fimDaImunidade = agora + personagem.msDeImunidade
+    membro.imunidades = registrarImunidade(membro.imunidades, atacante, agora, personagem.msDeImunidade)
+    membro.fimDoPiscarDeDano = agora + personagem.msDeImunidade // só o desenho pisca
     this.ultimoDano = agora
     if (membro.lider) tremerTela(this, 90, 0.004)
     if (vida <= 0) this.desmaiar(membro)

@@ -10,7 +10,7 @@ export function giro(cena, dono, h = config) {
   const area = { x: dono.x, y: dono.y, raio: h.raio }
   const cor = h.cor ?? 0xffffff
   for (const alvo of cena.alvosDoJogador()) {
-    if (circuloTocaRetangulo(area, alvo.retangulo())) cena.acertar(alvo, h.dano, dono, h.empurrao, dono)
+    if (circuloTocaRetangulo(area, alvo.retangulo())) cena.acertar(alvo, h.dano * (dono.fatorDeDano ?? 1), dono, h.empurrao, dono)
   }
 
   // Desenho: uma fatia branca dá a volta inteira e some

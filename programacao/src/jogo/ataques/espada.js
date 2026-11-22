@@ -9,7 +9,7 @@ const config = combateDeTeste.ataques.guerreiro
 export function golpeDeEspada(cena, dono, angulo) {
   for (const alvo of cena.alvosDoJogador()) {
     if (noArco(dono, angulo, config.alcance + alvo.tamanho / 2, config.aberturaGraus, alvo)) {
-      cena.acertar(alvo, config.dano, dono, config.empurrao, dono)
+      cena.acertar(alvo, config.dano * (dono.fatorDeDano ?? 1), dono, config.empurrao, dono) // Força (Parte 3)
     }
   }
 

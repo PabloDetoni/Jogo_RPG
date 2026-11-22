@@ -1016,3 +1016,45 @@ ARTE-16: abrir previa-16x.png da versão de 15/11. Conferir cabeça/tronco, bra�
 ARTE-16-R2: conferir previa-4x.png e previa-16x.png na rodada 2: rosto e classe reconhecíveis na menor, contornos e separação dos pés na maior. Conferir chapéu, elmo/espada, emblema do escudo, capuz/cajado e arco sem corda.
 
 ARTE-COMANDOS-64: importar um bloco pixel-matrix por vez no Ateliê e comparar com a prévia. Conferir pé, máscara, capuz/cajado, contornos e rosto intacto do Mago. Importação na interface ainda não executada pelo agente.
+
+## DV. Opções de desenvolvedor (Parte 1, 11/2026; só no npm run dev)
+
+**DV-01 · Super velocidade**
+- Fazer: no `npm run dev`, entre na Floresta e clique em "Super velocidade" na barra de teste (1× → 3× → 6× → 1×); ande com WASD.
+- Deve acontecer: o grupo inteiro anda 3 e 6 vezes mais rápido; de volta a 1×, normal. Ninguém atravessa árvore ou pedra.
+
+**DV-02 · Teletransporte**
+- Fazer: clique num ponto do minimapa; depois segure T e clique num ponto do mapa.
+- Deve acontecer: o Líder e o grupo vão para o lugar livre mais perto do ponto, com a câmera junto; com o T, o clique não ataca.
+
+**DV-03 · Nada disso no site**
+- Fazer: abra https://jogo-rpg-six.vercel.app e entre numa partida.
+- Deve acontecer: não há barra de teste, nem "Super velocidade"; clicar no minimapa e T + clique não fazem nada.
+
+## BO. Bonecos de quadradinho (Parte 2, 11/2026)
+
+**BO-01 · As 5 classes**
+- Fazer: entre na arena de teste (ou na Floresta) e use "Encher grupo".
+- Deve acontecer: cada classe é um boneco com cabeça grande, corpo, a saia na cor da classe, duas pernas e dois braços; Guerreiro com espada e elmo, Mago com chapéu e cajado, Tanque com escudo, Sacerdote com capuz e cetro com orbe, Arqueiro com capuz verde e arco. Parados, respiram de leve.
+
+**BO-02 · Andar, atacar e cair**
+- Fazer: ande, ataque com cada classe (troque pela barra de teste) e use "Derrubar aliado".
+- Deve acontecer: andando, as pernas alternam e o braço livre balança; a espada varre, o cajado e o cetro inclinam, o escudo empurra, a corda do arco estica com a carga; caído, o boneco tomba, escurece e fecha os olhos.
+
+**BO-03 · Tanque e Arqueiro seguindo a mira**
+- Fazer: com o Tanque e depois o Arqueiro de Líder, gire o mouse em volta dele.
+- Deve acontecer: o braço e a arma seguem a mira; mirando para cima, a arma vai para trás do corpo; para baixo, para a frente; o corpo vira de lado perto da vertical, sem piscar.
+
+## BA. Atributos no combate e simulador (Parte 3, 11/2026)
+
+**BA-01 · Atributo mudando o dano**
+- Fazer: no `npm run dev`, suba o nível de um Guerreiro pelo painel DEV e ponha pontos em Força nas Árvores de Habilidades; jogue na arena.
+- Deve acontecer: o número de dano da espada sobe (com a Força inicial, 25 como antes).
+
+**BA-02 · Sacerdote machuca e cercado é perigoso**
+- Fazer: jogue de Sacerdote perto de mobs; depois deixe 3 lobos cercarem o Líder.
+- Deve acontecer: a aura cura o grupo e tira um pouco de vida dos mobs dentro dela; cercado, cada lobo acerta (a imunidade é só contra o mesmo lobo).
+
+**BA-03 · Simulador**
+- Fazer: em `programacao/`, rode `npm run simular -- --nivel 5 --regiao media --classes guerreiro,mago` e `npm run simular -- --tabela`.
+- Deve acontecer: aparecem o resultado da luta, quem cai e quando, o dano dado e recebido, quantos mobs dá para enfrentar, o XP e o ouro por minuto e se fugir resolve.

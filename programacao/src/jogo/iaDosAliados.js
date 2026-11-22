@@ -26,7 +26,10 @@ import { pontoDeDesvio } from '../regras/movimento.js'
 import { atualizarFoco, chanceDeErro, sortear } from '../regras/nivelDaIA.js'
 
 const { ia, personagem, ataques, habilidades, desmaio, raioDaFormacao, mobVermelho } = combateDeTeste
-const velocidade = personagem.velocidade * 1.15
+// A velocidade do aliado (Parte 3: cada um pela Agilidade): a maior entre a dele e a do Líder, um pouco acima,
+// para o grupo nunca ficar para trás de um Líder mais rápido
+const velocidadeDoAliado = (aliado) =>
+  Math.max(aliado.velocidade ?? personagem.velocidade, aliado.cena?.lider?.velocidade ?? personagem.velocidade) * 1.15
 const distancia = (a, b) => Math.hypot(b.x - a.x, b.y - a.y)
 
 // IA dos aliados (TASK-043, TASK-045, 5b.1 e 5d). As escolhas vêm de regras/iaDosAliados.js, regras/nivelDaIA.js,
@@ -234,7 +237,7 @@ function executar(aliado, plano, contexto) {
   switch (plano.tipo) {
     case 'recuar': {
       const direcao = direcaoDeRecuo(aliado, plano.mob)
-      aliado.andar({ x: direcao.x * velocidade, y: direcao.y * velocidade })
+      aliado.andar({ x: direcao.x * velocidadeDoAliado(aliado), y: direcao.y * velocidadeDoAliado(aliado) })
       break
     }
     case 'seguir':
@@ -413,7 +416,7 @@ function ficarEmVoltaDoLider(aliado, plano, contexto) {
   // exata (num canto, por exemplo) deixaria o aliado rodando sem parar. Longe dele (voltando), desvia.
   const longeDoLider = distancia(aliado, lider) > zonaConfortavel.maxima + zonaConfortavel.folga
   irPara(aliado, pontoDaVaga, contexto, 60, plano.rapido ? 1.3 : 1, plano.rapido || longeDoLider)
-  if (passo) aliado.andar({ x: aliado.querida.x + passo.x * velocidade * 0.8, y: aliado.querida.y + passo.y * velocidade * 0.8 })
+  if (passo) aliado.andar({ x: aliado.querida.x + passo.x * velocidadeDoAliado(aliado) * 0.8, y: aliado.querida.y + passo.y * velocidadeDoAliado(aliado) * 0.8 })
   mirarNaDirecao(aliado)
 }
 
@@ -434,10 +437,10 @@ function irPara(aliado, ponto, { cena, agora }, raioDeChegada, fator = 1, desvia
   const desvio = desviar ? desvioDeQuemEstaParado(aliado, destino, cena) : null
   if (!desviar) aliado.ia.desvio = null
   if (desvio) {
-    aliado.andar(velocidadeParaSeguir(aliado, desvio, velocidade * fator, 1))
+    aliado.andar(velocidadeParaSeguir(aliado, desvio, velocidadeDoAliado(aliado) * fator, 1))
     return
   }
-  aliado.andar(velocidadeParaSeguir(aliado, destino, velocidade * fator, destino === ponto ? raioDeChegada : 1))
+  aliado.andar(velocidadeParaSeguir(aliado, destino, velocidadeDoAliado(aliado) * fator, destino === ponto ? raioDeChegada : 1))
 }
 
 // Ponto para contornar quem está parado entre o aliado e o destino (outro aliado, o Líder ou um caído).

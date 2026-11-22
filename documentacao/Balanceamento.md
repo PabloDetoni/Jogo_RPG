@@ -533,6 +533,49 @@ Rodada de **30 s**, no máximo 60 pontos; **3 rodadas por dia** em cada minijogo
 | Mina | Clique 3 vezes em cada pedra para quebrar. Algumas têm cristal. | Minério de ferro | Cristal (15%) | 5 |
 | Lago | Quando a boia afundar, clique rápido para fisgar. Antes da hora, o peixe foge. | Peixe | Pérola do lago (10%) | 7 |
 
+## Atributos no combate e simulador (Parte 3, 11/2026, provisório)
+
+O dano da arma (Força: espada, escudo e Giro; Inteligência: bola mágica e Meteoro; Sabedoria: a aura) e a força da cura (Sabedoria) são multiplicados por **fator = (1 + efeito(valor) ÷ 30) ÷ (1 + efeito(valor inicial da classe) ÷ 30)**, com o efeito da curva acima. No valor inicial da classe o fator é 1: o nível 1 continua como era. O Arqueiro continua com a Força no arco (sem fator a mais). A aura do Sacerdote também tira **3 de vida por pulso** dos inimigos dentro dela. A velocidade de andar é **170 + 1,5 × Agilidade** (px/s). A imunidade depois de apanhar (500 ms) vale **só contra o mesmo atacante**.
+
+| Atributo | Fator (referência 14, o Guerreiro) | Velocidade com essa Agilidade (px/s) |
+| --- | --- | --- |
+| 14 | 1,00× | 191 |
+| 25 | 1,21× | 208 |
+| 50 | 1,85× | 245 |
+| 75 | 2,69× | 283 |
+| 100 | 3,69× | 320 |
+
+### Simulador (npm run simular)
+
+Modelo simplificado (sem física nem IA; detalhes em src/regras/simulador.js e src/dados/simulador.js). Bando padrão de 3 mobs da região; no Boss, ele sozinho. "Mobs sem cair": o maior bando (até 12) que o grupo vence sem ninguém cair.
+
+| Nível | Grupo | Região | Luta padrão | Mobs sem cair | XP/min | Fugir resolve |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Guerreiro sozinho | facil | vence em 2,3 s | 8 | 591 | sim |
+| 1 | Guerreiro sozinho | media | vence em 4,3 s | 3 | 417 | sim |
+| 1 | Guerreiro sozinho | dificil | perde em 2,9 s | 2 | 371 | sim |
+| 1 | Guerreiro sozinho | boss | perde em 5,4 s | 0 | 0 | sim |
+| 1 | grupo de 5 | facil | vence em 0,7 s | 12 | 957 | sim |
+| 1 | grupo de 5 | media | vence em 2,2 s | 12 | 1568 | sim |
+| 1 | grupo de 5 | dificil | vence em 2,5 s | 7 | 1294 | sim |
+| 1 | grupo de 5 | boss | perde em 11,4 s | 0 | 0 | sim |
+| 10 | Guerreiro sozinho | facil | vence em 1,9 s | 12 | 845 | sim |
+| 10 | Guerreiro sozinho | media | vence em 3,5 s | 6 | 814 | sim |
+| 10 | Guerreiro sozinho | dificil | vence em 4,7 s | 4 | 721 | sim |
+| 10 | Guerreiro sozinho | boss | perde em 11,4 s | 0 | 0 | sim |
+| 10 | grupo de 5 | facil | vence em 0,7 s | 12 | 1011 | sim |
+| 10 | grupo de 5 | media | vence em 1,5 s | 12 | 1629 | sim |
+| 10 | grupo de 5 | dificil | vence em 2,2 s | 12 | 2170 | sim |
+| 10 | grupo de 5 | boss | vence em 14,2 s | 1 | 918 | sim |
+| 30 | Guerreiro sozinho | facil | vence em 1,5 s | 12 | 909 | sim |
+| 30 | Guerreiro sozinho | media | vence em 2,7 s | 11 | 1284 | sim |
+| 30 | Guerreiro sozinho | dificil | vence em 3,1 s | 8 | 1437 | sim |
+| 30 | Guerreiro sozinho | boss | vence em 18,3 s | 1 | 793 | sim |
+| 30 | grupo de 5 | facil | vence em 0,7 s | 12 | 1040 | sim |
+| 30 | grupo de 5 | media | vence em 0,7 s | 12 | 1802 | sim |
+| 30 | grupo de 5 | dificil | vence em 1,3 s | 12 | 2498 | sim |
+| 30 | grupo de 5 | boss | vence em 8,3 s | 1 | 1185 | sim |
+
 ## Ainda sem valor (a decidir)
 
 Valores do Conceito §19 que ainda não existem no código:

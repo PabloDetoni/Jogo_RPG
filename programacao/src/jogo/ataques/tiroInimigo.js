@@ -12,6 +12,7 @@ export default class TiroInimigo extends Projetil {
     const saida = atirador.tamanho * 0.7
     super(cena, atirador.x + Math.cos(angulo) * saida, atirador.y + Math.sin(angulo) * saida, angulo, config.velocidadeDoTiro, config.raioDoTiro, coresDaArena.tiroInimigo)
     this.config = config
+    this.atirador = atirador // a imunidade de quem leva o tiro vale contra este atirador (Parte 3)
     this.forma.setStrokeStyle(3, 0xffb0b0)
   }
 
@@ -22,11 +23,11 @@ export default class TiroInimigo extends Projetil {
       const circulo = this.circulo()
       if (this.percorrido >= config.alcanceDoTiro || this.cena.bateEmObstaculo(circulo)) acabou = true
       else if (this.cena.escudoQueBloqueia(circulo)) {
-        this.cena.projetilNoEscudo(this.cena.escudoQueBloqueia(circulo), config.dano, this.origemDoEmpurrao, config.empurrao, this.x, this.y)
+        this.cena.projetilNoEscudo(this.cena.escudoQueBloqueia(circulo), config.dano, this.origemDoEmpurrao, config.empurrao, this.x, this.y, this.atirador)
         acabou = true
       } else {
         const membro = this.cena.membroAtingido(circulo)
-        if (membro) acabou = this.cena.membroLevaGolpe(membro, config.dano, this.origemDoEmpurrao, config.empurrao) !== 'protegido'
+        if (membro) acabou = this.cena.membroLevaGolpe(membro, config.dano, this.origemDoEmpurrao, config.empurrao, this.atirador) !== 'protegido'
       }
       return acabou
     })

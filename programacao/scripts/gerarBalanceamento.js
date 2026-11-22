@@ -45,7 +45,9 @@ import {
 } from '../src/dados/regras.js'
 import { resultados } from '../src/dados/resultados.js'
 import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
-import { efeitoComExpoente, pontosDeAtributoAteONivel } from '../src/regras/atributos.js'
+import { efeitoComExpoente, fatorDoAtributo, pontosDeAtributoAteONivel, velocidadePelaAgilidade } from '../src/regras/atributos.js'
+import { simular } from '../src/regras/simulador.js'
+import { atributosNoCombate as noCombate } from '../src/dados/balanceamento.js'
 import { chanceDeCritico, limiteDoEscudo } from '../src/regras/combate.js'
 import { saltoMaximoPorQuadro } from '../src/regras/movimento.js'
 import { manaMaxima, manaPorSegundo } from '../src/regras/habilidades.js'
@@ -574,6 +576,28 @@ escrever(
   tabela(
     ['Lugar', 'Como joga', 'Recurso', 'Raro (chance por ponto)', 'XP por ponto'],
     Object.entries(dadosDosMinijogos).map(([id, dados]) => [dados.nome, dados.regra, itemDoCatalogo(dados.item).nome, `${itemDoCatalogo(dados.raro).nome} (${numero(minijogos[id].chanceDoRaro * 100)}%)`, minijogos[id].xpPorPonto]),
+  ),
+)
+
+escrever(
+  '## Atributos no combate e simulador (Parte 3, 11/2026, provisório)',
+  `O dano da arma (Força: espada, escudo e Giro; Inteligência: bola mágica e Meteoro; Sabedoria: a aura) e a força da cura (Sabedoria) são multiplicados por **fator = (1 + efeito(valor) ÷ ${noCombate.escala}) ÷ (1 + efeito(valor inicial da classe) ÷ ${noCombate.escala})**, com o efeito da curva acima. No valor inicial da classe o fator é 1: o nível 1 continua como era. O Arqueiro continua com a Força no arco (sem fator a mais). A aura do Sacerdote também tira **${combate.ataques.sacerdote.danoPorPulso} de vida por pulso** dos inimigos dentro dela. A velocidade de andar é **${noCombate.velocidade.base} + ${numero(noCombate.velocidade.porPontoDeAgilidade, 1)} × Agilidade** (px/s). A imunidade depois de apanhar (${combate.personagem.msDeImunidade} ms) vale **só contra o mesmo atacante**.`,
+  tabela(
+    ['Atributo', 'Fator (referência 14, o Guerreiro)', 'Velocidade com essa Agilidade (px/s)'],
+    [14, 25, 50, 75, 100].map((v) => [numero(v), `${numero(fatorDoAtributo(v, 14), 2)}×`, numero(velocidadePelaAgilidade(v))]),
+  ),
+  '### Simulador (npm run simular)',
+  'Modelo simplificado (sem física nem IA; detalhes em src/regras/simulador.js e src/dados/simulador.js). Bando padrão de 3 mobs da região; no Boss, ele sozinho. "Mobs sem cair": o maior bando (até 12) que o grupo vence sem ninguém cair.',
+  tabela(
+    ['Nível', 'Grupo', 'Região', 'Luta padrão', 'Mobs sem cair', 'XP/min', 'Fugir resolve'],
+    [1, 10, 30].flatMap((nivel) =>
+      [['guerreiro'], ['guerreiro', 'mago', 'tanque', 'sacerdote', 'arqueiro']].flatMap((grupo) =>
+        ['facil', 'media', 'dificil', 'boss'].map((regiao) => {
+          const r = simular({ nivel, regiao, classes: grupo })
+          return [nivel, grupo.length === 1 ? 'Guerreiro sozinho' : 'grupo de 5', regiao, `${r.lutaPadrao.venceu ? 'vence' : 'perde'} em ${numero(r.lutaPadrao.segundos, 1)} s`, r.maximoSemCair, r.xpPorMinuto, r.fugirResolve ? 'sim' : 'não']
+        }),
+      ),
+    ),
   ),
 )
 
