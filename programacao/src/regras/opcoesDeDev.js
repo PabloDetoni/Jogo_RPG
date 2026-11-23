@@ -30,10 +30,11 @@ export function saltoMaximoComDev(ms, { dev = false, multiplicador = 1 } = {}, c
 }
 
 // O ponto do mapa que corresponde a um clique no minimapa. clique: { x, y } dentro da caixa do minimapa (em px da
-// tela); caixa: { largura, altura } dela; tamanho: { largura, altura } do mapa. Fica sempre dentro do mapa.
-export function pontoDoMinimapa(clique, caixa, tamanho) {
+// tela); caixa: { largura, altura } dela; janela: o pedaço do mapa que o minimapa mostra ({ x, y, largura, altura }; sem
+// x e y, o mapa todo a partir do canto). Fica sempre dentro da janela.
+export function pontoDoMinimapa(clique, caixa, janela) {
   if (!caixa?.largura || !caixa?.altura) return null
   const fracaoX = Math.min(1, Math.max(0, clique.x / caixa.largura))
   const fracaoY = Math.min(1, Math.max(0, clique.y / caixa.altura))
-  return { x: Math.round(fracaoX * tamanho.largura), y: Math.round(fracaoY * tamanho.altura) }
+  return { x: Math.round((janela.x ?? 0) + fracaoX * janela.largura), y: Math.round((janela.y ?? 0) + fracaoY * janela.altura) }
 }

@@ -9,7 +9,6 @@ import {
   gerarObstaculos,
   inicioDoPontoDePartida,
   juntarNevoas,
-  paredesDaMata,
   regiaoEm,
   revelarEmVolta,
 } from './mundo.js'
@@ -19,25 +18,25 @@ const regioes = [
   { id: 'zonaSegura', pontoDePartida: 'inicio', x0: 0, x1: 500, y0: 400, y1: 600, inicio: { x: 100, y: 500 } },
   { id: 'facil', pontoDePartida: 'facil', x0: 500, x1: 1500, y0: 100, y1: 900, inicio: { x: 600, y: 500 } },
 ]
-const tamanho = { largura: 1500, altura: 1000 }
-const dentroDeParede = (ponto, paredes) =>
-  paredes.some((p) => Math.abs(ponto.x - p.x) * 2 < p.largura && Math.abs(ponto.y - p.y) * 2 < p.altura)
 
-describe('mata fechada em volta das regiões (TASK-060)', () => {
-  const paredes = paredesDaMata(regioes, tamanho)
-
-  it('em cima e embaixo de cada região vira parede; dentro delas, não', () => {
-    expect(dentroDeParede({ x: 250, y: 300 }, paredes)).toBe(true) // acima do corredor
-    expect(dentroDeParede({ x: 250, y: 700 }, paredes)).toBe(true) // abaixo do corredor
-    expect(dentroDeParede({ x: 1000, y: 50 }, paredes)).toBe(true)
-    expect(dentroDeParede({ x: 250, y: 500 }, paredes)).toBe(false)
-    expect(dentroDeParede({ x: 1000, y: 500 }, paredes)).toBe(false)
-    expect(dentroDeParede({ x: 520, y: 200 }, paredes)).toBe(false) // a região larga começa logo depois do corredor
+describe('regiões em polígono e áreas em círculo (Floresta grande, Parte 5)', () => {
+  const triangulo = { id: 'tri', poligono: [[0, 0], [400, 0], [0, 400]], x0: 0, x1: 400, y0: 0, y1: 400 }
+  it('o ponto conta só dentro do polígono, não da caixa dele; a primeira da lista vale onde se sobrepõem', () => {
+    expect(regiaoEm([triangulo], { x: 50, y: 50 })?.id).toBe('tri')
+    expect(regiaoEm([triangulo], { x: 350, y: 350 })).toBeNull()
+    const grande = { id: 'grande', x0: 0, x1: 1000, y0: 0, y1: 1000 }
+    expect(regiaoEm([triangulo, grande], { x: 50, y: 50 }).id).toBe('tri')
+    expect(regiaoEm([triangulo, grande], { x: 350, y: 350 }).id).toBe('grande')
   })
 
-  it('região que vai até a borda do mapa não gera parede vazia', () => {
-    const cheia = paredesDaMata([{ x0: 0, x1: 100, y0: 0, y1: 100 }], { largura: 100, altura: 100 })
-    expect(cheia).toEqual([])
+  it('área em círculo', () => {
+    const areas = [{ id: 'clareira', x: 500, y: 500, raio: 100 }]
+    expect(areaEm(areas, { x: 560, y: 500 }).id).toBe('clareira')
+    expect(areaEm(areas, { x: 620, y: 500 })).toBeNull()
+  })
+
+  it('a borda da taxa usa os pontos do polígono', () => {
+    expect(distanciaAteABorda({ x: 0, y: 0 }, [triangulo])).toBe(400)
   })
 })
 

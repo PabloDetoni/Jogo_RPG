@@ -45,6 +45,7 @@ import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, ini
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, separacao, tirarDasParedes } from '../../regras/movimento.js'
 import { multiplicadorQueVale, saltoMaximoComDev } from '../../regras/opcoesDeDev.js'
+import { zonaNoTerreno } from '../../regras/terreno.js'
 import { criarIndice, retangulosEntre, retangulosNaCaixa, retangulosPerto } from '../../regras/vizinhanca.js'
 import Aura from '../ataques/aura.js'
 import BolaMagica from '../ataques/bolaMagica.js'
@@ -202,13 +203,8 @@ export default class CenaArena extends Phaser.Scene {
     for (const inimigo of this.mapa.inimigosIniciais ?? []) this.criarInimigo(inimigo.tipo, inimigo)
     if (this.mapa.populacao) this.povoarMundo()
     this.boss = null
-    if (this.mapa.lugarDoBoss) {
-      // O Boss volta a cada partida (RF31), no meio do domínio dele
-      const lugar = this.lugarLivre(mundo.boss.tamanho, this.mapa.lugarDoBoss, null, mundo.nascimento.folga)
-      this.boss = this.adicionarInimigo(new GuardiaoDaFloresta(this, lugar.x, lugar.y))
-      this.boss.tipo = 'guardiao'
-      this.boss.regiao = 'dominioDoBoss'
-    }
+    // O chefe da Floresta grande é o Ogro (Parte 6d), no lugarDoChefe. O Guardião da Floresta saiu do mapa (fica no
+    // código, fora do beta: criarGuardiao, usado pelo roteiro de testes)
     if (this.mapa.recursos) this.espalharRecursos()
     this.prepararEscudos()
     this.prepararCamera()
@@ -471,8 +467,10 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // Em que região um ponto está (null na arena)
+  // (na Floresta grande, quem pisa numa casa andável da beira, fora do polígono, continua na região dessa casa)
   regiaoEm(ponto) {
-    return this.mapa.regioes.length ? regiaoEm(this.mapa.regioes, ponto) : null
+    if (!this.mapa.regioes.length) return null
+    return regiaoEm(this.mapa.regioes, ponto) ?? (this.mapa.terreno ? zonaNoTerreno(this.mapa.terreno, this.mapa.regioes, ponto) : null)
   }
 
   noDominioDeBoss(ponto) {
@@ -590,7 +588,8 @@ export default class CenaArena extends Phaser.Scene {
     const total = Math.ceil(this.mapa.tamanho.largura / celula) * Math.ceil(this.mapa.tamanho.altura / celula)
     const salvas = this.partida.descobertas
     this.exploracao = {
-      nevoa: criarNevoa(this.mapa.tamanho, celula, decodificarNevoa(salvas?.nevoa, total)),
+      // A névoa salva só vale para o mesmo desenho do mapa (Parte 5: a Floresta grande é outra grade); as áreas ficam
+      nevoa: criarNevoa(this.mapa.tamanho, celula, salvas?.mapa === this.mapa.versaoDoMapa ? decodificarNevoa(salvas?.nevoa, total) : null),
       conhecidas: new Set(salvas?.areas ?? []),
       novas: [],
       xp: 0,
@@ -720,6 +719,15 @@ export default class CenaArena extends Phaser.Scene {
       }
       inimigo.dormindo = dormir
     }
+  }
+
+  // O Guardião da Floresta (fora do beta desde a Parte 5): o roteiro de testes ainda confere os ataques avisados dele
+  criarGuardiao(ponto) {
+    const lugar = this.lugarLivre(mundo.boss.tamanho, ponto, null, mundo.nascimento.folga)
+    this.boss = this.adicionarInimigo(new GuardiaoDaFloresta(this, lugar.x, lugar.y))
+    this.boss.tipo = 'guardiao'
+    this.boss.regiao = 'dominioDoBoss'
+    return this.boss
   }
 
   // Desenha só o que aparece na tela (com uma folga): os pedaços do chão da Floresta e os mobs longe
@@ -1547,6 +1555,7 @@ export default class CenaArena extends Phaser.Scene {
       // O mapa descoberto (Fase 3): entra no save no fim, em qualquer resultado (RF50)
       descobertas: this.exploracao && {
         bioma: this.mapa.id,
+        mapa: this.mapa.versaoDoMapa ?? null,
         nevoa: codificarNevoa(this.exploracao.nevoa.bits),
         areas: [...this.exploracao.conhecidas],
         areasNovas: [...this.exploracao.novas],

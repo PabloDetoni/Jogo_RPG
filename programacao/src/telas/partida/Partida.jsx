@@ -13,6 +13,7 @@ import { musicaDaTela } from '../../regras/som.js'
 import { montarGrupoDaPartida } from '../../regras/grupoDaPartida.js'
 import BarraDeTeste from './BarraDeTeste.jsx'
 import HudDaPartida, { AvisosDaPartida } from './HudDaPartida.jsx'
+import { MapaInteiro } from './Minimapa.jsx'
 import MochilaNaPartida from './MochilaNaPartida.jsx'
 import { itensDaJanela } from '../../regras/itensNaPartida.js'
 import { useGradeComMao } from '../../componentes/ui/useGradeComMao.js'
@@ -211,6 +212,8 @@ export default function Partida() {
         aoTeletransportar={import.meta.env.DEV ? (ponto) => ponte.avisar('comando', { tipo: 'teletransportar', ponto }) : undefined}
       />
       <AvisosDaPartida situacao={situacao} mensagens={mensagens} />
+      {/* Na pausa, o mapa inteiro com a névoa do que não foi descoberto (Parte 5) */}
+      {pausado && situacao?.minimapa && <MapaInteiro bioma={bioma} minimapa={situacao.minimapa} />}
       <BarraDeTeste ponte={ponte} situacao={situacao} />
       {mochilaAberta && (
         <MochilaNaPartida

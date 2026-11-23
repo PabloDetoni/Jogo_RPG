@@ -102,7 +102,7 @@ export const mundo = {
   obstaculos: {
     espacamento: 300,
     desvio: 55,
-    densidade: { zonaSegura: 0.25, facil: 0.45, media: 0.55, dificil: 0.62, dominioDoBoss: 0.22 },
+    densidade: { zonaSegura: 0.25, facil: 0.45, media: 0.55, dificil: 0.62, dominioDoBoss: 0.22, neutraDaEntrada: 0.15, neutraDaCurva1: 0.2, neutraDaCurva2: 0.2, neutraDoFim: 0.15 },
     arvore: { min: 56, max: 96 },
     pedra: { largura: [70, 120], altura: [50, 90] },
     chanceDePedra: 0.3,
@@ -242,7 +242,7 @@ export const mundo = {
     especial: { item: 'coroaDeRaizes', chance: 0.08 },
   },
   // Vida, dano, XP e ouro dos mobs × este valor, pela dificuldade da região (regras/mobs.js)
-  forcaDaRegiao: { segura: 1, facil: 1, media: 1.5, dificil: 2.2, boss: 2.6 },
+  forcaDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 1.5, dificil: 2.2, boss: 2.6 },
   // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e
   // longe da mata; "folga" é o espaço livre em volta de cada um ao nascer (ninguém nasce encostado em ninguém)
   nascimento: { longeDosInicios: 700, distanciaEntreMobs: 140, margem: 90, folga: 24 },
@@ -256,9 +256,10 @@ export const mundo = {
   // PROVISÓRIO. Troca os 60 s do drop e os 30 s do que não coube: todos os dropados passam a 30 s.
   coleta: { alcance: 80, msDoItemDropado: 30000, msPiscando: 5000, msDoPisca: 150 },
   // Minimapa (RF40): o mapa é dividido em células de "celula" px; o grupo revela tudo a até "raioRevelado" px do Líder
-  minimapa: { celula: 200, raioRevelado: 450 },
+  // janela (Parte 5): o pedaço do mapa em volta do Líder que o minimapa do HUD mostra (o mapa inteiro fica na pausa)
+  minimapa: { celula: 200, raioRevelado: 450, janela: { largura: 3600, altura: 1800 } },
   // XP da primeira descoberta de cada área (RF40), pela dificuldade da região; dividido como o dos monstros (RF50)
-  xpPorArea: { segura: 0, facil: 30, media: 50, dificil: 80, boss: 120 },
+  xpPorArea: { segura: 0, neutra: 10, facil: 30, media: 50, dificil: 80, boss: 120 },
   // Aliado longe ou preso: fora da tela e a mais de "distancia" px do Líder (ou travado) por "ms", reaparece fora da
   // tela, logo além da borda do lado em que estava, e entra andando (o jogador não vê sumiço nem salto)
   aliadoLonge: { distancia: 1100, ms: 3000, alemDaBorda: 70 },
@@ -427,7 +428,8 @@ export const combateDeTeste = {
     folgaDoPontoLivre: 12,
   },
   // Caminho em volta das pedras: a arena vira uma grade de quadradinhos deste tamanho (px)
-  caminho: { celula: 20, msEntreRecalculos: 500 },
+  // Mapa maior que areaMaximaDaGradeUnica (px²): grade local em cada busca, com folgaDaGradeLocal px em volta (Parte 5)
+  caminho: { celula: 20, msEntreRecalculos: 500, areaMaximaDaGradeUnica: 40000000, folgaDaGradeLocal: 700 },
   // Ataque de teste de cada classe (clique esquerdo). "empurrao" = velocidade do empurrão no alvo
   ataques: {
     guerreiro: { dano: 25, alcance: 70, aberturaGraus: 120, recargaMs: 400, empurrao: 260 },

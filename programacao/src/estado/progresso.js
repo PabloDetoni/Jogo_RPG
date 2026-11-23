@@ -187,7 +187,9 @@ export function normalizarProgresso(dados) {
     if (!mapa) continue
     const nevoa = typeof mapa.nevoa === 'string' && /^[0-9a-f]{0,4096}$/.test(mapa.nevoa) ? mapa.nevoa : ''
     const areas = [...new Set((Array.isArray(mapa.areas) ? mapa.areas : []).filter((area) => typeof area === 'string' && area.length > 0 && area.length <= 40))].slice(0, 200)
-    if (nevoa || areas.length > 0) mapasDescobertos[bioma] = { nevoa, areas }
+    // mapa (Parte 5): a versão do desenho do mapa de quando a névoa foi salva (outra versão = névoa descartada)
+    const versao = typeof mapa.mapa === 'string' && mapa.mapa.length <= 30 ? mapa.mapa : null
+    if (nevoa || areas.length > 0) mapasDescobertos[bioma] = versao ? { mapa: versao, nevoa, areas } : { nevoa, areas }
   }
 
   const estatisticas = ehObjeto(dados.estatisticas) ? dados.estatisticas : {}
