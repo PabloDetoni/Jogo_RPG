@@ -15,6 +15,7 @@ export default class MobVermelho extends Inimigo {
     super(cena, x, y, config, cor)
     this.ultimoBote = null
     this.usarArte(config.tipo ?? 'mobVermelho') // na Floresta, o lobo, o javali ou o cervo
+    this.usarDesenhoDeBicho(config.tipo)
   }
 
   atualizar(agora) {

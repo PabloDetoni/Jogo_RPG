@@ -1,122 +1,150 @@
 import { describe, expect, it } from 'vitest'
-import { armasDosBonecos, pecasDoBoneco, poseDosBonecos, receitasDosBonecos } from '../dados/bonecos.js'
-import { classes } from '../dados/classes.js'
-import { anguloNoCorpo, armaAtras, balancoDoBoneco, ladoDoCorpo, poseDoAtaque, poseDoBraco, puxadaDaCorda } from './bonecos.js'
+import { bichosEmBlocos, chapeusDasClasses, medidasDoBoneco, poseDosBonecos } from '../dados/bonecos.js'
+import { classes, corDaClasse } from '../dados/classes.js'
+import { anguloNoCorpo, balancoDoBoneco, chapeuDaClasse, escalaDoBicho, escurecer, ladoDoCorpo, pecasDoBicho, pecasDoBoneco, socoDoAtaque } from './bonecos.js'
 
 const graus = (g) => (g * Math.PI) / 180
+// O canto mais à esquerda, mais à direita, mais alto e mais baixo de uma lista de formas
+function limites(pecas) {
+  const xs = []
+  const ys = []
+  for (const p of pecas) {
+    if (p.forma === 'ret') xs.push(p.x, p.x + p.largura), ys.push(p.y, p.y + p.altura)
+    if (p.forma === 'poli') for (const ponto of p.pontos) xs.push(ponto.x), ys.push(ponto.y)
+    if (p.forma === 'circulo') xs.push(p.x - p.raio, p.x + p.raio), ys.push(p.y - p.raio, p.y + p.raio)
+    if (p.forma === 'linha') xs.push(p.x1, p.x2), ys.push(p.y1, p.y2)
+  }
+  return { esquerda: Math.min(...xs), direita: Math.max(...xs), topo: Math.min(...ys), baixo: Math.max(...ys) }
+}
 
-describe('receitas dos bonecos (RNF15)', () => {
-  it('as 5 classes têm receita, e cada arma existe', () => {
+describe('bonecos em blocos dos personagens (RNF15, Parte 4)', () => {
+  it('cada classe tem o seu chapéu, e o Tanque nenhum', () => {
+    for (const classe of classes) expect(chapeusDasClasses, classe.id).toHaveProperty(classe.id)
+    expect(chapeuDaClasse('tanque')).toBeNull()
+    expect(chapeuDaClasse('guerreiro')).toBe('elmo')
+    expect(chapeuDaClasse('mago')).toBe('chapeuDeMago')
+    expect(chapeuDaClasse('arqueiro')).toBe('capuz')
+    expect(chapeuDaClasse('sacerdote')).toBe('mitra')
+  })
+
+  it('cabeçudinho: a cabeça é maior que o tronco; mãos e pés soltos; tudo na cor da classe', () => {
+    const cor = corDaClasse('tanque')
+    const pecas = pecasDoBoneco({ cor, chapeu: null })
+    const naCor = pecas.filter((p) => p.cor === cor)
+    // 2 pés, 2 mãos, o tronco e a cabeça
+    expect(naCor).toHaveLength(6)
+    const [peTras, peFrente, maoTras, tronco, cabeca, maoFrente] = naCor
+    expect(cabeca.largura).toBeGreaterThan(tronco.largura)
+    expect(cabeca.y + cabeca.altura).toBeCloseTo(tronco.y, 0) // o tronco encosta embaixo da cabeça
+    for (const pe of [peTras, peFrente]) expect(pe.y).toBeGreaterThan(tronco.y + tronco.altura) // pés soltos, embaixo
+    for (const mao of [maoTras, maoFrente]) expect(Math.abs(mao.x + mao.largura / 2)).toBeGreaterThan(tronco.largura / 2) // dos lados
+  })
+
+  it('o desenho cabe perto do tamanho 40 (a hitbox não muda); o chapéu pode passar um pouco por cima', () => {
     for (const classe of classes) {
-      const receita = receitasDosBonecos[classe.id]
-      expect(receita, classe.id).toBeDefined()
-      expect(armasDosBonecos[receita.arma], receita.arma).toBeDefined()
+      const { esquerda, direita, baixo } = limites(pecasDoBoneco({ cor: corDaClasse(classe.id), chapeu: chapeuDaClasse(classe.id) }))
+      expect(esquerda, classe.id).toBeGreaterThanOrEqual(-24)
+      expect(direita, classe.id).toBeLessThanOrEqual(24)
+      expect(baixo, classe.id).toBeLessThanOrEqual(23)
     }
   })
 
-  it('cabeçudinho: a cabeça é maior que o corpo, e o desenho cabe perto do tamanho 40 (a hitbox não muda)', () => {
-    const { cabeca, corpo, perna } = pecasDoBoneco
-    expect(cabeca.largura).toBeGreaterThan(corpo.largura)
-    expect(cabeca.y - cabeca.altura / 2).toBeGreaterThanOrEqual(-22)
-    expect(perna.y + perna.altura).toBeLessThanOrEqual(22)
+  it('olhinhos abertos; caído, fechados; o elmo cobre os olhos (a fenda no lugar)', () => {
+    const olhos = (pecas) => pecas.filter((p) => p.cor === medidasDoBoneco.olhos && p.forma === 'ret' && p.largura < 4)
+    expect(olhos(pecasDoBoneco({ cor: 1, chapeu: null }))).toHaveLength(2)
+    const caidos = olhos(pecasDoBoneco({ cor: 1, chapeu: null }, { caido: true }))
+    expect(caidos).toHaveLength(2)
+    for (const o of caidos) expect(o.altura).toBeLessThan(2)
+    expect(olhos(pecasDoBoneco({ cor: 1, chapeu: 'elmo' }))).toHaveLength(0)
+  })
+
+  it('olhando para a esquerda, o desenho é o espelho', () => {
+    const direita = pecasDoBoneco({ cor: 1, chapeu: null }, { lado: 'direita' })
+    const esquerda = pecasDoBoneco({ cor: 1, chapeu: null }, { lado: 'esquerda' })
+    direita.forEach((p, i) => {
+      expect(esquerda[i].x).toBeCloseTo(-(p.x + p.largura))
+      expect(esquerda[i].y).toBeCloseTo(p.y)
+    })
+  })
+
+  it('o "soquinho": a mão da frente vai na direção da mira (sem arma desenhada)', () => {
+    const parado = pecasDoBoneco({ cor: 1 }, { lado: 'direita' }).at(-1)
+    const socoFrente = pecasDoBoneco({ cor: 1 }, { lado: 'direita', soco: { angulo: 0, avanco: 8 } }).at(-1)
+    expect(socoFrente.x - parado.x).toBeCloseTo(8)
+    const socoCima = pecasDoBoneco({ cor: 1 }, { lado: 'direita', soco: { angulo: graus(-90), avanco: 8 } }).at(-1)
+    expect(socoCima.y - parado.y).toBeCloseTo(-8)
+    expect(socoDoAtaque(poseDosBonecos.soco.pico)).toBeCloseTo(poseDosBonecos.soco.distancia)
+    expect(socoDoAtaque(1)).toBe(0)
+    expect(socoDoAtaque(-0.1)).toBe(0)
   })
 })
 
-describe('o lado do corpo e a "viradinha"', () => {
-  it('olha para o lado da mira', () => {
+describe('o lado do corpo, a "viradinha" e o balanço', () => {
+  it('olha para o lado da mira; perto da vertical, não vira (sem pisca-pisca)', () => {
     expect(ladoDoCorpo(0)).toBe('direita')
     expect(ladoDoCorpo(Math.PI)).toBe('esquerda')
-    expect(ladoDoCorpo(graus(150))).toBe('esquerda')
-  })
-
-  it('perto da vertical não vira (sem pisca-pisca)', () => {
     expect(ladoDoCorpo(graus(-90), 'esquerda')).toBe('esquerda')
-    expect(ladoDoCorpo(graus(-88), 'esquerda')).toBe('esquerda')
     expect(ladoDoCorpo(graus(95), 'direita')).toBe('direita')
-    // passando bem da vertical, vira
     expect(ladoDoCorpo(graus(-60), 'esquerda')).toBe('direita')
   })
-})
 
-describe('arma atrás ou na frente do corpo', () => {
-  it('mirando para cima vai para trás; para baixo, para a frente', () => {
-    expect(armaAtras(graus(-90))).toBe(true)
-    expect(armaAtras(graus(-45))).toBe(true)
-    expect(armaAtras(graus(90))).toBe(false)
-    expect(armaAtras(graus(45))).toBe(false)
-  })
-
-  it('perto da horizontal fica onde estava', () => {
-    expect(armaAtras(graus(-5), true)).toBe(true)
-    expect(armaAtras(graus(5), false)).toBe(false)
-    expect(armaAtras(0, true)).toBe(true)
-  })
-})
-
-describe('o braço que segue a mira (Tanque e Arqueiro)', () => {
-  it('no lado esquerdo o ângulo é espelhado: mirar para a esquerda é "para a frente" do corpo', () => {
+  it('no lado esquerdo, o ângulo é espelhado: mirar para a esquerda é "para a frente" do corpo', () => {
     expect(anguloNoCorpo(Math.PI, 'esquerda')).toBeCloseTo(0)
     expect(anguloNoCorpo(graus(135), 'esquerda')).toBeCloseTo(graus(45))
-    expect(anguloNoCorpo(graus(-135), 'esquerda')).toBeCloseTo(graus(-45))
   })
 
-  it('as 8 direções: lado, frente ou trás e o braço apontando para a mira', () => {
-    const casos = [
-      [0, 'direita', 0],
-      [45, 'direita', 45],
-      [90, 'direita', 90],
-      [135, 'esquerda', 45],
-      [180, 'esquerda', 0],
-      [-135, 'esquerda', -45],
-      [-90, 'direita', -90],
-      [-45, 'direita', -45],
-    ]
-    for (const [mira, lado, braco] of casos) {
-      const pose = poseDoBraco(graus(mira), { lado: 'direita', atras: false })
-      expect(pose.lado, `mira ${mira}`).toBe(lado)
-      expect(pose.anguloDoBraco, `mira ${mira}`).toBeCloseTo(graus(braco))
-    }
-    expect(poseDoBraco(graus(-90)).atras).toBe(true)
-    expect(poseDoBraco(graus(90)).atras).toBe(false)
+  it('parado: só sobe e desce de leve (os pés não mexem); andando: os pés alternam', () => {
+    const parado = balancoDoBoneco(1, false)
+    expect(parado.peDaFrente).toBe(0)
+    expect(Math.abs(parado.corpoY)).toBeLessThanOrEqual(poseDosBonecos.parado.corpo)
+    const andando = balancoDoBoneco(Math.PI / 2, true)
+    expect(andando.peDaFrente).toBeCloseTo(poseDosBonecos.andando.pe)
+    expect(andando.peDeTras).toBeCloseTo(-poseDosBonecos.andando.pe)
+    expect(andando.levantaFrente).toBeGreaterThan(0)
   })
 
-  it('o braço nunca passa do limite (não atravessa o corpo)', () => {
-    for (let g = -180; g <= 180; g += 5) {
-      const { anguloDoBraco } = poseDoBraco(graus(g), { lado: 'direita' })
-      expect(Math.abs(anguloDoBraco)).toBeLessThanOrEqual(poseDosBonecos.limiteDoBraco + 1e-9)
-    }
+  it('escurecer: 0 não muda, 1 é preto', () => {
+    expect(escurecer(0xff8a1f, 0)).toBe(0xff8a1f)
+    expect(escurecer(0xff8a1f, 1)).toBe(0)
+    expect(escurecer(0xffffff, 0.5)).toBe(0x808080)
   })
 })
 
-describe('balanço, golpe e corda', () => {
-  it('parado: só respira (as pernas não mexem); andando: as pernas alternam', () => {
-    const parado = balancoDoBoneco(1, false)
-    expect(parado.pernaDaFrente).toBe(0)
-    expect(Math.abs(parado.corpoY)).toBeLessThanOrEqual(poseDosBonecos.parado.corpo)
-    const andando = balancoDoBoneco(Math.PI / 2, true)
-    expect(andando.pernaDaFrente).toBeCloseTo(poseDosBonecos.andando.perna)
-    expect(andando.pernaDeTras).toBeCloseTo(-poseDosBonecos.andando.perna)
-    expect(andando.bracoLivre).toBeCloseTo(-poseDosBonecos.andando.braco)
+describe('mobs e animais em blocos (Parte 4b)', () => {
+  it('lobo, javali e cervo são quadrúpedes com 4 pezinhos; cada um com o seu detalhe e a sua cor', () => {
+    const cores = new Set()
+    for (const tipo of ['lobo', 'javali', 'cervo']) {
+      const receita = bichosEmBlocos[tipo]
+      expect(receita.forma).toBe('quadrupede')
+      expect(receita.pes.xs).toHaveLength(4)
+      cores.add(receita.cor)
+      // o corpo é deitado (mais largo que alto), e o desenho tem os 4 pés
+      expect(receita.corpo.largura, tipo).toBeGreaterThan(receita.corpo.altura)
+      expect(pecasDoBicho(tipo).length, tipo).toBeGreaterThanOrEqual(8)
+    }
+    expect(cores.size).toBe(3)
+    expect(new Set(['lobo', 'javali', 'cervo'].map((t) => bichosEmBlocos[t].detalhe))).toEqual(new Set(['orelhas', 'presas', 'chifres']))
   })
 
-  it('a espada varre de trás para a frente e volta ao descanso; fora do golpe, nada', () => {
-    const { giroInicial, giroFinal, pico } = poseDosBonecos.ataques.espada
-    expect(poseDoAtaque('espada', 0).giro).toBeCloseTo(giroInicial)
-    expect(poseDoAtaque('espada', pico).giro).toBeCloseTo(giroFinal)
-    expect(Math.abs(poseDoAtaque('espada', 0.99).giro)).toBeLessThan(0.05)
-    expect(poseDoAtaque('espada', 1)).toEqual({ giro: 0, avanco: 0 })
-    expect(poseDoAtaque('espada', -0.1)).toEqual({ giro: 0, avanco: 0 })
+  it('a aranha é redonda, com 4 patinhas de cada lado (cada uma com joelho) que mexem andando', () => {
+    const parada = pecasDoBicho('aranha', { fase: 0, andando: false })
+    expect(parada.filter((p) => p.forma === 'linha')).toHaveLength(16)
+    expect(parada.filter((p) => p.forma === 'circulo')).toHaveLength(2)
+    const a = pecasDoBicho('aranha', { fase: 0, andando: true }).filter((p) => p.forma === 'linha')
+    const b = pecasDoBicho('aranha', { fase: 1.2, andando: true }).filter((p) => p.forma === 'linha')
+    expect(a.some((p, i) => Math.abs(p.x2 - b[i].x2) > 0.5)).toBe(true)
   })
 
-  it('cajado e cetro sobem; o escudo empurra para a frente', () => {
-    expect(poseDoAtaque('cajado', poseDosBonecos.ataques.cajado.pico).giro).toBeLessThan(0)
-    expect(poseDoAtaque('cetro', poseDosBonecos.ataques.cetro.pico).giro).toBeLessThan(0)
-    expect(poseDoAtaque('escudo', poseDosBonecos.ataques.escudo.pico).avanco).toBeCloseTo(poseDosBonecos.ataques.escudo.avanco)
+  it('espelha para o lado em que anda; sem receita, nada (o mob de teste da arena continua quadrado)', () => {
+    const direita = limites(pecasDoBicho('lobo', { lado: 'direita' }))
+    const esquerda = limites(pecasDoBicho('lobo', { lado: 'esquerda' }))
+    expect(esquerda.direita).toBeCloseTo(-direita.esquerda)
+    expect(pecasDoBicho('mobVermelho')).toEqual([])
   })
 
-  it('a corda do arco estica com a carga, até o máximo', () => {
-    expect(puxadaDaCorda(0)).toBe(0)
-    expect(puxadaDaCorda(0.5)).toBeCloseTo(poseDosBonecos.arco.puxadaMaxima / 2)
-    expect(puxadaDaCorda(3)).toBe(poseDosBonecos.arco.puxadaMaxima)
+  it('a escala acompanha o tamanho do mob', () => {
+    expect(escalaDoBicho('lobo', bichosEmBlocos.lobo.tamanhoDeReferencia)).toBe(1)
+    expect(escalaDoBicho('lobo', bichosEmBlocos.lobo.tamanhoDeReferencia * 2)).toBe(2)
+    expect(escalaDoBicho('desconhecido', 50)).toBe(1)
   })
 })
