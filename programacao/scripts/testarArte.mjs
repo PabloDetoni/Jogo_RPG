@@ -242,12 +242,12 @@ try {
   console.log('3. Mobs, Boss e itens no chão')
   const mobs = await cena(`(() => {
     const um = (tipo) => c.inimigos.find((i) => i.tipo === tipo)
-    const desenho = (i) => (i ? { imagem: !!i.boneco, quadrado: i.quadrado.visible, anim: i.boneco?.sprite.anims.currentAnim?.key ?? null } : null)
+    const desenho = (i) => (i ? { imagem: !!i.boneco, quadrado: i.quadrado.visible, blocos: !!i.desenhoEmCodigo?.grafico.visible, anim: i.boneco?.sprite.anims.currentAnim?.key ?? null } : null)
     return { lobo: desenho(um('lobo')), aranha: desenho(um('aranha')), javali: desenho(um('javali')), cervo: desenho(um('cervo')), boss: desenho(c.boss) }
   })()`)
-  conferir('o lobo virou imagem (nome em inglês do PixelLab)', mobs.lobo?.imagem && !mobs.lobo.quadrado, mobs.lobo)
+  conferir('o lobo virou imagem (nome em inglês do PixelLab), sem o desenho em blocos', mobs.lobo?.imagem && !mobs.lobo.quadrado && !mobs.lobo.blocos, mobs.lobo)
   conferir('a aranha usa a imagem única', mobs.aranha?.imagem && mobs.aranha.anim === 'arte:aranha', mobs.aranha)
-  conferir('o javali e o cervo, sem imagem, continuam quadrados', !mobs.javali?.imagem && mobs.javali?.quadrado && !mobs.cervo?.imagem && mobs.cervo?.quadrado, [mobs.javali, mobs.cervo])
+  conferir('o javali e o cervo, sem imagem, são bichos em blocos (Parte 4b), sem o quadrado', !mobs.javali?.imagem && mobs.javali?.blocos && !mobs.javali.quadrado && !mobs.cervo?.imagem && mobs.cervo?.blocos && !mobs.cervo.quadrado, [mobs.javali, mobs.cervo])
   conferir('o Boss virou imagem e a coroa de quadradinho sumiu', mobs.boss?.imagem && !(await cena(`c.boss.coroa.visible`)), mobs.boss)
   const boteDoLobo = await cena(`(() => {
     const lobo = c.inimigos.find((i) => i.tipo === 'lobo')
