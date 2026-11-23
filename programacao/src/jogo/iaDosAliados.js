@@ -106,6 +106,11 @@ export function pensarAliados(cena, agora) {
   aliados.forEach((aliado, indice) => {
     const plano = planos.get(aliado)
     if (plano && !aliado.caido) executar(aliado, plano, { ...contexto, indice, total: aliados.length })
+    // A aura também machuca (Parte 3): ela existe sempre que houver inimigo perto do Sacerdote, mesmo com o grupo de
+    // vida cheia (Pablo, 22/11), para o Sacerdote sozinho conseguir lutar. A cura continua só em quem não está cheio.
+    if (plano && !aliado.caido && aliado.classe === 'sacerdote' && plano.tipo !== 'curar' && temInimigoNaAura(aliado, cena.inimigos)) {
+      cena.usarAtaque(aliado, aliado.anguloDaMira)
+    }
   })
 
   // Tremor: quem vai e volta sem sair do lugar fica quieto um pouco (parado em volta do Líder: até ele sair)
@@ -117,6 +122,12 @@ export function pensarAliados(cena, agora) {
       if (planos.get(aliado)?.tipo === 'seguir') aliado.ia.parado = true
     }
   }
+}
+
+// Algum inimigo hostil (ou provocado) dentro do raio da aura do Sacerdote?
+function temInimigoNaAura(sacerdote, inimigos) {
+  const raio = ataques.sacerdote.raio
+  return inimigos.some((i) => !i.morto && (i.config?.hostil !== false || i.perseguindo) && distancia(i, sacerdote) <= raio + i.tamanho / 2)
 }
 
 // A cada poucos segundos (um pouco diferente para cada um), sorteia os erros do momento.

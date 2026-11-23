@@ -4,7 +4,7 @@ import { msDoAtaqueNaTela } from '../../dados/arte.js'
 import { corDaClasse } from '../../dados/classes.js'
 import { habilidadesNasTeclas } from '../../regras/habilidadesDaArvore.js'
 import { camadas } from '../efeitos.js'
-import BonecoDeQuadradinho from './BonecoDeQuadradinho.js'
+import { chapeuDaClasse, pecasDoBoneco } from '../../regras/bonecos.js'
 import Entidade, { BarraDeVida } from './Entidade.js'
 
 const { tamanho } = combateDeTeste.personagem
@@ -25,10 +25,13 @@ const marcas = [
 export default class Personagem extends Entidade {
   constructor(cena, membro, x, y) {
     super(cena, { x, y, tamanho, cor: corDaClasse(membro.classe) })
-    // O boneco de quadradinho da classe (RNF15, Parte 2): no lugar do quadrado, até a pixel art chegar
-    this.desenhoEmCodigo = new BonecoDeQuadradinho(cena, this)
-    this.visual.add(this.desenhoEmCodigo.grafico)
-    this.quadrado.setVisible(false)
+    // O boneco em blocos da classe (RNF15, Parte 4): na cor da classe, com o chapéu dela; olha para a mira ao atacar e a
+    // mão desse lado dá o "soquinho". No lugar do quadrado, até a pixel art chegar.
+    this.usarDesenhoEmBlocos({
+      gerarPecas: (pose) => pecasDoBoneco({ cor: corDaClasse(this.classe), chapeu: chapeuDaClasse(this.classe) }, pose),
+      chave: () => `boneco:${this.classe}`,
+      olharPelaMira: true,
+    })
     this.contornoEscuro = cena.add.rectangle(0, 0, tamanho + 10, tamanho + 10).setStrokeStyle(2, coresDaArena.contorno)
     this.contornoDoLider = cena.add.rectangle(0, 0, tamanho - 4, tamanho - 4).setStrokeStyle(5, 0xffffff)
     this.marca = cena.add.rectangle(0, 0, tamanho + 18, tamanho + 18).setVisible(false)
@@ -145,8 +148,8 @@ export default class Personagem extends Entidade {
   atualizarDesenho(agora, delta) {
     super.atualizarDesenho(agora, delta)
     const topo = this.y - tamanho * 0.5
-    this.barra.atualizar(this.x, topo - 16, this.vida / this.vidaMaxima)
-    this.barraDeMana.atualizar(this.x, topo - 10, this.mana / this.manaMaxima)
+    this.barra.atualizar(this.x, topo - 20, this.vida / this.vidaMaxima)
+    this.barraDeMana.atualizar(this.x, topo - 14, this.mana / this.manaMaxima)
     // Caído fica apagado; imune depois de apanhar, pisca
     const imune = agora < Math.max(this.fimDaImunidade, this.fimDoPiscarDeDano ?? 0)
     this.visual.setAlpha(this.caido ? 0.7 : imune && Math.floor(agora / 60) % 2 ? 0.35 : 1)
@@ -163,7 +166,7 @@ export default class Personagem extends Entidade {
       .setText(linhaDeBaixo ? `${segundos}\n${linhaDeBaixo}` : String(segundos))
       .setColor(segundos <= 10 ? '#ff8f8f' : '#ffffff')
       .setFontSize(linhaDeBaixo ? 18 : 22)
-      .setPosition(this.x, this.y - tamanho * 0.5 - 22)
+      .setPosition(this.x, this.y - tamanho * 0.5 - 26)
     const anel = this.anelDaAjuda
     anel.clear()
     anel.lineStyle(5, 0x1c2230, 0.35).strokeCircle(this.x, this.y, tamanho * 0.85)

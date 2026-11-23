@@ -1,103 +1,101 @@
-// Bonecos de quadradinho dos 5 personagens (RNF15, Parte 2 de 11/2026). PROVISÓRIO até a pixel art (quando a imagem da
-// classe existir em src/assets/arte/, ela substitui o boneco inteiro: Entidade.usarArte).
-// Pedido do Pablo (20/11): ainda é quadradinho, mas com corpo grande, cabeça grande ("cabeçudinho"), um retângulo
-// embaixo, duas perninhas e dois bracinhos, balançando de leve; uma mão segura a arma e a outra fica para baixo.
-// As roupas seguem a referência própria do Pablo (Guia de Arte, seção 3); o retângulo embaixo do corpo (a saia/faixa)
-// tem a cor-assinatura da classe, a mesma do HUD.
+// Bonecos em blocos (RNF15; Parte 2 de 11/2026, refeitos na Parte 4 a pedido do Pablo). PROVISÓRIO até a pixel art
+// (quando a imagem existir em src/assets/arte/, ela substitui o boneco inteiro: Entidade.usarArte).
+// Pedido do Pablo (22/11): blocões coloridos e bonitinhos, sem armas nem roupas. Em cima, um quadrado grande de cantos
+// arredondados (cabeça e corpo juntos, "cabeçudinho"); logo abaixo, um retângulo menor (o tronco); duas mãozinhas e
+// dois pezinhos flutuando, soltos; olhinhos; tudo balançando de leve. Cor: a da classe (a do HUD, dados/classes.js),
+// com o contorno escuro. No máximo um chapéu por classe.
 // Medidas em px para um personagem de tamanho 40 (combateDeTeste.personagem.tamanho); o desenho escala junto.
-// O centro (0, 0) é o centro da hitbox; y cresce para baixo.
+// O centro (0, 0) é o centro da hitbox; y cresce para baixo; o boneco olha para a direita (o lado esquerdo espelha).
 
-export const pecasDoBoneco = {
-  cabeca: { largura: 22, altura: 18, y: -12 }, // y = centro
-  corpo: { largura: 18, altura: 12, y: 2 },
-  saia: { largura: 20, altura: 5, y: 9.5 },
-  perna: { largura: 5, altura: 8, x: 4.5, y: 12 }, // y = topo da perna
-  braco: { largura: 4.5, comprimento: 11, ombroX: 9, ombroY: -2 },
-  olho: { largura: 2, altura: 3, x: 3.5, y: -11, frente: 3 }, // frente: o quanto os olhos vão para o lado que olha
+export const medidasDoBoneco = {
+  cabeca: { largura: 26, altura: 24, y: -9, raio: 7 }, // y = centro
+  tronco: { largura: 16, altura: 9, y: 7.5, raio: 3.5 },
+  mao: { lado: 6.5, x: 14, y: 6, raio: 2.5 },
+  pe: { largura: 7.5, altura: 5, x: 5, y: 17.5, raio: 2.5 },
+  olho: { largura: 2.5, altura: 4.5, x: 3.8, y: -8, frente: 3 }, // frente: o quanto os olhos vão para o lado que olha
   contorno: { espessura: 1.5, cor: 0x2b1d1a },
-  pele: 0xf2c79a,
   olhos: 0x2b1d1a,
 }
 
-// Cada classe: as cores das peças, o acessório da cabeça e a arma
-export const receitasDosBonecos = {
-  guerreiro: {
-    corpo: 0x9aa4b0, // armadura cinza
-    detalhe: 0xd4a017, // dourado
-    pernas: 0x5a6170,
-    bracos: 0x9aa4b0,
-    cabeca: { tipo: 'elmo', cor: 0xb7c0cb, fenda: 0x2b1d1a, penacho: 0xc0392b },
-    capa: 0xc0392b, // capa vermelha atrás do corpo
-    arma: 'espada',
+// O chapéu de cada classe (o Tanque não usa) e as cores fixas de cada chapéu. O chapéu do Mago e o capuz do Arqueiro
+// usam um tom mais escuro da cor da classe (escurecer em regras/bonecos.js).
+export const chapeusDasClasses = { guerreiro: 'elmo', mago: 'chapeuDeMago', tanque: null, sacerdote: 'mitra', arqueiro: 'capuz' }
+export const coresDosChapeus = {
+  elmo: { metal: 0xc3cbd6, sombra: 0x8a94a3, fenda: 0x2b1d1a, penacho: 0xd8483e },
+  chapeuDeMago: { escurecer: 0.35, estrela: 0xffd54a },
+  mitra: { pano: 0xf7f4ec, ouro: 0xd4a017 },
+  capuz: { escurecer: 0.35 },
+}
+
+// Mobs e animais em blocos (Parte 4b): cada espécie com forma e cor próprias, para nunca se confundirem. Os
+// quadrúpedes são um bloco deitado com a cabeça na frente e quatro pezinhos flutuando; a aranha, um bloco redondo com
+// patinhas. Medidas em px para o "tamanho" do mob (mundo.mobs, em dados/balanceamento.js): o desenho escala com ele.
+export const bichosEmBlocos = {
+  lobo: {
+    forma: 'quadrupede',
+    tamanhoDeReferencia: 34,
+    cor: 0x8f949c, // cinza
+    barriga: 0xc9ccd1,
+    corpo: { largura: 30, altura: 16, y: 1, raio: 6 },
+    cabeca: { largura: 15, altura: 13, x: 16, y: -6, raio: 4 },
+    pes: { largura: 5, altura: 4.5, xs: [-11, -5, 6, 12], y: 12, raio: 2 },
+    rabo: { largura: 8, altura: 4, x: -17, y: -2 },
+    detalhe: 'orelhas',
+    corDoDetalhe: 0x5e636b,
   },
-  mago: {
-    corpo: 0x4b3bb0, // manto azul-arroxeado
-    detalhe: 0xd4a017,
-    pernas: 0x2e2470,
-    bracos: 0x4b3bb0,
-    cabeca: { tipo: 'chapeu', cor: 0x3a2d8f, aba: 0x2e2470, faixa: 0xd4a017 },
-    arma: 'cajado',
+  javali: {
+    forma: 'quadrupede',
+    tamanhoDeReferencia: 42,
+    cor: 0x5a3a24, // marrom-escuro
+    barriga: 0x7a5236,
+    corpo: { largura: 38, altura: 18, y: 4, raio: 7 }, // baixo e largo
+    cabeca: { largura: 15, altura: 14, x: 21, y: 2, raio: 4 },
+    pes: { largura: 6, altura: 4.5, xs: [-13, -6, 7, 14], y: 16, raio: 2 },
+    rabo: { largura: 5, altura: 3, x: -21, y: -1 },
+    detalhe: 'presas',
+    corDoDetalhe: 0xf2ead8,
   },
-  tanque: {
-    corpo: 0x2f4f9c, // armadura azul
-    detalhe: 0xd4a017,
-    pernas: 0x22396f,
-    bracos: 0x2f4f9c,
-    cabeca: { tipo: 'cabelo', cor: 0x6b3f1f },
-    arma: 'escudo',
+  cervo: {
+    forma: 'quadrupede',
+    tamanhoDeReferencia: 34,
+    cor: 0xc89a66, // marrom-claro
+    barriga: 0xe9d2b0,
+    corpo: { largura: 26, altura: 15, y: -1, raio: 6 }, // mais alto: patas mais longas
+    cabeca: { largura: 12, altura: 12, x: 15, y: -13, raio: 4 },
+    pes: { largura: 4, altura: 7, xs: [-9, -4, 5, 10], y: 12, raio: 2 },
+    rabo: { largura: 4, altura: 4, x: -14, y: -4 },
+    detalhe: 'chifres',
+    corDoDetalhe: 0x7a5236,
   },
-  sacerdote: {
-    corpo: 0xf1ede4, // túnica branca
-    detalhe: 0x3d6fd1, // faixa azul
-    pernas: 0xd9d3c4,
-    bracos: 0xf1ede4,
-    cabeca: { tipo: 'capuz', cor: 0xf7f4ec, borda: 0xd4a017 },
-    arma: 'cetro',
-  },
-  arqueiro: {
-    corpo: 0x7a4a2a, // couro marrom
-    detalhe: 0x3f8f3a, // verde
-    pernas: 0x5a361e,
-    bracos: 0x7a4a2a,
-    cabeca: { tipo: 'capuz', cor: 0x3f8f3a, borda: 0x2c6a28 },
-    arma: 'arco',
+  aranha: {
+    forma: 'aranha',
+    tamanhoDeReferencia: 30,
+    cor: 0x3a2a3d, // bem escura
+    corpo: { raio: 11, y: 0 },
+    cabeca: { raio: 6, x: 10, y: 2 },
+    patas: { quantas: 4, comprimento: 13, espessura: 2.2, abertura: 0.55 }, // por lado
+    olhos: 0xff5a5a,
   },
 }
 
-// As armas (desenhadas com poucos retângulos e polígonos; a espada parece espada de verdade)
-export const armasDosBonecos = {
-  espada: { lamina: 0xdfe6ee, brilho: 0xffffff, guarda: 0xd4a017, cabo: 0x6b3f1f, pomo: 0xd4a017, comprimento: 20, largura: 4, guardaLargura: 10, comprimentoDoCabo: 5 },
-  cajado: { madeira: 0x8b5a2b, veio: 0x6b4220, ponta: 0x6b4220, comprimento: 30, largura: 3.5, nos: 2 },
-  cetro: { haste: 0xd4a017, orbe: 0x8fd3ff, brilho: 0xffffff, aro: 0xb8860b, comprimento: 22, largura: 3, raioDaOrbe: 4.5 },
-  escudo: { frente: 0x2f4f9c, borda: 0xd4a017, emblema: 0xd4a017, costas: 0x6b4a2a, rompido: 0xd9534f, largura: 16, altura: 21, distancia: 9 },
-  arco: { madeira: 0x8b5a2b, corda: 0xf5f0e0, flecha: 0xc9a46a, ponta: 0xb7c0cb, altura: 26, curva: 6 },
-}
-
-// Os números da pose (regras/bonecos.js)
+// Os números da pose e do balanço (regras/bonecos.js)
 export const poseDosBonecos = {
   // cos da mira abaixo disso (perto da vertical): o corpo não vira (evita o pisca-pisca)
   histereseDoLado: 0.2,
-  // sen da mira entre -isso e +isso (perto da horizontal): a arma fica onde estava (atrás ou na frente)
-  histereseDaFrente: 0.25,
-  // o braço da arma gira até este ângulo para cima ou para baixo, a partir da frente (radianos)
-  limiteDoBraco: 1.75,
-  // ritmo do balanço: fase por milissegundo
-  faseAndando: 0.016,
-  faseParado: 0.004,
-  parado: { ritmo: 1, corpo: 0.7, braco: 0.06 },
-  andando: { perna: 3, corpo: 1.5, braco: 0.45 },
-  // ângulo de descanso do braço da arma (radianos, dentro do corpo: 0 = frente, π/2 = para baixo)
-  descanso: { espada: 0.9, cajado: 1.25, cetro: 1.2 },
-  // o golpe de cada arma (regras/bonecos.js, poseDoAtaque): giro em radianos e avanço em px
-  ataques: {
-    espada: { pico: 0.45, giroInicial: -2.1, giroFinal: 0.6, avanco: 3 },
-    cajado: { pico: 0.35, giro: -1.0, avanco: 4 },
-    cetro: { pico: 0.35, giro: -0.9, avanco: 3 },
-    escudo: { pico: 0.4, giro: 0, avanco: 7 },
-    arco: { pico: 0.3, giro: 0, avanco: -2 },
-  },
+  // ritmo do balanço (fase por milissegundo)
+  faseAndando: 0.0105,
+  faseParado: 0.0028,
+  // parado: um sobe e desce suave; andando: os pés alternam e as mãos balançam ("balangandinho", nada exagerado)
+  parado: { corpo: 0.8, mao: 0.7 },
+  andando: { pe: 2.5, levanta: 1.6, corpo: 1.2, mao: 2 },
+  // o "soquinho" do ataque: a mão do lado da mira vai na direção da mira e volta (sobe até "pico" do tempo do golpe)
+  soco: { pico: 0.35, distancia: 9 },
   msDoAtaque: 320,
-  arco: { puxadaMaxima: 9 },
-  // caído: as cores escurecem por esta fração
-  escurecerCaido: 0.45,
+  // Desempenho (jogo/desenhoEmBlocos.js): cada pose vira uma textura feita uma vez. O balanço tem estes quadros por volta,
+  // o soquinho estes níveis (e 8 direções); o quadro da textura tem este lado (px, no tamanho de referência)
+  quadrosDoBalanco: 8,
+  niveisDoSoco: 3,
+  ladoDaTextura: 86,
+  // caído: o desenho escurece (o tint multiplica as cores por este cinza)
+  tintDoCaido: 0x8c8c8c,
 }

@@ -2,6 +2,7 @@ import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { direcaoDoVetor } from '../../regras/arte.js'
 import { raioDoCorpo } from '../../regras/movimento.js'
 import { DesenhoDoBoneco } from '../arte.js'
+import DesenhoEmBlocos from '../desenhoEmBlocos.js'
 import { camadas } from '../efeitos.js'
 
 // Base de tudo que tem corpo na arena: Líder, aliados, mobs e boneco.
@@ -84,6 +85,16 @@ export default class Entidade {
     this.parar()
     this.travamento = null
     this.manobra = null
+  }
+
+  // O desenho em blocos (RNF15, Parte 4): no lugar do quadrado, até a arte chegar. A imagem, quando existir, ganha
+  // (usarArte esconde o desenho). opcoes: { gerarPecas, escala, olharPelaMira } (jogo/desenhoEmBlocos.js)
+  usarDesenhoEmBlocos(opcoes) {
+    this.desenhoEmCodigo?.destruir()
+    this.desenhoEmCodigo = new DesenhoEmBlocos(this.cena, this, opcoes)
+    this.visual.add(this.desenhoEmCodigo.grafico)
+    this.desenhoEmCodigo.definirVisivel(!this.boneco)
+    this.quadrado.setVisible(false)
   }
 
   // Troca o quadrado pela imagem do boneco (classe, mob ou Boss; dados/arte.js), se ela existir

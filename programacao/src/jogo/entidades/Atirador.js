@@ -13,6 +13,7 @@ export default class Atirador extends Inimigo {
     super(cena, x, y, config, cor)
     this.ultimoTiro = null
     this.usarArte(config.tipo ?? 'atirador') // na Floresta, a aranha
+    this.usarDesenhoDeBicho(config.tipo)
   }
 
   atualizar(agora) {

@@ -3,6 +3,8 @@ import { velocidadeDoMovimento } from '../../regras/combate.js'
 import { combateDeTeste, mundo } from '../../dados/balanceamento.js'
 import { alvoDoInimigo, maisProximo } from '../../regras/iaDosAliados.js'
 import { dentroDoTerritorio } from '../../regras/mobs.js'
+import { bichosEmBlocos } from '../../dados/bonecos.js'
+import { escalaDoBicho, pecasDoBicho } from '../../regras/bonecos.js'
 import { numeroFlutuante, particulas } from '../efeitos.js'
 import Entidade, { BarraDeVida } from './Entidade.js'
 
@@ -15,6 +17,13 @@ import Entidade, { BarraDeVida } from './Entidade.js'
 // O alvo é escolhido em regras/iaDosAliados.js: o Tanque perto atrai, e a Provocação puxa todos no raio.
 // Cada inimigo tem um "!" quando começa a perseguir e um "?" quando desiste, para dar para ver.
 export default class Inimigo extends Entidade {
+  // O bicho em blocos da espécie (RNF15, Parte 4b: lobo, javali, cervo, aranha), no lugar do quadrado. Sem receita
+  // (os mobs de teste da arena), continua o quadrado.
+  usarDesenhoDeBicho(tipo) {
+    if (!bichosEmBlocos[tipo]) return
+    this.usarDesenhoEmBlocos({ gerarPecas: (pose) => pecasDoBicho(tipo, pose), chave: () => `bicho:${tipo}`, escala: escalaDoBicho(tipo, this.tamanho) })
+  }
+
   constructor(cena, x, y, config, cor) {
     super(cena, { x, y, tamanho: config.tamanho, cor })
     this.config = config

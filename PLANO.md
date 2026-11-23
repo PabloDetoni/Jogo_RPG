@@ -4,6 +4,7 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
 
 ## Onde parei
 
+- **Agora (22/11/2026): Partes 4 a 10 da mensagem de 22/11** (`mensagens-claude/2026-11-22-para-o-claude-code-partes-4-a-10.md`), no ramo `jogo-dezembro`. Publicar e fazer a página do grupo no fim de cada parte; depois da Parte 10, parar e escrever `mensagens-claude/2026-11-XX-relatorio-partes-4-a-10.md`. Respostas do Pablo: SQL 004 ele roda (não depender); Codex fechado (manter ignorado); velocidade fica; aura existe sempre que houver inimigo perto (em combate); bonecos refeitos (Parte 4).
 - **Partes 0 a 3 feitas e publicadas (22/11/2026). PARADO, esperando o teste do Pablo e a próxima mensagem** (mapa grande, mobs novos, Caravana, NPCs e pesca). Relatório final: `mensagens-claude/2026-11-22-relatorio-partes-0-a-3.md` (com as perguntas). Páginas do grupo: Parte 2 https://claude.ai/artifact/R5VAm1XTKXkhQ7du6XaAJR; Parte 3 https://claude.ai/artifact/SRhTCSGSHBNyxyVgmZob7K.
   - **Esperando o Pablo:** rodar o `programacao/supabase/004_apelido_de_conta_nao_confirmada.sql` (passo a passo no README de `supabase/`) e responder as perguntas da seção 9 do relatório.
 - **Agora (21/11/2026): Partes 0 a 3 da mensagem de 20/11** (`mensagens-claude/2026-11-20-para-o-claude-code-partes-0-a-3.md`), no ramo local **`jogo-dezembro`** (saído do `main`). Plano logo abaixo. Depois da Parte 3, parar e escrever `mensagens-claude/2026-11-XX-relatorio-partes-0-a-3.md`.
@@ -67,6 +68,17 @@ Atualizado em 08/10/2026: Fase 0 (`d938108`), parte 5a (`1143420`), ajustes da 5
   - aprovar ou mudar a proposta do escudo do Tanque contra golpes fortes (abaixo, na parte 10).
 - **Depois: Fase 5** (polimento e testes): TEST-008, TEST-009, TEST-010, os problemas conhecidos, os prints das telas como protótipos (o `npm run prints` já existe) e o DOC-006.
 - **Fase 5** (polimento e testes), sem esperar a arte: a arte entra quando chegar, sem mexer no código. A arte não vai sozinha para o `main`: entra junto com a próxima publicação (a regra é publicar no fim de cada fase; aqui não muda nada no que se vê, então vai com a Fase 5).
+
+### Plano das Partes 4 a 10 (mensagem de 22/11/2026; ramo `jogo-dezembro`)
+
+- **4a · bonecos em blocos:** cabeça+corpo num quadrado arredondado, tronco menor, mãos e pés flutuando, olhinhos, cor da classe; só o chapéu (elmo, chapéu de mago, nada, capuz, mitra). Sem armas na mão: o "soquinho" na direção da mira; os efeitos de ataque como antes; o escudo simples de antes volta (gira com a mira). Tirar o que não for mais usado (armas, saia). FPS de novo. Aura do Sacerdote em combate mesmo com o grupo cheio.
+- **4b · mobs em blocos:** lobo, javali e cervo deitados com 4 pés; aranha redonda com patinhas; receitas em `dados/bonecos.js`.
+- **5 · Floresta grande e fixa:** polígonos à mão em `dados/mundo/floresta.js` (caminho em "S", ~3 min a ~190 px/s), grade de terreno, mata pela grade, caminho com grades locais, desenho por blocos perto da câmera, minimapa que acompanha o Líder e o mapa inteiro na pausa, a borda da taxa recalibrada, o Guardião fora do mapa; roteiros.
+- **6 · mobs novos em levas:** 6a fácil e neutras (Lobo Alfa, animais pacíficos, território pela área, XP quase zero); 6b acampamento goblin (lanceiro, arqueiro, xamã; prioridade de alvo); 6c forte goblin e Orc, Aranha-Mãe; 6d o Ogro.
+- **7 · Caravana:** paradas (início grátis, zonas neutras), preço caro, paga no Começar partida, devolve se cair; RF56 e UC44 feitos.
+- **8 · números das regiões:** metas como testes do simulador; mobs fundos mais rápidos que o Líder do começo; curva de XP e XP dos mobs juntos; tabela para o Pablo discutir.
+- **9 · NPCs:** comerciante, ferreiro e mestre da Guilda, balão, apresentação (`npcsConhecidos`), falas PROVISÓRIAS, desenho em blocos.
+- **10 · pesca visual:** canvas em React no Lago, bonequinho em blocos com vara, boia e o peixe pulando.
 
 ### Plano das Partes 0 a 3 (mensagem de 20/11/2026; ramo local `jogo-dezembro`)
 
