@@ -91,6 +91,11 @@ export const poseDosBonecos = {
   // o "soquinho" do ataque: a mão do lado da mira vai na direção da mira e volta (sobe até "pico" do tempo do golpe)
   soco: { pico: 0.35, distancia: 9 },
   msDoAtaque: 320,
-  // caído: as cores escurecem por esta fração
-  escurecerCaido: 0.45,
+  // Desempenho (jogo/desenhoEmBlocos.js): cada pose vira uma textura feita uma vez. O balanço tem estes quadros por volta,
+  // o soquinho estes níveis (e 8 direções); o quadro da textura tem este lado (px, no tamanho de referência)
+  quadrosDoBalanco: 8,
+  niveisDoSoco: 3,
+  ladoDaTextura: 86,
+  // caído: o desenho escurece (o tint multiplica as cores por este cinza)
+  tintDoCaido: 0x8c8c8c,
 }

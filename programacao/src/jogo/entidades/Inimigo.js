@@ -21,7 +21,7 @@ export default class Inimigo extends Entidade {
   // (os mobs de teste da arena), continua o quadrado.
   usarDesenhoDeBicho(tipo) {
     if (!bichosEmBlocos[tipo]) return
-    this.usarDesenhoEmBlocos({ gerarPecas: (pose) => pecasDoBicho(tipo, pose), escala: escalaDoBicho(tipo, this.tamanho) })
+    this.usarDesenhoEmBlocos({ gerarPecas: (pose) => pecasDoBicho(tipo, pose), chave: () => `bicho:${tipo}`, escala: escalaDoBicho(tipo, this.tamanho) })
   }
 
   constructor(cena, x, y, config, cor) {

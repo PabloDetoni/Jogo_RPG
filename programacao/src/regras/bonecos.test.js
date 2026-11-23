@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bichosEmBlocos, chapeusDasClasses, medidasDoBoneco, poseDosBonecos } from '../dados/bonecos.js'
 import { classes, corDaClasse } from '../dados/classes.js'
-import { anguloNoCorpo, balancoDoBoneco, chapeuDaClasse, escalaDoBicho, escurecer, ladoDoCorpo, pecasDoBicho, pecasDoBoneco, socoDoAtaque } from './bonecos.js'
+import { anguloNoCorpo, balancoDoBoneco, chapeuDaClasse, escalaDoBicho, escurecer, ladoDoCorpo, pecasDoBicho, pecasDoBoneco, poseEmQuadros, socoDoAtaque } from './bonecos.js'
 
 const graus = (g) => (g * Math.PI) / 180
 // O canto mais à esquerda, mais à direita, mais alto e mais baixo de uma lista de formas
@@ -148,3 +148,22 @@ describe('mobs e animais em blocos (Parte 4b)', () => {
     expect(escalaDoBicho('desconhecido', 50)).toBe(1)
   })
 })
+
+describe('a pose em poucos quadros (cada quadro vira uma textura feita uma vez: desempenho)', () => {
+  it('o balanço tem quadrosDoBalanco quadros por volta; o mesmo quadro dá o mesmo nome', () => {
+    const nomes = new Set()
+    for (let i = 0; i < 200; i++) nomes.add(poseEmQuadros({ fase: (i / 200) * Math.PI * 2, andando: true }).nome)
+    expect(nomes.size).toBe(poseDosBonecos.quadrosDoBalanco)
+    expect(poseEmQuadros({ fase: 0.01 }).nome).toBe(poseEmQuadros({ fase: 0.02 }).nome)
+    expect(poseEmQuadros({ fase: 1, lado: 'esquerda' }).nome).not.toBe(poseEmQuadros({ fase: 1, lado: 'direita' }).nome)
+  })
+
+  it('o soquinho em poucos níveis e 8 direções; durante ele, e caído, sem balanço', () => {
+    const nomes = new Set()
+    for (let a = 0; a < 64; a++) for (let v = 1; v <= 9; v++) nomes.add(poseEmQuadros({ fase: a, andando: true, soco: { angulo: (a / 64) * Math.PI * 2, avanco: v } }).nome)
+    expect(nomes.size).toBeLessThanOrEqual(poseDosBonecos.niveisDoSoco * 8)
+    const caido = poseEmQuadros({ fase: 2, andando: true, caido: true, soco: { angulo: 0, avanco: 5 } })
+    expect(caido).toMatchObject({ andando: false, fase: 0, soco: null })
+  })
+})
+

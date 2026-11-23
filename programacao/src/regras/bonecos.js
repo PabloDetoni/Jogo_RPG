@@ -62,6 +62,30 @@ export function socoDoAtaque(fracao, config = poseDosBonecos.soco) {
   return config.distancia * ida
 }
 
+// A pose reduzida a poucos quadros (jogo/desenhoEmBlocos.js guarda uma textura por quadro): o balanço em
+// quadrosDoBalanco passos por volta; o soquinho em niveisDoSoco níveis e 8 direções (durante o soquinho, o resto fica
+// parado); caído, sem balanço. Devolve a pose para pecasDoBoneco/pecasDoBicho e o "nome" do quadro.
+export function poseEmQuadros({ lado = 'direita', fase = 0, andando = false, caido = false, soco = null }, config = poseDosBonecos) {
+  const volta = Math.PI * 2
+  const q = config.quadrosDoBalanco
+  const quadro = Math.floor(((((fase % volta) + volta) % volta) / volta) * q) % q
+  let nivel = 0
+  let direcao = 0
+  if (!caido && soco && soco.avanco > 0) {
+    nivel = Math.min(config.niveisDoSoco, Math.max(1, Math.round((soco.avanco / config.soco.distancia) * config.niveisDoSoco)))
+    direcao = (((Math.round(soco.angulo / (Math.PI / 4)) % 8) + 8) % 8)
+  }
+  const parado = caido || nivel > 0
+  return {
+    lado,
+    caido,
+    andando: andando && !parado,
+    fase: parado ? 0 : ((quadro + 0.5) * volta) / q,
+    soco: nivel > 0 ? { angulo: (direcao * Math.PI) / 4, avanco: (nivel / config.niveisDoSoco) * config.soco.distancia } : null,
+    nome: `${lado === 'esquerda' ? 'e' : 'd'}${caido ? 'c' : ''}${andando && !parado ? 'a' : 'p'}${parado ? '' : quadro}${nivel > 0 ? `s${nivel}d${direcao}` : ''}`,
+  }
+}
+
 // ---------- O boneco (personagens; depois goblins, Orc, Ogro e NPCs no mesmo formato) ----------
 
 // pose: { lado, fase, andando, caido, soco: { angulo, avanco } (angulo no sistema da tela), escala }

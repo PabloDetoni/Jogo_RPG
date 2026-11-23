@@ -29,6 +29,7 @@ export default class Personagem extends Entidade {
     // mão desse lado dá o "soquinho". No lugar do quadrado, até a pixel art chegar.
     this.usarDesenhoEmBlocos({
       gerarPecas: (pose) => pecasDoBoneco({ cor: corDaClasse(this.classe), chapeu: chapeuDaClasse(this.classe) }, pose),
+      chave: () => `boneco:${this.classe}`,
       olharPelaMira: true,
     })
     this.contornoEscuro = cena.add.rectangle(0, 0, tamanho + 10, tamanho + 10).setStrokeStyle(2, coresDaArena.contorno)
