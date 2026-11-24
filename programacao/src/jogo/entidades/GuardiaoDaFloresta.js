@@ -14,9 +14,10 @@ import Inimigo from './Inimigo.js'
 // - investida: a média distância, uma faixa reta até o alvo, por onde ele avança;
 // - espinhos: de longe, um leque de tiros, com as linhas marcadas antes.
 // Estados: passeando → perseguindo → avisando (a marca no chão) → atacando → perseguindo.
+// O Ogro (Parte 6d, jogo/entidades/Ogro.js) é este mesmo chefe com outra ficha, outra arte e o arremesso no lugar dos
+// espinhos.
 export default class GuardiaoDaFloresta extends Inimigo {
-  constructor(cena, x, y) {
-    const config = mundo.boss
+  constructor(cena, x, y, config = mundo.boss, arte = 'guardiao') {
     super(cena, x, y, config, config.cor)
     this.ehBoss = true
     this.peso = 6 // quase não se mexe com a separação dos corpos
@@ -26,8 +27,8 @@ export default class GuardiaoDaFloresta extends Inimigo {
     // A coroa de raízes em cima (só desenho)
     this.coroa = cena.add.rectangle(0, -config.tamanho * 0.42, config.tamanho * 0.7, 10, 0x4f8f3a).setStrokeStyle(2, coresDaArena.contorno)
     this.visual.add(this.coroa)
-    this.usarArte('guardiao')
-    this.coroa.setVisible(!this.boneco)
+    this.usarArte(arte)
+    this.coroa.setVisible(arte === 'guardiao' && !this.boneco)
   }
 
   // Na arte: o aviso e o golpe, olhando para onde o ataque vai
@@ -75,7 +76,8 @@ export default class GuardiaoDaFloresta extends Inimigo {
     if (podeUsar(agora, this.ultimoAtaque, config.msEntreAtaques)) {
       if (ate <= config.pisao.alcance) return this.comecarAtaque('pisao', agora)
       if (ate <= config.investida.alcance) return this.comecarAtaque('investida', agora)
-      if (ate <= config.espinhos.alcanceDoTiro * 0.85) return this.comecarAtaque('espinhos', agora)
+      // o terceiro golpe: os espinhos do Guardião ou o arremesso do Ogro
+      if (config.arremesso ? ate <= config.arremesso.alcance : ate <= config.espinhos.alcanceDoTiro * 0.85) return this.comecarAtaque(config.arremesso ? 'arremesso' : 'espinhos', agora)
     }
     if (ate > config.pisao.alcance * 0.7) this.andar(this.velocidadeAte(alvo, config.velocidade))
     else this.parar()

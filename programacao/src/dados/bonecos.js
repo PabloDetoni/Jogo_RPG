@@ -103,6 +103,8 @@ export const bichosEmBlocos = {
   goblinArqueiro: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x7fa64a, chapeu: 'capuz', arma: 'arco' },
   goblinXama: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x5c8a6a, chapeu: 'cocar', arma: 'cajado' },
   // Parte 6c: o Orc é o boneco grande, verde-escuro, com presas e machado
+  // Parte 6d: o Ogro, chefe da Floresta: o boneco enorme, verde-acinzentado, com presas e a clava
+  ogro: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x7a8a5e, chapeu: null, arma: 'clava', presas: true },
   orc: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x55703f, chapeu: 'capaceteGoblin', arma: 'machado', presas: true },
   // a Aranha-Mãe: a aranha maior, roxa, de olhos amarelos e com a marca vermelha nas costas
   aranhaMae: {

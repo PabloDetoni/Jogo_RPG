@@ -593,7 +593,7 @@ try {
   await passo('Guilda')
   await passo('Abandonar', true)
   await passo('Sim, abandonar')
-  await aceitarMissao('O Guardião da Floresta')
+  await aceitarMissao('O Ogro da Floresta')
   await irAoReino()
   await passo('Mercado')
   await clicarItem('Poção de vida')

@@ -61,6 +61,7 @@ import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
 import GoblinXama from '../entidades/GoblinXama.js'
 import GuardiaoDaFloresta from '../entidades/GuardiaoDaFloresta.js'
+import Ogro from '../entidades/Ogro.js'
 import ItemNoChao from '../entidades/ItemNoChao.js'
 import Inimigo from '../entidades/Inimigo.js'
 import MobVermelho from '../entidades/MobVermelho.js'
@@ -207,7 +208,8 @@ export default class CenaArena extends Phaser.Scene {
     if (this.mapa.populacao) this.povoarMundo()
     this.boss = null
     // O chefe da Floresta grande é o Ogro (Parte 6d), no lugarDoChefe. O Guardião da Floresta saiu do mapa (fica no
-    // código, fora do beta: criarGuardiao, usado pelo roteiro de testes)
+    // código, fora do beta: criarGuardiao, usado pelo roteiro da arte)
+    if (this.mapa.lugarDoChefe) this.criarOgro(this.mapa.lugarDoChefe)
     if (this.mapa.recursos) this.espalharRecursos()
     this.prepararEscudos()
     this.prepararCamera()
@@ -776,6 +778,15 @@ export default class CenaArena extends Phaser.Scene {
   }
 
   // O Guardião da Floresta (fora do beta desde a Parte 5): o roteiro de testes ainda confere os ataques avisados dele
+  // O chefe da Floresta grande (Parte 6d): o Ogro, no lugar do chefe, no domínio do fim do mapa
+  criarOgro(ponto) {
+    const lugar = this.lugarLivre(mundo.ogro.tamanho, ponto, null, mundo.nascimento.folga)
+    this.boss = this.adicionarInimigo(new Ogro(this, lugar.x, lugar.y))
+    this.boss.tipo = 'ogro'
+    this.boss.regiao = 'dominioDoBoss'
+    return this.boss
+  }
+
   criarGuardiao(ponto) {
     const lugar = this.lugarLivre(mundo.boss.tamanho, ponto, null, mundo.nascimento.folga)
     this.boss = this.adicionarInimigo(new GuardiaoDaFloresta(this, lugar.x, lugar.y))
@@ -1333,7 +1344,7 @@ export default class CenaArena extends Phaser.Scene {
     const { xp = 0, ouro = 0 } = inimigo.config
     this.ganhos.ouro += ouro
     this.ganhos.monstros += 1
-    const tipo = inimigo.ehBoss ? 'guardiao' : (inimigo.tipo ?? 'outro')
+    const tipo = inimigo.tipo ?? (inimigo.ehBoss ? 'guardiao' : 'outro')
     this.contarParaAMissao(() => {
       this.eventosDaMissao.abates[tipo] = (this.eventosDaMissao.abates[tipo] ?? 0) + 1
     })

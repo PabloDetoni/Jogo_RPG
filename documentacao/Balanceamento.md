@@ -364,7 +364,15 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 | cervo | pacífico (nunca ataca, foge) | 45 / 99 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 260 px | 900 px | chifreDeCervo (40%) |
 | coelho | pacífico (nunca ataca, foge) | 18 / 40 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 220 px | 700 px | peDeCoelho (50%) |
 
-### Boss da Floresta (TASK-065, provisório)
+### Chefe da Floresta: o Ogro (Parte 6d, provisório)
+
+- **Ogro**: 3.000 de vida, 500 XP, 300 de ouro e **+600 na pontuação** (bônus de Boss, RF49). Território de 760 px no domínio dele.
+- Pancada (perto): área de 200 px em volta, aviso de 1 s, 30 de dano.
+- Investida (média distância): faixa de 440 × 90 px até o alvo, aviso de 1 s, 42 de dano.
+- Arremesso (até 700 px): a marca de 120 px onde o alvo está, aviso de 1 s, 24 de dano.
+- Um ataque a cada 2 s no máximo. Drop: couroDoOgro sempre e **8%** de chance do equipamento especial (cintoDoOgro, RF39; no npm run dev dá para forçar 100%).
+
+### O Guardião da Floresta (fora do beta desde a Parte 5; fica no código)
 
 - **Guardião da Floresta**: 2.400 de vida, 400 XP, 250 de ouro e **+500 na pontuação** (bônus de Boss, RF49). Território de 720 px no domínio dele.
 - Pisão (perto): área de 190 px em volta, aviso de 1 s, 26 de dano.
@@ -409,6 +417,7 @@ Quem vende (no Mercado, ou equipamento na Forja) recebe **50%** do preço, para 
 | Presa de orc | material | Incomum | 2 | 28 | 14 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Seda da Aranha-Mãe | material | Raro | 1 | 50 | 25 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Totem do xamã | material | Raro | 2 | 55 | 27 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Couro do Ogro | material | Raro | 4 | 70 | 35 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Casca antiga | material | Raro | 4 | 60 | 30 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Minério de ferro | material | Comum | 3 | 12 | 6 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Poção de vida | consumivel | Comum | 1 | 25 | 12 | Recupera 40% da vida. Não levanta quem desmaiou. Na partida: Tab, depois E (Líder) ou R (aliado). |
@@ -438,6 +447,7 @@ Quem vende (no Mercado, ou equipamento na Forja) recebe **50%** do preço, para 
 | Grevas de ferro | equipamento | Incomum | 4 | 200 | 100 | Calças · Vitalidade +2 · Força +1 · Defesa 3 · todas as classes |
 | Botas de vento | equipamento | Incomum | 1 | 220 | 110 | Botas · Agilidade +3 · Recarga −5% · todas as classes |
 | Manoplas de ferro | equipamento | Incomum | 3 | 180 | 90 | Manoplas · Força +3 · Defesa 2 · todas as classes |
+| Cinto do Ogro | equipamento | Especial | 3 | 520 | 260 | Peitoral · Força +6 · Vitalidade +4 · Defesa 4 · todas as classes |
 | Coroa de raízes | equipamento | Especial | 2 | 500 | 250 | Capacete · Vitalidade +6 · Sabedoria +4 · Defesa 4 · todas as classes |
 | Capacete de teste | equipamento | Teste | 2 | 10 | 5 | Capacete · Vitalidade +1 · todas as classes |
 | Peitoral de teste | equipamento | Teste | 4 | 10 | 5 | Peitoral · Vitalidade +2 · todas as classes |
@@ -520,7 +530,7 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 | O xamã do acampamento | matar | 1 goblin xamã | 120 | 180 | 12 |
 | Aranhas no caminho | matar | 6 aranha | 110 | 180 | 11 |
 | Javalis bravos | matar | 4 javali | 150 | 240 | 15 |
-| O Guardião da Floresta | matar | 1 Guardião da Floresta | 400 | 600 | 40 |
+| O Ogro da Floresta | matar | 1 Ogro | 400 | 600 | 40 |
 | Cogumelos para poções | coletar | 6 Cogumelo | 60 | 80 | 6 |
 | Lenha para o inverno | coletar | 8 Madeira | 70 | 90 | 7 |
 | Peles para o curtidor | entregar | 4 Pele de lobo | 90 | 100 | 9 |
@@ -536,7 +546,7 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 | Caçador | Derrote 50 monstros. | 100 de ouro |
 | Exterminador | Derrote 1.000 monstros. | 300 de ouro |
 | Lenda da Floresta | Derrote 10.000 monstros. | 1.000 de ouro |
-| Queda do Guardião | Derrote o Guardião da Floresta. | 200 de ouro |
+| Queda do chefe | Derrote o chefe da Floresta (o Ogro). | 200 de ouro |
 | Volta triunfal | Consiga uma Grande Vitória. | 100 de ouro |
 | A serviço da Guilda | Entregue 5 missões na Guilda. | 150 de ouro |
 | Explorador | Descubra todas as áreas da Floresta. | 150 de ouro |

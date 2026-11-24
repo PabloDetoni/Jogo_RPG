@@ -544,7 +544,7 @@ Para ter itens, ouro e pontos sem jogar horas: no `npm run dev`, painel `</> DEV
 - Deve acontecer: com as peles, a linha mostra 4/4; vendidas, volta a 0/4 e Entregar explica que ainda falta.
 
 **RE-04 · Abandonar com ouro abaixo da multa (TEST-006, caso 4)**
-- Fazer: aceite O Guardião da Floresta (multa 40), gaste o ouro até ficar com menos de 40 e clique em Abandonar….
+- Fazer: aceite O Ogro da Floresta (multa 40), gaste o ouro até ficar com menos de 40 e clique em Abandonar….
 - Deve acontecer: o aviso mostra a multa e diz que o ouro vai ficar em zero; confirmado, o ouro fica 0 e a missão sai.
 
 **RE-05 · Arma de outra classe (TEST-006, caso 5)**
@@ -651,12 +651,12 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
 - Fazer: na barra de teste, **Encher mochila**; chegue perto de um item e aperte **E**.
 - Deve acontecer: aparece "Mochila cheia: não cabe ..." em vermelho; com E, o item continua no chão com o aviso "ficou no chão (some em 30 s)"; nos últimos segundos ele pisca e depois some.
 
-**FL-09 · Enfrentar o Boss**
-- Fazer: vá até o domínio do Boss (o fundo, à direita; ou escolha **Muito difícil** no Ponto de partida). Deixe o Guardião da Floresta (quadrado grande marrom com uma faixa verde) atacar; tente sair das marcas vermelhas no chão. Para ver o drop especial: **Drop especial do Boss: 100%** antes de derrotá-lo (ligue o **Invencível** se precisar).
+**FL-09 · Enfrentar o Boss (o Ogro, Parte 6d)**
+- Fazer: vá até o domínio do Boss (o fim do caminho, embaixo à direita; ou escolha **Muito difícil** no Ponto de partida). Deixe o Ogro (o boneco enorme verde-acinzentado, com presas e clava) atacar; tente sair das marcas vermelhas no chão. Para ver o drop especial: **Drop especial do Boss: 100%** antes de derrotá-lo (ligue o **Invencível** se precisar).
 - Deve acontecer:
   - ao entrar no domínio: a mensagem "Domínio do Boss: aqui a fuga e os perdidos custam mais", a região em vermelho no HUD e a barra grande do Boss embaixo do HUD;
-  - antes de cada golpe, uma marca vermelha no chão (círculo em volta dele, faixa reta até você ou linhas em leque); quem sai da marca a tempo não leva dano;
-  - derrotado: "+500 pontos", a casca antiga no chão e, com 100%, a Coroa de raízes; o Resumo mostra "Boss: derrotado (+500 pontos)".
+  - antes de cada golpe, uma marca vermelha no chão (círculo em volta dele, faixa reta até você, ou, de longe, um círculo onde você está: a pedra que ele arremessa); quem sai da marca a tempo não leva dano;
+  - derrotado: "+600 pontos", o couro do Ogro no chão e, com 100%, o Cinto do Ogro; o Resumo mostra "Boss: derrotado (+600 pontos)".
 
 **FL-10 · O grupo atravessa a Floresta sem ninguém ficar preso**
 - Fazer: com o grupo cheio (**Encher grupo**), atravesse a Floresta inteira, passando entre árvores e pedras e pelos degraus entre as regiões.

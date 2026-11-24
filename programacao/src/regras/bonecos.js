@@ -320,6 +320,9 @@ function pecasDoGoblin(receita, pose, medidas) {
   } else if (receita.arma === 'machado') {
     arma.push(linha(mx - 2, my + 10, mx + 4, my - 24, 2.6, c.madeira))
     arma.push({ forma: 'poli', pontos: [{ x: (mx + 3) * s, y: my - 25 }, { x: (mx + 13) * s, y: my - 29 }, { x: (mx + 12) * s, y: my - 15 }, { x: (mx + 4) * s, y: my - 17 }], cor: c.metal, ...comContorno })
+  } else if (receita.arma === 'clava') {
+    arma.push(linha(mx - 1, my + 10, mx + 5, my - 20, 3.2, c.madeira))
+    arma.push({ forma: 'circulo', x: (mx + 6) * s, y: my - 24, raio: 6, cor: c.madeira, ...comContorno })
   } else if (receita.arma === 'cajado') {
     arma.push(linha(mx + 1, my + 10, mx + 1, my - 24, 2.4, c.madeira))
     arma.push({ forma: 'circulo', x: (mx + 1) * s, y: my - 26, raio: 3.4, cor: c.pedra, ...comContorno })

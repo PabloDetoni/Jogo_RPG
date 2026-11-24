@@ -14,7 +14,7 @@ export const conquistas = [
   { id: 'cacador', nome: 'Caçador', descricao: 'Derrote 50 monstros.', condicao: { tipo: 'estatistica', campo: 'monstrosDerrotados', meta: 50 }, recompensa: { ouro: 100 } },
   { id: 'exterminador', nome: 'Exterminador', descricao: 'Derrote 1.000 monstros.', condicao: { tipo: 'estatistica', campo: 'monstrosDerrotados', meta: 1000 }, recompensa: { ouro: 300 } },
   { id: 'lendaDaFloresta', nome: 'Lenda da Floresta', descricao: 'Derrote 10.000 monstros.', condicao: { tipo: 'estatistica', campo: 'monstrosDerrotados', meta: 10000 }, recompensa: { ouro: 1000 } },
-  { id: 'quedaDoGuardiao', nome: 'Queda do Guardião', descricao: 'Derrote o Guardião da Floresta.', condicao: { tipo: 'estatistica', campo: 'bossesDerrotados', meta: 1 }, recompensa: { ouro: 200 } },
+  { id: 'quedaDoGuardiao', nome: 'Queda do chefe', descricao: 'Derrote o chefe da Floresta (o Ogro).', condicao: { tipo: 'estatistica', campo: 'bossesDerrotados', meta: 1 }, recompensa: { ouro: 200 } },
   { id: 'grandeVitoria', nome: 'Volta triunfal', descricao: 'Consiga uma Grande Vitória.', condicao: { tipo: 'estatistica', campo: 'grandesVitorias', meta: 1 }, recompensa: { ouro: 100 } },
   { id: 'aServicoDaGuilda', nome: 'A serviço da Guilda', descricao: 'Entregue 5 missões na Guilda.', condicao: { tipo: 'estatistica', campo: 'missoesEntregues', meta: 5 }, recompensa: { ouro: 150 } },
   { id: 'explorador', nome: 'Explorador', descricao: 'Descubra todas as áreas da Floresta.', condicao: { tipo: 'areas', bioma: 'floresta', meta: 9 }, recompensa: { ouro: 150 } },

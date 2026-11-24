@@ -40,6 +40,8 @@ const dados = {
   presaDeOrc: { nome: 'Presa de orc', tipo: 'material', raridade: 'incomum', peso: 2, preco: 28, cor: 0xf0e6c8, descricao: 'Grossa e lascada de tanto morder escudo.' },
   sedaDaMae: { nome: 'Seda da Aranha-Mãe', tipo: 'material', raridade: 'raro', peso: 1, preco: 50, cor: 0xe8e0f0, descricao: 'Fio grosso que prende quase tudo.' },
   totemDoXama: { nome: 'Totem do xamã', tipo: 'material', raridade: 'raro', peso: 2, preco: 55, cor: 0xb08a5a, descricao: 'Ossinhos e penas amarrados: ainda brilha um pouco.' },
+  // Parte 6d: o drop do Ogro. PROVISÓRIO – substituir pelo do grupo.
+  couroDoOgro: { nome: 'Couro do Ogro', tipo: 'material', raridade: 'raro', peso: 4, preco: 70, cor: 0x6b5a3a, descricao: 'Grosso como tábua: nem flecha atravessa.' },
   cascaAntiga: { nome: 'Casca antiga', tipo: 'material', raridade: 'raro', peso: 4, preco: 60, cor: 0x5d4a2e, descricao: 'Pedaço da casca do Guardião da Floresta.' },
   minerioDeFerro: { nome: 'Minério de ferro', tipo: 'material', raridade: 'comum', peso: 3, preco: 12, cor: 0x8a8f99, descricao: 'Pedra com ferro, vinda da mina do Planalto.' },
 
@@ -83,6 +85,8 @@ const dados = {
   manoplasDeFerro: { nome: 'Manoplas de ferro', tipo: 'equipamento', raridade: 'incomum', peso: 3, preco: 180, espaco: 'manoplas', classes: 'todas', bonus: { forca: 3 }, defesa: 2, cor: 0x8a8f99, descricao: 'Cada golpe pesa mais.' },
 
   // ---------- Equipamento especial do Boss da Floresta (pequena chance, RF39) ----------
+  // Parte 6d: o equipamento especial do Ogro (pequena chance, RF39). PROVISÓRIO – substituir pelo do grupo.
+  cintoDoOgro: { nome: 'Cinto do Ogro', tipo: 'equipamento', raridade: 'especial', peso: 3, preco: 520, espaco: 'peitoral', classes: 'todas', bonus: { forca: 6, vitalidade: 4 }, defesa: 4, cor: 0xffd23f, descricao: 'A fivela é do tamanho de um prato.' },
   coroaDeRaizes: { nome: 'Coroa de raízes', tipo: 'equipamento', raridade: 'especial', peso: 2, preco: 500, espaco: 'capacete', classes: 'todas', bonus: { vitalidade: 6, sabedoria: 4 }, defesa: 4, cor: 0xffd23f, descricao: 'Raízes vivas que o Guardião da Floresta usava como coroa.' },
 
   // ---------- Equipamento de teste (pedido do Pablo em 09/10): um de cada espaço, para testar a Forja ----------

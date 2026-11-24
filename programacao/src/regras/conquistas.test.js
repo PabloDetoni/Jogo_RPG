@@ -43,7 +43,7 @@ describe('progresso e conclusão (TASK-103)', () => {
     const deNovo = aplicarConquistas(progresso)
     expect(deNovo.novas).toEqual([])
     expect(deNovo.progresso).toBe(progresso) // nada muda
-    expect(avisoDaConquista(conquista('quedaDoGuardiao'))).toBe('Conquista: Queda do Guardião (+200 de ouro)')
+    expect(avisoDaConquista(conquista('quedaDoGuardiao'))).toBe('Conquista: Queda do chefe (+200 de ouro)')
     expect(avisoDaConquista(conquista('cofreCheio'))).toBe('Conquista: Cofre cheio')
   })
 
