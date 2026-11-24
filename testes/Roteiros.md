@@ -56,6 +56,16 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## NPC. Os NPCs do Reino (Parte 9, 11/2026)
+
+**NPC-01 · A apresentação na primeira visita**
+- Fazer: com um convidado novo, entre no Mercado. Leia o balão e clique em **Continuar** até o fim. Saia com **Ir embora** e entre de novo. Faça o mesmo na Forja e na Guilda.
+- Deve acontecer: o comerciante Bartolomeu (chapéu de aba e bigode) se apresenta em 3 partes ("Continuar (1 de 3)"); na segunda visita, ele diz uma fala curta (e não a mesma da vez anterior). Na Forja, o ferreiro Gunnar (barba branca e avental); na Guilda, a Mestra Isolda (chapéu com pena). Recarregar a página não faz ninguém se apresentar de novo.
+
+**NPC-02 · O menu abre a tela**
+- Fazer: no Mercado, clique em **Vender**; depois em **Falar com Bartolomeu**. Na Forja, **Fabricar**; na Guilda, **Contratos**.
+- Deve acontecer: cada opção abre a tela já na aba dela (Vender, Fabricar, Contrato temporário), com as outras abas ainda ali; "Falar com ..." volta para a conversa; "Ir embora" e "Voltar ao Reino" voltam ao Reino. Escolher uma opção antes de ler a apresentação também conta como conhecer o NPC.
+
 ## CM. O Reino e o Mapa em camadas (20/10; com as suas peças desde 21/10)
 
 Os VN-01 a VN-05 abaixo valiam para o Reino e o Mapa de antes (as áreas invisíveis); agora valem estes.

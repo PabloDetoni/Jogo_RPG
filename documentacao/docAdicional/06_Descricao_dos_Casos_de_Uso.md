@@ -38,12 +38,12 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
 | UC15 | Gerenciar Mochila | Associação | — | — | Vê itens, função, descrição e peso; mexe nos itens com o mouse, como num inventário (pegar a pilha, a metade, pôr, trocar); descarta pela lixeira ou escolhendo a quantidade (1, várias ou todas), sempre com confirmação. |
-| UC16 | Negociar no Mercado | Associação | — | — | Compra, vende e troca itens com NPCs. **Planejado (11/2026):** começa pela conversa com o comerciante («include» UC45). |
-| UC17 | Gerenciar equipamentos (Forja) | Associação | Estendido por UC18 | — | Equipa os personagens e compra e vende equipamentos. **Planejado (11/2026):** começa pela conversa com o ferreiro («include» UC45). |
+| UC16 | Negociar no Mercado | Associação | — | — | Compra, vende e troca itens com NPCs. **Feito em 11/2026:** começa pela conversa com o comerciante («include» UC45). |
+| UC17 | Gerenciar equipamentos (Forja) | Associação | Estendido por UC18 | — | Equipa os personagens e compra e vende equipamentos. **Feito em 11/2026:** começa pela conversa com o ferreiro («include» UC45). |
 | UC18 | Fabricar equipamento | «extend» de UC17 | — | Condição: possuir os materiais e o ouro da receita | Fabrica um equipamento a partir de uma receita. |
 | UC19 | Gerenciar personagens (Árvores de Habilidades) | Associação | Estendido por UC20 | — | Distribui atributos, evolui habilidades e escolhe as 3 ativas de cada personagem. |
 | UC20 | Redefinir atributos | «extend» de UC19 | — | Condição: possuir o pergaminho de redefinição | Devolve os pontos de atributo de um personagem para redistribuir. |
-| UC21 | Gerenciar missões (Guilda) | Associação | Estendido por UC22, UC23 e UC24 | — | Mostra a missão ativa, o progresso e o quadro de missões. **Planejado (11/2026):** começa pela conversa com o mestre da Guilda («include» UC45). |
+| UC21 | Gerenciar missões (Guilda) | Associação | Estendido por UC22, UC23 e UC24 | — | Mostra a missão ativa, o progresso e o quadro de missões. **Feito em 11/2026:** começa pela conversa com a mestra da Guilda («include» UC45). |
 | UC22 | Aceitar missão | «extend» de UC21 | — | Condição: não há missão ativa | Pega uma missão do quadro. |
 | UC23 | Entregar missão | «extend» de UC21 | — | Condição: objetivo cumprido no momento da entrega | Entrega a missão e recebe a recompensa. |
 | UC24 | Abandonar missão | «extend» de UC21 | — | Condição: há missão ativa | Cancela a missão pagando a multa. |
@@ -79,7 +79,7 @@ Casos de uso novos, ainda não feitos (planejamento de 11/2026). Passam para a s
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
 | UC44 | Viajar de Caravana | «extend» de UC26 | — | Condição: o jogador quer nascer mais à frente e tem o ouro | **Feito em 11/2026 (Parte 7).** Escolhe a zona neutra onde nascer (perto da região fácil, da média, da difícil ou do fim) e paga o preço, que cresce com a distância (o ouro sai no fim da partida). Substitui o UC28. Se a partida cair, nada é cobrado. |
-| UC45 | Conversar com NPC | Incluído por UC16, UC17 e UC21 | — | — | O NPC se apresenta na primeira visita (tutorial) e diz uma fala aleatória nas outras; o menu leva à ação da tela ou a "Ir embora". |
+| UC45 | Conversar com NPC | Incluído por UC16, UC17 e UC21 | — | — | **Feito em 11/2026 (Parte 9).** O NPC se apresenta na primeira visita (tutorial) e diz uma fala aleatória nas outras; o menu leva à ação da tela ou a "Ir embora". |
 | UC46 | Usar opções de desenvolvedor | Associação (Desenvolvedor) | — | Condição: o jogo está no `npm run dev` | Na partida, liga a super velocidade (1×, 3×, 6×) e se teletransporta clicando no minimapa ou com "T + clique" no mapa. Não existe no site publicado. **Feito em 11/2026.** |
 | UC47 | Simular balanceamento | Associação (Desenvolvedor) | — | — | Roda o simulador (`npm run simular`) com um grupo de nível X contra a região Y e lê o tempo até cada um cair, o dano dado e recebido, quantos mobs dá para enfrentar e o XP e o ouro por minuto. **Feito em 11/2026.** |
 | UC48 | Acessar a Área do Desenvolvedor (extra) | Associação (Desenvolvedor) | Estendido por UC49 | Condição: conta de desenvolvedor, com a segunda etapa de verificação | Entra na Área do Desenvolvedor (auditoria e consultas). **Extra**, fora do beta; fica num pacote separado no diagrama. |

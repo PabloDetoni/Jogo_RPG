@@ -2323,6 +2323,74 @@ button.slot:hover {
 }
 
 /* Antes → depois */
+/* Os NPCs do Reino (Parte 9): o retrato em blocos, o balão de fala e o menu */
+.npc {
+  display: flex;
+  align-items: center;
+  gap: 2.2cqw;
+  width: min(62cqw, 92vw);
+  color: var(--texto);
+}
+.npc-retrato {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  flex: 0 0 auto;
+}
+.npc-retrato .boneco-em-blocos {
+  width: 15cqw;
+  height: 15cqw;
+  animation: npc-respira 2.6s ease-in-out infinite;
+}
+@keyframes npc-respira {
+  50% {
+    translate: 0 -0.25cqw;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .npc-retrato .boneco-em-blocos {
+    animation: none;
+  }
+}
+.npc-nome {
+  font-weight: 700;
+  font-size: 1.5cqw;
+}
+.npc-oficio {
+  opacity: 0.8;
+  font-size: 1.1cqw;
+}
+.npc-conversa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9cqw;
+  min-width: 0;
+}
+.npc-balao {
+  position: relative;
+  margin: 0;
+  padding: 1cqw 1.3cqw;
+  font-size: 1.35cqw;
+  line-height: 1.45;
+  background: var(--painel);
+  border: 0.18cqw solid var(--borda);
+  border-radius: 0.8cqw;
+}
+.npc-balao::before {
+  content: '';
+  position: absolute;
+  left: -1.2cqw;
+  top: 1.6cqw;
+  border: 0.6cqw solid transparent;
+  border-right: 0.7cqw solid var(--borda);
+}
+.npc-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6cqw;
+}
+
 /* A Caravana (Parte 7): a lista das paradas */
 .caravana {
   display: flex;

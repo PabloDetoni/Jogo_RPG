@@ -160,20 +160,27 @@ export const posicoes = {
       ],
     },
   },
+  // npc: a conversa com o NPC do lugar (Parte 9); falarComNpc: o botão que volta à conversa
   guilda: {
     abas: { x: 50, y: 25 },
     conteudo: { x: 50, y: 29.5 }, // preso pelo topo (ConteudoComAbas noTopo): as cartas e o quadro não sobem nas abas
     voltarAoReino: { x: 10, y: 90 },
+    npc: { x: 50, y: 55 },
+    falarComNpc: { x: 27, y: 90 },
   },
   mercado: {
     abas: { x: 50, y: 25 },
     conteudo: { x: 50, y: 57 },
     voltarAoReino: { x: 10, y: 90 },
+    npc: { x: 50, y: 55 },
+    falarComNpc: { x: 27, y: 90 },
   },
   forja: {
     abas: { x: 50, y: 25 },
     conteudo: { x: 50, y: 57 },
     voltarAoReino: { x: 10, y: 90 },
+    npc: { x: 50, y: 55 },
+    falarComNpc: { x: 27, y: 90 },
   },
   mochila: {
     conteudo: { x: 50, y: 53 },

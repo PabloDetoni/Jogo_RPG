@@ -175,6 +175,17 @@ function pecasDoChapeu(chapeu, cor, { topo, y0, ret, poli, medidas }) {
     ret(x0 + 3, topo, largura - 6, 3, 1, c.ouro, false)
     ret(-1, topo - 10, 2, 8, 0.5, c.ouro, false)
     ret(-3.5, topo - 7.5, 7, 2, 0.5, c.ouro, false)
+  } else if (chapeu === 'chapeuDeAba') {
+    // Chapéu de aba larga do comerciante: a aba bem larga, a copa e a faixa dourada
+    const c = coresDosChapeus.chapeuDeAba
+    ret(x0 - 6, topo - 1, largura + 12, 4, 2, c.feltro)
+    ret(x0 + 3, topo - 9, largura - 6, 9, 3, c.feltro)
+    ret(x0 + 3, topo - 3, largura - 6, 2.5, 1, c.faixa, false)
+  } else if (chapeu === 'chapeuComPena') {
+    // Chapéu com pena da mestra da Guilda: um gorro baixo de lado e a pena comprida para trás
+    const c = coresDosChapeus.chapeuComPena
+    poli([{ x: x0 + 8, y: topo - 2 }, { x: x0 - 9, y: topo - 17 }, { x: x0 - 2, y: topo - 16 }, { x: x0 + 5, y: topo - 4 }], c.pena)
+    ret(x0 - 1, topo - 5, largura + 2, 7, 3.5, c.feltro)
   } else if (chapeu === 'capaceteGoblin') {
     // Capacete de ferro velho: a calota em cima, deixando os olhos de fora, e dois rebites
     const c = coresDosChapeus.capaceteGoblin
@@ -286,6 +297,32 @@ export function pecasDoBicho(tipo, { lado = 'direita', fase = 0, andando = false
   ret(xc + cabeca.largura - 3, topoDaCabeca + cabeca.altura * 0.45, 3, 3, 1, escurecer(cor, 0.5), false)
   ret(xc + cabeca.largura * 0.5, topoDaCabeca + cabeca.altura * 0.28, 2.2, 3, 1, medidas.olhos, false)
   return pecas.map((p) => (p.contorno && p.espessura === undefined ? { ...p, espessura: contorno.espessura, corDoContorno: contorno.cor } : p))
+}
+
+// NPC do Reino (Parte 9): o boneco dos personagens na cor do NPC, com o chapéu e o detalhe do ofício: o avental de
+// couro e a barba branca do ferreiro; o bigode do comerciante. aparencia: { cor, chapeu, detalhe, barba }.
+export function pecasDoNpc(aparencia, pose = {}, medidas = medidasDoBoneco) {
+  const s = pose.lado === 'esquerda' ? -1 : 1
+  const { cabeca, tronco, olho, contorno } = medidas
+  const comContorno = { contorno: true, espessura: contorno.espessura, corDoContorno: contorno.cor }
+  const ret = (x, y, largura, altura, raio, cor, borda = true) => ({ forma: 'ret', x: s > 0 ? x : -x - largura, y, largura, altura, raio, cor, ...(borda ? comContorno : { contorno: false }) })
+  const corpo = pecasDoBoneco({ cor: aparencia.cor, chapeu: aparencia.chapeu ?? null }, pose, medidas)
+  const extras = []
+  // o avental fica no tronco (embaixo do quadrado da cabeça), com a alça; a barba vem por cima dele
+  if (aparencia.detalhe === 'avental') {
+    const c = coresDosChapeus.avental
+    extras.push(ret(-tronco.largura / 2 - 2, tronco.y - tronco.altura / 2 - 1.5, tronco.largura + 4, tronco.altura + 3, 2.5, c.couro))
+    extras.push(ret(-tronco.largura / 2 + 1, tronco.y - 1, tronco.largura - 2, 1.6, 0.8, c.alca, false))
+  }
+  if (aparencia.barba) {
+    const baixo = cabeca.y + cabeca.altura / 2
+    const f = olho.frente
+    extras.push({ forma: 'poli', pontos: [{ x: (f - 8) * s, y: olho.y + 4.5 }, { x: (f + 8) * s, y: olho.y + 4.5 }, { x: (f + 6) * s, y: baixo + 3 }, { x: f * s, y: baixo + 6 }, { x: (f - 6) * s, y: baixo + 3 }], cor: aparencia.barba, ...comContorno })
+  }
+  if (aparencia.detalhe === 'bigode') {
+    extras.push(ret(olho.frente - 6, olho.y + 5, 12, 3, 1.5, coresDosChapeus.bigode, false))
+  }
+  return [...corpo, ...extras]
 }
 
 // Goblin (Parte 6b): o boneco dos personagens na cor dele, com as orelhas pontudas atrás da cabeça e a arma na mão da

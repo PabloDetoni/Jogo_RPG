@@ -19,6 +19,9 @@ import Pentagono from '../componentes/Pentagono.jsx'
 import { atributosIniciaisDaClasse } from '../dados/classes.js'
 import { descreverMissao } from '../dados/missoes.js'
 import { ContratosPermanentes, ContratosTemporarios } from './reino/Contratos.jsx'
+import { Comprar as ComprarNoMercado } from './reino/Mercado.jsx'
+import { Equipar } from './reino/Forja.jsx'
+import { MissoesDaGuilda } from './reino/Missoes.jsx'
 
 // Desenha cada tela com todas as janelas, os avisos e o painel, para cada tipo de jogador.
 // Pega telas que quebram ao aparecer e confere o que cada uma precisa mostrar.
@@ -33,7 +36,9 @@ const progresso = {
   estatisticas: { partidasJogadas: 4, monstrosDerrotados: 0 },
 }
 
-function desenhar(tela, tipoJogador, problema = null, { contas = { disponivel: true, guardada: null }, mudancas = {} } = {}) {
+// componente: desenha só ele no lugar da tela (o conteúdo de uma aba: o Mercado, a Forja e a Guilda começam pela
+// conversa com o NPC, Parte 9)
+function desenhar(tela, tipoJogador, problema = null, { contas = { disponivel: true, guardada: null }, mudancas = {}, componente = null } = {}) {
   const salvador = {
     inscrever: () => () => {},
     obterInfo: () => ({ versao: 7, salvoEm: '2026-10-05T12:00:00.000Z', problema }),
@@ -52,7 +57,7 @@ function desenhar(tela, tipoJogador, problema = null, { contas = { disponivel: t
     conta: tipoJogador === 'conta' ? { id: 'u1', email: 'a@b.com', apelido: 'Pablo' } : null,
     ...mudancas,
   }
-  const TelaAtual = componentesDasTelas[tela]
+  const TelaAtual = componente ?? componentesDasTelas[tela]
   return renderToString(
     <ContextoJogo value={{ estado, acoes, salvador, contas }}>
       <TelaAtual />
@@ -539,9 +544,34 @@ describe('mochila da partida com Tab (Fase 4, TASK-047; estilo Minecraft nos aju
   })
 })
 
+describe('os NPCs do Reino (Parte 9, RF57)', () => {
+  it('na primeira visita, o Mercado começa pela apresentação do comerciante, com o menu e o Ir embora', () => {
+    const html = desenhar('mercado', 'convidado').replace(/<!-- -->/g, '')
+    expect(html).toContain('Bartolomeu')
+    expect(html).toContain('Ora, ora! Um cliente novo!')
+    expect(html).toContain('Continuar (1 de 3)')
+    for (const opcao of ['Comprar', 'Vender', 'Trocar', 'Ir embora']) expect(html).toContain(`${opcao}</button>`)
+    expect(html).toContain('<svg class="boneco-em-blocos')
+  })
+
+  it('o NPC conhecido não se apresenta de novo: diz uma das falas dele', () => {
+    const mudancas = { progresso: { ...progresso, npcsConhecidos: ['ferreiro'] } }
+    const html = desenhar('forja', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')
+    expect(html).toContain('Gunnar')
+    expect(html).not.toContain('Continuar (')
+    for (const opcao of ['Equipar', 'Comprar', 'Vender', 'Fabricar', 'Ir embora']) expect(html).toContain(`${opcao}</button>`)
+  })
+
+  it('a Guilda começa pela mestra, com Missões e Contratos', () => {
+    const html = desenhar('guilda', 'convidado').replace(/<!-- -->/g, '')
+    expect(html).toContain('Mestra Isolda')
+    for (const opcao of ['Missões', 'Contratos', 'Ir embora']) expect(html).toContain(`${opcao}</button>`)
+  })
+})
+
 describe('Mercado (Fase 4, TASK-074)', () => {
   it('a aba Comprar mostra o ouro, as ofertas com preço (rotativas com ★) e quando elas mudam', () => {
-    const html = desenhar('mercado', 'convidado').replace(/<!-- -->/g, '')
+    const html = desenhar('mercado', 'convidado', null, { componente: ComprarNoMercado }).replace(/<!-- -->/g, '')
     expect(html).toContain('Seu ouro: 120')
     expect(html).toContain('aria-label="Poção de vida: 25 de ouro"')
     expect(html).toContain('★')
@@ -555,6 +585,7 @@ describe('Forja (Fase 4, TASK-075)', () => {
   it('a aba Equipar mostra o personagem, os 7 espaços, os atributos com o bônus e o que serve na Mochila', () => {
     const mago = { ...progresso.personagens[0], equipamento: { arma: 'cajadoDeCarvalho' } }
     const html = desenhar('forja', 'convidado', null, {
+      componente: Equipar,
       mudancas: { progresso: { ...progresso, personagens: [mago, progresso.personagens[1]], mochila: [{ id: 'espadaCurta', quantidade: 1 }] } },
     }).replace(/<!-- -->/g, '')
     expect(html).toContain('Mago')
@@ -595,7 +626,7 @@ describe('árvore de habilidades (Fase 4, TASK-077)', () => {
 
 describe('Guilda: missões (Fase 4, TASK-078)', () => {
   it('sem missão ativa, o quadro com um cartaz por missão: tipo, objetivo, recompensa e Aceitar', () => {
-    const html = desenhar('guilda', 'convidado').replace(/<!-- -->/g, '')
+    const html = desenhar('guilda', 'convidado', null, { componente: MissoesDaGuilda }).replace(/<!-- -->/g, '')
     expect(html).toContain('aria-label="Caçar lobos"')
     expect(html).toContain('Matar')
     expect(html).toContain('Derrotar 8 lobo')
@@ -607,7 +638,7 @@ describe('Guilda: missões (Fase 4, TASK-078)', () => {
   it('com missão ativa, o progresso, a recompensa, Entregar e Abandonar; o HUD do Reino mostra a linha', () => {
     const missaoAtiva = { id: 'pelesParaOCurtidor', tipo: 'entregar', alvo: 'peleDeLobo', quantidade: 4, progresso: 0, recompensa: { ouro: 90, xp: 100 } }
     const mudancas = { progresso: { ...progresso, missaoAtiva, mochila: [{ id: 'peleDeLobo', quantidade: 2 }] } }
-    const html = desenhar('guilda', 'convidado', null, { mudancas }).replace(/<!-- -->/g, '')
+    const html = desenhar('guilda', 'convidado', null, { mudancas, componente: MissoesDaGuilda }).replace(/<!-- -->/g, '')
     expect(html).toContain('Sua missão: Peles para o curtidor')
     expect(html).toContain('Entregar 4 Pele de lobo (2/4)')
     expect(html).toContain('2 de 4')

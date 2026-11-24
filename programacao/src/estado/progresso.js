@@ -17,6 +17,7 @@ import { registrarItensVistos } from '../regras/interface.js'
 import { juntarItens } from '../regras/mochila.js'
 import { ehObjeto, inteiroEntre, inteiroNaoNegativo } from './validacao.js'
 import { normalizarMinijogosDoDia } from '../regras/rodadasDoDia.js'
+import { npcs } from '../dados/npcs.js'
 
 // Progresso do jogador: é tudo o que fica salvo (no navegador para o convidado; no Supabase
 // para a conta, na etapa 8). As etapas seguintes preenchem os campos que hoje começam vazios.
@@ -35,6 +36,7 @@ export function progressoInicial() {
     // bioma → { nevoa, areas }: o minimapa já revelado (texto hexadecimal, regras/mundo.js) e as áreas que já deram
     // o XP da primeira descoberta (RF40). Fase 3.
     mapasDescobertos: {},
+    npcsConhecidos: [], // os NPCs do Reino que já se apresentaram (Parte 9: comerciante, ferreiro, mestre)
     itensVistos: [], // itens que o jogador já teve (Fase 4.5, o Catálogo da Forja e do Mercado; regras/interface.js)
     // Rodadas dos minijogos hoje (ajustes de 14/10, RF54): { dia: 'AAAA-MM-DD' de Brasília, rodadas: { fazenda, mina, lago } }
     minijogosDoDia: null,
@@ -211,6 +213,8 @@ export function normalizarProgresso(dados) {
     regioesDescobertas,
     mapasDescobertos,
     itensVistos,
+    // os NPCs que já se apresentaram (Parte 9): só ids de NPC que existem, sem repetir
+    npcsConhecidos: [...new Set((Array.isArray(dados.npcsConhecidos) ? dados.npcsConhecidos : []).filter((id) => Object.hasOwn(npcs, id)))],
     minijogosDoDia: normalizarMinijogosDoDia(dados.minijogosDoDia),
     // Só conquistas que existem, marcadas como concluídas
     conquistas: Object.fromEntries(listaDeConquistas.filter((conquista) => ehObjeto(dados.conquistas) && dados.conquistas[conquista.id] === true).map((conquista) => [conquista.id, true])),

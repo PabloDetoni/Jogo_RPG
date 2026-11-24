@@ -419,7 +419,8 @@ try {
   // só lutam com quem está a até 380 px do Líder)
   await colocarLider(acamp.x + acamp.raio - 130, acamp.y)
   let miraNoXama = false
-  for (let i = 0; i < 12 && !miraNoXama; i++) {
+  // (6 s: o aliado às vezes está recuando de um golpe ou levantando alguém na hora da amostra)
+  for (let i = 0; i < 24 && !miraNoXama; i++) {
     miraNoXama = await cena(`c.aliados.some((a) => !a.caido && ['guerreiro', 'arqueiro'].includes(a.classe) && a.ia.alvo?.tipo === 'goblinXama')`)
     if (!miraNoXama) await pausa(250)
   }
