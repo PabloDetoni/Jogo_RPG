@@ -30,7 +30,8 @@ export const telas = {
   fazenda: { nome: 'Minijogo da Fazenda', grupo: 'Mapa e partida', pai: 'mapa' },
   mina: { nome: 'Minijogo da Mina', grupo: 'Mapa e partida', pai: 'mapa' },
   lago: { nome: 'Minijogo do Lago', grupo: 'Mapa e partida', pai: 'mapa' },
-  pontoPartida: { nome: 'Ponto de partida', grupo: 'Mapa e partida', pai: 'mapa' },
+  // A Caravana (RF56, Parte 7) ocupa a tela do antigo Ponto de partida (RF32)
+  pontoPartida: { nome: 'Caravana', grupo: 'Mapa e partida', pai: 'mapa' },
   preparacao: { nome: 'Preparação', grupo: 'Mapa e partida', pai: 'mapa' },
   partida: { nome: 'Partida', grupo: 'Mapa e partida', raiz: true, soConfiguracoes: true, naPartida: true },
   cutsceneDerrota: { nome: 'Cutscene de derrota', grupo: 'Mapa e partida', raiz: true, soConfiguracoes: true, naPartida: true },

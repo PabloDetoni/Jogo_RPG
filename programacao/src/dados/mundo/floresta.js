@@ -141,6 +141,17 @@ export const floresta = {
     neutraDaCurva2: { cervo: 3, coelho: 2 },
     neutraDoFim: { cervo: 2, coelho: 2 },
   },
+  // A ordem das zonas ao longo do caminho em "S" (a Caravana cobra pela distância andada nela, Parte 7)
+  ordemDoCaminho: ['zonaSegura', 'neutraDaEntrada', 'facil', 'neutraDaCurva1', 'media', 'neutraDaCurva2', 'dificil', 'neutraDoFim', 'dominioDoBoss'],
+  // As paradas da Caravana (RF56, Parte 7; PROVISÓRIO – substituir pelo do grupo): o início (de graça) e as zonas
+  // neutras perto de cada região. Nunca dentro de uma região. O "id" vira o ponto de partida da partida.
+  caravana: [
+    { id: 'inicio', regiao: 'zonaSegura', nome: 'Início do bioma', perto: 'A zona segura, perto do Reino' },
+    { id: 'neutraDaEntrada', regiao: 'neutraDaEntrada', nome: 'Clareira da Entrada', perto: 'Perto da região Fácil' },
+    { id: 'neutraDaCurva1', regiao: 'neutraDaCurva1', nome: 'Vau do Riacho', perto: 'Perto da região Média' },
+    { id: 'neutraDaCurva2', regiao: 'neutraDaCurva2', nome: 'Campo dos Cervos', perto: 'Perto da região Difícil' },
+    { id: 'neutraDoFim', regiao: 'neutraDoFim', nome: 'Pouso do Caçador', perto: 'Perto do domínio do chefe' },
+  ],
   // Acampamentos goblin (Parte 6b; PROVISÓRIO – substituir pelo do grupo): um círculo com a paliçada (raio) e as
   // entradas (ângulos: 0 = leste, π = oeste, π/2 = sul), dentro da região; a população nasce dentro, em volta da
   // fogueira. Os lugares foram escolhidos com um círculo de 560 px que cabe inteiro na Média.

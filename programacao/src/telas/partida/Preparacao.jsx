@@ -10,7 +10,10 @@ import GradeDeItens from '../../componentes/ui/GradeDeItens.jsx'
 import Painel from '../../componentes/ui/Painel.jsx'
 import Simbolo from '../../componentes/ui/Simbolo.jsx'
 import { retratoDaClasse } from '../../dados/arte.js'
-import { biomas, pontosDePartida } from '../../dados/biomas.js'
+import { biomas } from '../../dados/biomas.js'
+import { floresta } from '../../dados/mundo/floresta.js'
+import Mudanca from '../../componentes/ui/Mudanca.jsx'
+import { paradasComPreco, podeViajar } from '../../regras/caravana.js'
 import { acoes as acoesDaInterface, arteDaAcao } from '../../dados/interface.js'
 import { nomeDaClasse } from '../../dados/classes.js'
 import { itemDoCatalogo, usavelNaPartida } from '../../dados/itens.js'
@@ -28,6 +31,10 @@ export default function Preparacao() {
   const { estado, acoes } = useJogo()
   const { personagens: permanentes, lider, contratosTemporarios } = estado.progresso
   const temLider = permanentes.some((p) => p.classe === lider)
+  // A Caravana (Parte 7): a parada escolhida, o preço e se ainda dá (o ouro pode ter mudado)
+  const parada = paradasComPreco({ floresta }[estado.escolhasDaPartida.bioma]).find((p) => p.id === estado.escolhasDaPartida.pontoPartida)
+  const preco = parada?.preco ?? 0
+  const viagem = podeViajar(estado.progresso.ouro, preco)
 
   return (
     <Tela>
@@ -55,7 +62,7 @@ export default function Preparacao() {
       </Area>
       {/* Verbo e resultado (ajustes de 14/10): para onde vai e com quem; sem Líder, o motivo */}
       <Area em={pos.comecarPartida} className="comecar-partida">
-        <BotaoDeAcao acao="jogar" grande desativado={!temLider} motivo="Escolha um Líder primeiro" onClick={() => {
+        <BotaoDeAcao acao="jogar" grande desativado={!temLider || !viagem.ok} motivo={!temLider ? 'Escolha um Líder primeiro' : `Caravana: ${viagem.motivo}`} onClick={() => {
             pedirTelaCheia(estado.preferencias.telaCheia)
             acoes.comecarPartida()
           }}>
@@ -63,8 +70,12 @@ export default function Preparacao() {
         </BotaoDeAcao>
         {temLider && (
           <span className="nota">
-            {biomas.find((b) => b.id === estado.escolhasDaPartida.bioma)?.nome ?? 'Bioma'} ·{' '}
-            {pontosDePartida.find((p) => p.id === estado.escolhasDaPartida.pontoPartida)?.nome ?? 'Início do bioma'} · Líder: {nomeDaClasse(lider)}
+            {biomas.find((b) => b.id === estado.escolhasDaPartida.bioma)?.nome ?? 'Bioma'} · {parada?.nome ?? 'Início do bioma'} · Líder: {nomeDaClasse(lider)}
+          </span>
+        )}
+        {preco > 0 && (
+          <span className="nota">
+            Caravana: {preco} de ouro (sai no fim da partida) · <Mudanca nome="Ouro:" antes={estado.progresso.ouro} depois={estado.progresso.ouro - preco} />
           </span>
         )}
       </Area>

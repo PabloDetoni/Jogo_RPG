@@ -64,6 +64,7 @@ describe('partida', () => {
     expect(dadosParaSalvar(e).partidaEmAndamento).toEqual({
       bioma: 'floresta',
       pontoPartida: 'inicio',
+      custoDaCaravana: 0, // o início é de graça (Parte 7)
       lider: 'mago',
       iniciadaEm: '2026-10-05T12:00:00.000Z',
     })
@@ -520,13 +521,28 @@ describe('painel DEV: mexe no save só fora da partida (5c)', () => {
 })
 
 describe('Floresta: Ponto de partida e mapa descoberto (Fase 3, RF32, RF40)', () => {
-  it('sem outra região descoberta, a Floresta vai direto para a Preparação, nascendo no início', () => {
+  it('a Caravana (Parte 7) aparece sempre, com o início escolhido de começo', () => {
     const e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'mapa' }, { tipo: 'escolherBioma', bioma: 'floresta' })
-    expect(e.tela).toBe('preparacao')
+    expect(e.tela).toBe('pontoPartida')
     expect(e.escolhasDaPartida.pontoPartida).toBe('inicio')
   })
 
-  it('o fim da partida guarda o mapa descoberto; na próxima, a tela Ponto de partida aparece', () => {
+  it('Caravana: sem ouro não começa; com ouro, o preço fica reservado e sai só no fim (em qualquer resultado)', () => {
+    const ate = [{ tipo: 'irPara', destino: 'mapa' }, { tipo: 'escolherBioma', bioma: 'floresta' }, { tipo: 'escolherPontoPartida', pontoPartida: 'neutraDaEntrada' }]
+    const pobre = fazer(convidadoComMago(), ...ate, comecar)
+    expect(pobre.partidaAtual).toBeFalsy()
+    const rico = { ...convidadoComMago(), progresso: { ...convidadoComMago().progresso, ouro: 1000 } }
+    let e = fazer(rico, ...ate, comecar)
+    const preco = e.partidaAtual.custoDaCaravana
+    expect(preco).toBeGreaterThan(0)
+    expect(e.progresso.ouro).toBe(1000) // ainda não saiu (RF12)
+    expect(dadosParaSalvar(e).partidaEmAndamento.custoDaCaravana).toBe(preco)
+    e = fazer(e, { tipo: 'encerrarPartida', fim: { como: 'todosDesmaiaram' } })
+    expect(e.progresso.ouro).toBe(1000 - preco)
+    expect(e.ultimoResultado.custoDaCaravana).toBe(preco)
+  })
+
+  it('o fim da partida guarda o mapa descoberto; na próxima, a Caravana aparece', () => {
     let e = fazer(convidadoComMago(), ...irAtePreparacao, comecar)
     e = fazer(e, {
       tipo: 'encerrarPartida',

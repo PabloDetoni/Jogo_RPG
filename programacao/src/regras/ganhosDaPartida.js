@@ -4,7 +4,7 @@ import { juntarNevoas } from './mundo.js'
 import { ganharXp } from './xp.js'
 
 // O que a partida deixa no progresso quando termina (TASK-048), em qualquer resultado (RF50: XP e itens ficam):
-// - o ouro recebido (já com a taxa e com o bônus da Grande Vitória);
+// - o ouro recebido (já com a taxa e com o bônus da Grande Vitória), menos o preço da Caravana (Parte 7);
 // - o XP de cada personagem permanente, com os níveis e os pontos de atributo e de habilidade ganhos (RF55);
 // - os monstros derrotados e mais uma partida jogada (RF34);
 // - cada contrato temporário perde uma partida (RF52);
@@ -20,7 +20,7 @@ import { ganharXp } from './xp.js'
 // Devolve o progresso novo e, para o Resumo, o XP de cada permanente com o nível de antes e o de depois.
 export function aplicarFimNoProgresso(
   progresso,
-  { ouroRecebido = 0, xpPorClasse = {}, monstros = 0, descobertas = null, itens = [], levados = {}, eventos = null, bossDerrotado = false, grandeVitoria = false },
+  { ouroRecebido = 0, xpPorClasse = {}, monstros = 0, descobertas = null, itens = [], levados = {}, eventos = null, bossDerrotado = false, grandeVitoria = false, custoDaCaravana = 0 },
 ) {
   const xpDosPersonagens = []
   const personagens = progresso.personagens.map((personagem) => {
@@ -35,7 +35,8 @@ export function aplicarFimNoProgresso(
     progresso: {
       ...progresso,
       personagens,
-      ouro: progresso.ouro + Math.max(0, Math.floor(ouroRecebido)),
+      // a Caravana (Parte 7): o preço reservado no Começar partida sai agora (nunca deixa o ouro negativo)
+      ouro: Math.max(0, progresso.ouro + Math.max(0, Math.floor(ouroRecebido)) - Math.max(0, Math.floor(custoDaCaravana))),
       estatisticas: {
         ...estatisticas,
         partidasJogadas: estatisticas.partidasJogadas + 1,

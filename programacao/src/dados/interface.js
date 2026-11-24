@@ -23,6 +23,7 @@ export const acoes = {
   levar: { nome: 'Levar', cor: '#1098ad', simbolo: '→', significado: 'da Mochila do Reino para a da partida' },
   aplicar: { nome: 'Aplicar', cor: '#5c940d', simbolo: '+', significado: 'fixar pontos e escolhas' },
   jogar: { nome: 'Jogar', cor: '#4263eb', simbolo: '▶', significado: 'começar a partida ou a rodada' },
+  viajar: { nome: 'Viajar', cor: '#b5651d', simbolo: '➜', significado: 'a Caravana leva o grupo mais à frente no bioma' },
 }
 
 // Cor da borda de cada raridade (o nome fica no detalhe do item)

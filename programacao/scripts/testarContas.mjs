@@ -342,13 +342,8 @@ async function irAteAPartida(aba, noMapa) {
   await aba.clicar('Jogar')
   if (noMapa) await noMapa()
   await aba.clicar('Floresta')
-  // A tela Ponto de partida só aparece quando a conta já descobriu outra região da Floresta (Fase 3)
-  await aba.esperar(
-    `document.querySelector('.tela .titulo')?.textContent === 'Preparação' || [...document.querySelectorAll('button')].some(b => b.textContent.trim() === 'Início do bioma')`,
-    'o Ponto de partida ou a Preparação',
-  )
-  if ((await aba.titulo()) !== 'Preparação') await aba.clicar('Início do bioma')
-  await aba.esperarTela('Preparação')
+  // A Caravana aparece sempre (Parte 7): começa no início, de graça
+  await aba.passarPelaCaravana()
   await aba.clicar('Começar partida')
 }
 // A partida aberta: o desenho do Phaser e o HUD com a região, que só aparece quando a cena já manda a situação

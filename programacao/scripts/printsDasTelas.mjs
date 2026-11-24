@@ -158,11 +158,11 @@ try {
       await irPara('mapa')
     }
   }
-  await irPara('pontoPartida')
-  await print('ponto-de-partida')
-  await irPara('mapa')
+  // A Caravana (Parte 7), pelo caminho de verdade (depois de escolher a Floresta)
   await passo('Floresta')
-  await aba.esperarTela('Preparação')
+  await aba.esperarTela('Caravana')
+  await print('caravana')
+  await aba.passarPelaCaravana()
   // Duas poções na mochila da partida (a grade da direita e a da partida, com Tab)
   for (let i = 0; i < 2; i++) {
     await aba.avaliar(`(() => { [...document.querySelectorAll('.mochila-da-preparacao button.slot')].find((b) => (b.getAttribute('aria-label') ?? '').startsWith('Poção de vida'))?.click(); return true })()`)

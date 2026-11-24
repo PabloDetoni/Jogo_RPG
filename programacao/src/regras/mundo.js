@@ -181,6 +181,7 @@ export function juntarNevoas(textoA, textoB, total) {
 
 // O início da região de onde se escolheu nascer ("inicio" = a zona segura); sem a região, o ponto inicial do bioma
 export function inicioDoPontoDePartida(regioes, idDoPonto) {
-  const regiao = regioes.find((uma) => uma.pontoDePartida === idDoPonto) ?? regioes[0]
+  // a Caravana (Parte 7) usa o id da zona neutra; os pontos antigos, o "pontoDePartida" da região
+  const regiao = regioes.find((uma) => uma.pontoDePartida === idDoPonto || uma.id === idDoPonto) ?? regioes[0]
   return { ...regiao.inicio }
 }

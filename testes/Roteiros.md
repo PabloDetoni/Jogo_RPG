@@ -597,7 +597,7 @@ Para ter itens, ouro e pontos sem jogar horas: no `npm run dev`, painel `</> DEV
 
 ## FL. Floresta (Fase 3)
 
-Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **Jogar → Floresta**. Na primeira vez não aparece a tela Ponto de partida: vai direto para a Preparação. No `npm run dev`, a barra de teste (faixa de baixo) tem **Invencível**, **Encher grupo**, **Encher mochila**, **Drop especial do Boss** e **Pior cenário (FPS)**. A Floresta é provisória: o layout, os mobs e o Boss do grupo (TASK-012 e TASK-013) substituem estes.
+Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **Jogar → Floresta**. Depois do bioma aparece sempre a **Caravana** (Parte 7): **Começar no início** é de graça e leva à Preparação. No `npm run dev`, a barra de teste (faixa de baixo) tem **Invencível**, **Encher grupo**, **Encher mochila**, **Drop especial do Boss** e **Pior cenário (FPS)**. A Floresta é provisória: o layout, os mobs e o Boss do grupo (TASK-012 e TASK-013) substituem estes.
 
 **FL-01 · Andar até a borda**
 - Fazer: ande para a esquerda até o fim (você nasce perto da borda esquerda) e, na zona segura, tente subir e descer até a mata escura.
@@ -615,12 +615,15 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
   - embaixo do minimapa, numa linha cada: o nome da região (por exemplo, "Zona segura"; com o mouse em cima, "Região: Zona segura") e "Mochila X/Y", sem nada passar para baixo da faixa do HUD, nem em 1366×768;
   - ao mudar de região, aparece "Região: Fácil" (etc.); na primeira vez em cada área, "Área descoberta: Clareira das Flores (+30 XP)".
 
-**FL-04 · Nascer numa região descoberta e conferir a taxa**
-- Fazer: termine uma partida em que você chegou à Média (volte com Q). Depois, **Jogar → Floresta**.
+**FL-04 · A Caravana (Parte 7) e a taxa**
+- Fazer: termine uma partida (volte com Q). Depois, **Jogar → Floresta**. Na Caravana, veja os preços; se faltar ouro, use no painel `</> DEV` **Itens de teste, +1000 de ouro e pontos livres**. Escolha **Vau do Riacho**, comece a partida, volte com Q e veja o Resumo.
 - Deve acontecer:
-  - o Resumo mostra "Exploração: N áreas novas (+X XP)";
-  - aparece a tela **Ponto de partida**, com Início, Fácil e Média liberados e Difícil e Muito difícil "(não descoberta)";
-  - escolhendo **Média**, o grupo nasce no começo da Média, sem mob perto, e o custo da fuga no HUD ("Fuga (F): X%") já começa maior que no início do bioma;
+  - o Resumo da primeira partida mostra "Exploração: N áreas novas (+X XP)";
+  - a Caravana mostra o Início (de graça) e as 4 zonas neutras, cada vez mais caras, cada uma com o ouro antes → depois; as que custam mais que o seu ouro ficam apagadas com "Falta N de ouro";
+  - a Preparação mostra "Caravana: N de ouro (sai no fim da partida)";
+  - o grupo nasce no Vau do Riacho (zona neutra, sem mob hostil perto) e o custo da fuga no HUD já começa maior que no início do bioma;
+  - o ouro do save só muda no fim: o Resumo mostra "Caravana −N de ouro";
+  - (fechar a aba no meio da partida e abrir de novo: aparece o aviso da partida descartada, e o ouro continua o mesmo de antes);
   - o minimapa já começa com o que foi descoberto antes.
 
 **FL-05 · Fugir de um mob até ele desistir**
@@ -652,7 +655,7 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
 - Deve acontecer: aparece "Mochila cheia: não cabe ..." em vermelho; com E, o item continua no chão com o aviso "ficou no chão (some em 30 s)"; nos últimos segundos ele pisca e depois some.
 
 **FL-09 · Enfrentar o Boss (o Ogro, Parte 6d)**
-- Fazer: vá até o domínio do Boss (o fim do caminho, embaixo à direita; ou escolha **Muito difícil** no Ponto de partida). Deixe o Ogro (o boneco enorme verde-acinzentado, com presas e clava) atacar; tente sair das marcas vermelhas no chão. Para ver o drop especial: **Drop especial do Boss: 100%** antes de derrotá-lo (ligue o **Invencível** se precisar).
+- Fazer: vá até o domínio do Boss (o fim do caminho, embaixo à direita; ou, na Caravana, o **Pouso do Caçador**, logo antes dele). Deixe o Ogro (o boneco enorme verde-acinzentado, com presas e clava) atacar; tente sair das marcas vermelhas no chão. Para ver o drop especial: **Drop especial do Boss: 100%** antes de derrotá-lo (ligue o **Invencível** se precisar).
 - Deve acontecer:
   - ao entrar no domínio: a mensagem "Domínio do Boss: aqui a fuga e os perdidos custam mais", a região em vermelho no HUD e a barra grande do Boss embaixo do HUD;
   - antes de cada golpe, uma marca vermelha no chão (círculo em volta dele, faixa reta até você, ou, de longe, um círculo onde você está: a pedra que ele arremessa); quem sai da marca a tempo não leva dano;

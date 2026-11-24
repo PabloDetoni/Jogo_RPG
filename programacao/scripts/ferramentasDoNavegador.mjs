@@ -227,6 +227,12 @@ function criarAba(cdp, nome, pastaDosPrints) {
     },
     titulo: () => aba.avaliar(`document.querySelector('.tela .titulo')?.textContent ?? ''`),
     texto: () => aba.avaliar(`document.body.innerText`),
+    // A Caravana (Parte 7) aparece sempre depois de escolher o bioma: começa no início (de graça) e vai à Preparação
+    async passarPelaCaravana(parada = 'Começar no início') {
+      await aba.esperarTela('Caravana')
+      await aba.clicar(parada, false)
+      await aba.esperarTela('Preparação')
+    },
     esperarTela: (titulo, ms = 10000) => aba.esperar(`document.querySelector('.tela .titulo')?.textContent === ${JSON.stringify(titulo)}`, `a tela ${titulo}`, ms),
     async clicar(texto, exato = true) {
       const achou = await aba.avaliar(`(() => {

@@ -31,7 +31,7 @@ Liga cada caso de uso ao requisito funcional, à história de usuário e ao diag
 | UC25 Contratar personagem (Guilda) | RF19, RF29 | HU25 | Guilda (05) |
 | UC26 Iniciar partida | RF30, RF34, RF10 | HU26 | Partida (04) |
 | UC27 Selecionar bioma | RF30, RF31 | HU27 | Partida (04) |
-| UC28 Escolher ponto de partida (dificuldade) — será substituído pelo UC44 | RF32 | HU28 | Partida (04) |
+| UC28 Escolher ponto de partida (dificuldade) — substituído pelo UC44 (Parte 7) | RF32 | HU28 | Partida (04) |
 | UC29 Selecionar Líder | RF33 | HU29 | Partida (04) |
 | UC30 Preparar mochila da partida | RF33 | HU30 | Partida (04) |
 | UC31 Jogar partida | RF34, RF35, RF42, RF53, RF58 e RF59 | HU31 | Partida (04) |
@@ -47,7 +47,7 @@ Liga cada caso de uso ao requisito funcional, à história de usuário e ao diag
 | UC41 Encerrar partida | RF12, RF47, RF48, RF49, RF50, RF52 | HU41 | Partida (04) |
 | UC42 Visualizar resumo da partida | RF51 | HU42 | Partida (04) |
 | UC43 Jogar minijogo do Planalto | RF54, RF50 | HU43 | Partida (04) |
-| UC44 Viajar de Caravana (planejado) | RF56 | HU44 | Partida (04), quando for feito |
+| UC44 Viajar de Caravana | RF56 | HU44 | Partida (04) |
 | UC45 Conversar com NPC (planejado) | RF57 | HU45 | — |
 | UC46 Usar opções de desenvolvedor (feito, 11/2026) | RF61 | HU46 | — |
 | UC47 Simular balanceamento (feito, 11/2026) | RF62 | HU47 | — |

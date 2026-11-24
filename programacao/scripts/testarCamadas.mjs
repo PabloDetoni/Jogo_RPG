@@ -40,7 +40,7 @@ const vaziosDoReino = {
   'a frente da Árvore (as pedras, enfeite)': [1620, 900],
 }
 const noMapa = {
-  floresta: { ponto: [432, 733], tela: 'Preparação' },
+  floresta: { ponto: [432, 733], tela: 'Caravana' }, // a Caravana aparece sempre (Parte 7)
   reino: { ponto: [972, 487], tela: 'Reino' },
   fazenda: { ponto: [801, 503], tela: 'Minijogo da Fazenda' },
   mina: { ponto: [1108, 495], tela: 'Minijogo da Mina' },

@@ -380,6 +380,15 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 - Espinhos (longe): leque de 5 tiros, aviso de 1 s, 12 de dano cada.
 - Um ataque a cada 2 s no máximo. Drop: cascaAntiga sempre e **8%** de chance do equipamento especial (coroaDeRaizes, RF39; no npm run dev dá para forçar 100%).
 
+### A Caravana (RF56, Parte 7, provisório)
+
+- Preço de cada parada: 40 + 25 por 1.000 px andados pelo caminho até ela, arredondado de 5 em 5; o início é de graça. Sai do ouro no fim da partida.
+- Início do bioma (a zona segura, perto do reino): **0 de ouro**.
+- Clareira da Entrada (perto da região fácil): **70 de ouro**.
+- Vau do Riacho (perto da região média): **265 de ouro**.
+- Campo dos Cervos (perto da região difícil): **495 de ouro**.
+- Pouso do Caçador (perto do domínio do chefe): **675 de ouro**.
+
 ### Coleta, minimapa e outros
 
 - Coleta com E até **80 px** do Líder. Item natural (os recursos do mapa): fica até alguém pegar e volta a cada partida. Item dropado (drop de mob e o que o jogador descarta): some **30 s** depois de cair, com um anel do tempo, piscando nos últimos **5 s**; descartado de novo, cai com o tempo novo. O que não coube na mochila fica como estava.
