@@ -441,6 +441,54 @@ try {
   conferir('com o grupo longe, nenhum goblin sai do acampamento (só a folga em volta da paliçada)', longe.every((d) => d <= acamp.raio + 260), longe)
   await cena(`(c.iaForcada = null, c.inimigos.filter((i) => i.__goblin).forEach((i) => c.matarInimigo(i)), true)`)
 
+  console.log('9d. O forte goblin da Difícil, o Orc e a Aranha-Mãe (Parte 6c)')
+  const forte = await cena(`(() => {
+    const f = c.mapa.acampamentos.find((a) => a.forma === 'retangulo')
+    const muros = c.mapa.obstaculos.filter((o) => o.tipo === 'muro').length
+    const moradores = c.inimigos.filter((i) => i.acampamento === f && !i.morto)
+    const naTorre = moradores.filter((i) => i.naTorre)
+    return { x: f.centro.x, y: f.centro.y, largura: f.largura, altura: f.altura, muros, torres: (f.torres ?? []).length, naTorre: naTorre.length, torreFixa: naTorre.every((i) => i.fixo), orc: moradores.some((i) => i.tipo === 'orc'), tipos: [...new Set(moradores.map((i) => i.tipo))] }
+  })()`)
+  conferir('o forte tem muros, 4 torres com um arqueiro parado em cada e o Orc dentro', forte.muros > 10 && forte.torres === 4 && forte.naTorre === 4 && forte.torreFixa && forte.orc, forte)
+  await cena(`(c.invencivel = true, c.inimigos.filter((i) => i.acampamento?.forma === 'retangulo').forEach((g) => { g.__forte = true; g.vida = g.vidaMaxima = 1e6 }), true)`)
+  await cena(`(c.inimigos.filter((i) => !i.__forte && Math.hypot(i.x - ${forte.x}, i.y - ${forte.y}) < 2000).forEach((i) => c.matarInimigo(i)), true)`)
+  // Entrando pelo portão oeste: o forte inteiro acorda junto
+  await colocarLider(forte.x - forte.largura / 2 - 80, forte.y)
+  await pausa(1500)
+  const acordouForte = await cena(`c.inimigos.filter((i) => i.__forte).map((i) => i.perseguindo)`)
+  conferir('chegando no portão, o forte acorda junto (todos perseguem)', acordouForte.length >= 10 && acordouForte.every(Boolean), acordouForte.length)
+  const torreParada = await cena(`(() => { const a = c.inimigos.find((i) => i.__forte && i.naTorre); a.__antes = { x: a.x, y: a.y }; return true })()`)
+  await pausa(1500)
+  const moveu = await cena(`(() => { const a = c.inimigos.find((i) => i.__forte && i.naTorre && i.__antes); return Math.round(Math.hypot(a.x - a.__antes.x, a.y - a.__antes.y)) })()`)
+  conferir('o arqueiro da torre não sai do lugar', torreParada && moveu <= 2, moveu)
+  await aba.print('06e-forte')
+  await cena(`(c.inimigos.filter((i) => i.__forte).forEach((i) => c.matarInimigo(i)), true)`)
+  // A teia da Aranha-Mãe: prende o Líder (não anda) e solta depois do tempo
+  const teia = await cena(`(() => {
+    c.invencivel = false
+    c.__vidaAntes = { vida: c.lider.vida, maxima: c.lider.vidaMaxima }
+    c.lider.vida = c.lider.vidaMaxima = 100000
+    const m = c.criarMobDoMundo('aranhaMae', 'facil', { x: ${faixa.x + 700}, y: ${faixa.y} })
+    m.__mae = true; m.vida = m.vidaMaxima = 1e6; m.dormindo = false
+    return { msPreso: m.config.teia.msPreso }
+  })()`)
+  await cena(`(c.inimigos.filter((i) => !i.__mae && Math.hypot(i.x - ${faixa.x + 700}, i.y - ${faixa.y}) < 1500).forEach((i) => c.matarInimigo(i)), true)`)
+  await colocarLider(faixa.x + 350, faixa.y)
+  await aba.esperar(`${CENA}.lider.presoAte > ${CENA}.agora`, 'a teia prender', 12000).catch(() => {})
+  await pausa(250) // o tiro também empurra: espera o empurrão acabar antes de medir
+  const presoAntes = await cena(`({ preso: c.lider.presoAte > c.agora, x: c.lider.x, teia: (c.teias ?? []).length })`)
+  conferir('a teia da Aranha-Mãe prende o Líder (e aparece em cima dele)', presoAntes.preso && presoAntes.teia >= 1, presoAntes)
+  await aba.segurar(['a'], 500)
+  const presoDepois = await cena(`({ x: c.lider.x, preso: c.lider.presoAte > c.agora })`)
+  conferir('preso, o Líder não anda', !presoDepois.preso || Math.abs(presoDepois.x - presoAntes.x) <= 3, { antes: presoAntes.x, depois: presoDepois.x })
+  await aba.print('06f-teia')
+  await cena(`(c.inimigos.filter((i) => i.__mae).forEach((i) => c.matarInimigo(i)), true)`)
+  await pausa(teia.msPreso + 200)
+  await aba.segurar(['a'], 500)
+  const solto = await cena(`({ preso: c.lider.presoAte > c.agora, x: c.lider.x, teia: (c.teias ?? []).length })`)
+  conferir('depois do tempo, a teia some e o Líder volta a andar', !solto.preso && solto.teia === 0 && Math.abs(solto.x - presoDepois.x) > 20, solto)
+  await cena(`(c.lider.vidaMaxima = c.__vidaAntes.maxima, c.lider.vida = c.__vidaAntes.vida, c.invencivel = true, true)`)
+
   console.log('10. Aliado longe ou preso volta por fora da tela')
   await colocarLider(faixa.x + 600, faixa.y)
   await pausa(600)

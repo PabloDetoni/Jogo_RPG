@@ -36,6 +36,9 @@ const dados = {
   peDeCoelho: { nome: 'Pé de coelho', tipo: 'material', raridade: 'comum', peso: 1, preco: 3, cor: 0xd8cfc6, descricao: 'Dizem que dá sorte.' },
   // Parte 6b (11/2026): drops dos goblins. PROVISÓRIO – substituir pelo do grupo.
   orelhaDeGoblin: { nome: 'Orelha de goblin', tipo: 'material', raridade: 'comum', peso: 1, preco: 10, cor: 0x7fa64a, descricao: 'Prova de que o acampamento ficou mais vazio.' },
+  // Parte 6c: drops do Orc e da Aranha-Mãe. PROVISÓRIO – substituir pelo do grupo.
+  presaDeOrc: { nome: 'Presa de orc', tipo: 'material', raridade: 'incomum', peso: 2, preco: 28, cor: 0xf0e6c8, descricao: 'Grossa e lascada de tanto morder escudo.' },
+  sedaDaMae: { nome: 'Seda da Aranha-Mãe', tipo: 'material', raridade: 'raro', peso: 1, preco: 50, cor: 0xe8e0f0, descricao: 'Fio grosso que prende quase tudo.' },
   totemDoXama: { nome: 'Totem do xamã', tipo: 'material', raridade: 'raro', peso: 2, preco: 55, cor: 0xb08a5a, descricao: 'Ossinhos e penas amarrados: ainda brilha um pouco.' },
   cascaAntiga: { nome: 'Casca antiga', tipo: 'material', raridade: 'raro', peso: 4, preco: 60, cor: 0x5d4a2e, descricao: 'Pedaço da casca do Guardião da Floresta.' },
   minerioDeFerro: { nome: 'Minério de ferro', tipo: 'material', raridade: 'comum', peso: 3, preco: 12, cor: 0x8a8f99, descricao: 'Pedra com ferro, vinda da mina do Planalto.' },

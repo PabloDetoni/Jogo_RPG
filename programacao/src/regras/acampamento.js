@@ -33,9 +33,59 @@ export function diferencaDeAngulo(a, b) {
   return d
 }
 
-// O ponto está dentro do acampamento (do círculo da paliçada, mais a folga)?
-export function dentroDoAcampamento({ centro, raio }, ponto, folga = 0) {
+// O ponto está dentro do acampamento (do círculo da paliçada, ou do retângulo dos muros do forte, mais a folga)?
+export function dentroDoAcampamento({ centro, raio, forma, largura, altura }, ponto, folga = 0) {
+  if (forma === 'retangulo') return Math.abs(ponto.x - centro.x) <= largura / 2 + folga && Math.abs(ponto.y - centro.y) <= altura / 2 + folga
   return Math.hypot(ponto.x - centro.x, ponto.y - centro.y) <= raio + folga
+}
+
+// O raio de um círculo que cobre o acampamento inteiro (o forte é um retângulo: a metade da diagonal)
+export function raioExterno({ raio, forma, largura, altura }) {
+  return forma === 'retangulo' ? Math.hypot(largura, altura) / 2 : raio
+}
+
+// Os muros do forte goblin (Parte 6c): o retângulo dos muros (espessura px), em pedaços de até "pedaco" px (o desenho
+// aparece por pedaços do mapa), com um portão de "larguraDoPortao" no meio de cada lado pedido ('norte', 'sul',
+// 'leste', 'oeste'). Devolve [{ x, y, largura, altura, tipo: 'muro' }] com o centro.
+export function murosDoForte({ centro, largura, altura, portoes = [] }, { espessura, larguraDoPortao, pedaco }) {
+  const muros = []
+  // um lado reto, de a até b (no eixo do lado), na posição fixa do outro eixo
+  const lado = (nome, horizontal, fixo, a, b) => {
+    const meio = (a + b) / 2
+    const trechos = portoes.includes(nome)
+      ? [
+          [a, meio - larguraDoPortao / 2],
+          [meio + larguraDoPortao / 2, b],
+        ]
+      : [[a, b]]
+    for (const [inicio, fim] of trechos) {
+      const quantos = Math.max(1, Math.ceil((fim - inicio) / pedaco))
+      const passo = (fim - inicio) / quantos
+      for (let i = 0; i < quantos; i++) {
+        const c = inicio + passo * (i + 0.5)
+        muros.push(
+          horizontal
+            ? { x: Math.round(c), y: Math.round(fixo), largura: Math.round(passo), altura: espessura, tipo: 'muro' }
+            : { x: Math.round(fixo), y: Math.round(c), largura: espessura, altura: Math.round(passo), tipo: 'muro' },
+        )
+      }
+    }
+  }
+  const x0 = centro.x - largura / 2
+  const x1 = centro.x + largura / 2
+  const y0 = centro.y - altura / 2
+  const y1 = centro.y + altura / 2
+  lado('norte', true, y0, x0, x1)
+  lado('sul', true, y1, x0, x1)
+  // os lados de pé ficam entre os de cima e de baixo (sem sobrepor os cantos)
+  lado('oeste', false, x0, y0 + espessura / 2, y1 - espessura / 2)
+  lado('leste', false, x1, y0 + espessura / 2, y1 - espessura / 2)
+  return muros
+}
+
+// As torres dos arqueiros do forte: uma em cada canto, por dentro dos muros ("recuo" px do canto)
+export function torresDoForte({ centro, largura, altura }, recuo) {
+  return [-1, 1].flatMap((sx) => [-1, 1].map((sy) => ({ x: centro.x + sx * (largura / 2 - recuo), y: centro.y + sy * (altura / 2 - recuo) })))
 }
 
 // O acampamento que contém o ponto (com a folga), ou null

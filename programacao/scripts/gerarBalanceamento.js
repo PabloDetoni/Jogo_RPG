@@ -469,7 +469,7 @@ escrever(
       [
         ...Object.entries(floresta.populacao[regiao.id] ?? {}).map(([tipo, quantos]) => `${quantos} ${tipo}`),
         // os acampamentos goblin da região (Parte 6b)
-        ...(floresta.acampamentos ?? []).filter((a) => a.regiao === regiao.id).map((a) => `${a.nome} (${Object.entries(a.populacao).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ')})`),
+        ...(floresta.acampamentos ?? []).filter((a) => a.regiao === regiao.id).map((a) => `${a.nome} (${Object.entries(a.populacao).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ')}${a.arqueirosNasTorres ? ' e 4 goblinArqueiro nas torres' : ''})`),
       ].join(', ') || 'nenhum',
     ]),
   ),
@@ -482,7 +482,7 @@ escrever(
       const dificil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.dificil)
       return [
         tipo,
-        ficha.comportamento === 'pacifico' ? 'pacífico (nunca ataca, foge)' : ficha.comportamento === 'xama' ? `atira de longe e cura ${ficha.cura.quanto} a cada ${ficha.cura.msEntreCuras / 1000} s` : `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
+        ficha.comportamento === 'pacifico' ? 'pacífico (nunca ataca, foge)' : ficha.teia ? `atira teia que prende por ${ficha.teia.msPreso / 1000} s` : ficha.comportamento === 'xama' ? `atira de longe e cura ${ficha.cura.quanto} a cada ${ficha.cura.msEntreCuras / 1000} s` : `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
         `${facil.vida} / ${dificil.vida}`,
         `${facil.dano} / ${dificil.dano}`,
         `${facil.xp} / ${dificil.xp}`,

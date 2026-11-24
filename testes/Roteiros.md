@@ -639,6 +639,10 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
 - Fazer: na Média, ache o acampamento (círculo de troncos com uma fogueira no meio). Passe por fora, sem chegar perto da paliçada; depois entre por uma entrada. Ataque um goblin e repare no xamã (o de cocar de penas e cajado com a pedra verde). Por fim, corra para longe.
 - Deve acontecer: passando por fora, ninguém acorda e os aliados não atacam; entrando, todos os goblins perseguem juntos; o xamã cura os goblins feridos (partículas verdes e "+N"); com a IA média ou avançada, os aliados vão primeiro no xamã; longe, os goblins não saem do acampamento (só um pouco para fora da paliçada).
 
+**FL-06d · Forte goblin e Aranha-Mãe (Parte 6c)**
+- Fazer: na Difícil, perto do fim do caminho, ache o forte (muros de pedra com torres de madeira nos cantos). Chegue pelo portão oeste. Depois, na Média ou na Difícil, ache uma Aranha-Mãe (aranha grande e roxa, com uma marca vermelha nas costas) e deixe ela acertar a teia em você.
+- Deve acontecer: chegando no portão, o forte inteiro acorda (inclusive os arqueiros das torres, que atiram de longe e não saem do lugar); o Orc (o grande, com machado e presas) bate forte e empurra longe. A teia prende o Líder por pouco mais de 1 s ("PRESO!", a teia aparece em cima e ele não anda nem esquiva); depois solta sozinho.
+
 **FL-07 · Coleta com E**
 - Fazer: chegue perto de um losango colorido no chão (cogumelo vermelho, erva verde, madeira marrom) e aperte **E**. Derrote um lobo e pegue o que ele deixar.
 - Deve acontecer: perto do item aparece "E: pegar Cogumelo"; com E ele some do chão, aparece "+1 Cogumelo" e o "Mochila X/Y" sobe. No fim da partida, o Resumo lista os itens coletados e eles vão para a Mochila do Reino.

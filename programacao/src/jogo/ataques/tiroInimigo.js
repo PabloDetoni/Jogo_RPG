@@ -14,6 +14,8 @@ export default class TiroInimigo extends Projetil {
     this.config = config
     this.atirador = atirador // a imunidade de quem leva o tiro vale contra este atirador (Parte 3)
     this.forma.setStrokeStyle(3, 0xffb0b0)
+    // A teia da Aranha-Mãe (Parte 6c): branca, e prende quem acerta (CenaArena.prender)
+    if (config.teia) this.forma.setFillStyle(0xf2eefa).setStrokeStyle(3, 0x9b8fb0)
   }
 
   atualizar(agora, segundos) {
@@ -27,7 +29,11 @@ export default class TiroInimigo extends Projetil {
         acabou = true
       } else {
         const membro = this.cena.membroAtingido(circulo)
-        if (membro) acabou = this.cena.membroLevaGolpe(membro, config.dano, this.origemDoEmpurrao, config.empurrao, this.atirador) !== 'protegido'
+        if (membro) {
+          const resultado = this.cena.membroLevaGolpe(membro, config.dano, this.origemDoEmpurrao, config.empurrao, this.atirador)
+          acabou = resultado !== 'protegido'
+          if (resultado === 'acertou' && config.teia) this.cena.prender(membro, config.teia.msPreso)
+        }
       }
       return acabou
     })

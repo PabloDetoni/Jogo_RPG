@@ -88,11 +88,13 @@ export default class Inimigo extends Entidade {
     super.andar(this.casaFixa && rapidez > 0 ? this.velocidadeAte(this.casaFixa, rapidez) : velocidade)
   }
 
-  // Chama o bando: quem está perto e à toa passa a perseguir o mesmo alvo (provocado, como se tivesse apanhado)
+  // Chama o bando: quem está perto e à toa passa a perseguir o mesmo alvo (provocado, como se tivesse apanhado). No
+  // acampamento e no forte, acorda todo mundo, mesmo longe (o forte tem mais de 1.000 px de canto a canto).
   alertarBando(alvo, agora) {
     if (!this.bando || !alvo) return
     for (const outro of this.bando) {
-      if (outro === this || outro.morto || outro.perseguindo || this.distanciaAte(outro) > mundo.bando.raioDoAlerta) continue
+      const longe = !this.acampamento && this.distanciaAte(outro) > mundo.bando.raioDoAlerta
+      if (outro === this || outro.morto || outro.perseguindo || longe) continue
       outro.provocadoAte = agora + mundo.msProvocado
       outro.voltandoAte = 0
       outro.alvo = alvo

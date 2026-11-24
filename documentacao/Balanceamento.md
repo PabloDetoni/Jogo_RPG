@@ -338,8 +338,8 @@ Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grup
 | --- | --- | --- | --- | --- |
 | Zona segura | 1.303 × 1.954 | ×1,0 | 0 | nenhum |
 | Fácil | 6.742 × 2.201 | ×1,0 | 30 | 10 lobo, 3 loboAlfa, 5 aranha |
-| Média | 6.981 × 2.204 | ×1,5 | 50 | 6 lobo, 10 aranha, 6 javali, Acampamento do Riacho (3 goblinLanceiro, 2 goblinArqueiro, 1 goblinXama), Acampamento da Pedra (4 goblinLanceiro, 3 goblinArqueiro, 1 goblinXama) |
-| Difícil | 5.498 × 1.840 | ×2,2 | 80 | 12 lobo, 10 aranha, 10 javali |
+| Média | 6.981 × 2.204 | ×1,5 | 50 | 6 lobo, 8 aranha, 2 aranhaMae, 6 javali, Acampamento do Riacho (3 goblinLanceiro, 2 goblinArqueiro, 1 goblinXama), Acampamento da Pedra (4 goblinLanceiro, 3 goblinArqueiro, 1 goblinXama) |
+| Difícil | 5.498 × 1.840 | ×2,2 | 80 | 6 lobo, 8 aranha, 2 aranhaMae, 10 javali, 2 orc, Forte Goblin (5 goblinLanceiro, 2 goblinArqueiro, 2 goblinXama, 1 orc e 4 goblinArqueiro nas torres) |
 | Domínio do Boss | 2.058 × 1.815 | ×2,6 | 120 | 3 lobo |
 | Clareira da Entrada | 958 × 2.062 | ×1,0 | 10 | 2 cervo, 3 coelho |
 | Vau do Riacho | 1.893 × 3.917 | ×1,0 | 10 | 3 cervo, 3 coelho |
@@ -359,6 +359,8 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 | goblinLanceiro | corpo a corpo | 70 / 154 | 12 / 26 | 26 / 57 | 14 / 31 | 330 px | 900 px | orelhaDeGoblin (60%) |
 | goblinArqueiro | atira de longe | 45 / 99 | 10 / 22 | 24 / 53 | 14 / 31 | 480 px | 900 px | orelhaDeGoblin (60%) |
 | goblinXama | atira de longe e cura 22 a cada 2.2 s | 60 / 132 | 7 / 15 | 40 / 88 | 22 / 48 | 480 px | 900 px | orelhaDeGoblin (100%), totemDoXama (30%) |
+| orc | corpo a corpo | 260 / 572 | 26 / 57 | 90 / 198 | 50 / 110 | 340 px | 800 px | presaDeOrc (60%), orelhaDeGoblin (50%) |
+| aranhaMae | atira teia que prende por 1.3 s | 150 / 330 | 10 / 22 | 60 / 132 | 30 / 66 | 560 px | 800 px | teiaDeAranha (100%), sedaDaMae (35%) |
 | cervo | pacífico (nunca ataca, foge) | 45 / 99 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 260 px | 900 px | chifreDeCervo (40%) |
 | coelho | pacífico (nunca ataca, foge) | 18 / 40 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 220 px | 700 px | peDeCoelho (50%) |
 
@@ -404,6 +406,8 @@ Quem vende (no Mercado, ou equipamento na Forja) recebe **50%** do preço, para 
 | Pelagem do Alfa | material | Raro | 3 | 45 | 22 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Pé de coelho | material | Comum | 1 | 3 | 1 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Orelha de goblin | material | Comum | 1 | 10 | 5 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Presa de orc | material | Incomum | 2 | 28 | 14 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Seda da Aranha-Mãe | material | Raro | 1 | 50 | 25 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Totem do xamã | material | Raro | 2 | 55 | 27 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Casca antiga | material | Raro | 4 | 60 | 30 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Minério de ferro | material | Comum | 3 | 12 | 6 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
@@ -511,6 +515,8 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 | Caçar lobos | matar | 8 lobo | 80 | 120 | 8 |
 | O alfa da matilha | matar | 1 Lobo Alfa | 120 | 160 | 12 |
 | Lanças no acampamento | matar | 6 goblin lanceiro | 140 | 200 | 14 |
+| O chefe do forte | matar | 1 orc | 180 | 260 | 18 |
+| A mãe das aranhas | matar | 1 Aranha-Mãe | 130 | 190 | 13 |
 | O xamã do acampamento | matar | 1 goblin xamã | 120 | 180 | 12 |
 | Aranhas no caminho | matar | 6 aranha | 110 | 180 | 11 |
 | Javalis bravos | matar | 4 javali | 150 | 240 | 15 |
@@ -568,28 +574,28 @@ Modelo simplificado (sem física nem IA; detalhes em src/regras/simulador.js e s
 | Nível | Grupo | Região | Luta padrão | Mobs sem cair | XP/min | Fugir resolve |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Guerreiro sozinho | facil | vence em 3,5 s | 5 | 533 | sim |
-| 1 | Guerreiro sozinho | media | vence em 4,3 s | 3 | 417 | sim |
-| 1 | Guerreiro sozinho | dificil | perde em 2,9 s | 2 | 371 | sim |
+| 1 | Guerreiro sozinho | media | vence em 5,1 s | 4 | 698 | sim |
+| 1 | Guerreiro sozinho | dificil | perde em 6,4 s | 2 | 371 | sim |
 | 1 | Guerreiro sozinho | boss | perde em 5,4 s | 0 | 0 | sim |
 | 1 | grupo de 5 | facil | vence em 1,7 s | 12 | 1225 | sim |
-| 1 | grupo de 5 | media | vence em 2,2 s | 12 | 1568 | sim |
-| 1 | grupo de 5 | dificil | vence em 2,5 s | 7 | 1294 | sim |
+| 1 | grupo de 5 | media | vence em 2,3 s | 12 | 1959 | sim |
+| 1 | grupo de 5 | dificil | vence em 3,5 s | 4 | 1097 | sim |
 | 1 | grupo de 5 | boss | perde em 11,4 s | 0 | 0 | sim |
 | 10 | Guerreiro sozinho | facil | vence em 3,1 s | 10 | 878 | sim |
-| 10 | Guerreiro sozinho | media | vence em 3,5 s | 6 | 814 | sim |
-| 10 | Guerreiro sozinho | dificil | vence em 4,7 s | 4 | 721 | sim |
+| 10 | Guerreiro sozinho | media | vence em 3,9 s | 7 | 1089 | sim |
+| 10 | Guerreiro sozinho | dificil | vence em 5,9 s | 4 | 976 | sim |
 | 10 | Guerreiro sozinho | boss | perde em 11,4 s | 0 | 0 | sim |
 | 10 | grupo de 5 | facil | vence em 1,3 s | 12 | 1287 | sim |
-| 10 | grupo de 5 | media | vence em 1,5 s | 12 | 1629 | sim |
-| 10 | grupo de 5 | dificil | vence em 2,2 s | 12 | 2170 | sim |
+| 10 | grupo de 5 | media | vence em 1,9 s | 12 | 2047 | sim |
+| 10 | grupo de 5 | dificil | vence em 2,7 s | 9 | 2388 | sim |
 | 10 | grupo de 5 | boss | vence em 14,2 s | 1 | 918 | sim |
 | 30 | Guerreiro sozinho | facil | vence em 1,9 s | 12 | 1196 | sim |
-| 30 | Guerreiro sozinho | media | vence em 2,7 s | 11 | 1284 | sim |
-| 30 | Guerreiro sozinho | dificil | vence em 3,1 s | 8 | 1437 | sim |
+| 30 | Guerreiro sozinho | media | vence em 3,1 s | 12 | 1804 | sim |
+| 30 | Guerreiro sozinho | dificil | vence em 3,9 s | 6 | 1617 | sim |
 | 30 | Guerreiro sozinho | boss | vence em 18,3 s | 1 | 793 | sim |
 | 30 | grupo de 5 | facil | vence em 0,7 s | 12 | 1412 | sim |
-| 30 | grupo de 5 | media | vence em 0,7 s | 12 | 1802 | sim |
-| 30 | grupo de 5 | dificil | vence em 1,3 s | 12 | 2498 | sim |
+| 30 | grupo de 5 | media | vence em 1,1 s | 12 | 2305 | sim |
+| 30 | grupo de 5 | dificil | vence em 1,9 s | 12 | 3544 | sim |
 | 30 | grupo de 5 | boss | vence em 8,3 s | 1 | 1185 | sim |
 
 ## Ainda sem valor (a decidir)

@@ -41,7 +41,7 @@ import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao, pontosEmVolta } from '../../regras/mobs.js'
-import { lugaresNoAcampamento } from '../../regras/acampamento.js'
+import { lugaresNoAcampamento, raioExterno } from '../../regras/acampamento.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, separacao, tirarDasParedes } from '../../regras/movimento.js'
@@ -391,7 +391,7 @@ export default class CenaArena extends Phaser.Scene {
     const proibidos = [
       ...this.mapa.regioes.map((regiao) => ({ ...regiao.inicio, raio: nascimento.longeDosInicios })),
       // os mobs soltos não nascem nos acampamentos goblin nem encostados neles (Parte 6b)
-      ...(this.mapa.acampamentos ?? []).map((acampamento) => ({ ...acampamento.centro, raio: acampamento.raio + mundo.acampamento.longeDosOutros })),
+      ...(this.mapa.acampamentos ?? []).map((acampamento) => ({ ...acampamento.centro, raio: raioExterno(acampamento) + mundo.acampamento.longeDosOutros })),
     ]
     const sorteio = criarSorteio(this.sementeDoSorteio(1))
     const mobs = espalharMobs(this.mapa.regioes, this.mapa.populacao, { proibidos, distanciaEntreMobs: nascimento.distanciaEntreMobs, margem: nascimento.margem }, sorteio)
@@ -412,6 +412,19 @@ export default class CenaArena extends Phaser.Scene {
         goblin.acampamento = acampamento
         goblin.casa = { ...acampamento.centro }
         bando.push(goblin)
+      }
+      // O forte (Parte 6c): um arqueiro parado em cima de cada torre, que vê e atira mais longe
+      if (acampamento.arqueirosNasTorres) {
+        for (const torre of acampamento.torres ?? []) {
+          const arqueiro = this.criarMobDoMundo('goblinArqueiro', acampamento.regiao, torre)
+          arqueiro.acampamento = acampamento
+          arqueiro.naTorre = true
+          arqueiro.podeSerEmpurrado = false // fixo: não anda nem é empurrado
+          arqueiro.colocarEm(torre.x, torre.y)
+          const vezes = mundo.forte.alcanceNaTorre
+          arqueiro.config = { ...arqueiro.config, raioDeDeteccao: arqueiro.config.raioDeDeteccao * vezes, raioDeDesistencia: arqueiro.config.raioDeDesistencia * vezes, alcanceDoTiro: arqueiro.config.alcanceDoTiro * vezes, distanciaMinima: 0 }
+          bando.push(arqueiro)
+        }
       }
       for (const goblin of bando) goblin.bando = bando
     }
@@ -594,6 +607,7 @@ export default class CenaArena extends Phaser.Scene {
       return continua
     })
     for (const membro of this.grupo) membro.escudo?.atualizar()
+    this.atualizarTeias(agora)
     this.atualizarItensNoChao(agora)
     this.atualizarMana(segundos)
     this.prenderVidaDoTesteDoFoco(agora)
@@ -826,6 +840,7 @@ export default class CenaArena extends Phaser.Scene {
   // Esquiva: avanço curto na direção do movimento (parado: na direção da mira), sem levar dano
   esquivar(agora, dx, dy) {
     if (!podeUsar(agora, this.ultimaEsquiva, esquiva.recargaMs)) return
+    if (this.lider.presoAte > agora) return // preso na teia não esquiva (Parte 6c)
     const direcao = dx || dy ? { x: dx, y: dy } : { x: Math.cos(this.anguloDaMira), y: Math.sin(this.anguloDaMira) }
     this.velocidadeDaEsquiva = velocidadeDoMovimento(direcao.x, direcao.y, esquiva.distancia / (esquiva.ms / 1000))
     this.ultimaEsquiva = agora
@@ -872,6 +887,8 @@ export default class CenaArena extends Phaser.Scene {
       }
       const empurrado = entidade.estaSendoEmpurrado(agora)
       let base = empurrado ? entidade.vetorDoEmpurrao : entidade.querida
+      // Preso na teia da Aranha-Mãe (Parte 6c): não anda até soltar (o empurrão do golpe ainda vale)
+      if (!empurrado && entidade.presoAte > agora) base = { x: 0, y: 0 }
       // Tônico ligeiro (Fase 4): mais rápido por um tempo, só andando (a esquiva do Líder fica igual)
       const rapido = multiplicadorAtivo(entidade.efeitos, 'velocidade', agora) * multiplicadorDaVelocidade(entidade) // puxando o arco, mais devagar
       if (!empurrado && rapido !== 1 && !(entidade.lider && agora < this.fimDaEsquiva)) base = { x: base.x * rapido, y: base.y * rapido }
@@ -1661,6 +1678,42 @@ export default class CenaArena extends Phaser.Scene {
     tocarEfeito('fuga')
     particulas(this, this.lider.x, this.lider.y, 0x9fd8ff, 16, 240)
     this.avisarAndamento()
+  }
+
+  // A teia da Aranha-Mãe (Parte 6c): prende quem levou o tiro por "ms" (não anda nem esquiva), com a teia desenhada em
+  // cima dele e o aviso. Quem já está preso não tem o tempo aumentado (não dá para prender para sempre).
+  prender(membro, ms) {
+    const agora = this.agora
+    if (membro.caido || membro.presoAte > agora) return
+    membro.presoAte = agora + ms
+    numeroFlutuante(this, membro.x, membro.y - membro.tamanho, 'PRESO!', '#e8e0f0', 22)
+    if (membro.lider) this.mensagem('Preso na teia! Espere soltar', 'alerta')
+    if (!this.textures.exists('teia')) {
+      const desenho = this.make.graphics({}, false)
+      desenho.lineStyle(2, 0xffffff, 0.9)
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2
+        desenho.lineBetween(32, 32, 32 + Math.cos(a) * 30, 32 + Math.sin(a) * 30)
+      }
+      for (const r of [10, 19, 28]) desenho.strokeCircle(32, 32, r)
+      desenho.generateTexture('teia', 64, 64)
+      desenho.destroy()
+    }
+    this.teias ??= []
+    this.teias.push({ membro, imagem: this.add.image(membro.x, membro.y, 'teia').setDisplaySize(membro.tamanho * 1.5, membro.tamanho * 1.5).setAlpha(0.85).setDepth(membro.y + 50) })
+  }
+
+  // A teia acompanha quem está preso e some quando ele solta (ou cai)
+  atualizarTeias(agora) {
+    if (!this.teias?.length) return
+    this.teias = this.teias.filter(({ membro, imagem }) => {
+      if (membro.caido || !(membro.presoAte > agora)) {
+        imagem.destroy()
+        return false
+      }
+      imagem.setPosition(membro.x, membro.y).setDepth(membro.y + 50)
+      return true
+    })
   }
 
   // Mensagem curta no HUD (crítico, nível, desmaio, perdido, retorno...). O React mostra e tira depois de 2,5 s.
