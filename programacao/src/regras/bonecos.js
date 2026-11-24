@@ -175,6 +175,20 @@ function pecasDoChapeu(chapeu, cor, { topo, y0, ret, poli, medidas }) {
     ret(x0 + 3, topo, largura - 6, 3, 1, c.ouro, false)
     ret(-1, topo - 10, 2, 8, 0.5, c.ouro, false)
     ret(-3.5, topo - 7.5, 7, 2, 0.5, c.ouro, false)
+  } else if (chapeu === 'capaceteGoblin') {
+    // Capacete de ferro velho: a calota em cima, deixando os olhos de fora, e dois rebites
+    const c = coresDosChapeus.capaceteGoblin
+    ret(x0 - 1, topo - 3, largura + 2, cabeca.altura * 0.42, cabeca.raio, c.metal)
+    ret(x0 + 4, topo + 1, 2.5, 2.5, 1, c.rebite, false)
+    ret(x0 + largura - 6.5, topo + 1, 2.5, 2.5, 1, c.rebite, false)
+  } else if (chapeu === 'cocar') {
+    // Cocar do xamã: a faixa de osso na testa e três penas em pé
+    const c = coresDosChapeus.cocar
+    c.penas.forEach((cor, i) => {
+      const x = x0 + 5 + i * 6
+      poli([{ x, y: topo + 1 }, { x: x + 2.5, y: topo - 11 + (i === 1 ? -3 : 0) }, { x: x + 5, y: topo + 1 }], cor)
+    })
+    ret(x0, topo + 1, largura, 4, 1.5, c.faixa)
   } else if (chapeu === 'capuz') {
     // Capuz: cobre o alto e a nuca (o lado de trás), deixando o rosto aberto para o lado que olha
     const escuro = escurecer(cor, coresDosChapeus.capuz.escurecer)
@@ -208,6 +222,8 @@ export function pecasDoBicho(tipo, { lado = 'direita', fase = 0, andando = false
   const poli = (pontos, cor, comContorno = true) => pecas.push({ forma: 'poli', pontos: pontos.map((p) => ({ x: p.x * s, y: p.y })), cor, contorno: comContorno })
   const passo = andando ? Math.sin(fase) : 0
   const respira = andando ? -Math.abs(Math.cos(fase)) * 1.2 : Math.sin(fase) * 0.6
+
+  if (receita.forma === 'goblin') return pecasDoGoblin(receita, { lado, fase, andando }, medidas)
 
   if (receita.forma === 'aranha') {
     const { corpo, cabeca, patas } = receita
@@ -265,6 +281,42 @@ export function pecasDoBicho(tipo, { lado = 'direita', fase = 0, andando = false
   ret(xc + cabeca.largura - 3, topoDaCabeca + cabeca.altura * 0.45, 3, 3, 1, escurecer(cor, 0.5), false)
   ret(xc + cabeca.largura * 0.5, topoDaCabeca + cabeca.altura * 0.28, 2.2, 3, 1, medidas.olhos, false)
   return pecas.map((p) => (p.contorno && p.espessura === undefined ? { ...p, espessura: contorno.espessura, corDoContorno: contorno.cor } : p))
+}
+
+// Goblin (Parte 6b): o boneco dos personagens na cor dele, com as orelhas pontudas atrás da cabeça e a arma na mão da
+// frente (a lança em pé, o arco ou o cajado com a pedra)
+function pecasDoGoblin(receita, pose, medidas) {
+  const s = pose.lado === 'esquerda' ? -1 : 1
+  const { cabeca, mao, contorno } = medidas
+  const comContorno = { contorno: true, espessura: contorno.espessura, corDoContorno: contorno.cor }
+  const orelha = escurecer(receita.cor, 0.12)
+  const yDaCabeca = cabeca.y
+  const orelhas = [-1, 1].map((lado) => ({
+    forma: 'poli',
+    pontos: [
+      { x: lado * (cabeca.largura / 2 - 2), y: yDaCabeca - 6 },
+      { x: lado * (cabeca.largura / 2 + 9), y: yDaCabeca - 11 },
+      { x: lado * (cabeca.largura / 2 - 2), y: yDaCabeca + 2 },
+    ],
+    cor: orelha,
+    ...comContorno,
+  }))
+  const corpo = pecasDoBoneco({ cor: receita.cor, chapeu: receita.chapeu }, pose, medidas)
+  const c = coresDosChapeus.armas
+  const linha = (x1, y1, x2, y2, espessura, cor) => ({ forma: 'linha', x1: x1 * s, y1, x2: x2 * s, y2, espessura, cor })
+  const mx = mao.x + 2
+  const my = mao.y + 3
+  const arma = []
+  if (receita.arma === 'lanca') {
+    arma.push(linha(mx - 4, my + 10, mx + 6, my - 30, 2.4, c.madeira))
+    arma.push({ forma: 'poli', pontos: [{ x: (mx + 4) * s, y: my - 29 }, { x: (mx + 8.5) * s, y: my - 39 }, { x: (mx + 8) * s, y: my - 27 }], cor: c.metal, ...comContorno })
+  } else if (receita.arma === 'arco') {
+    arma.push(linha(mx + 1, my - 14, mx + 6, my - 3, 2.2, c.madeira), linha(mx + 6, my - 3, mx + 1, my + 9, 2.2, c.madeira), linha(mx + 1, my - 14, mx + 1, my + 9, 1, c.corda))
+  } else if (receita.arma === 'cajado') {
+    arma.push(linha(mx + 1, my + 10, mx + 1, my - 24, 2.4, c.madeira))
+    arma.push({ forma: 'circulo', x: (mx + 1) * s, y: my - 26, raio: 3.4, cor: c.pedra, ...comContorno })
+  }
+  return [...orelhas, ...corpo, ...arma]
 }
 
 // A escala de um bicho para o "tamanho" do mob (o desenho foi feito para o tamanho de referência)

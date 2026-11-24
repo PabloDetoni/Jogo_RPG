@@ -635,6 +635,10 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
 - Fazer: na Fácil, ache um Lobo Alfa (lobo maior e mais escuro, com a juba clara) e atire nele de longe. Depois, com um lobo perseguindo, corra de volta para a Clareira da Entrada.
 - Deve acontecer: atacado, o Alfa chama a matilha e os lobos em volta dele perseguem juntos; o lobo para na borda da Fácil e não entra na Clareira (ali o grupo fica a salvo).
 
+**FL-06c · Acampamento goblin (Parte 6b)**
+- Fazer: na Média, ache o acampamento (círculo de troncos com uma fogueira no meio). Passe por fora, sem chegar perto da paliçada; depois entre por uma entrada. Ataque um goblin e repare no xamã (o de cocar de penas e cajado com a pedra verde). Por fim, corra para longe.
+- Deve acontecer: passando por fora, ninguém acorda e os aliados não atacam; entrando, todos os goblins perseguem juntos; o xamã cura os goblins feridos (partículas verdes e "+N"); com a IA média ou avançada, os aliados vão primeiro no xamã; longe, os goblins não saem do acampamento (só um pouco para fora da paliçada).
+
 **FL-07 · Coleta com E**
 - Fazer: chegue perto de um losango colorido no chão (cogumelo vermelho, erva verde, madeira marrom) e aperte **E**. Derrote um lobo e pegue o que ele deixar.
 - Deve acontecer: perto do item aparece "E: pegar Cogumelo"; com E ele some do chão, aparece "+1 Cogumelo" e o "Mochila X/Y" sobe. No fim da partida, o Resumo lista os itens coletados e eles vão para a Mochila do Reino.

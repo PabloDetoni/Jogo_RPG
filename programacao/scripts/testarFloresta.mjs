@@ -239,10 +239,19 @@ try {
   await pausa(500)
   conferir('entrando na Fácil, o HUD mostra "Fácil"', (await quadroDoMinimapa()).regiao === 'Fácil')
   // A taxa da fuga como o HUD mostra ("Fuga (F): 11% · ...")
+  // (depois de um salto longo, o HUD pode levar mais que um instante para trocar: espera o número parar de mudar)
   const taxa = async (x, y) => {
     await colocarLider(x, y)
+    const ler = () => aba.avaliar(`parseInt(document.querySelector('.hud').innerText.split('Fuga (F): ')[1] ?? '', 10)`)
     await pausa(400)
-    return aba.avaliar(`parseInt(document.querySelector('.hud').innerText.split('Fuga (F): ')[1] ?? '', 10)`)
+    let antes = await ler()
+    for (let i = 0; i < 10; i++) {
+      await pausa(300)
+      const agora = await ler()
+      if (agora === antes) return agora
+      antes = agora
+    }
+    return antes
   }
   // A taxa conta a distância em LINHA RETA até o início do bioma (RF48, mantido pelo Pablo em 20/11). Com o caminho em
   // "S", o início da Difícil fica mais perto do começo, em linha reta, que o da Média: a conferência usa pontos em
@@ -255,6 +264,7 @@ try {
   const taxaBoss = await taxa(Z.dominioDoBoss.x, Z.dominioDoBoss.y)
   conferir('o custo da fuga sobe com a distância (em linha reta) do ponto inicial', taxaPerto < taxaMedia && taxaMedia < taxaDificil, { taxaPerto, taxaMedia, taxaDificil })
   conferir('no domínio do Boss, a fuga custa +7 pontos (RF48)', taxaBoss - taxaAntes >= 7 && taxaBoss - taxaAntes <= 10, { taxaAntes, taxaBoss })
+  await aba.esperar(`!!document.querySelector('.hud-regiao-boss')`, 'o aviso do domínio', 3000).catch(() => {})
   conferir('no domínio do Boss, o HUD avisa a região em destaque', await aba.avaliar(`!!document.querySelector('.hud-regiao-boss')`))
   const noDominio = await quadroDoMinimapa()
   conferir('...e o nome mais comprido ("Domínio do Boss") também cabe no quadro', noDominio.regiao === 'Domínio do Boss' && noDominio.fora.length === 0, noDominio)
@@ -370,13 +380,66 @@ try {
   await cena(`(() => { const l = c.criarMobDoMundo('lobo', 'facil', c.lugarLivre(34, { x: ${borda.x + 260}, y: ${borda.y} })); l.__borda = true; l.vida = l.vidaMaxima = 1e6; return true })()`)
   await colocarLider(borda.x - 200, borda.y)
   await pausa(1500)
-  conferir('com o Líder na zona neutra, o lobo da Fácil ao lado não persegue', !(await cena(`c.inimigos.find((i) => i.__borda).perseguindo`)))
+  // (os aliados podem bater no lobo, que está perto do Líder: aí ele persegue porque apanhou, o que vale)
+  // (um aliado que pisar na Fácil pode virar alvo, o que vale: a conferência olha se o alvo é o Líder)
+  const naNeutra = await cena(`(() => { const l = c.inimigos.find((i) => i.__borda); return { liderNaAreaDoLobo: l.naMinhaArea(c.lider), alvoEOLider: l.alvo === c.lider, apanhou: l.provocadoAte > 0 } })()`)
+  conferir('com o Líder na zona neutra, ele não está na área do lobo da Fácil (o lobo não o escolhe, a não ser que apanhe)', !naNeutra.liderNaAreaDoLobo && (!naNeutra.alvoEOLider || naNeutra.apanhou), naNeutra)
   await cena(`(c.inimigos.find((i) => i.__borda).aoApanhar(c.agora), true)`)
   await pausa(2500)
   const naBorda = await cena(`(() => { const l = c.inimigos.find((i) => i.__borda); return { naFacil: l.naMinhaArea(l), x: Math.round(l.x), lider: Math.round(c.lider.x), vida: c.lider.vida, maxima: c.lider.vidaMaxima } })()`)
   conferir('provocado, o lobo vai até a borda da Fácil mas não entra na zona neutra', naBorda.naFacil && naBorda.x > naBorda.lider + 60, naBorda)
   await aba.print('06c-territorio')
   await cena(`(c.inimigos.filter((i) => i.__borda).forEach((i) => c.matarInimigo(i)), true)`)
+
+  console.log('9c. O acampamento goblin da Média (Parte 6b): paliçada, bando, xamã e a IA dos aliados')
+  const acamp = await cena(`(() => {
+    const a = c.mapa.acampamentos[0]
+    const troncos = c.mapa.obstaculos.filter((o) => o.tipo === 'palicada' && Math.hypot(o.x - a.centro.x, o.y - a.centro.y) < a.raio + 30).length
+    const goblins = c.inimigos.filter((i) => i.acampamento === a && !i.morto)
+    const intrusos = c.inimigos.filter((i) => !i.acampamento && !i.morto && Math.hypot(i.x - a.centro.x, i.y - a.centro.y) < a.raio).length
+    return { x: a.centro.x, y: a.centro.y, raio: a.raio, entradas: a.entradas.length, troncos, goblins: goblins.map((g) => g.tipo), mesmoBando: goblins.every((g) => g.bando === goblins[0].bando), intrusos }
+  })()`)
+  conferir('o acampamento tem a paliçada (com 1 ou 2 entradas), os goblins dentro, no mesmo bando, e nenhum outro mob', acamp.troncos > 40 && acamp.entradas >= 1 && acamp.goblins.includes('goblinXama') && acamp.goblins.includes('goblinLanceiro') && acamp.goblins.includes('goblinArqueiro') && acamp.mesmoBando && acamp.intrusos === 0, acamp)
+  // Goblins com vida de sobra e o grupo invencível (as conferências não podem depender de quem ganha a briga)
+  await cena(`(c.invencivel = true, c.iaForcada = 'media', c.inimigos.filter((i) => i.acampamento === c.mapa.acampamentos[0]).forEach((g) => { g.__goblin = true; g.vida = g.vidaMaxima = 1e6 }), true)`)
+  await cena(`(c.inimigos.filter((i) => !i.__goblin && Math.hypot(i.x - ${acamp.x}, i.y - ${acamp.y}) < 1800).forEach((i) => c.matarInimigo(i)), true)`)
+  // Passando do lado de fora, longe da paliçada (além da folga): ninguém acorda e os aliados não começam a briga
+  await colocarLider(acamp.x, acamp.y + acamp.raio + 420)
+  await pausa(2500)
+  const acampamentoDormindo = await cena(`({ acordados: c.inimigos.filter((i) => i.__goblin && i.perseguindo).length, apanhou: c.inimigos.filter((i) => i.__goblin && i.vida < 1e6).length })`)
+  conferir('passando do lado de fora, o acampamento continua dormindo e os aliados não atacam', acampamentoDormindo.acordados === 0 && acampamentoDormindo.apanhou === 0, acampamentoDormindo)
+  // Entrando pela entrada leste: o acampamento acorda junto
+  await colocarLider(acamp.x + acamp.raio + 70, acamp.y)
+  await pausa(1200)
+  const acordou = await cena(`c.inimigos.filter((i) => i.__goblin).map((i) => i.perseguindo)`)
+  conferir('chegando na entrada, o acampamento acorda junto (todos perseguem)', acordou.length >= 5 && acordou.every(Boolean), acordou)
+  await aba.print('06d-acampamento')
+  // IA média: o Guerreiro, o Arqueiro ou o Mago aliado miram o xamã primeiro (o grupo dentro do acampamento: os aliados
+  // só lutam com quem está a até 380 px do Líder)
+  await colocarLider(acamp.x + acamp.raio - 130, acamp.y)
+  let miraNoXama = false
+  for (let i = 0; i < 12 && !miraNoXama; i++) {
+    miraNoXama = await cena(`c.aliados.some((a) => !a.caido && ['guerreiro', 'arqueiro'].includes(a.classe) && a.ia.alvo?.tipo === 'goblinXama')`)
+    if (!miraNoXama) await pausa(250)
+  }
+  conferir('na IA média, um aliado (Guerreiro ou Arqueiro) mira o xamã primeiro', miraNoXama)
+  // O xamã cura o goblin ferido
+  // (os aliados continuam batendo: confere quem o xamã escolheu curar, o lanceiro com 30% da vida)
+  await cena(`(() => {
+    const x = c.inimigos.find((i) => i.__goblin && i.tipo === 'goblinXama'); x.__curas = []
+    const curar = x.curar.bind(x); x.curar = (f, a) => { x.__curas.push(f.__ferido ? 'ferido' : f.tipo); curar(f, a) }
+    const g = c.inimigos.find((i) => i.__goblin && i.tipo === 'goblinLanceiro'); g.vida = g.vidaMaxima * 0.3; g.__ferido = true
+    return true
+  })()`)
+  await aba.esperar(`${CENA}.inimigos.find((i) => i.tipo === 'goblinXama' && i.__goblin)?.__curas.includes('ferido')`, 'o xamã curar', 6000).catch(() => {})
+  const curas = await cena(`c.inimigos.find((i) => i.tipo === 'goblinXama' && i.__goblin).__curas`)
+  conferir('o xamã cura o goblin mais ferido do acampamento', curas.includes('ferido'), curas)
+  // Território: o Líder foge para longe; os goblins ficam no acampamento (com a folga)
+  await colocarLider(acamp.x + acamp.raio + 900, acamp.y)
+  await pausa(3000)
+  const longe = await cena(`c.inimigos.filter((i) => i.__goblin).map((g) => Math.round(Math.hypot(g.x - ${acamp.x}, g.y - ${acamp.y})))`)
+  conferir('com o grupo longe, nenhum goblin sai do acampamento (só a folga em volta da paliçada)', longe.every((d) => d <= acamp.raio + 260), longe)
+  await cena(`(c.iaForcada = null, c.inimigos.filter((i) => i.__goblin).forEach((i) => c.matarInimigo(i)), true)`)
 
   console.log('10. Aliado longe ou preso volta por fora da tela')
   await colocarLider(faixa.x + 600, faixa.y)

@@ -8,6 +8,7 @@ import {
   deveVoltar,
   direcaoDeRecuo,
   inimigoMaisForte,
+  alvoPrioritario,
   alvosDosAliados,
   inimigosPerto,
   maisProximo,
@@ -81,6 +82,7 @@ export function pensarAliados(cena, agora) {
     else if (inimigos.length > 0) plano = planoDeCombate(aliado, perfil, inimigos, contexto)
     else plano = { tipo: 'seguir' }
     plano.perfil = perfil
+    aliado.ia.alvo = plano.alvo ?? null // o alvo escolhido neste quadro (para os roteiros e para depurar)
     if (plano.tipo !== aliado.ia.ultimoPlano) {
       aliado.ia.ultimoPlano = plano.tipo
       aliado.ia.noPosto = false
@@ -210,7 +212,11 @@ function planoDeCombate(aliado, perfil, inimigos, { cena, lider, formacao }) {
     return { tipo: 'tanque', alvo: maisProximo(lider, inimigos), inimigos }
   }
 
+  // Parte 6b: na IA média e avançada, o Guerreiro, o Arqueiro e o Mago vão primeiro no xamã (o Tanque segura os outros)
+  const prioridade = alvoPrioritario(aliado, inimigos, errou ? 'basica' : perfil.id)
+
   if (aliado.classe === 'guerreiro') {
+    if (prioridade) return { tipo: 'corpoACorpo', alvo: prioridade, inimigos }
     if (avancada && formacao) {
       // Veterano: com o Tanque na frente, fica ao lado dele; se o Tanque não está lá (errou, caiu ou não há), não
       // espera: vai proteger o Líder, no mob mais perto dele
@@ -230,6 +236,10 @@ function planoDeCombate(aliado, perfil, inimigos, { cena, lider, formacao }) {
   const alcance = arqueiro ? ataques.arqueiro.alcance : ataques.mago.alcance
   const alvoDoMago = () => pontoDeMaisInimigos(aliado, inimigos, ataques.mago.raioDaExplosao)
   const base = { tipo: 'longe', alcance, inimigos }
+  if (prioridade) {
+    const faixa = avancada ? faixaNormal : errou ? faixaCurta : faixaNormal
+    return { ...base, alvo: arqueiro ? prioridade : { x: prioridade.x, y: prioridade.y, quantos: 1 }, faixa, respeitaLinha: true, ...(avancada && formacao ? { posto: arqueiro ? formacao.arqueiro : formacao.mago } : {}) }
+  }
   if (perfil.id === 'basica') {
     // Vai para o meio da luta; errando, o Arqueiro chega a encostar no mob e os dois atiram mesmo com pedra no meio
     const faixa = errou && arqueiro ? { minima: 50, maxima: 90 } : faixaCurta

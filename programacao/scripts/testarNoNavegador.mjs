@@ -110,8 +110,13 @@ console.log(`Site: ${SITE} · navegador: ${caminhoDoNavegador}`)
 
 async function desligar(codigo) {
   // O navegador abre vários processos: fecha todos (no Windows, a árvore inteira)
-  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(navegador.pid), '/T', '/F'], { stdio: 'ignore' })
-  else navegador.kill()
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(navegador.pid), '/T', '/F'], { stdio: 'ignore' })
+    // O msedge.exe aberto às vezes só repassa para outro processo e sai na hora: fecha também pelo perfil temporário
+    // (o mesmo conserto do fechar() em ferramentasDoNavegador.mjs, 24/11)
+    const filtro = `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | Where-Object { $_.CommandLine -like '*${perfil}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+    spawnSync('powershell', ['-NoProfile', '-Command', filtro], { stdio: 'ignore' })
+  } else navegador.kill()
   await servidor.close()
   await pausa(500)
   try {

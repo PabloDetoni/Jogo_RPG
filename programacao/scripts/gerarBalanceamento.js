@@ -466,7 +466,11 @@ escrever(
       `${numero(regiao.x1 - regiao.x0)} × ${numero(regiao.y1 - regiao.y0)}`,
       `×${numero(mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
       numero(mundo.xpPorArea[regiao.dificuldade] ?? 0),
-      Object.entries(floresta.populacao[regiao.id] ?? {}).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ') || 'nenhum',
+      [
+        ...Object.entries(floresta.populacao[regiao.id] ?? {}).map(([tipo, quantos]) => `${quantos} ${tipo}`),
+        // os acampamentos goblin da região (Parte 6b)
+        ...(floresta.acampamentos ?? []).filter((a) => a.regiao === regiao.id).map((a) => `${a.nome} (${Object.entries(a.populacao).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ')})`),
+      ].join(', ') || 'nenhum',
     ]),
   ),
   '### Mobs (TASK-012, provisório)',
@@ -478,7 +482,7 @@ escrever(
       const dificil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.dificil)
       return [
         tipo,
-        ficha.comportamento === 'pacifico' ? 'pacífico (nunca ataca, foge)' : `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
+        ficha.comportamento === 'pacifico' ? 'pacífico (nunca ataca, foge)' : ficha.comportamento === 'xama' ? `atira de longe e cura ${ficha.cura.quanto} a cada ${ficha.cura.msEntreCuras / 1000} s` : `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
         `${facil.vida} / ${dificil.vida}`,
         `${facil.dano} / ${dificil.dano}`,
         `${facil.xp} / ${dificil.xp}`,

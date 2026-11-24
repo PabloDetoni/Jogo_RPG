@@ -34,6 +34,9 @@ const dados = {
   // Parte 6a (11/2026): drops do Lobo Alfa e do coelho. PROVISÓRIO – substituir pelo do grupo.
   pelagemDoAlfa: { nome: 'Pelagem do Alfa', tipo: 'material', raridade: 'raro', peso: 3, preco: 45, cor: 0x5e636b, descricao: 'A pelagem grossa do líder da matilha.' },
   peDeCoelho: { nome: 'Pé de coelho', tipo: 'material', raridade: 'comum', peso: 1, preco: 3, cor: 0xd8cfc6, descricao: 'Dizem que dá sorte.' },
+  // Parte 6b (11/2026): drops dos goblins. PROVISÓRIO – substituir pelo do grupo.
+  orelhaDeGoblin: { nome: 'Orelha de goblin', tipo: 'material', raridade: 'comum', peso: 1, preco: 10, cor: 0x7fa64a, descricao: 'Prova de que o acampamento ficou mais vazio.' },
+  totemDoXama: { nome: 'Totem do xamã', tipo: 'material', raridade: 'raro', peso: 2, preco: 55, cor: 0xb08a5a, descricao: 'Ossinhos e penas amarrados: ainda brilha um pouco.' },
   cascaAntiga: { nome: 'Casca antiga', tipo: 'material', raridade: 'raro', peso: 4, preco: 60, cor: 0x5d4a2e, descricao: 'Pedaço da casca do Guardião da Floresta.' },
   minerioDeFerro: { nome: 'Minério de ferro', tipo: 'material', raridade: 'comum', peso: 3, preco: 12, cor: 0x8a8f99, descricao: 'Pedra com ferro, vinda da mina do Planalto.' },
 

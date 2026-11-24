@@ -20,8 +20,19 @@ export function inimigosPerto(inimigos, lider, raioDeCombate) {
 // Os alvos dos aliados: os inimigos perto do Líder, menos o mob não hostil (o cervo) que ninguém provocou. Ele "só
 // reage se for atacado" (RF36): os aliados não começam a briga sozinhos; se o Líder bater nele, ele passa a perseguir
 // e vira alvo. (Parte 0b, 21/11: os aliados atacavam o cervo, que revidava no Líder.)
+// Acampamento goblin (Parte 6b): os aliados também não começam briga com o acampamento dormindo (passando perto da
+// paliçada, um tiro do Arqueiro aliado acordava o acampamento inteiro); quando um goblin persegue, todos acordam.
 export function alvosDosAliados(inimigos, lider, raioDeCombate) {
-  return inimigosPerto(inimigos, lider, raioDeCombate).filter((inimigo) => inimigo.config?.hostil !== false || inimigo.perseguindo)
+  return inimigosPerto(inimigos, lider, raioDeCombate).filter(
+    (inimigo) => (inimigo.config?.hostil !== false || inimigo.perseguindo) && (!inimigo.acampamento || inimigo.perseguindo),
+  )
+}
+
+// O alvo que vem primeiro (Parte 6b): na IA média e avançada, o inimigo marcado com "prioridade" (o xamã que cura os
+// goblins), o mais perto de "de". Na básica, ou sem nenhum, null (cada classe escolhe como sempre).
+export function alvoPrioritario(de, inimigos, perfilId) {
+  if (perfilId === 'basica') return null
+  return maisProximo(de, inimigos.filter((inimigo) => !inimigo.morto && inimigo.config?.prioridade))
 }
 
 export function maisProximo(de, lista) {

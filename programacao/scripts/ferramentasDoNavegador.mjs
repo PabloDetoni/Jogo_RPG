@@ -158,8 +158,14 @@ export async function abrirNavegador(nome, pastaDosPrints) {
       return criarAba(cdp, `${nome}/${rotulo}`, pastaDosPrints)
     },
     async fechar() {
-      if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(processo.pid), '/T', '/F'], { stdio: 'ignore' })
-      else processo.kill()
+      if (process.platform === 'win32') {
+        spawnSync('taskkill', ['/pid', String(processo.pid), '/T', '/F'], { stdio: 'ignore' })
+        // O msedge.exe aberto às vezes só repassa para outro processo e sai na hora (com uma atualização do Edge
+        // pendente): aí o taskkill pelo número não acha ninguém e o navegador escondido ficava aberto para sempre
+        // (24/11: dezenas deles acumulados deixaram a máquina sem fôlego). Fecha também todo Edge com este perfil.
+        const filtro = `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | Where-Object { $_.CommandLine -like '*${perfil}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+        spawnSync('powershell', ['-NoProfile', '-Command', filtro], { stdio: 'ignore' })
+      } else processo.kill()
       await pausa(400)
       try {
         rmSync(perfil, { recursive: true, force: true })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  alvoPrioritario,
   acompanharTremor,
   alvoComLinhaDeTiro,
   alvoDoInimigo,
@@ -336,5 +337,25 @@ describe('Sacerdote avançado: onde ficar para curar', () => {
   it('curando a si mesmo, fica onde está', () => {
     const sacerdote = { x: 10, y: 20 }
     expect(posicaoParaCurar(sacerdote, sacerdote, [{ x: 50, y: 20 }], 80)).toEqual({ x: 10, y: 20 })
+  })
+})
+
+describe('acampamento goblin e o alvo prioritário (Parte 6b)', () => {
+  const lider = { x: 0, y: 0 }
+  it('os aliados não começam briga com o acampamento dormindo; acordado, ele vira alvo', () => {
+    const dormindo = { x: 100, y: 0, acampamento: {}, perseguindo: false, config: { hostil: true } }
+    const acordado = { x: 120, y: 0, acampamento: {}, perseguindo: true, config: { hostil: true } }
+    const lobo = { x: 140, y: 0, perseguindo: false, config: { hostil: true } }
+    expect(alvosDosAliados([dormindo, acordado, lobo], lider, 600)).toEqual([acordado, lobo])
+  })
+
+  it('na IA média e avançada, o xamã (prioridade) vem primeiro; na básica, não', () => {
+    const lanceiro = { x: 50, y: 0, config: {} }
+    const xama = { x: 400, y: 0, config: { prioridade: true } }
+    const outroXama = { x: 300, y: 0, config: { prioridade: true } }
+    expect(alvoPrioritario(lider, [lanceiro, xama, outroXama], 'media')).toBe(outroXama)
+    expect(alvoPrioritario(lider, [lanceiro, xama], 'avancada')).toBe(xama)
+    expect(alvoPrioritario(lider, [lanceiro, xama], 'basica')).toBeNull()
+    expect(alvoPrioritario(lider, [lanceiro], 'media')).toBeNull()
   })
 })

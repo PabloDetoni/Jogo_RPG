@@ -4,6 +4,7 @@ import { combateDeTeste, mundo } from '../../dados/balanceamento.js'
 import { alvoDoInimigo, maisProximo } from '../../regras/iaDosAliados.js'
 import { dentroDoTerritorio, passoNaArea } from '../../regras/mobs.js'
 import { zonaNoTerreno } from '../../regras/terreno.js'
+import { dentroDoAcampamento } from '../../regras/acampamento.js'
 import { bichosEmBlocos } from '../../dados/bonecos.js'
 import { escalaDoBicho, pecasDoBicho } from '../../regras/bonecos.js'
 import { numeroFlutuante, particulas } from '../efeitos.js'
@@ -46,6 +47,7 @@ export default class Inimigo extends Entidade {
     this.andaSozinho = true
     this.dormindo = false // longe do Líder (Fase 3): não pensa nem anda
     this.bando = null // os mobs do mesmo bando (lista compartilhada), ou null
+    this.acampamento = null // o acampamento goblin de quem mora nele (Parte 6b), ou null
     this.corpo.body.setCollideWorldBounds(true)
   }
 
@@ -63,17 +65,27 @@ export default class Inimigo extends Entidade {
   }
 
   // O ponto está na zona do mob? (sem a zona ou sem o terreno, como na arena de teste, vale tudo; a mata vale, porque a
-  // parede já segura)
+  // parede já segura). Acampamento goblin (Parte 6b): quem mora nele não sai dele (com a folga do território) e os
+  // outros mobs não entram nele.
   naMinhaArea(ponto) {
     const terreno = this.cena.mapa?.terreno
     if (!this.regiao || !terreno) return true
+    const { acampamento } = mundo
+    if (this.acampamento) return dentroDoAcampamento(this.acampamento, ponto, acampamento.folgaDoTerritorio)
+    if (this.cena.mapa.acampamentos?.some((um) => dentroDoAcampamento(um, ponto, acampamento.tronco))) return false
     const zona = zonaNoTerreno(terreno, this.cena.mapa.regioes, ponto)
     return !zona || zona.id === this.regiao
   }
 
-  // Andar sem sair da zona (desliza pela borda). Empurrado para fora, volta andando livre.
+  // Andar sem sair da zona (desliza pela borda). Empurrado para fora (um golpe), volta para casa, na mesma velocidade,
+  // antes de qualquer outra coisa (senão, perseguindo, ele seguia o grupo para fora da área).
   andar(velocidade) {
-    super.andar(this.naMinhaArea(this) ? passoNaArea(this, velocidade, (ponto) => this.naMinhaArea(ponto)) : velocidade)
+    if (this.naMinhaArea(this)) {
+      super.andar(passoNaArea(this, velocidade, (ponto) => this.naMinhaArea(ponto)))
+      return
+    }
+    const rapidez = Math.hypot(velocidade.x, velocidade.y)
+    super.andar(this.casaFixa && rapidez > 0 ? this.velocidadeAte(this.casaFixa, rapidez) : velocidade)
   }
 
   // Chama o bando: quem está perto e à toa passa a perseguir o mesmo alvo (provocado, como se tivesse apanhado)
@@ -104,7 +116,7 @@ export default class Inimigo extends Entidade {
       : this.cena.membrosDePe
     // Provocado (apanhou ou o bando chamou), só desiste mais longe: quem atirou de longe ou o bando chamado de longe
     // continua no alvo
-    const raioDeDesistencia = provocado ? Math.max(this.config.raioDeDesistencia, mundo.bando.raioDoAlerta + this.config.raioDeDeteccao) : this.config.raioDeDesistencia
+    const raioDeDesistencia = provocado ? Math.max(this.config.raioDeDesistencia, mundo.bando.raioProvocado) : this.config.raioDeDesistencia
     const alvo = alvoDoInimigo(this, membros, {
       alvoAtual: this.alvo,
       raioDeDeteccao: this.config.raioDeDeteccao,

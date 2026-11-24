@@ -130,7 +130,8 @@ export const floresta = {
   populacao: {
     // Parte 6a: na Fácil, lobos soltos e 3 Lobos Alfa (cada um nasce com a matilha em volta: + 2 lobos)
     facil: { lobo: 10, loboAlfa: 3, aranha: 5 },
-    media: { lobo: 12, aranha: 10, javali: 6 },
+    // Parte 6b: a Média ganhou dois acampamentos goblin (em "acampamentos", abaixo); menos lobos soltos
+    media: { lobo: 6, aranha: 10, javali: 6 },
     dificil: { lobo: 12, aranha: 10, javali: 10 },
     dominioDoBoss: { lobo: 3 },
     // Zonas neutras: só os animais pacíficos (Parte 6a: fogem do grupo e dos mobs, XP quase nada)
@@ -139,6 +140,13 @@ export const floresta = {
     neutraDaCurva2: { cervo: 3, coelho: 2 },
     neutraDoFim: { cervo: 2, coelho: 2 },
   },
+  // Acampamentos goblin (Parte 6b; PROVISÓRIO – substituir pelo do grupo): um círculo com a paliçada (raio) e as
+  // entradas (ângulos: 0 = leste, π = oeste, π/2 = sul), dentro da região; a população nasce dentro, em volta da
+  // fogueira. Os lugares foram escolhidos com um círculo de 560 px que cabe inteiro na Média.
+  acampamentos: [
+    { id: 'acampamentoDoRiacho', nome: 'Acampamento do Riacho', regiao: 'media', centro: { x: 5900, y: 4370 }, raio: 360, entradas: [0, Math.PI], populacao: { goblinLanceiro: 3, goblinArqueiro: 2, goblinXama: 1 } },
+    { id: 'acampamentoDaPedra', nome: 'Acampamento da Pedra', regiao: 'media', centro: { x: 3260, y: 4450 }, raio: 380, entradas: [0], populacao: { goblinLanceiro: 4, goblinArqueiro: 3, goblinXama: 1 } },
+  ],
   // Recursos no chão de cada região, a cada partida (coletados com E). PROVISÓRIO – substituir pelo do grupo (TASK-012).
   recursos: {
     zonaSegura: { ervaMedicinal: 2 },
@@ -155,5 +163,11 @@ export const floresta = {
     arvore: 0x2e6e36, // as árvores soltas no caminho
     tronco: 0x6b4a2b,
     pedra: 0x9aa3ad,
+    // acampamento goblin (Parte 6b): os troncos da paliçada vistos de cima, as pedras da fogueira e o fogo
+    palicada: 0x7a5230,
+    palicadaClara: 0xa57a4a,
+    fogueiraPedra: 0x8b8f96,
+    fogo: 0xff8a2a,
+    fogoClaro: 0xffd54a,
   },
 }
