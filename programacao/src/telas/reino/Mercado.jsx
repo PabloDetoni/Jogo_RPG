@@ -1,5 +1,4 @@
 import Botao from '../../componentes/Botao.jsx'
-import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
 import Painel from '../../componentes/ui/Painel.jsx'
@@ -16,6 +15,7 @@ import { quantidadeNaMochila } from '../../regras/mochila.js'
 import { Catalogo, ComprarNoBalcao, VenderNoBalcao } from './Balcao.jsx'
 import { MensagemDoReino } from './MensagemDoReino.jsx'
 import { useNoReino } from './useNoReino.js'
+import ComNpc from './ComNpc.jsx'
 
 const pos = posicoes.mercado
 
@@ -32,7 +32,7 @@ export default function Mercado() {
 
   return (
     <Tela>
-      <ConteudoComAbas pos={pos} abas={abas} />
+      <ComNpc lugar="mercado" pos={pos} abas={abas} />
       <Botao em={pos.voltarAoReino} onClick={() => acoes.irPara('reino')}>
         Voltar ao Reino
       </Botao>
@@ -40,7 +40,8 @@ export default function Mercado() {
   )
 }
 
-function Comprar() {
+// (exportada para os testes: a tela começa pela conversa com o NPC, Parte 9)
+export function Comprar() {
   const { progresso } = useNoReino()
   const { fixas, rotativas, partidasParaMudar } = ofertasDoMomento(progresso.estatisticas.partidasJogadas)
   const ofertas = [...fixas.map((id) => ({ id, rotativa: false })), ...rotativas.map((id) => ({ id, rotativa: true }))]

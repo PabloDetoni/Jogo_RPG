@@ -1,10 +1,10 @@
 import Botao from '../../componentes/Botao.jsx'
-import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 import { ContratosPermanentes, ContratosTemporarios } from './Contratos.jsx'
 import { MissoesDaGuilda } from './Missoes.jsx'
+import ComNpc from './ComNpc.jsx'
 
 const pos = posicoes.guilda
 
@@ -19,7 +19,7 @@ export default function Guilda() {
 
   return (
     <Tela>
-      <ConteudoComAbas pos={pos} abas={abas} noTopo />
+      <ComNpc lugar="guilda" pos={pos} abas={abas} noTopo />
       <Botao em={pos.voltarAoReino} onClick={() => acoes.irPara('reino')}>
         Voltar ao Reino
       </Botao>

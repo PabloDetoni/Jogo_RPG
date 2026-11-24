@@ -48,7 +48,7 @@ Liga cada caso de uso ao requisito funcional, à história de usuário e ao diag
 | UC42 Visualizar resumo da partida | RF51 | HU42 | Partida (04) |
 | UC43 Jogar minijogo do Planalto | RF54, RF50 | HU43 | Partida (04) |
 | UC44 Viajar de Caravana | RF56 | HU44 | Partida (04) |
-| UC45 Conversar com NPC (planejado) | RF57 | HU45 | — |
+| UC45 Conversar com NPC | RF57 | HU45 | Reino (02) |
 | UC46 Usar opções de desenvolvedor (feito, 11/2026) | RF61 | HU46 | — |
 | UC47 Simular balanceamento (feito, 11/2026) | RF62 | HU47 | — |
 | UC48 Acessar a Área do Desenvolvedor (extra) | — (extra, fora do beta) | HU48 | — |

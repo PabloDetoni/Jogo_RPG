@@ -417,7 +417,7 @@ Critérios de aceite:
 - Se a partida cair, o ouro da Caravana volta.
 - Requisitos atendidos: RF56.
 
-### HU45 · Conversar com NPC (UC45) — planejado (11/2026)
+### HU45 · Conversar com NPC (UC45) — feito (11/2026, Parte 9)
 
 Como jogador, quero conversar com o comerciante, o ferreiro e o mestre da Guilda, para entender o que cada lugar faz.
 

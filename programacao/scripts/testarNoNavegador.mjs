@@ -1364,7 +1364,8 @@ try {
   console.log('24b. Guilda: contratos temporário e permanente (TASK-079)')
   await clicar('Voltar ao Reino')
   await clicar('Guilda')
-  await clicar('Contrato temporário')
+  // a Guilda começa pela mestra (Parte 9): "Contratos" abre a aba do contrato temporário
+  await clicar('Contratos')
   const antesDoContrato = await salvo()
   await contratarPelaCarta('Arqueiro')
   const depoisDoTemporario = await salvo()
@@ -1405,7 +1406,8 @@ try {
   await voltarComQ()
   await clicar('Voltar ao Reino')
   await clicar('Guilda')
-  await clicar('Contrato temporário')
+  // a Guilda começa pela mestra (Parte 9): "Contratos" abre a aba do contrato temporário
+  await clicar('Contratos')
   conferir('depois de uma partida, o Arqueiro temporário fica com 2 partidas (critério do card)', (await textoDe('.contratos-novos')).includes('2 partidas restantes'))
   await clicar('Voltar ao Reino')
 
@@ -1827,7 +1829,10 @@ try {
   await apertar('f')
   await pausa(100)
   const fugindo = await correrMedindo(['d'], 1200)
-  conferir('fuga com F: o Líder atravessa todos os aliados, sem parar', fugindo.andou >= 220 && fugindo.maiorParado <= 1 && fugindo.atravessou === 4, fugindo)
+  // (desde a Parte 3 a velocidade vem da Agilidade: o Mago anda ~182 px/s, e os 220 px fixos de antes ficavam no limite;
+  // agora a conta é 90% do que o Líder anda em 1,2 s na velocidade dele)
+  const velocidadeDoLider = await cena(`c.lider.velocidade`)
+  conferir('fuga com F: o Líder atravessa todos os aliados, sem parar', fugindo.andou >= velocidadeDoLider * 1.2 * 0.9 && fugindo.maiorParado <= 1 && fugindo.atravessou === 4, { ...fugindo, velocidadeDoLider })
   conferir('fuga com F: nenhum aliado fica em cima de outro', fugindo.aliadosEmCima === 0, fugindo)
   await print('51-fuga-atravessa')
 

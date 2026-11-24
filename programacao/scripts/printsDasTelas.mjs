@@ -59,6 +59,11 @@ async function print(nome, { manterDica = false } = {}) {
   await aba.avaliar(`(() => { const p = document.querySelector('.painel-dev, .painel-dev-mini'); if (p) p.style.visibility = ''; return true })()`)
   tirados.push(arquivo)
 }
+// O Mercado, a Forja e a Guilda começam pela conversa com o NPC (Parte 9): a primeira opção do menu abre a tela
+async function abrirLoja() {
+  await aba.avaliar(`(() => { document.querySelector('.npc-menu .botao-de-acao')?.click(); return true })()`)
+  await pausa(250)
+}
 // Todas as abas de uma tela, uma por print
 async function abasDaTela(prefixo, nomes) {
   for (const nome of nomes) if (await abaChamada(nome)) await print(`${prefixo}-${nome.toLowerCase().replace(/[^a-z0-9à-ú]+/g, '-')}`)
@@ -89,8 +94,10 @@ try {
   await print('selecao-de-classe')
   await passo('Escolher Arqueiro')
   await aba.esperarTela('Reino')
-  // O Catálogo de quem acabou de começar: quase tudo ainda apagado (silhueta)
+  // O Catálogo de quem acabou de começar: quase tudo ainda apagado (silhueta). Antes, o comerciante se apresenta (Parte 9)
   await irPara('mercado')
+  await print('mercado-npc-apresentacao')
+  await abrirLoja()
   if (await abaChamada('Catálogo')) await print('catalogo-no-comeco')
   await irPara('reino')
   await passo('Itens de teste', true)
@@ -102,6 +109,8 @@ try {
   await print('mochila')
 
   await irPara('mercado')
+  await print('mercado-npc')
+  await abrirLoja()
   await abasDaTela('mercado', ['Comprar', 'Vender', 'Trocar', 'Catálogo'])
   // O "?" (Fase 4.5): a explicação da tela
   if (await clicar('?')) {
@@ -112,6 +121,8 @@ try {
 
   await irPara('forja')
   await print('forja-dica-da-primeira-visita', { manterDica: true })
+  await print('forja-npc-apresentacao')
+  await abrirLoja()
   // Na aba Equipar, uma peça escolhida (para o print mostrar o antes e depois)
   await abaChamada('Equipar')
   // A grade com o item na mão: o clique pega e o segundo põe de volta (o detalhe fica no item)
@@ -123,6 +134,8 @@ try {
   await abasDaTela('forja', ['Equipar', 'Comprar', 'Vender', 'Fabricar', 'Catálogo'])
 
   await irPara('guilda')
+  await print('guilda-npc-apresentacao')
+  await abrirLoja()
   await abasDaTela('guilda', ['Missões', 'Contrato temporário', 'Contrato permanente', 'Contratos'])
   // Um temporário ativo e uma missão aceita, para os prints com conteúdo
   if (await abaChamada('Contrato temporário')) {

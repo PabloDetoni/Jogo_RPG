@@ -6,6 +6,7 @@ import { aplicarMinijogo, comecarRodadaDoMinijogo } from './minijogos.js'
 import { abandonarMissaoNaGuilda, aceitarMissaoDoQuadro, entregarMissaoNaGuilda } from './missoes.js'
 import { tirarDaMochila } from './mochila.js'
 import { nomeDoItem } from './textosDosItens.js'
+import { conhecerNpc } from './npcs.js'
 
 // OPERAÇÕES DO REINO (Fase 4): tudo o que muda o progresso nas telas do Reino (Mochila, Mercado, Forja, Árvores e
 // Guilda) é uma regra pura daqui, chamada pelo nome. A tela roda a regra antes para mostrar o motivo quando não dá
@@ -27,6 +28,8 @@ export function descartar(progresso, id, quantidade = 1) {
 
 // Todas as operações pelo nome
 export const operacoesDoReino = {
+  // os NPCs do Reino (Parte 9): o NPC conhecido não se apresenta de novo
+  conhecerNpc,
   descartar,
   comprarNoMercado,
   venderNoMercado,

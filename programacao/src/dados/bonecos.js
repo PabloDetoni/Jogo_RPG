@@ -28,6 +28,12 @@ export const coresDosChapeus = {
   // Goblins (Parte 6b): o capacete de ferro velho do lanceiro e o cocar de penas do xamã
   capaceteGoblin: { metal: 0x8a7f72, rebite: 0xc9bfa8 },
   cocar: { faixa: 0xe8dcc0, penas: [0xd8483e, 0xffd54a, 0x3fa7a0] },
+  // os NPCs do Reino (Parte 9): o chapéu de aba do comerciante e o chapéu com pena da mestra da Guilda
+  chapeuDeAba: { feltro: 0x6b3f22, faixa: 0xd9a441 },
+  chapeuComPena: { feltro: 0x2b3a6b, pena: 0xd8483e },
+  // o avental de couro do ferreiro e o bigode do comerciante
+  avental: { couro: 0x5a3a24, alca: 0x3b2618 },
+  bigode: 0x3b2618,
   // as armas dos goblins: madeira, ponta de metal, corda do arco e a pedra do cajado
   armas: { madeira: 0x8a5a2b, metal: 0xc3cbd6, corda: 0xefe6d2, pedra: 0x9be37a },
 }

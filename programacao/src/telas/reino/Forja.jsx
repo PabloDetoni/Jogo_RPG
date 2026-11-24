@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { urlDaArte } from '../../arte/indice.js'
 import Botao from '../../componentes/Botao.jsx'
-import ConteudoComAbas from '../../componentes/ConteudoComAbas.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
 import GradeDeItens from '../../componentes/ui/GradeDeItens.jsx'
@@ -24,6 +23,7 @@ import { Catalogo, ComprarNoBalcao, OuroAVista, VenderNoBalcao } from './Balcao.
 import DetalheDoItem from './DetalheDoItem.jsx'
 import { MensagemDoReino } from './MensagemDoReino.jsx'
 import { useNoReino } from './useNoReino.js'
+import ComNpc from './ComNpc.jsx'
 
 const pos = posicoes.forja
 
@@ -42,7 +42,7 @@ export default function Forja() {
 
   return (
     <Tela>
-      <ConteudoComAbas pos={pos} abas={abas} />
+      <ComNpc lugar="forja" pos={pos} abas={abas} />
       <Botao em={pos.voltarAoReino} onClick={() => acoes.irPara('reino')}>
         Voltar ao Reino
       </Botao>
@@ -108,7 +108,8 @@ function ResumoDoPersonagem({ personagem }) {
   )
 }
 
-function Equipar() {
+// (exportada para os testes: a tela começa pela conversa com o NPC, Parte 9)
+export function Equipar() {
   const { progresso, mensagem, setMensagem, fazer } = useNoReino()
   const [classe, setClasse] = useState(null)
   const [espacoEscolhido, setEspacoEscolhido] = useState('arma')
