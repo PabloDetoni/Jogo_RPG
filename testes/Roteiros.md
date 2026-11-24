@@ -624,12 +624,16 @@ Antes: **Iniciar jogo → Jogar como convidado** (ou entre na sua conta) → **J
   - o minimapa já começa com o que foi descoberto antes.
 
 **FL-05 · Fugir de um mob até ele desistir**
-- Fazer: chegue perto de um lobo (quadrado vermelho) até aparecer o "!" em cima dele; depois corra para longe, de volta para a esquerda.
+- Fazer: chegue perto de um lobo (o bicho cinza) até aparecer o "!" em cima dele; depois corra para longe, de volta para a esquerda.
 - Deve acontecer: ele persegue; quando você sai do território dele, aparece o "?" e ele volta para casa; uns 5 s depois o HUD troca "Em combate" por "Fora de combate".
 
-**FL-06 · Passar por um mob não hostil**
-- Fazer: ache um cervo (quadrado bege) e passe ao lado dele, bem perto. Depois ataque-o uma vez.
-- Deve acontecer: passando ao lado, ele não ataca; atacado, ele revida (persegue quem bateu).
+**FL-06 · Animais pacíficos (Parte 6a, 11/2026)**
+- Fazer: numa zona neutra (por exemplo a Clareira da Entrada, logo depois da zona segura), ache um cervo (bicho marrom-claro com chifrinhos) ou um coelho (pequeno, orelhas compridas) e ande na direção dele. Depois ataque-o uma vez.
+- Deve acontecer: ele se afasta de você sem sair da zona neutra e nunca ataca, nem atacado (foge mais longe); os aliados não atacam ele; derrotado, dá só 1 de XP.
+
+**FL-06b · A matilha do Lobo Alfa e o território pela área (Parte 6a)**
+- Fazer: na Fácil, ache um Lobo Alfa (lobo maior e mais escuro, com a juba clara) e atire nele de longe. Depois, com um lobo perseguindo, corra de volta para a Clareira da Entrada.
+- Deve acontecer: atacado, o Alfa chama a matilha e os lobos em volta dele perseguem juntos; o lobo para na borda da Fácil e não entra na Clareira (ali o grupo fica a salvo).
 
 **FL-07 · Coleta com E**
 - Fazer: chegue perto de um losango colorido no chão (cogumelo vermelho, erva verde, madeira marrom) e aperte **E**. Derrote um lobo e pegue o que ele deixar.

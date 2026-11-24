@@ -128,14 +128,16 @@ export const floresta = {
   // PROVISÓRIO – substituir pelo do grupo (TASK-012); os mobs novos e os números entram nas Partes 6 e 8. As zonas
   // neutras só têm os animais que não atacam.
   populacao: {
-    facil: { lobo: 16, aranha: 5 },
+    // Parte 6a: na Fácil, lobos soltos e 3 Lobos Alfa (cada um nasce com a matilha em volta: + 2 lobos)
+    facil: { lobo: 10, loboAlfa: 3, aranha: 5 },
     media: { lobo: 12, aranha: 10, javali: 6 },
     dificil: { lobo: 12, aranha: 10, javali: 10 },
     dominioDoBoss: { lobo: 3 },
-    neutraDaEntrada: { cervo: 2 },
-    neutraDaCurva1: { cervo: 3 },
-    neutraDaCurva2: { cervo: 3 },
-    neutraDoFim: { cervo: 2 },
+    // Zonas neutras: só os animais pacíficos (Parte 6a: fogem do grupo e dos mobs, XP quase nada)
+    neutraDaEntrada: { cervo: 2, coelho: 3 },
+    neutraDaCurva1: { cervo: 3, coelho: 3 },
+    neutraDaCurva2: { cervo: 3, coelho: 2 },
+    neutraDoFim: { cervo: 2, coelho: 2 },
   },
   // Recursos no chão de cada região, a cada partida (coletados com E). PROVISÓRIO – substituir pelo do grupo (TASK-012).
   recursos: {

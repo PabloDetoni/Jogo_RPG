@@ -478,12 +478,12 @@ escrever(
       const dificil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.dificil)
       return [
         tipo,
-        `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
+        ficha.comportamento === 'pacifico' ? 'pacífico (nunca ataca, foge)' : `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
         `${facil.vida} / ${dificil.vida}`,
         `${facil.dano} / ${dificil.dano}`,
         `${facil.xp} / ${dificil.xp}`,
         `${facil.ouro} / ${dificil.ouro}`,
-        ficha.raioDeDeteccao ? `${ficha.raioDeDeteccao} px` : 'só se atacado',
+        ficha.raioDeDeteccao ? `${ficha.raioDeDeteccao} px` : ficha.raioDeFuga ? `foge a ${ficha.raioDeFuga} px` : 'só se atacado',
         `${ficha.raioDoTerritorio} px`,
         (ficha.drops ?? []).map((drop) => `${drop.item} (${numero(drop.chance * 100)}%)`).join(', '),
       ]

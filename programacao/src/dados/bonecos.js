@@ -67,6 +67,31 @@ export const bichosEmBlocos = {
     detalhe: 'chifres',
     corDoDetalhe: 0x7a5236,
   },
+  // Parte 6a: o Lobo Alfa (o lobo maior e mais escuro, com a juba clara no pescoço) e o coelho (pequeno, orelhas longas)
+  loboAlfa: {
+    forma: 'quadrupede',
+    tamanhoDeReferencia: 34,
+    cor: 0x5e636b, // cinza-escuro
+    barriga: 0xa9adb3,
+    corpo: { largura: 31, altura: 17, y: 1, raio: 6 },
+    cabeca: { largura: 15, altura: 14, x: 17, y: -7, raio: 4 },
+    pes: { largura: 5.5, altura: 4.5, xs: [-11, -5, 6, 12], y: 12.5, raio: 2 },
+    rabo: { largura: 9, altura: 4.5, x: -18, y: -3 },
+    detalhe: 'juba',
+    corDoDetalhe: 0xd6d9dd,
+  },
+  coelho: {
+    forma: 'quadrupede',
+    tamanhoDeReferencia: 22,
+    cor: 0xb9aea4, // pardo-claro
+    barriga: 0xece6df,
+    corpo: { largura: 18, altura: 13, y: 2, raio: 6 },
+    cabeca: { largura: 11, altura: 10, x: 9, y: -4, raio: 4 },
+    pes: { largura: 5, altura: 3.5, xs: [-6, -2, 3, 6], y: 9, raio: 1.5 },
+    rabo: { largura: 5, altura: 5, x: -10, y: -1, cor: 0xf4f0ea }, // o pompom branco
+    detalhe: 'orelhasLongas',
+    corDoDetalhe: 0xe8b4b0,
+  },
   aranha: {
     forma: 'aranha',
     tamanhoDeReferencia: 30,

@@ -190,28 +190,65 @@ export const mundo = {
       raioDoPasseio: 110,
       drops: [{ item: 'presaDeJavali', chance: 0.5, quantidade: [1, 1] }],
     },
-    // Cervo: não hostil (passa ao lado do grupo sem atacar; atacado, revida)
-    cervo: {
+    // Lobo Alfa (Parte 6a): o líder da matilha na Fácil, maior e mais forte; nasce com "matilha" lobos em volta e o
+    // bando acorda junto (quem começa a perseguir chama os outros)
+    loboAlfa: {
       comportamento: 'corpoACorpo',
+      hostil: true,
+      cor: 0x6f747c,
+      xp: 45,
+      ouro: 25,
+      vida: 150,
+      tamanho: 44,
+      velocidade: 150,
+      dano: 15,
+      raioDeDeteccao: 360,
+      raioDeDesistencia: 560,
+      raioDoTerritorio: 700,
+      alcanceDoBote: 100,
+      msDeAviso: 550,
+      msDeBote: 220,
+      distanciaDoBote: 140,
+      recargaMs: 1500,
+      empurrao: 420,
+      raioDoPasseio: 110,
+      matilha: { lobos: 2, distancia: 120 },
+      drops: [
+        { item: 'peleDeLobo', chance: 1, quantidade: [1, 2] },
+        { item: 'pelagemDoAlfa', chance: 0.35, quantidade: [1, 1] },
+      ],
+    },
+    // Animais pacíficos (Parte 6a): nunca atacam, fogem de mob hostil e do grupo ("raioDeFuga") e ficam na zona neutra
+    // deles. XP e ouro quase nada (pedido do Pablo: "ridiculamente baixo"). Os aliados e a aura não miram neles.
+    cervo: {
+      comportamento: 'pacifico',
       hostil: false,
       cor: 0xd9b48a,
-      xp: 12,
-      ouro: 6,
+      xp: 1,
+      ouro: 1,
       vida: 45,
       tamanho: 34,
-      velocidade: 160,
-      dano: 7,
-      raioDeDeteccao: 0,
-      raioDeDesistencia: 500,
-      raioDoTerritorio: 700,
-      alcanceDoBote: 85,
-      msDeAviso: 450,
-      msDeBote: 200,
-      distanciaDoBote: 110,
-      recargaMs: 1400,
-      empurrao: 260,
+      velocidade: 175,
+      dano: 0,
+      raioDeFuga: 260,
+      raioDoTerritorio: 900,
       raioDoPasseio: 180,
       drops: [{ item: 'chifreDeCervo', chance: 0.4, quantidade: [1, 1] }],
+    },
+    coelho: {
+      comportamento: 'pacifico',
+      hostil: false,
+      cor: 0xb9aea4,
+      xp: 1,
+      ouro: 1,
+      vida: 18,
+      tamanho: 22,
+      velocidade: 200,
+      dano: 0,
+      raioDeFuga: 220,
+      raioDoTerritorio: 700,
+      raioDoPasseio: 120,
+      drops: [{ item: 'peDeCoelho', chance: 0.5, quantidade: [1, 1] }],
     },
   },
   // O Boss da Floresta (TASK-065). PROVISÓRIO – substituir pelo do grupo (TASK-012). Fica no domínio dele
@@ -246,6 +283,12 @@ export const mundo = {
   // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e
   // longe da mata; "folga" é o espaço livre em volta de cada um ao nascer (ninguém nasce encostado em ninguém)
   nascimento: { longeDosInicios: 700, distanciaEntreMobs: 140, margem: 90, folga: 24 },
+  // Bando (Parte 6a): quem começa a perseguir chama os do mesmo bando a até este raio (a matilha do Alfa; na 6b, o
+  // acampamento goblin acorda junto)
+  bando: { raioDoAlerta: 500 },
+  // Animais pacíficos (Parte 6a): o raio de fuga × raioFugindo enquanto foge (não fica parando e voltando na borda) e ×
+  // raioAtacado por msFugindoAtacado depois de apanhar; passado o susto, fica parado um pouco antes de voltar a passear
+  pacificos: { raioFugindo: 1.3, raioAtacado: 1.8, msFugindoAtacado: 4000, msParadoDepoisDoSusto: 1200 },
   // Mob que desistiu volta para casa sem olhar para o grupo por este tempo (dá para fugir dele)
   msVoltandoParaCasa: 3500,
   // Atacado, o mob persegue mesmo fora do território por este tempo (um tiro de longe não fica sem resposta)

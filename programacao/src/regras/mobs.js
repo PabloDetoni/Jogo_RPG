@@ -55,3 +55,61 @@ function pontoComMargemNaRegiao(regioes, regiao, ponto, margem) {
 export function dentroDoTerritorio(casa, ponto, raio) {
   return Math.hypot(ponto.x - casa.x, ponto.y - casa.y) <= raio
 }
+
+// Território pela área (Parte 6a de 11/2026): o mob nunca anda para fora da zona dele (o cervo não entra onde há lobo;
+// o lobo não entra no acampamento goblin). Olha "olhar" segundos à frente: se o passo inteiro sai da área, tenta só o
+// lado de cada eixo (desliza pela borda); sem eixo que caiba (indo reto contra a borda), gira o passo para os lados
+// (45° e 90°, os dois sentidos); se nada cabe, para. naArea(ponto) → true/false.
+export function passoNaArea(ponto, velocidade, naArea, olhar = 0.12) {
+  if (!velocidade.x && !velocidade.y) return velocidade
+  const cabe = (v) => naArea({ x: ponto.x + v.x * olhar, y: ponto.y + v.y * olhar })
+  if (cabe(velocidade)) return velocidade
+  const soX = { x: velocidade.x, y: 0 }
+  const soY = { x: 0, y: velocidade.y }
+  if (Math.abs(velocidade.x) >= Math.abs(velocidade.y)) {
+    if (velocidade.x && cabe(soX)) return soX
+    if (velocidade.y && cabe(soY)) return soY
+  } else {
+    if (velocidade.y && cabe(soY)) return soY
+    if (velocidade.x && cabe(soX)) return soX
+  }
+  for (const giro of [Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2]) {
+    const cos = Math.cos(giro)
+    const sen = Math.sin(giro)
+    const girado = { x: velocidade.x * cos - velocidade.y * sen, y: velocidade.x * sen + velocidade.y * cos }
+    if (cabe(girado)) return girado
+  }
+  return { x: 0, y: 0 }
+}
+
+// Para onde o animal pacífico foge (Parte 6a): para longe de todas as ameaças, cada uma pesando mais quanto mais perto.
+// Devolve a direção (comprimento 1) ou null se nenhuma ameaça está a até "raio".
+export function direcaoDeFuga(ponto, ameacas, raio) {
+  let x = 0
+  let y = 0
+  for (const ameaca of ameacas) {
+    const dx = ponto.x - ameaca.x
+    const dy = ponto.y - ameaca.y
+    const d = Math.hypot(dx, dy)
+    if (d > raio) continue
+    if (d < 1) {
+      x += 1
+      continue
+    }
+    const peso = (raio - d) / raio + 0.2
+    x += (dx / d) * peso
+    y += (dy / d) * peso
+  }
+  const tamanho = Math.hypot(x, y)
+  return tamanho > 0 ? { x: x / tamanho, y: y / tamanho } : null
+}
+
+// Os lugares do bando em volta do líder dele (a matilha do Lobo Alfa, Parte 6a): "quantos" pontos a "distancia" dele,
+// espalhados por igual com um giro sorteado.
+export function pontosEmVolta(centro, quantos, distancia, sorteio) {
+  const giro = sorteio() * Math.PI * 2
+  return Array.from({ length: quantos }, (_, i) => {
+    const angulo = giro + (i * Math.PI * 2) / quantos
+    return { x: Math.round(centro.x + Math.cos(angulo) * distancia), y: Math.round(centro.y + Math.sin(angulo) * distancia) }
+  })
+}

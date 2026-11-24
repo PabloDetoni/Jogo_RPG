@@ -40,7 +40,7 @@ import { efeitoDoAtaque } from '../../regras/som.js'
 import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
-import { espalharMobs, fichaNaRegiao } from '../../regras/mobs.js'
+import { espalharMobs, fichaNaRegiao, pontosEmVolta } from '../../regras/mobs.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, separacao, tirarDasParedes } from '../../regras/movimento.js'
@@ -55,6 +55,7 @@ import Flecha from '../ataques/flecha.js'
 import { colisaoVolta, liderAtravessa, naFrenteDoLider, saidaDoAliado, velocidadeParaAbrir } from '../../regras/passagemDoLider.js'
 import { DesenhoDoArco, cargaAtual, comecarAPuxar, flechaAgora, horaDeSoltar, msDeRecargaDoAtaque, multiplicadorDaVelocidade, podePuxar, puxarParaADistancia, usaArco } from '../arco.js'
 import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela } from '../efeitos.js'
+import AnimalPacifico from '../entidades/AnimalPacifico.js'
 import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
 import GuardiaoDaFloresta from '../entidades/GuardiaoDaFloresta.js'
@@ -77,7 +78,7 @@ const msDeCombate = segundosDeCombateDepoisDoDano * 1000
 const somar = (a, b) => ({ x: a.x + b.x, y: a.y + b.y })
 const tiposDeInimigo = { mobVermelho: MobVermelho, atirador: Atirador }
 // Os mobs da Floresta são o mob vermelho ou o atirador com outra ficha (balanceamento.js, mundo.mobs)
-const classeDoComportamento = { corpoACorpo: MobVermelho, atirador: Atirador }
+const classeDoComportamento = { corpoACorpo: MobVermelho, atirador: Atirador, pacifico: AnimalPacifico }
 // Alcance da busca de obstáculos em volta de quem anda (px): o que passa disso não muda nada neste quadro
 const alcanceDasParedes = 160
 
@@ -388,7 +389,24 @@ export default class CenaArena extends Phaser.Scene {
     const proibidos = this.mapa.regioes.map((regiao) => ({ ...regiao.inicio, raio: nascimento.longeDosInicios }))
     const sorteio = criarSorteio(this.sementeDoSorteio(1))
     const mobs = espalharMobs(this.mapa.regioes, this.mapa.populacao, { proibidos, distanciaEntreMobs: nascimento.distanciaEntreMobs, margem: nascimento.margem }, sorteio)
-    for (const mob of mobs) this.criarMobDoMundo(mob.tipo, mob.regiao, mob)
+    for (const mob of mobs) {
+      const criado = this.criarMobDoMundo(mob.tipo, mob.regiao, mob)
+      if (criado.config.matilha) this.criarMatilha(criado, sorteio)
+    }
+  }
+
+  // A matilha do Lobo Alfa (Parte 6a): lobos em volta dele, na mesma zona, todos no mesmo bando (acordam juntos)
+  criarMatilha(alfa, sorteio) {
+    const { lobos, distancia } = alfa.config.matilha
+    const bando = [alfa]
+    for (const ponto of pontosEmVolta(alfa, lobos, distancia, sorteio)) {
+      // na mesma zona e longe dos inícios (o grupo nunca nasce com mob perto)
+      if (this.regiaoEm(ponto)?.id !== alfa.regiao) continue
+      if (this.mapa.regioes.some((r) => Math.hypot(r.inicio.x - ponto.x, r.inicio.y - ponto.y) < mundo.nascimento.longeDosInicios)) continue
+      bando.push(this.criarMobDoMundo('lobo', alfa.regiao, ponto))
+    }
+    for (const membro of bando) membro.bando = bando
+    return bando
   }
 
   // Recursos no chão de cada região (o bioma reinicia a cada partida, RF31), num lugar livre e longe uns dos outros
