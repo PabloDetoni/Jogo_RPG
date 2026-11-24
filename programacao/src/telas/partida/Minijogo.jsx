@@ -22,6 +22,9 @@ import {
 } from '../../regras/minijogos.js'
 import { podeJogarRodada, textoDasRodadas } from '../../regras/rodadasDoDia.js'
 import { useNoReino } from '../reino/useNoReino.js'
+import CenaDaPesca from './CenaDaPesca.jsx'
+import { corDaClasse } from '../../dados/classes.js'
+import { chapeuDaClasse } from '../../regras/bonecos.js'
 
 const pos = posicoes.minijogo
 const sortear = () => Math.random()
@@ -56,6 +59,8 @@ function Rodada({ jogo, dados }) {
   const [agora, setAgora] = useState(0)
   const [pontos, setPontos] = useState(0)
   const [cena, setCena] = useState(null) // canteiros (Fazenda), pedra (Mina) ou boia (Lago)
+  const [puxao, setPuxao] = useState(null) // o último clique no Lago (Parte 10: a vara sobe e o peixe pula)
+  const lider = progresso.lider
   const inicio = useRef(0)
 
   function comecar() {
@@ -167,17 +172,19 @@ function Rodada({ jogo, dados }) {
           </button>
         )}
         {jogo === 'lago' && (
+          // A pesca visual (Parte 10): a cena inteira é o botão de puxar (as regras e o nome do botão são os de sempre)
           <button
             type="button"
-            className={`boia boia-${cena.estado}`}
+            className={`boia pesca boia-${cena.estado}`}
             aria-label={cena.estado === 'fisgando' ? 'A boia afundou: puxe!' : 'Boia'}
             onClick={() => {
               const resultado = puxarNoLago(cena, performance.now() - inicio.current, sortear)
               setCena(resultado.boia)
+              setPuxao({ quando: performance.now(), ponto: resultado.ponto })
               marcar(resultado.ponto)
             }}
           >
-            {cena.estado === 'fisgando' ? '!' : cena.estado === 'assustado' ? '…' : ''}
+            <CenaDaPesca estado={cena.estado} puxao={puxao} boneco={{ cor: corDaClasse(lider), chapeu: chapeuDaClasse(lider) }} />
           </button>
         )}
       </div>
