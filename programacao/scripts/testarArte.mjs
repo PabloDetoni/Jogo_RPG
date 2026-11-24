@@ -201,7 +201,7 @@ try {
   console.log('2. Preparação e partida na Floresta')
   await passo('Jogar')
   await passo('Floresta')
-  await aba.esperarTela('Preparação')
+  await aba.passarPelaCaravana()
   conferir(
     'Preparação: o retrato no botão do Líder e o ícone da poção no quadradinho; a barra de peso usa as imagens',
     (await icones('.tela')) >= 1 &&

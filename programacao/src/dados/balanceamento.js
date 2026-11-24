@@ -441,6 +441,9 @@ export const mundo = {
   // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e
   // longe da mata; "folga" é o espaço livre em volta de cada um ao nascer (ninguém nasce encostado em ninguém)
   nascimento: { longeDosInicios: 700, distanciaEntreMobs: 140, margem: 90, folga: 24 },
+  // A Caravana (RF56, Parte 7): o preço de cada parada = base + porMilPx por 1.000 px ANDADOS pelo caminho até ela,
+  // arredondado para múltiplos de "arredondar" (o início é de graça). "Tem que doer para um iniciante" (Pablo, 22/11).
+  caravana: { base: 40, porMilPx: 25, arredondar: 5 },
   // Bando (Parte 6a): quem começa a perseguir chama os do mesmo bando a até este raio (a matilha do Alfa; na 6b, o
   // acampamento goblin acorda junto)
   // raioProvocado: atacado (ou chamado pelo bando), o mob só desiste do alvo além deste raio (um tiro de longe tem
@@ -721,3 +724,6 @@ export const combateDeTeste = {
   // Boneco de treino: não ataca e recupera toda a vida depois de um tempo sem apanhar
   boneco: { vida: 300, tamanho: 44, msParaRecuperar: 3000 },
 }
+
+// Atalho para a Caravana (regras/caravana.js)
+export const caravana = mundo.caravana

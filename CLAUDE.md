@@ -42,7 +42,7 @@ Comandos: `npm run dev`, `npm test` (Vitest), `npm run lint`, `npm run build`, `
 - Em combate (dano nos últimos 5 s ou mob perseguindo) não dá para pausar nem começar o Q; a fuga com F funciona sempre e, confirmada, não se cancela. M liga e desliga o mudo (menos digitando). Esc fecha a janela aberta; sem janela, pausa.
 - Classes: Guerreiro, Mago, Tanque, Sacerdote e Arqueiro; a inicial é gratuita; um personagem por classe; as outras vêm de contratos na Guilda.
 - Reino: Guilda, Mercado, Forja, Mochila, Árvores, Jogar, Ranking e Configurações. Jogar abre o mapa em ovo (Planalto no centro com Reino, fazenda, mina e lago, minijogos que não contam como partida; em volta Floresta, Deserto, Tundra e Vulcânico; no beta, só a Floresta).
-- Fluxo da partida: bioma → ponto de partida → Preparação (Líder e mochila) → "Começar partida" → partida → Resumo. Resultados: Grande Vitória, Vitória, Retorno forçado (amarelo) e Derrota (com cutscene). Só o ouro é taxado; XP nunca.
+- Fluxo da partida: bioma → Caravana (início de graça ou zona neutra mais à frente, paga no fim da partida; Parte 7) → Preparação (Líder e mochila) → "Começar partida" → partida → Resumo. Resultados: Grande Vitória, Vitória, Retorno forçado (amarelo) e Derrota (com cutscene). Só o ouro é taxado; XP nunca.
 - Ranking e Configurações aparecem em quase todas as telas; na partida, só Configurações, que abre sem pausar.
 
 ## Convenções

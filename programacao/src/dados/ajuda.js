@@ -24,7 +24,7 @@ export const dicasDasTelas = {
   fazenda: 'Minijogo: clique nas plantas maduras antes que murchem.',
   mina: 'Minijogo: clique 3 vezes em cada pedra para quebrar.',
   lago: 'Minijogo: quando a boia afundar, clique rápido.',
-  pontoPartida: 'Escolha onde o grupo começa. Mais longe é mais difícil, e a fuga custa mais.',
+  pontoPartida: 'A Caravana: comece no início de graça ou pague para começar mais à frente. Mais longe é mais caro, mais difícil e a fuga custa mais.',
   preparacao: 'Escolha o Líder e o que levar na mochila. Depois, Começar partida.',
   partida: 'WASD anda, o mouse mira e o clique ataca (o Arqueiro segura o clique para carregar). Q volta ao Reino; F foge.',
   resumo: 'Como foi a partida e o que você ganhou. Só o ouro paga taxa; o XP nunca.',
@@ -72,7 +72,11 @@ export const ajudaDasTelas = {
     'Clique num lugar do mapa (passe o mouse para ver o nome). No beta, só a Floresta (embaixo à esquerda) está aberta; a Tundra, o Vulcânico e o Deserto aparecem com cadeado.',
     'No Planalto, no meio: o castelo volta ao Reino; a Fazenda (os campos e o moinho), a Mina (a entrada na montanha) e o Lago (com a cachoeira) são minijogos rápidos: dão recursos e XP, sem taxa e sem contar como partida, com algumas rodadas por dia.',
   ],
-  pontoPartida: ['Escolha onde o grupo começa. Só as regiões que você já descobriu ficam liberadas; quanto mais longe, mais difícil e maior a taxa da fuga.'],
+  pontoPartida: [
+    'A Caravana leva o grupo a uma zona neutra mais à frente no bioma (nunca dentro de uma região). O início é de graça.',
+    'O preço cresce com a distância. Ele só sai do seu ouro no fim da partida; se a partida cair (aba fechada, queda), nada é cobrado.',
+    'Quanto mais longe, mais difíceis os mobs e maior a taxa da fuga.',
+  ],
   preparacao: [
     'Escolha o Líder (só personagens permanentes) e o que vai na mochila da partida.',
     'À esquerda, o que dá para levar da Mochila do Reino; clique para passar 1 para a direita (a mochila da partida). Clique na direita para devolver.',

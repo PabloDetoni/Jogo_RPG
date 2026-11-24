@@ -28,6 +28,7 @@ export default function Resumo() {
     ['Ouro ganho', fim?.ouroGanho ?? 0],
     ['Taxa', `${fim?.taxa ?? 0}% (−${fim?.taxaEmOuro ?? 0} de ouro)`],
     ['Ouro recebido', `${fim?.ouroRecebido ?? 0}${grandeVitoria ? ' (com +10%)' : ''}`],
+    ...(fim?.custoDaCaravana ? [['Caravana', `−${fim.custoDaCaravana} de ouro`]] : []),
     ['Pontuação', `${fim?.pontuacaoFinal ?? 0} (base ${fim?.pontuacaoBase ?? 0})`],
     ['Monstros derrotados', fim?.monstros ?? 0],
     ...(fim?.bonusDeBoss ? [['Boss', `derrotado (+${fim.bonusDeBoss} pontos)`]] : []),

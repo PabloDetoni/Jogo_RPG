@@ -13,6 +13,11 @@ import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
 import { dicasDasTelas } from '../dados/ajuda.js'
 import { dicaVisivel, registrarItensVistos, telaDeCima } from '../regras/interface.js'
+import { custoDaCaravana } from '../regras/caravana.js'
+import { floresta as florestaDaCaravana } from '../dados/mundo/floresta.js'
+
+// Os biomas com Caravana (Parte 7)
+const mapasDaCaravana = { floresta: florestaDaCaravana }
 
 // Estado global do jogo. Só "progresso" vai para o salvamento (do convidado ou da conta);
 // as preferências são salvas à parte (salvamento/preferenciasLocais.js); o resto vive só na memória.
@@ -67,6 +72,7 @@ export function dadosParaSalvar(estado) {
     partidaEmAndamento: partidaAtual && {
       bioma: partidaAtual.bioma,
       pontoPartida: partidaAtual.pontoPartida,
+      custoDaCaravana: partidaAtual.custoDaCaravana ?? 0,
       lider: partidaAtual.lider,
       iniciadaEm: partidaAtual.iniciadaEm,
     },
@@ -136,6 +142,7 @@ function encerrarPartida(estado, fim = {}) {
       eventos: fim.eventos ?? null,
       bossDerrotado: (fim.bonusDeBoss ?? 0) > 0,
       grandeVitoria: contas.resultado === 'grandeVitoria',
+      custoDaCaravana: partidaAtual.custoDaCaravana ?? 0,
     })
     novo = { ...novo, progresso: aplicado.progresso }
     personagens = aplicado.personagens
@@ -150,6 +157,7 @@ function encerrarPartida(estado, fim = {}) {
     taxa: contas.taxa,
     taxaEmOuro: contas.taxaEmOuro,
     ouroRecebido: contas.ouroRecebido,
+    custoDaCaravana: partidaAtual?.custoDaCaravana ?? 0,
     pontuacaoBase: contas.pontuacaoBase,
     pontuacaoFinal: contas.pontuacaoFinal,
     monstros: fim.monstros ?? 0,
@@ -337,11 +345,10 @@ function atualizarSemConquistas(estado, acao) {
         'reino',
       )
 
-    // Sem outra região descoberta naquele bioma, o grupo nasce no ponto inicial e a tela Ponto de partida nem aparece
-    // (RF32). A arena de teste (só no npm run dev) também vai direto para a Preparação.
+    // A Caravana (RF56, Parte 7) aparece sempre: só o preço barra (as regiões descobertas ficam para o minimapa e as
+    // conquistas). A arena de teste (só no npm run dev) vai direto para a Preparação.
     case 'escolherBioma': {
-      const descobertas = (estado.progresso.regioesDescobertas[acao.bioma] ?? []).filter((regiao) => regiao !== 'inicio')
-      const direto = acao.bioma === 'arena' || descobertas.length === 0
+      const direto = acao.bioma === 'arena'
       return navegar(
         { ...estado, escolhasDaPartida: { ...estado.escolhasDaPartida, bioma: acao.bioma, pontoPartida: 'inicio' } },
         direto ? 'preparacao' : 'pontoPartida',
@@ -372,11 +379,15 @@ function atualizarSemConquistas(estado, acao) {
 
     // "Começar partida" salva o progresso (RF34), já marcando a partida em andamento. O que vai na mochila da partida é
     // conferido de novo com a Mochila do Reino de agora (a escolha fica guardada entre partidas).
+    // A Caravana (Parte 7): o preço da parada é conferido aqui (sem ouro, não começa) e fica reservado na partida; ele
+    // sai do ouro só no fim (encerrarPartida). Se a partida cair, nada é cobrado (RF12).
     case 'comecarPartida': {
-      const { lider, personagens, mochila } = estado.progresso
+      const { lider, personagens, mochila, ouro } = estado.progresso
       if (!personagens.some((p) => p.classe === lider)) return estado
+      const custoDaViagem = custoDaCaravana(mapasDaCaravana[estado.escolhasDaPartida.bioma], estado.escolhasDaPartida.pontoPartida)
+      if (custoDaViagem > ouro) return estado
       const levar = ajustarLevar(estado.escolhasDaPartida.levar, mochila, capacidadeDaPartida(estado.progresso, lider))
-      const partidaAtual = { ...estado.escolhasDaPartida, levar, lider, iniciadaEm: acao.agora }
+      const partidaAtual = { ...estado.escolhasDaPartida, levar, lider, iniciadaEm: acao.agora, custoDaCaravana: custoDaViagem }
       return navegar(pedirEnvioAoBanco(pedirSalvamento({ ...estado, partidaAtual, controleDaPartida: controleInicialDaPartida() })), 'partida')
     }
 

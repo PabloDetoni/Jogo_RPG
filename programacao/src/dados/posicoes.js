@@ -238,6 +238,7 @@ export const posicoes = {
   },
   pontoPartida: {
     bioma: { x: 50, y: 21 },
+    paradas: { x: 50, y: 55 }, // a Caravana (Parte 7): a lista das paradas
     inicio: { x: 50, y: 32 },
     facil: { x: 50, y: 43 },
     media: { x: 50, y: 53 },

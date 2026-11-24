@@ -67,7 +67,7 @@ try {
   await aba.esperarTela('Reino')
   await aba.clicar('Jogar')
   await aba.clicar('Floresta')
-  await aba.esperarTela('Preparação')
+  await aba.passarPelaCaravana()
   await aba.clicar('Começar partida')
   await aba.esperar(`!!${CENA}?.lider && !document.querySelector('.carregando-a-partida')`, 'a partida', 25000)
   await aba.clicar('Entendi').catch(() => {})

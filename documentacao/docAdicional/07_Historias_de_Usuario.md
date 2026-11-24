@@ -406,7 +406,7 @@ Critérios de aceite:
 - Cada minijogo tem rodadas por dia (3, provisório), que renovam à meia-noite de Brasília; a tela mostra quantas sobram e quando renova.
 - Requisitos atendidos: RF54, RF50.
 
-### HU44 · Viajar de Caravana (UC44) — planejado (11/2026)
+### HU44 · Viajar de Caravana (UC44) — feito (11/2026, Parte 7)
 
 Como jogador, quero pagar uma Caravana para nascer mais à frente no bioma, para não refazer o começo toda vez.
 

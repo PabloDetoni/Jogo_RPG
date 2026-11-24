@@ -137,3 +137,11 @@ describe('missão ativa no fim da partida (Fase 4, TASK-078)', () => {
     expect(aplicarFimNoProgresso({ ...progressoInicial(), missaoAtiva }, {}).progresso.missaoAtiva).toEqual(missaoAtiva)
   })
 })
+
+describe('a Caravana sai do ouro no fim (Parte 7)', () => {
+  it('o preço reservado sai junto com o ouro recebido, sem deixar o ouro negativo', () => {
+    expect(aplicarFimNoProgresso(progresso, { ouroRecebido: 30, custoDaCaravana: 70 }).progresso.ouro).toBe(progresso.ouro + 30 - 70)
+    expect(aplicarFimNoProgresso({ ...progresso, ouro: 10 }, { ouroRecebido: 0, custoDaCaravana: 70 }).progresso.ouro).toBe(0)
+    expect(aplicarFimNoProgresso(progresso, { ouroRecebido: 30 }).progresso.ouro).toBe(progresso.ouro + 30)
+  })
+})

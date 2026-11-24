@@ -62,6 +62,7 @@ import { capacidadeDaMochila } from '../src/regras/mochila.js'
 import { aplicarTaxa, taxaNaDistancia } from '../src/regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../src/regras/xp.js'
 import { danoPorSegundo, flechaDaCarga, msDeRecargaDoArco, msParaCargaCheia } from '../src/regras/arco.js'
+import { paradasComPreco } from '../src/regras/caravana.js'
 
 // Fica junto da documentação, que é a fonte de verdade do grupo (TASK-011)
 const destino = fileURLToPath(new URL('../../documentacao/Balanceamento.md', import.meta.url))
@@ -508,6 +509,11 @@ escrever(
     `Investida (média distância): faixa de ${mundo.boss.investida.comprimento} × ${mundo.boss.investida.largura} px até o alvo, aviso de ${segundosDoMundo(mundo.boss.investida.msDeAviso)}, ${mundo.boss.investida.dano} de dano.`,
     `Espinhos (longe): leque de ${mundo.boss.espinhos.quantos} tiros, aviso de ${segundosDoMundo(mundo.boss.espinhos.msDeAviso)}, ${mundo.boss.espinhos.dano} de dano cada.`,
     `Um ataque a cada ${segundosDoMundo(mundo.boss.msEntreAtaques)} no máximo. Drop: ${mundo.boss.drops.map((drop) => drop.item).join(', ')} sempre e **${numero(mundo.boss.especial.chance * 100)}%** de chance do equipamento especial (${mundo.boss.especial.item}, RF39; no npm run dev dá para forçar 100%).`,
+  ),
+  '### A Caravana (RF56, Parte 7, provisório)',
+  lista(
+    `Preço de cada parada: ${mundo.caravana.base} + ${mundo.caravana.porMilPx} por 1.000 px andados pelo caminho até ela, arredondado de ${mundo.caravana.arredondar} em ${mundo.caravana.arredondar}; o início é de graça. Sai do ouro no fim da partida.`,
+    ...paradasComPreco(floresta).map((parada) => `${parada.nome} (${parada.perto.toLowerCase()}): **${parada.preco} de ouro**.`),
   ),
   '### Coleta, minimapa e outros',
   lista(

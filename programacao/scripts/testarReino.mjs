@@ -120,6 +120,8 @@ const aceitarMissao = async (titulo) => {
 const salvo = () => aba.avaliar(`JSON.parse(localStorage.getItem('jogo-rpg:convidado') ?? 'null')?.progresso ?? null`)
 const quantos = (progresso, id) => (progresso?.mochila ?? []).filter((item) => item.id === id).reduce((soma, item) => soma + item.quantidade, 0)
 const irAoReino = async () => {
+  // da Caravana (Parte 7), primeiro de volta ao Mapa
+  if ((await aba.titulo()) === 'Caravana' && (await clicar('Voltar ao Mapa'))) await pausa(200)
   if ((await aba.titulo()) !== 'Reino') {
     if (await clicar('Voltar ao Reino')) await pausa(200)
     else if (await clicar('Voltar')) await pausa(200)
@@ -247,8 +249,8 @@ try {
     await pausa(500)
     const naFloresta = await aba.titulo()
     conferir(
-      `${tamanho}: no Mapa, a Tundra (bloqueada) não abre; o castelo volta ao Reino; a Fazenda abre o minijogo; a Floresta abre a Preparação`,
-      naTundra === 'Mapa' && peloCastelo === 'Reino' && pelaFazenda === 'Minijogo da Fazenda' && naFloresta === 'Preparação',
+      `${tamanho}: no Mapa, a Tundra (bloqueada) não abre; o castelo volta ao Reino; a Fazenda abre o minijogo; a Floresta abre a Caravana (Parte 7)`,
+      naTundra === 'Mapa' && peloCastelo === 'Reino' && pelaFazenda === 'Minijogo da Fazenda' && naFloresta === 'Caravana',
       { naTundra, peloCastelo, pelaFazenda, naFloresta },
     )
     await irAoReino()
@@ -457,7 +459,7 @@ try {
   await irAoReino()
   await passo('Jogar')
   await passo('Floresta')
-  await aba.esperarTela('Preparação')
+  await aba.passarPelaCaravana()
   await clicarItem('Poção de vida', '.mochila-da-preparacao')
   await clicarItem('Poção de vida', '.mochila-da-preparacao')
   conferir(
@@ -669,7 +671,7 @@ try {
   await aba.cdp.enviar('Network.setBlockedURLs', { urls: ['*phaser*', '*criarJogo*'] })
   await passo('Jogar')
   await passo('Floresta')
-  await aba.esperarTela('Preparação')
+  await aba.passarPelaCaravana()
   await passo('Começar partida')
   await aba.esperar(`!!document.querySelector('.carregando-a-partida')`, 'a tela de carregamento', 5000)
   conferir('ao começar, aparece a tela de carregamento com a barra, a etapa e uma dica', await aba.avaliar(`(() => { const t = document.querySelector('.carregando-a-partida')?.innerText ?? ''; return t.includes('Dica:') || t.includes('Tentar de novo') })()`))
@@ -687,7 +689,7 @@ try {
   conferir('"Tentar de novo" recarrega a página sem perder nada: o Reino volta com o ouro de antes', (await salvo()).ouro === depoisDeRecarregar.ouro, { antes: depoisDeRecarregar.ouro, agora: (await salvo()).ouro })
   await passo('Jogar')
   await passo('Floresta')
-  await aba.esperarTela('Preparação')
+  await aba.passarPelaCaravana()
   await passo('Começar partida')
   await aba.esperar(`!!${CENA}?.lider`, 'a partida depois de recarregar', 25000)
   await aba.esperar(`!document.querySelector('.carregando-a-partida')`, 'a tela de carregamento sumir', 5000)
