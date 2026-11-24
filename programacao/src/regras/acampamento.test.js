@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { acampamentoEm, dentroDoAcampamento, diferencaDeAngulo, goblinParaCurar, lugaresNoAcampamento, troncosDaPalicada } from './acampamento.js'
+import { acampamentoEm, dentroDoAcampamento, diferencaDeAngulo, goblinParaCurar, lugaresNoAcampamento, murosDoForte, raioExterno, torresDoForte, troncosDaPalicada } from './acampamento.js'
 
 const acampamento = { centro: { x: 1000, y: 1000 }, raio: 300, entradas: [0, Math.PI] }
 const medidas = { tronco: 30, larguraDaEntrada: 120 }
@@ -63,3 +63,45 @@ describe('acampamento goblin (Parte 6b)', () => {
     expect(goblinParaCurar(xama, [xama, a, b], 450)).toBe(xama)
   })
 })
+
+describe('forte goblin (Parte 6c)', () => {
+  const forte = { forma: 'retangulo', centro: { x: 1000, y: 1000 }, largura: 800, altura: 600, raio: 300, portoes: ['oeste', 'leste'] }
+  const medidas = { espessura: 40, larguraDoPortao: 160, pedaco: 200 }
+  const naParede = (muros, x, y) => muros.some((m) => Math.abs(x - m.x) * 2 <= m.largura && Math.abs(y - m.y) * 2 <= m.altura)
+
+  it('os muros fecham o retângulo, em pedaços de até 200 px, menos nos portões', () => {
+    const muros = murosDoForte(forte, medidas)
+    expect(muros.every((m) => m.tipo === 'muro' && Math.max(m.largura, m.altura) <= 200)).toBe(true)
+    // os lados de cima e de baixo e os cantos
+    for (const x of [620, 800, 1000, 1200, 1380]) {
+      expect(naParede(muros, x, 700)).toBe(true)
+      expect(naParede(muros, x, 1300)).toBe(true)
+    }
+    // os lados de pé, fora do portão, fechados; no meio (o portão), abertos
+    for (const y of [760, 860, 1140, 1240]) {
+      expect(naParede(muros, 600, y)).toBe(true)
+      expect(naParede(muros, 1400, y)).toBe(true)
+    }
+    expect(naParede(muros, 600, 1000)).toBe(false)
+    expect(naParede(muros, 1400, 1000)).toBe(false)
+    expect(naParede(muros, 600, 930)).toBe(false) // o portão tem 160 px
+  })
+
+  it('dentro do forte é o retângulo (com a folga); o raio por fora cobre os cantos', () => {
+    expect(dentroDoAcampamento(forte, { x: 1390, y: 1290 })).toBe(true)
+    expect(dentroDoAcampamento(forte, { x: 1420, y: 1000 })).toBe(false)
+    expect(dentroDoAcampamento(forte, { x: 1420, y: 1000 }, 50)).toBe(true)
+    expect(raioExterno(forte)).toBe(500)
+    expect(raioExterno({ raio: 300 })).toBe(300)
+  })
+
+  it('uma torre em cada canto, por dentro', () => {
+    const torres = torresDoForte(forte, 70)
+    expect(torres).toHaveLength(4)
+    for (const t of torres) {
+      expect(Math.abs(t.x - 1000)).toBe(330)
+      expect(Math.abs(t.y - 1000)).toBe(230)
+    }
+  })
+})
+

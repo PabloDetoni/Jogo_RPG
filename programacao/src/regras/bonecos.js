@@ -243,6 +243,11 @@ export function pecasDoBicho(tipo, { lado = 'direita', fase = 0, andando = false
     pecas.push({ forma: 'circulo', x: cabeca.x * s, y: cabeca.y + respira, raio: cabeca.raio, cor: escurecer(receita.cor, 0.15), contorno: true, espessura: contorno.espessura, corDoContorno: contorno.cor })
     ret(cabeca.x + 1, cabeca.y - 2 + respira, 2, 2, 0.5, receita.olhos, false)
     ret(cabeca.x + 3.5, cabeca.y - 1 + respira, 2, 2, 0.5, receita.olhos, false)
+    // a marca da Aranha-Mãe nas costas (uma ampulheta vermelha)
+    if (receita.marca) {
+      poli([{ x: -3, y: corpo.y - 6 + respira }, { x: 3, y: corpo.y - 6 + respira }, { x: 0, y: corpo.y + respira }], receita.marca, false)
+      poli([{ x: -3, y: corpo.y + 6 + respira }, { x: 3, y: corpo.y + 6 + respira }, { x: 0, y: corpo.y + respira }], receita.marca, false)
+    }
     return pecas
   }
 
@@ -312,11 +317,18 @@ function pecasDoGoblin(receita, pose, medidas) {
     arma.push({ forma: 'poli', pontos: [{ x: (mx + 4) * s, y: my - 29 }, { x: (mx + 8.5) * s, y: my - 39 }, { x: (mx + 8) * s, y: my - 27 }], cor: c.metal, ...comContorno })
   } else if (receita.arma === 'arco') {
     arma.push(linha(mx + 1, my - 14, mx + 6, my - 3, 2.2, c.madeira), linha(mx + 6, my - 3, mx + 1, my + 9, 2.2, c.madeira), linha(mx + 1, my - 14, mx + 1, my + 9, 1, c.corda))
+  } else if (receita.arma === 'machado') {
+    arma.push(linha(mx - 2, my + 10, mx + 4, my - 24, 2.6, c.madeira))
+    arma.push({ forma: 'poli', pontos: [{ x: (mx + 3) * s, y: my - 25 }, { x: (mx + 13) * s, y: my - 29 }, { x: (mx + 12) * s, y: my - 15 }, { x: (mx + 4) * s, y: my - 17 }], cor: c.metal, ...comContorno })
   } else if (receita.arma === 'cajado') {
     arma.push(linha(mx + 1, my + 10, mx + 1, my - 24, 2.4, c.madeira))
     arma.push({ forma: 'circulo', x: (mx + 1) * s, y: my - 26, raio: 3.4, cor: c.pedra, ...comContorno })
   }
-  return [...orelhas, ...corpo, ...arma]
+  // as presas do Orc: dois dentinhos brancos para fora da boca, do lado que olha
+  const presas = receita.presas
+    ? [3, 9].map((dx) => ({ forma: 'ret', x: s > 0 ? dx : -dx - 2.5, y: cabeca.y + 6, largura: 2.5, altura: 4, raio: 1, cor: c.corda, contorno: false }))
+    : []
+  return [...orelhas, ...corpo, ...presas, ...arma]
 }
 
 // A escala de um bicho para o "tamanho" do mob (o desenho foi feito para o tamanho de referência)

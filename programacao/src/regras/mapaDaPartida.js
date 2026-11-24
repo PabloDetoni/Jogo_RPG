@@ -1,7 +1,7 @@
 import * as arenaDeTeste from '../dados/arenaDeTeste.js'
 import { combateDeTeste, mundo } from '../dados/balanceamento.js'
 import { floresta } from '../dados/mundo/floresta.js'
-import { troncosDaPalicada } from './acampamento.js'
+import { murosDoForte, raioExterno, torresDoForte, troncosDaPalicada } from './acampamento.js'
 import { distanciaAteABorda, gerarObstaculos } from './mundo.js'
 import { beiraDaMata, caixaDoPoligono, criarTerreno, paredesDoTerreno } from './terreno.js'
 
@@ -10,7 +10,7 @@ import { beiraDaMata, caixaDoPoligono, criarTerreno, paredesDoTerreno } from './
 // inicial do bioma e a borda da taxa (RF48). A cena da partida só desenha e move o que vem daqui.
 //
 // Campos: id, nome, tamanho, area (onde dá para andar: { x, y, largura, altura } com o centro), comCamera,
-// obstaculos ({ x, y, largura, altura, tipo: 'mata' | 'arvore' | 'pedra' | 'palicada' | 'fogueira' }), acampamentos, regioes (na Floresta, polígonos com a
+// obstaculos ({ x, y, largura, altura, tipo: 'mata' | 'arvore' | 'pedra' | 'palicada' | 'muro' | 'fogueira' }), acampamentos (o forte com as torres), regioes (na Floresta, polígonos com a
 // caixa), terreno e beiraDaMata (regras/terreno.js), areas, inicio (ponto inicial
 // do bioma, de onde a taxa conta) e distanciaAteABorda. A arena tem também boneco, manchas, inimigosIniciais e
 // pontosDeSurgimento.
@@ -23,17 +23,21 @@ function montarFloresta() {
     ...regioes.map((regiao) => ({ ...regiao.inicio, raio: config.raioLivreDoInicio })),
     { ...floresta.lugarDoChefe, raio: config.raioLivreDoBoss },
     // os acampamentos goblin (Parte 6b): nada de árvore ou pedra dentro nem encostado na paliçada
-    ...(floresta.acampamentos ?? []).map((acampamento) => ({ ...acampamento.centro, raio: acampamento.raio + mundo.acampamento.longeDosOutros })),
+    ...(floresta.acampamentos ?? []).map((acampamento) => ({ ...acampamento.centro, raio: raioExterno(acampamento) + mundo.acampamento.longeDosOutros })),
   ]
   // A grade do terreno: a mata fechada vira retângulos (as paredes) e a beira dela dá os pontos das copas
   const terreno = criarTerreno(regioes, floresta.tamanho, floresta.celulaDoTerreno)
   const mata = paredesDoTerreno(terreno).map((parede) => ({ ...parede, tipo: 'mata' }))
   const soltos = gerarObstaculos(regioes, livres, config, floresta.semente)
-  // Acampamentos goblin (Parte 6b): a paliçada vira troncos (paredes) e a fogueira do meio também bloqueia
-  const acampamentos = floresta.acampamentos ?? []
+  // Acampamentos goblin (Parte 6b): a paliçada vira troncos (paredes) e a fogueira do meio também bloqueia. O forte
+  // (Parte 6c) tem muros retos com portões e as torres dos arqueiros nos cantos (as torres são só desenho: o arqueiro
+  // fica em cima, parado)
+  const acampamentos = (floresta.acampamentos ?? []).map((acampamento) =>
+    acampamento.forma === 'retangulo' ? { ...acampamento, torres: torresDoForte(acampamento, mundo.forte.recuoDaTorre) } : acampamento,
+  )
   const medidas = mundo.acampamento
   const doAcampamento = acampamentos.flatMap((acampamento) => [
-    ...troncosDaPalicada(acampamento, medidas),
+    ...(acampamento.forma === 'retangulo' ? murosDoForte(acampamento, mundo.forte) : troncosDaPalicada(acampamento, medidas)),
     { x: acampamento.centro.x, y: acampamento.centro.y, largura: medidas.fogueira, altura: medidas.fogueira, tipo: 'fogueira' },
   ])
   const { largura, altura } = floresta.tamanho

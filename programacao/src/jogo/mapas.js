@@ -6,6 +6,7 @@ import { retangulosDoTipo } from '../regras/terreno.js'
 import { criarSorteio, dentroDaRegiao } from '../regras/mundo.js'
 import { imagemDaArte, texturaDaArte } from './arte.js'
 import { camadas } from './efeitos.js'
+import { mundo } from '../dados/balanceamento.js'
 
 // Desenho da Floresta (Fase 3). Só desenho: as hitboxes dos obstáculos ficam na cena (zonas invisíveis), como pede
 // o CLAUDE.md, e trocar a arte depois não mexe no acerto. Até a arte chegar, cada região tem um tom de verde, a mata
@@ -212,6 +213,13 @@ export function desenharFloresta(cena, mapa) {
       guardar(cena.add.image(x, y, 'floresta-palicada').setDisplaySize(largura * 1.2, altura * 1.25).setDepth(camadas.manchas - 2), x, y)
       continue
     }
+    if (obstaculo.tipo === 'muro') {
+      // Muro do forte (Parte 6c): pedra cinza com a sombra e a beirada clara em cima
+      guardar(cena.add.rectangle(x + 5, y + 7, largura, altura, 0x000000, 0.22).setDepth(camadas.manchas - 3), x, y)
+      guardar(cena.add.rectangle(x, y, largura, altura, cores.muro).setStrokeStyle(2, coresDaArena.contorno).setDepth(camadas.manchas - 2), x, y)
+      guardar(cena.add.rectangle(x, y - altura / 2 + 5, largura - 6, 5, cores.muroClaro).setDepth(camadas.manchas - 1), x, y)
+      continue
+    }
     if (obstaculo.tipo === 'fogueira') {
       guardar(cena.add.image(x, y, 'floresta-fogueira').setDisplaySize(largura * 1.6, largura * 1.6).setDepth(camadas.manchas - 2), x, y)
       const fogo = cena.add.circle(x, y - 2, largura * 0.32, cores.fogo).setDepth(camadas.manchas - 1)
@@ -232,6 +240,16 @@ export function desenharFloresta(cena, mapa) {
     guardar(cena.add.rectangle(x + 6, y + 8, largura, altura, 0x000000, 0.22).setDepth(camadas.manchas - 3), x, y)
     guardar(cena.add.rectangle(x, y, largura, altura, cores.pedra).setStrokeStyle(2, coresDaArena.contorno).setDepth(camadas.manchas - 2), x, y)
     guardar(cena.add.rectangle(x, y - altura / 2 + 7, largura - 12, 6, 0xffffff, 0.25).setDepth(camadas.manchas - 1), x, y)
+  }
+
+  // As torres do forte (Parte 6c): um tablado de madeira no canto, onde o arqueiro fica (só desenho: não bloqueia)
+  for (const acampamento of mapa.acampamentos ?? []) {
+    for (const torre of acampamento.torres ?? []) {
+      const lado = mundo.forte.torre
+      guardar(cena.add.rectangle(torre.x + 6, torre.y + 8, lado, lado, 0x000000, 0.25).setDepth(camadas.manchas - 3), torre.x, torre.y)
+      guardar(cena.add.rectangle(torre.x, torre.y, lado, lado, cores.palicada).setStrokeStyle(3, coresDaArena.contorno).setDepth(camadas.manchas - 2), torre.x, torre.y)
+      for (const d of [-lado / 4, 0, lado / 4]) guardar(cena.add.rectangle(torre.x, torre.y + d, lado - 8, 2, cores.palicadaClara).setDepth(camadas.manchas - 1), torre.x, torre.y)
+    }
   }
 
   cena.pedacosDoChao = [...pedacos.values()]

@@ -296,6 +296,61 @@ export const mundo = {
         { item: 'totemDoXama', chance: 0.3, quantidade: [1, 1] },
       ],
     },
+    // Parte 6c: o Orc (grande, lento no golpe, bate muito e empurra longe; o chefe do forte e alguns soltos na Difícil)
+    // e a Aranha-Mãe (atira teia: quem leva fica preso por teia.msPreso, sem andar nem esquivar)
+    orc: {
+      comportamento: 'corpoACorpo',
+      hostil: true,
+      cor: 0x55703f,
+      xp: 90,
+      ouro: 50,
+      vida: 260,
+      tamanho: 50,
+      velocidade: 150,
+      dano: 26,
+      raioDeDeteccao: 340,
+      raioDeDesistencia: 560,
+      raioDoTerritorio: 800,
+      alcanceDoBote: 115,
+      msDeAviso: 720,
+      msDeBote: 260,
+      distanciaDoBote: 160,
+      recargaMs: 1900,
+      empurrao: 560,
+      raioDoPasseio: 90,
+      drops: [
+        { item: 'presaDeOrc', chance: 0.6, quantidade: [1, 1] },
+        { item: 'orelhaDeGoblin', chance: 0.5, quantidade: [1, 2] },
+      ],
+    },
+    aranhaMae: {
+      comportamento: 'atirador',
+      hostil: true,
+      cor: 0x5a2a4d,
+      xp: 60,
+      ouro: 30,
+      vida: 150,
+      tamanho: 44,
+      velocidade: 110,
+      raioDeDeteccao: 560,
+      raioDeDesistencia: 760,
+      raioDoTerritorio: 800,
+      distanciaMinima: 300,
+      distanciaMaxima: 460,
+      msEntreTiros: 2600,
+      msDeAviso: 450,
+      velocidadeDoTiro: 250,
+      raioDoTiro: 11,
+      alcanceDoTiro: 640,
+      dano: 10,
+      empurrao: 120,
+      raioDoPasseio: 90,
+      teia: { msPreso: 1300 },
+      drops: [
+        { item: 'teiaDeAranha', chance: 1, quantidade: [2, 3] },
+        { item: 'sedaDaMae', chance: 0.35, quantidade: [1, 1] },
+      ],
+    },
     // Animais pacíficos (Parte 6a): nunca atacam, fogem de mob hostil e do grupo ("raioDeFuga") e ficam na zona neutra
     // deles. XP e ouro quase nada (pedido do Pablo: "ridiculamente baixo"). Os aliados e a aura não miram neles.
     cervo: {
@@ -371,6 +426,10 @@ export const mundo = {
   // Acampamento goblin (Parte 6b): o tamanho dos troncos da paliçada, a largura de cada entrada, onde os goblins nascem
   // (longe da fogueira e da paliçada), quanto eles saem para fora da paliçada atrás de alguém (folgaDoTerritorio), o
   // tamanho da fogueira e o espaço sem árvores nem outros mobs em volta (longeDosOutros)
+  // Forte goblin (Parte 6c): a espessura dos muros, a largura dos portões, o tamanho de cada pedaço de muro (o desenho
+  // aparece por pedaços do mapa), o recuo das torres a partir dos cantos, o tamanho da torre e o alcance a mais dos
+  // arqueiros nela (lá de cima eles veem e atiram mais longe; ficam parados)
+  forte: { espessura: 40, larguraDoPortao: 170, pedaco: 180, recuoDaTorre: 75, torre: 84, alcanceNaTorre: 1.3 },
   acampamento: { tronco: 34, larguraDaEntrada: 140, longeDaFogueira: 95, longeDaPalicada: 85, folgaDoTerritorio: 220, fogueira: 44, longeDosOutros: 200 },
   pacificos: { raioFugindo: 1.3, raioAtacado: 1.8, msFugindoAtacado: 4000, msParadoDepoisDoSusto: 1200 },
   // Mob que desistiu volta para casa sem olhar para o grupo por este tempo (dá para fugir dele)
