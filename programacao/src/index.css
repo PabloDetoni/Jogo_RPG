@@ -1670,6 +1670,24 @@ body {
   opacity: 0.6;
 }
 
+/* A pesca visual (Parte 10): o canvas da cena ocupa o campo inteiro; o botão em volta é só a área de clicar */
+.boia.pesca {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  transform: none;
+  opacity: 1;
+}
+.cena-da-pesca {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* Arte (TASK-110 a TASK-116): as imagens chegam pela pasta src/assets/arte/ (dados/arte.js). Sem a imagem, nada disto
    aparece e a tela fica como antes. */
 .icone {

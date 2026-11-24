@@ -70,7 +70,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC40 | Fugir com a Pedra de Retorno | «extend» de UC31 | — | Condição: o jogador confirma a fuga | Foge com o grupo inteiro em 5 segundos, mesmo em combate, pagando a taxa de fuga. Confirmada, não se cancela. |
 | UC41 | Encerrar partida | Incluído por UC31 | «include» UC42 e UC09 | — | Define o resultado e calcula taxa, ouro, XP e pontuação. O nível ganho vale a partir da partida seguinte. |
 | UC42 | Visualizar resumo da partida | Incluído por UC41 | — | — | Mostra o resumo e permite jogar de novo sem recarregar a página. |
-| UC43 | Jogar minijogo do Planalto | Associação | Condição: sobra rodada hoje | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. Cada minijogo tem 3 rodadas por dia (provisório), que renovam à meia-noite de Brasília. **Planejado (11/2026):** a pesca visual no Lago. |
+| UC43 | Jogar minijogo do Planalto | Associação | Condição: sobra rodada hoje | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. Cada minijogo tem 3 rodadas por dia (provisório), que renovam à meia-noite de Brasília. **Feito em 11/2026 (Parte 10):** a pesca visual no Lago. |
 
 ## Planejado (11/2026)
 

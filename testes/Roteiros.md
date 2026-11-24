@@ -56,6 +56,12 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## PE. A pesca visual do Lago (Parte 10, 11/2026)
+
+**PE-01 · Pescar**
+- Fazer: Jogar → Lago → Começar rodada. Espere a boia afundar e clique; depois clique antes da hora.
+- Deve acontecer: o seu Líder (na cor e com o chapéu da classe) na margem, com a vara, a linha e a boia balançando na água. Quando a boia afunda, aparece um "!" amarelo: clicando aí, a vara sobe, o peixe pula fora d'água e o placar soma 1. Clicando cedo, a boia treme e aparece "…" (sem ponto). As rodadas do dia e o XP no fim são os de sempre. Com "reduzir movimento" no Windows, a boia fica parada, mas o "!" e o peixe continuam.
+
 ## NPC. Os NPCs do Reino (Parte 9, 11/2026)
 
 **NPC-01 · A apresentação na primeira visita**
