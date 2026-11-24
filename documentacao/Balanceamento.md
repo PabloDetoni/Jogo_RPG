@@ -338,7 +338,7 @@ Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grup
 | --- | --- | --- | --- | --- |
 | Zona segura | 1.303 × 1.954 | ×1,0 | 0 | nenhum |
 | Fácil | 6.742 × 2.201 | ×1,0 | 30 | 10 lobo, 3 loboAlfa, 5 aranha |
-| Média | 6.981 × 2.204 | ×1,5 | 50 | 12 lobo, 10 aranha, 6 javali |
+| Média | 6.981 × 2.204 | ×1,5 | 50 | 6 lobo, 10 aranha, 6 javali, Acampamento do Riacho (3 goblinLanceiro, 2 goblinArqueiro, 1 goblinXama), Acampamento da Pedra (4 goblinLanceiro, 3 goblinArqueiro, 1 goblinXama) |
 | Difícil | 5.498 × 1.840 | ×2,2 | 80 | 12 lobo, 10 aranha, 10 javali |
 | Domínio do Boss | 2.058 × 1.815 | ×2,6 | 120 | 3 lobo |
 | Clareira da Entrada | 958 × 2.062 | ×1,0 | 10 | 2 cervo, 3 coelho |
@@ -356,6 +356,9 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 | aranha | atira de longe | 38 / 84 | 8 / 18 | 22 / 48 | 12 / 26 | 560 px | 800 px | teiaDeAranha (70%) |
 | javali | corpo a corpo | 110 / 242 | 18 / 40 | 35 / 77 | 18 / 40 | 300 px | 600 px | presaDeJavali (50%) |
 | loboAlfa | corpo a corpo | 150 / 330 | 15 / 33 | 45 / 99 | 25 / 55 | 360 px | 700 px | peleDeLobo (100%), pelagemDoAlfa (35%) |
+| goblinLanceiro | corpo a corpo | 70 / 154 | 12 / 26 | 26 / 57 | 14 / 31 | 330 px | 900 px | orelhaDeGoblin (60%) |
+| goblinArqueiro | atira de longe | 45 / 99 | 10 / 22 | 24 / 53 | 14 / 31 | 480 px | 900 px | orelhaDeGoblin (60%) |
+| goblinXama | atira de longe e cura 22 a cada 2.2 s | 60 / 132 | 7 / 15 | 40 / 88 | 22 / 48 | 480 px | 900 px | orelhaDeGoblin (100%), totemDoXama (30%) |
 | cervo | pacífico (nunca ataca, foge) | 45 / 99 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 260 px | 900 px | chifreDeCervo (40%) |
 | coelho | pacífico (nunca ataca, foge) | 18 / 40 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 220 px | 700 px | peDeCoelho (50%) |
 
@@ -400,6 +403,8 @@ Quem vende (no Mercado, ou equipamento na Forja) recebe **50%** do preço, para 
 | Chifre de cervo | material | Incomum | 3 | 18 | 9 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Pelagem do Alfa | material | Raro | 3 | 45 | 22 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Pé de coelho | material | Comum | 1 | 3 | 1 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Orelha de goblin | material | Comum | 1 | 10 | 5 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Totem do xamã | material | Raro | 2 | 55 | 27 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Casca antiga | material | Raro | 4 | 60 | 30 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Minério de ferro | material | Comum | 3 | 12 | 6 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Poção de vida | consumivel | Comum | 1 | 25 | 12 | Recupera 40% da vida. Não levanta quem desmaiou. Na partida: Tab, depois E (Líder) ou R (aliado). |
@@ -505,6 +510,8 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 | --- | --- | --- | --- | --- | --- |
 | Caçar lobos | matar | 8 lobo | 80 | 120 | 8 |
 | O alfa da matilha | matar | 1 Lobo Alfa | 120 | 160 | 12 |
+| Lanças no acampamento | matar | 6 goblin lanceiro | 140 | 200 | 14 |
+| O xamã do acampamento | matar | 1 goblin xamã | 120 | 180 | 12 |
 | Aranhas no caminho | matar | 6 aranha | 110 | 180 | 11 |
 | Javalis bravos | matar | 4 javali | 150 | 240 | 15 |
 | O Guardião da Floresta | matar | 1 Guardião da Floresta | 400 | 600 | 40 |

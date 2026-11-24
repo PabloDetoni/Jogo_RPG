@@ -25,6 +25,11 @@ export const coresDosChapeus = {
   chapeuDeMago: { escurecer: 0.35, estrela: 0xffd54a },
   mitra: { pano: 0xf7f4ec, ouro: 0xd4a017 },
   capuz: { escurecer: 0.35 },
+  // Goblins (Parte 6b): o capacete de ferro velho do lanceiro e o cocar de penas do xamã
+  capaceteGoblin: { metal: 0x8a7f72, rebite: 0xc9bfa8 },
+  cocar: { faixa: 0xe8dcc0, penas: [0xd8483e, 0xffd54a, 0x3fa7a0] },
+  // as armas dos goblins: madeira, ponta de metal, corda do arco e a pedra do cajado
+  armas: { madeira: 0x8a5a2b, metal: 0xc3cbd6, corda: 0xefe6d2, pedra: 0x9be37a },
 }
 
 // Mobs e animais em blocos (Parte 4b): cada espécie com forma e cor próprias, para nunca se confundirem. Os
@@ -92,6 +97,11 @@ export const bichosEmBlocos = {
     detalhe: 'orelhasLongas',
     corDoDetalhe: 0xe8b4b0,
   },
+  // Goblins (Parte 6b): bonecos pequenos (o mesmo boneco dos personagens), verdes, com orelhas pontudas, o chapéu e a
+  // arma de cada papel
+  goblinLanceiro: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x6f9a3a, chapeu: 'capaceteGoblin', arma: 'lanca' },
+  goblinArqueiro: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x7fa64a, chapeu: 'capuz', arma: 'arco' },
+  goblinXama: { forma: 'goblin', tamanhoDeReferencia: 40, cor: 0x5c8a6a, chapeu: 'cocar', arma: 'cajado' },
   aranha: {
     forma: 'aranha',
     tamanhoDeReferencia: 30,

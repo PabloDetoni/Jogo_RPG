@@ -218,6 +218,84 @@ export const mundo = {
         { item: 'pelagemDoAlfa', chance: 0.35, quantidade: [1, 1] },
       ],
     },
+    // Goblins do acampamento (Parte 6b): vivem dentro da paliçada e acordam juntos. O lanceiro luta de perto com o bote
+    // longo da lança; o arqueiro atira de longe; o xamã atira fraco e cura o goblin mais ferido do acampamento
+    // ("cura"); "prioridade: true" = a IA média e avançada dos aliados mira nele primeiro
+    goblinLanceiro: {
+      comportamento: 'corpoACorpo',
+      hostil: true,
+      cor: 0x6f9a3a,
+      xp: 26,
+      ouro: 14,
+      vida: 70,
+      tamanho: 32,
+      velocidade: 165,
+      dano: 12,
+      raioDeDeteccao: 330,
+      raioDeDesistencia: 520,
+      raioDoTerritorio: 900,
+      alcanceDoBote: 115,
+      msDeAviso: 480,
+      msDeBote: 200,
+      distanciaDoBote: 150,
+      recargaMs: 1400,
+      empurrao: 360,
+      raioDoPasseio: 90,
+      drops: [{ item: 'orelhaDeGoblin', chance: 0.6, quantidade: [1, 1] }],
+    },
+    goblinArqueiro: {
+      comportamento: 'atirador',
+      hostil: true,
+      cor: 0x7fa64a,
+      xp: 24,
+      ouro: 14,
+      vida: 45,
+      tamanho: 30,
+      velocidade: 150,
+      raioDeDeteccao: 480,
+      raioDeDesistencia: 680,
+      raioDoTerritorio: 900,
+      distanciaMinima: 230,
+      distanciaMaxima: 400,
+      msEntreTiros: 1700,
+      msDeAviso: 360,
+      velocidadeDoTiro: 330,
+      raioDoTiro: 5,
+      alcanceDoTiro: 620,
+      dano: 10,
+      empurrao: 140,
+      raioDoPasseio: 70,
+      drops: [{ item: 'orelhaDeGoblin', chance: 0.6, quantidade: [1, 1] }],
+    },
+    goblinXama: {
+      comportamento: 'xama',
+      hostil: true,
+      prioridade: true,
+      cor: 0x5c8a6a,
+      xp: 40,
+      ouro: 22,
+      vida: 60,
+      tamanho: 32,
+      velocidade: 140,
+      raioDeDeteccao: 480,
+      raioDeDesistencia: 680,
+      raioDoTerritorio: 900,
+      distanciaMinima: 280,
+      distanciaMaxima: 440,
+      msEntreTiros: 2400,
+      msDeAviso: 400,
+      velocidadeDoTiro: 260,
+      raioDoTiro: 7,
+      alcanceDoTiro: 560,
+      dano: 7,
+      empurrao: 120,
+      raioDoPasseio: 50,
+      cura: { quanto: 22, msEntreCuras: 2200, raio: 450 },
+      drops: [
+        { item: 'orelhaDeGoblin', chance: 1, quantidade: [1, 1] },
+        { item: 'totemDoXama', chance: 0.3, quantidade: [1, 1] },
+      ],
+    },
     // Animais pacíficos (Parte 6a): nunca atacam, fogem de mob hostil e do grupo ("raioDeFuga") e ficam na zona neutra
     // deles. XP e ouro quase nada (pedido do Pablo: "ridiculamente baixo"). Os aliados e a aura não miram neles.
     cervo: {
@@ -285,9 +363,15 @@ export const mundo = {
   nascimento: { longeDosInicios: 700, distanciaEntreMobs: 140, margem: 90, folga: 24 },
   // Bando (Parte 6a): quem começa a perseguir chama os do mesmo bando a até este raio (a matilha do Alfa; na 6b, o
   // acampamento goblin acorda junto)
-  bando: { raioDoAlerta: 500 },
+  // raioProvocado: atacado (ou chamado pelo bando), o mob só desiste do alvo além deste raio (um tiro de longe tem
+  // resposta e o bando chamado não desiste no caminho)
+  bando: { raioDoAlerta: 500, raioProvocado: 1100 },
   // Animais pacíficos (Parte 6a): o raio de fuga × raioFugindo enquanto foge (não fica parando e voltando na borda) e ×
   // raioAtacado por msFugindoAtacado depois de apanhar; passado o susto, fica parado um pouco antes de voltar a passear
+  // Acampamento goblin (Parte 6b): o tamanho dos troncos da paliçada, a largura de cada entrada, onde os goblins nascem
+  // (longe da fogueira e da paliçada), quanto eles saem para fora da paliçada atrás de alguém (folgaDoTerritorio), o
+  // tamanho da fogueira e o espaço sem árvores nem outros mobs em volta (longeDosOutros)
+  acampamento: { tronco: 34, larguraDaEntrada: 140, longeDaFogueira: 95, longeDaPalicada: 85, folgaDoTerritorio: 220, fogueira: 44, longeDosOutros: 200 },
   pacificos: { raioFugindo: 1.3, raioAtacado: 1.8, msFugindoAtacado: 4000, msParadoDepoisDoSusto: 1200 },
   // Mob que desistiu volta para casa sem olhar para o grupo por este tempo (dá para fugir dele)
   msVoltandoParaCasa: 3500,

@@ -41,6 +41,22 @@ function criarTexturasDaFloresta(cena, cores) {
   desenho.lineStyle(3, coresDaArena.contorno, 0.6).strokeCircle(50, 42, 51)
   desenho.fillStyle(cores.copaClara, 0.85).fillCircle(34, 26, 20)
   desenho.generateTexture('floresta-arvore', 116, 112)
+  desenho.clear()
+  // Acampamento goblin (Parte 6b): o tronco da paliçada visto de cima (o corte, com os anéis) e as pedras da fogueira
+  desenho.fillStyle(0x000000, 0.22).fillCircle(22, 24, 18)
+  desenho.fillStyle(cores.palicada, 1).fillCircle(20, 20, 18)
+  desenho.lineStyle(2.5, coresDaArena.contorno, 0.9).strokeCircle(20, 20, 17)
+  desenho.fillStyle(cores.palicadaClara, 1).fillCircle(20, 20, 11)
+  desenho.lineStyle(1.5, cores.palicada, 1).strokeCircle(20, 20, 6)
+  desenho.generateTexture('floresta-palicada', 42, 44)
+  desenho.clear()
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2
+    desenho.fillStyle(cores.fogueiraPedra, 1).fillCircle(32 + Math.cos(a) * 24, 32 + Math.sin(a) * 24, 7)
+    desenho.lineStyle(1.5, coresDaArena.contorno, 0.8).strokeCircle(32 + Math.cos(a) * 24, 32 + Math.sin(a) * 24, 7)
+  }
+  desenho.fillStyle(0x2b1d1a, 1).fillCircle(32, 32, 17)
+  desenho.generateTexture('floresta-fogueira', 64, 64)
   desenho.destroy()
 }
 
@@ -189,6 +205,20 @@ export function desenharFloresta(cena, mapa) {
         const imagem = cena.add.image(x + largura * 0.06, y, 'floresta-arvore').setDisplaySize(largura * 1.16, altura * 1.12)
         guardar(imagem.setDepth(camadas.manchas - 2), x, y)
       }
+      continue
+    }
+    // Acampamento goblin (Parte 6b): os troncos da paliçada e a fogueira, com o fogo piscando
+    if (obstaculo.tipo === 'palicada') {
+      guardar(cena.add.image(x, y, 'floresta-palicada').setDisplaySize(largura * 1.2, altura * 1.25).setDepth(camadas.manchas - 2), x, y)
+      continue
+    }
+    if (obstaculo.tipo === 'fogueira') {
+      guardar(cena.add.image(x, y, 'floresta-fogueira').setDisplaySize(largura * 1.6, largura * 1.6).setDepth(camadas.manchas - 2), x, y)
+      const fogo = cena.add.circle(x, y - 2, largura * 0.32, cores.fogo).setDepth(camadas.manchas - 1)
+      const miolo = cena.add.circle(x, y, largura * 0.17, cores.fogoClaro).setDepth(camadas.manchas - 1)
+      cena.tweens.add({ targets: [fogo, miolo], scale: { from: 0.85, to: 1.15 }, alpha: { from: 0.8, to: 1 }, duration: 260, yoyo: true, repeat: -1, ease: 'Sine.InOut' })
+      guardar(fogo, x, y)
+      guardar(miolo, x, y)
       continue
     }
     // Pedra comprida pode virar um tronco caído (só desenho; bloqueia do mesmo jeito)

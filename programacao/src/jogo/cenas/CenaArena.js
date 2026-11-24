@@ -41,6 +41,7 @@ import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaNaRegiao, pontosEmVolta } from '../../regras/mobs.js'
+import { lugaresNoAcampamento } from '../../regras/acampamento.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, separacao, tirarDasParedes } from '../../regras/movimento.js'
@@ -58,6 +59,7 @@ import { camadas, criarTexturas, numeroFlutuante, particulas, rastro, tremerTela
 import AnimalPacifico from '../entidades/AnimalPacifico.js'
 import Atirador from '../entidades/Atirador.js'
 import BonecoDeTreino from '../entidades/BonecoDeTreino.js'
+import GoblinXama from '../entidades/GoblinXama.js'
 import GuardiaoDaFloresta from '../entidades/GuardiaoDaFloresta.js'
 import ItemNoChao from '../entidades/ItemNoChao.js'
 import Inimigo from '../entidades/Inimigo.js'
@@ -78,7 +80,7 @@ const msDeCombate = segundosDeCombateDepoisDoDano * 1000
 const somar = (a, b) => ({ x: a.x + b.x, y: a.y + b.y })
 const tiposDeInimigo = { mobVermelho: MobVermelho, atirador: Atirador }
 // Os mobs da Floresta são o mob vermelho ou o atirador com outra ficha (balanceamento.js, mundo.mobs)
-const classeDoComportamento = { corpoACorpo: MobVermelho, atirador: Atirador, pacifico: AnimalPacifico }
+const classeDoComportamento = { corpoACorpo: MobVermelho, atirador: Atirador, pacifico: AnimalPacifico, xama: GoblinXama }
 // Alcance da busca de obstáculos em volta de quem anda (px): o que passa disso não muda nada neste quadro
 const alcanceDasParedes = 160
 
@@ -386,12 +388,32 @@ export default class CenaArena extends Phaser.Scene {
   // (o grupo nunca nasce com mob perto, RF32)
   povoarMundo() {
     const { nascimento } = mundo
-    const proibidos = this.mapa.regioes.map((regiao) => ({ ...regiao.inicio, raio: nascimento.longeDosInicios }))
+    const proibidos = [
+      ...this.mapa.regioes.map((regiao) => ({ ...regiao.inicio, raio: nascimento.longeDosInicios })),
+      // os mobs soltos não nascem nos acampamentos goblin nem encostados neles (Parte 6b)
+      ...(this.mapa.acampamentos ?? []).map((acampamento) => ({ ...acampamento.centro, raio: acampamento.raio + mundo.acampamento.longeDosOutros })),
+    ]
     const sorteio = criarSorteio(this.sementeDoSorteio(1))
     const mobs = espalharMobs(this.mapa.regioes, this.mapa.populacao, { proibidos, distanciaEntreMobs: nascimento.distanciaEntreMobs, margem: nascimento.margem }, sorteio)
     for (const mob of mobs) {
       const criado = this.criarMobDoMundo(mob.tipo, mob.regiao, mob)
       if (criado.config.matilha) this.criarMatilha(criado, sorteio)
+    }
+    this.criarAcampamentos()
+  }
+
+  // Os acampamentos goblin (Parte 6b): os goblins nascem dentro, em volta da fogueira; o acampamento todo é um bando
+  // (acorda junto) e o território deles (Inimigo.naMinhaArea)
+  criarAcampamentos() {
+    for (const acampamento of this.mapa.acampamentos ?? []) {
+      const bando = []
+      for (const lugar of lugaresNoAcampamento(acampamento, acampamento.populacao, mundo.acampamento)) {
+        const goblin = this.criarMobDoMundo(lugar.tipo, acampamento.regiao, lugar)
+        goblin.acampamento = acampamento
+        goblin.casa = { ...acampamento.centro }
+        bando.push(goblin)
+      }
+      for (const goblin of bando) goblin.bando = bando
     }
   }
 

@@ -111,8 +111,12 @@ const processos = []
 
 async function desligar(codigo) {
   for (const { processo, perfil } of processos) {
-    if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(processo.pid), '/T', '/F'], { stdio: 'ignore' })
-    else processo.kill()
+    if (process.platform === 'win32') {
+      spawnSync('taskkill', ['/pid', String(processo.pid), '/T', '/F'], { stdio: 'ignore' })
+      // o msedge.exe às vezes só repassa para outro processo e sai: fecha também pelo perfil (24/11)
+      const filtro = `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | Where-Object { $_.CommandLine -like '*${perfil}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+      spawnSync('powershell', ['-NoProfile', '-Command', filtro], { stdio: 'ignore' })
+    } else processo.kill()
     await pausa(300)
     try {
       rmSync(perfil, { recursive: true, force: true })
