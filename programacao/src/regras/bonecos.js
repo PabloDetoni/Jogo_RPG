@@ -236,18 +236,26 @@ export function pecasDoBicho(tipo, { lado = 'direita', fase = 0, andando = false
     const alterna = i % 2 === 0 ? passo : -passo
     ret(x - pes.largura / 2 + alterna * 1.5, pes.y - Math.max(0, alterna) * 1.4, pes.largura, pes.altura, pes.raio, escurecer(cor, 0.12))
   })
-  if (rabo) ret(rabo.x - rabo.largura / 2, rabo.y + respira - rabo.altura / 2, rabo.largura, rabo.altura, rabo.altura / 2, cor)
+  if (rabo) ret(rabo.x - rabo.largura / 2, rabo.y + respira - rabo.altura / 2, rabo.largura, rabo.altura, rabo.altura / 2, rabo.cor ?? cor)
   ret(-corpo.largura / 2, corpo.y - corpo.altura / 2 + respira, corpo.largura, corpo.altura, corpo.raio, cor)
   ret(-corpo.largura / 2 + 4, corpo.y + corpo.altura / 2 - 5 + respira, corpo.largura - 8, 3, 1.5, barriga, false)
   const topoDaCabeca = cabeca.y - cabeca.altura / 2 + respira
   const xc = cabeca.x - cabeca.largura / 2
-  if (receita.detalhe === 'orelhas') {
-    poli([{ x: xc + 2, y: topoDaCabeca + 2 }, { x: xc + 4, y: topoDaCabeca - 5 }, { x: xc + 7, y: topoDaCabeca + 1 }], receita.corDoDetalhe)
+  if (receita.detalhe === 'orelhas' || receita.detalhe === 'juba') {
+    poli([{ x: xc + 2, y: topoDaCabeca + 2 }, { x: xc + 4, y: topoDaCabeca - 5 }, { x: xc + 7, y: topoDaCabeca + 1 }], receita.detalhe === 'juba' ? escurecer(cor, 0.3) : receita.corDoDetalhe)
+  } else if (receita.detalhe === 'orelhasLongas') {
+    // duas orelhas compridas em pé, com o rosado de dentro
+    for (const dx of [1, 5]) {
+      ret(xc + dx, topoDaCabeca - 9, 3.5, 11, 1.7, cor)
+      ret(xc + dx + 1, topoDaCabeca - 7, 1.5, 7, 0.7, receita.corDoDetalhe, false)
+    }
   } else if (receita.detalhe === 'chifres') {
     pecas.push({ forma: 'linha', x1: (xc + 4) * s, y1: topoDaCabeca, x2: (xc + 2) * s, y2: topoDaCabeca - 8, espessura: 2, cor: receita.corDoDetalhe })
     pecas.push({ forma: 'linha', x1: (xc + 2.8) * s, y1: topoDaCabeca - 4, x2: (xc - 1) * s, y2: topoDaCabeca - 6, espessura: 1.6, cor: receita.corDoDetalhe })
     pecas.push({ forma: 'linha', x1: (xc + 8) * s, y1: topoDaCabeca, x2: (xc + 9) * s, y2: topoDaCabeca - 8, espessura: 2, cor: receita.corDoDetalhe })
   }
+  // a juba do Alfa: uma faixa clara no pescoço, entre o corpo e a cabeça
+  if (receita.detalhe === 'juba') ret(xc - 6, topoDaCabeca + 3, 10, cabeca.altura + 2, 4, receita.corDoDetalhe)
   ret(xc, topoDaCabeca, cabeca.largura, cabeca.altura, cabeca.raio, cor)
   if (receita.detalhe === 'presas') {
     ret(xc + cabeca.largura - 4, topoDaCabeca + cabeca.altura - 4, 2.5, 5, 1, receita.corDoDetalhe)

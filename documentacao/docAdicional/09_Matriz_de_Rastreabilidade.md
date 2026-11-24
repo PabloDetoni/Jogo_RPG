@@ -34,11 +34,11 @@ Liga cada caso de uso ao requisito funcional, à história de usuário e ao diag
 | UC28 Escolher ponto de partida (dificuldade) — será substituído pelo UC44 | RF32 | HU28 | Partida (04) |
 | UC29 Selecionar Líder | RF33 | HU29 | Partida (04) |
 | UC30 Preparar mochila da partida | RF33 | HU30 | Partida (04) |
-| UC31 Jogar partida | RF34, RF35, RF42, RF53, RF58 e RF59 (planejados) | HU31 | Partida (04) |
+| UC31 Jogar partida | RF34, RF35, RF42, RF53, RF58 e RF59 | HU31 | Partida (04) |
 | UC32 Combater monstros | RF36, RF37, RF50, RF55, RF59 e RF60 (planejados) | HU32 | Partida (04) |
 | UC33 Usar habilidade | RF38 | HU33 | Partida (04) |
 | UC34 Enfrentar Boss | RF39 | HU34 | Partida (04) |
-| UC35 Explorar e coletar recursos | RF31, RF40, RF50, RF58 (planejado) | HU35 | Partida (04) |
+| UC35 Explorar e coletar recursos | RF31, RF40, RF50, RF58 | HU35 | Partida (04) |
 | UC36 Usar item | RF41 | HU36 | Partida (04) |
 | UC37 Levantar aliado desmaiado | RF42, RF43 | HU37 | Partida (04) |
 | UC38 Pausar partida | RF37, RF44 | HU38 | Partida (04) |

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dentroDoTerritorio, espalharMobs, fichaNaRegiao } from './mobs.js'
+import { dentroDoTerritorio, direcaoDeFuga, espalharMobs, fichaNaRegiao, passoNaArea, pontosEmVolta } from './mobs.js'
 import { criarSorteio } from './mundo.js'
 
 describe('força do mob pela região (TASK-062)', () => {
@@ -65,5 +65,48 @@ describe('território', () => {
   it('dentro até o raio a partir de casa; fora dele, não', () => {
     expect(dentroDoTerritorio({ x: 0, y: 0 }, { x: 300, y: 400 }, 500)).toBe(true)
     expect(dentroDoTerritorio({ x: 0, y: 0 }, { x: 300, y: 401 }, 500)).toBe(false)
+  })
+})
+
+describe('território pela área, fuga e bando (Parte 6a)', () => {
+  // a área: só x < 100
+  const naArea = (p) => p.x < 100
+
+  it('o passo que cabe na área passa igual', () => {
+    expect(passoNaArea({ x: 0, y: 0 }, { x: 100, y: 50 }, naArea)).toEqual({ x: 100, y: 50 })
+  })
+
+  it('na borda, desliza pelo eixo que cabe', () => {
+    expect(passoNaArea({ x: 95, y: 0 }, { x: 100, y: 50 }, naArea)).toEqual({ x: 0, y: 50 })
+    expect(passoNaArea({ x: 95, y: 0 }, { x: -100, y: 0 }, naArea)).toEqual({ x: -100, y: 0 })
+  })
+
+  it('indo reto contra a borda, gira o passo para o lado (90°); num canto sem saída, para', () => {
+    const passo = passoNaArea({ x: 95, y: 0 }, { x: 100, y: 0 }, naArea)
+    expect(passo.x).toBeCloseTo(0)
+    expect(Math.abs(passo.y)).toBeCloseTo(100)
+    expect(passoNaArea({ x: 95, y: 0 }, { x: 100, y: 0 }, (p) => p.x < 100 && Math.abs(p.y) < 1)).toEqual({ x: 0, y: 0 })
+  })
+
+  it('a fuga vai para longe da ameaça; longe demais, nada', () => {
+    const fuga = direcaoDeFuga({ x: 0, y: 0 }, [{ x: 100, y: 0 }], 300)
+    expect(fuga.x).toBeCloseTo(-1)
+    expect(fuga.y).toBeCloseTo(0)
+    expect(direcaoDeFuga({ x: 0, y: 0 }, [{ x: 400, y: 0 }], 300)).toBeNull()
+  })
+
+  it('entre duas ameaças, foge para o lado livre; a mais perto pesa mais', () => {
+    const fuga = direcaoDeFuga({ x: 0, y: 0 }, [{ x: 100, y: 0 }, { x: 0, y: 250 }], 300)
+    expect(fuga.x).toBeLessThan(0)
+    expect(fuga.y).toBeLessThan(0)
+    expect(Math.abs(fuga.x)).toBeGreaterThan(Math.abs(fuga.y))
+    expect(Math.hypot(fuga.x, fuga.y)).toBeCloseTo(1)
+  })
+
+  it('o bando em volta do líder: a mesma distância, espalhado', () => {
+    const pontos = pontosEmVolta({ x: 500, y: 500 }, 3, 100, criarSorteio(7))
+    expect(pontos).toHaveLength(3)
+    for (const p of pontos) expect(Math.hypot(p.x - 500, p.y - 500)).toBeCloseTo(100, 0)
+    expect(Math.hypot(pontos[0].x - pontos[1].x, pontos[0].y - pontos[1].y)).toBeGreaterThan(150)
   })
 })

@@ -2,7 +2,8 @@ import { coresDaArena } from '../../dados/arenaDeTeste.js'
 import { velocidadeDoMovimento } from '../../regras/combate.js'
 import { combateDeTeste, mundo } from '../../dados/balanceamento.js'
 import { alvoDoInimigo, maisProximo } from '../../regras/iaDosAliados.js'
-import { dentroDoTerritorio } from '../../regras/mobs.js'
+import { dentroDoTerritorio, passoNaArea } from '../../regras/mobs.js'
+import { zonaNoTerreno } from '../../regras/terreno.js'
 import { bichosEmBlocos } from '../../dados/bonecos.js'
 import { escalaDoBicho, pecasDoBicho } from '../../regras/bonecos.js'
 import { numeroFlutuante, particulas } from '../efeitos.js'
@@ -16,6 +17,9 @@ import Entidade, { BarraDeVida } from './Entidade.js'
 // resposta).
 // O alvo é escolhido em regras/iaDosAliados.js: o Tanque perto atrai, e a Provocação puxa todos no raio.
 // Cada inimigo tem um "!" quando começa a perseguir e um "?" quando desiste, para dar para ver.
+// Território pela área (Parte 6a): na Floresta grande, o mob nunca anda para fora da zona onde nasceu e só persegue
+// quem está nela (o cervo não entra onde há lobo; quem foge para a zona neutra fica a salvo). Bando (Parte 6a): quem
+// começa a perseguir chama os do mesmo bando que estão perto (a matilha do Alfa; o acampamento goblin, na 6b).
 export default class Inimigo extends Entidade {
   // O bicho em blocos da espécie (RNF15, Parte 4b: lobo, javali, cervo, aranha), no lugar do quadrado. Sem receita
   // (os mobs de teste da arena), continua o quadrado.
@@ -41,6 +45,7 @@ export default class Inimigo extends Entidade {
     this.peso = combateDeTeste.separacao.pesoDoInimigo
     this.andaSozinho = true
     this.dormindo = false // longe do Líder (Fase 3): não pensa nem anda
+    this.bando = null // os mobs do mesmo bando (lista compartilhada), ou null
     this.corpo.body.setCollideWorldBounds(true)
   }
 
@@ -57,6 +62,33 @@ export default class Inimigo extends Entidade {
     return Math.hypot(alvo.x - this.x, alvo.y - this.y)
   }
 
+  // O ponto está na zona do mob? (sem a zona ou sem o terreno, como na arena de teste, vale tudo; a mata vale, porque a
+  // parede já segura)
+  naMinhaArea(ponto) {
+    const terreno = this.cena.mapa?.terreno
+    if (!this.regiao || !terreno) return true
+    const zona = zonaNoTerreno(terreno, this.cena.mapa.regioes, ponto)
+    return !zona || zona.id === this.regiao
+  }
+
+  // Andar sem sair da zona (desliza pela borda). Empurrado para fora, volta andando livre.
+  andar(velocidade) {
+    super.andar(this.naMinhaArea(this) ? passoNaArea(this, velocidade, (ponto) => this.naMinhaArea(ponto)) : velocidade)
+  }
+
+  // Chama o bando: quem está perto e à toa passa a perseguir o mesmo alvo (provocado, como se tivesse apanhado)
+  alertarBando(alvo, agora) {
+    if (!this.bando || !alvo) return
+    for (const outro of this.bando) {
+      if (outro === this || outro.morto || outro.perseguindo || this.distanciaAte(outro) > mundo.bando.raioDoAlerta) continue
+      outro.provocadoAte = agora + mundo.msProvocado
+      outro.voltandoAte = 0
+      outro.alvo = alvo
+      outro.estado = 'perseguindo'
+      numeroFlutuante(outro.cena, outro.x, outro.y - outro.tamanho, '!', '#ffe14a', 30)
+    }
+  }
+
   // Decide quem perseguir (ou voltar a passear). Devolve o alvo, ou null se está passeando.
   decidirAlvo(agora) {
     const perseguia = this.perseguindo
@@ -68,12 +100,15 @@ export default class Inimigo extends Entidade {
     }
     // Só conta quem está dentro do território (atacado, conta todo mundo por um tempo)
     const membros = this.casaFixa && !provocado
-      ? this.cena.membrosDePe.filter((membro) => dentroDoTerritorio(this.casaFixa, membro, this.config.raioDoTerritorio))
+      ? this.cena.membrosDePe.filter((membro) => dentroDoTerritorio(this.casaFixa, membro, this.config.raioDoTerritorio) && this.naMinhaArea(membro))
       : this.cena.membrosDePe
+    // Provocado (apanhou ou o bando chamou), só desiste mais longe: quem atirou de longe ou o bando chamado de longe
+    // continua no alvo
+    const raioDeDesistencia = provocado ? Math.max(this.config.raioDeDesistencia, mundo.bando.raioDoAlerta + this.config.raioDeDeteccao) : this.config.raioDeDesistencia
     const alvo = alvoDoInimigo(this, membros, {
       alvoAtual: this.alvo,
       raioDeDeteccao: this.config.raioDeDeteccao,
-      raioDeDesistencia: this.config.raioDeDesistencia,
+      raioDeDesistencia,
       raioDeAtracao: combateDeTeste.ia.raioDeAtracaoDoTanque,
       raioDaProvocacao: combateDeTeste.habilidades.tanque.raio,
     })
@@ -81,6 +116,7 @@ export default class Inimigo extends Entidade {
     if (alvo && !perseguia) {
       this.estado = 'perseguindo'
       numeroFlutuante(this.cena, this.x, this.y - this.tamanho, '!', '#ffe14a', 30)
+      this.alertarBando(alvo, agora)
     } else if (!alvo && perseguia) {
       this.desistir(agora)
     }
@@ -110,6 +146,7 @@ export default class Inimigo extends Entidade {
       this.alvo = alvo
       this.estado = 'perseguindo'
       numeroFlutuante(this.cena, this.x, this.y - this.tamanho, '!', '#ffe14a', 30)
+      this.alertarBando(alvo, agora ?? this.cena.agora)
     }
   }
 

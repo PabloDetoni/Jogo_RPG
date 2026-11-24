@@ -309,27 +309,74 @@ try {
   // O lobo do teste (com vida de sobra) sai do jogo, para não perseguir o grupo nos testes seguintes
   await cena(`(c.inimigos.filter((i) => i.__teste).forEach((i) => c.matarInimigo(i)), true)`)
 
-  console.log('9. Passar por um mob não hostil (o cervo)')
-  // (se as seções de antes não deixaram nenhum cervo vivo, nasce um na região Fácil, como no sorteio do mapa)
+  console.log('9. Animais pacíficos (Parte 6a): o cervo nunca ataca e foge do grupo, sem sair da zona neutra')
+  // (se as seções de antes não deixaram nenhum cervo vivo, nasce um numa zona neutra, como no sorteio do mapa)
   const cervo = await cena(`(() => {
     let v = c.inimigos.find((i) => i.tipo === 'cervo' && !i.morto)
-    if (!v) { const r = c.mapa.regioes.find((u) => u.dificuldade === 'facil'); v = c.criarMobDoMundo('cervo', r.id, { x: r.inicio.x + 500, y: r.inicio.y }) }
+    if (!v) { const r = c.mapa.regioes.find((u) => u.dificuldade === 'neutra'); v = c.criarMobDoMundo('cervo', r.id, r.inicio) }
     // vida de sobra, como o lobo de teste: nada de fora (um tiro perdido) derruba o cervo antes das conferências
     v.__cervo = true
     v.vida = v.vidaMaxima = 1e6
-    return { x: Math.round(v.x), y: Math.round(v.y) }
+    return { x: Math.round(v.x), y: Math.round(v.y), regiao: v.regiao }
   })()`)
+  conferir('o cervo nasce numa zona neutra', cervo.regiao.startsWith('neutra'), cervo)
   await cena(`(c.inimigos.filter((i) => !i.__cervo && Math.hypot(i.x - ${cervo.x}, i.y - ${cervo.y}) < 1200).forEach((i) => c.matarInimigo(i)), true)`)
   await cena(`(c.invencivel = false, c.lider.vida = c.lider.vidaMaxima, true)`)
-  await colocarLider(cervo.x - 90, cervo.y)
-  await pausa(3000)
-  const passou = await cena(`({ persegue: c.inimigos.find((i) => i.__cervo).perseguindo, apanhou: c.inimigos.find((i) => i.__cervo).vida < 1e6, vida: c.lider.vida, maxima: c.lider.vidaMaxima })`)
-  conferir('passando ao lado do cervo, ele não ataca', !passou.persegue && passou.vida === passou.maxima, passou)
-  await cena(`(c.invencivel = true, c.acertar(c.inimigos.find((i) => i.__cervo), 5, c.lider, 0, c.lider), true)`)
-  await pausa(300)
-  conferir('atacado, o cervo reage (persegue quem bateu)', await cena(`c.inimigos.find((i) => i.__cervo).perseguindo`))
-  await aba.print('06-cervo-revida')
+  await colocarLider(cervo.x - 120, cervo.y)
+  await pausa(1500)
+  const veado = `c.inimigos.find((i) => i.__cervo)`
+  const passou = await cena(`(() => { const v = ${veado}; return { persegue: v.perseguindo, longe: Math.round(Math.hypot(v.x - c.lider.x, v.y - c.lider.y)), naZona: v.naMinhaArea(v), vida: c.lider.vida, maxima: c.lider.vidaMaxima } })()`)
+  conferir('passando perto do cervo, ele não ataca e se afasta do grupo', !passou.persegue && passou.vida === passou.maxima && passou.longe > 170, passou)
+  conferir('...sem sair da zona neutra dele', passou.naZona, passou)
+  const vidaDepoisDoGolpe = await cena(`(c.invencivel = true, c.acertar(${veado}, 5, c.lider, 0, c.lider), ${veado}.vida)`)
+  await pausa(600)
+  const atacado = await cena(`(() => { const v = ${veado}; return { persegue: v.perseguindo, fugindo: v.fugindo, estado: v.estado, naZona: v.naMinhaArea(v) } })()`)
+  conferir('atacado, o cervo não revida: foge', !atacado.persegue && atacado.fugindo, atacado)
+  await pausa(1500)
+  const vidaDoCervo = await cena(`${veado}.vida`)
+  conferir('os aliados não atacam o animal pacífico (só o Líder bateu)', vidaDoCervo === vidaDepoisDoGolpe, { vidaDepoisDoGolpe, agora: vidaDoCervo })
+  await aba.print('06-cervo-foge')
   await cena(`(c.inimigos.filter((i) => i.__cervo).forEach((i) => c.matarInimigo(i)), true)`)
+
+  console.log('9b. O Lobo Alfa e a matilha (acordam juntos) e o território pela área (Parte 6a)')
+  await cena(`(c.invencivel = true, true)`)
+  // Um Alfa novo no fim da faixa livre da Fácil, com a matilha; nada mais por perto
+  await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${faixa.x + 800}, i.y - ${faixa.y}) < 1600).forEach((i) => c.matarInimigo(i)), true)`)
+  const matilha = await cena(`(() => {
+    const a = c.criarMobDoMundo('loboAlfa', 'facil', { x: ${faixa.x + 800}, y: ${faixa.y} })
+    c.criarMatilha(a, Math.random)
+    for (const m of a.bando) { m.__matilha = true; m.vida = m.vidaMaxima = 1e6 }
+    const lobo = c.inimigos.find((i) => i.tipo === 'lobo' && i.__matilha)
+    return { bando: a.bando.length, tamanho: a.tamanho, doLobo: lobo?.tamanho, mesmoBando: a.bando.every((m) => m.bando === a.bando), x: Math.round(a.x), y: Math.round(a.y) }
+  })()`)
+  conferir('o Lobo Alfa nasce maior que o lobo, com a matilha em volta (todos no mesmo bando)', matilha.bando >= 2 && matilha.mesmoBando && matilha.tamanho > matilha.doLobo, matilha)
+  await colocarLider(faixa.x + 50, faixa.y)
+  await pausa(500)
+  conferir('longe deles, ninguém da matilha persegue', !(await cena(`c.inimigos.some((i) => i.__matilha && i.perseguindo)`)))
+  await cena(`(c.inimigos.find((i) => i.tipo === 'loboAlfa' && i.__matilha).aoApanhar(c.agora), true)`)
+  await pausa(300)
+  const acordaram = await cena(`c.inimigos.filter((i) => i.__matilha).map((i) => i.perseguindo)`)
+  conferir('o Alfa atacado chama a matilha: todos perseguem juntos', acordaram.length >= 2 && acordaram.every(Boolean), acordaram)
+  await aba.print('06b-matilha')
+  await cena(`(c.inimigos.filter((i) => i.__matilha).forEach((i) => c.matarInimigo(i)), true)`)
+  // Território pela área: o lobo da Fácil não entra na zona neutra vizinha (a Clareira da Entrada), nem provocado
+  const borda = await cena(`(() => {
+    const neutra = c.mapa.regioes.find((r) => r.id === 'neutraDaEntrada'), facil = c.mapa.regioes.find((r) => r.id === 'facil')
+    const y = neutra.inicio.y
+    for (let x = neutra.inicio.x; x < facil.inicio.x; x += 10) if (c.regiaoEm({ x, y })?.id === 'facil') return { x, y }
+    return null
+  })()`)
+  await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${borda.x}, i.y - ${borda.y}) < 1500).forEach((i) => c.matarInimigo(i)), true)`)
+  await cena(`(() => { const l = c.criarMobDoMundo('lobo', 'facil', c.lugarLivre(34, { x: ${borda.x + 260}, y: ${borda.y} })); l.__borda = true; l.vida = l.vidaMaxima = 1e6; return true })()`)
+  await colocarLider(borda.x - 200, borda.y)
+  await pausa(1500)
+  conferir('com o Líder na zona neutra, o lobo da Fácil ao lado não persegue', !(await cena(`c.inimigos.find((i) => i.__borda).perseguindo`)))
+  await cena(`(c.inimigos.find((i) => i.__borda).aoApanhar(c.agora), true)`)
+  await pausa(2500)
+  const naBorda = await cena(`(() => { const l = c.inimigos.find((i) => i.__borda); return { naFacil: l.naMinhaArea(l), x: Math.round(l.x), lider: Math.round(c.lider.x), vida: c.lider.vida, maxima: c.lider.vidaMaxima } })()`)
+  conferir('provocado, o lobo vai até a borda da Fácil mas não entra na zona neutra', naBorda.naFacil && naBorda.x > naBorda.lider + 60, naBorda)
+  await aba.print('06c-territorio')
+  await cena(`(c.inimigos.filter((i) => i.__borda).forEach((i) => c.matarInimigo(i)), true)`)
 
   console.log('10. Aliado longe ou preso volta por fora da tela')
   await colocarLider(faixa.x + 600, faixa.y)

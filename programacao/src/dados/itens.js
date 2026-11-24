@@ -31,6 +31,9 @@ const dados = {
   teiaDeAranha: { nome: 'Teia de aranha', tipo: 'material', raridade: 'comum', peso: 1, preco: 6, cor: 0xf2f2f2, descricao: 'Fios resistentes e grudentos.' },
   presaDeJavali: { nome: 'Presa de javali', tipo: 'material', raridade: 'incomum', peso: 2, preco: 15, cor: 0xf0e6c8, descricao: 'Presa curva e afiada.' },
   chifreDeCervo: { nome: 'Chifre de cervo', tipo: 'material', raridade: 'incomum', peso: 3, preco: 18, cor: 0xc9a36b, descricao: 'Chifre que o cervo deixa ao fugir.' },
+  // Parte 6a (11/2026): drops do Lobo Alfa e do coelho. PROVISÓRIO – substituir pelo do grupo.
+  pelagemDoAlfa: { nome: 'Pelagem do Alfa', tipo: 'material', raridade: 'raro', peso: 3, preco: 45, cor: 0x5e636b, descricao: 'A pelagem grossa do líder da matilha.' },
+  peDeCoelho: { nome: 'Pé de coelho', tipo: 'material', raridade: 'comum', peso: 1, preco: 3, cor: 0xd8cfc6, descricao: 'Dizem que dá sorte.' },
   cascaAntiga: { nome: 'Casca antiga', tipo: 'material', raridade: 'raro', peso: 4, preco: 60, cor: 0x5d4a2e, descricao: 'Pedaço da casca do Guardião da Floresta.' },
   minerioDeFerro: { nome: 'Minério de ferro', tipo: 'material', raridade: 'comum', peso: 3, preco: 12, cor: 0x8a8f99, descricao: 'Pedra com ferro, vinda da mina do Planalto.' },
 

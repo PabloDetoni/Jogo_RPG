@@ -10,10 +10,12 @@ export const tiposDeMissao = ['matar', 'coletar', 'entregar', 'explorar']
 
 // QUADRO DE MISSÕES DA GUILDA (Fase 4, TASK-078). PROVISÓRIO – substituir pelo do grupo (missões do beta: TASK-015).
 // Só com o que existe no beta: os mobs, os itens e as áreas da Floresta. Para trocar, mude só esta lista.
-// alvo: o tipo do mob (matar: lobo, aranha, javali, cervo, guardiao), o id do item (coletar, entregar) ou o id da
+// alvo: o tipo do mob (matar: lobo, loboAlfa, aranha, javali, cervo, coelho, guardiao), o id do item (coletar, entregar) ou o id da
 // área (explorar, dados/mundo/floresta.js).
 export const quadroDeMissoes = [
   { id: 'cacarLobos', titulo: 'Caçar lobos', descricao: 'Os lobos da Fácil estão atacando quem passa pela trilha.', tipo: 'matar', alvo: 'lobo', quantidade: 8, recompensa: { ouro: 80, xp: 120 } },
+  // Parte 6a (11/2026): PROVISÓRIO – substituir pelo do grupo
+  { id: 'oAlfaDaMatilha', titulo: 'O alfa da matilha', descricao: 'Um Lobo Alfa lidera os lobos da Fácil. Derrote um.', tipo: 'matar', alvo: 'loboAlfa', quantidade: 1, recompensa: { ouro: 120, xp: 160 } },
   { id: 'aranhasNoCaminho', titulo: 'Aranhas no caminho', descricao: 'As aranhas da Média cobriram a trilha de teias.', tipo: 'matar', alvo: 'aranha', quantidade: 6, recompensa: { ouro: 110, xp: 180 } },
   { id: 'javalisBravos', titulo: 'Javalis bravos', descricao: 'Os javalis da Difícil derrubaram a cerca da fazenda.', tipo: 'matar', alvo: 'javali', quantidade: 4, recompensa: { ouro: 150, xp: 240 } },
   { id: 'oGuardiao', titulo: 'O Guardião da Floresta', descricao: 'Derrote o Guardião, no fundo da Floresta.', tipo: 'matar', alvo: 'guardiao', quantidade: 1, recompensa: { ouro: 400, xp: 600 } },
@@ -29,7 +31,7 @@ export function missaoDoQuadro(id) {
   return quadroDeMissoes.find((missao) => missao.id === id) ?? null
 }
 
-const nomesDosMobs = { lobo: 'lobo', aranha: 'aranha', javali: 'javali', cervo: 'cervo', guardiao: 'Guardião da Floresta' }
+const nomesDosMobs = { lobo: 'lobo', loboAlfa: 'Lobo Alfa', coelho: 'coelho', aranha: 'aranha', javali: 'javali', cervo: 'cervo', guardiao: 'Guardião da Floresta' }
 
 // O nome do alvo de uma missão: o mob, o item ou a área (um alvo desconhecido aparece como ele mesmo)
 export function nomeDoAlvo(missao) {

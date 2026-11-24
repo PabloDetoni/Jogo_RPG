@@ -337,14 +337,14 @@ Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grup
 | Região | Tamanho (px) | Força dos mobs | XP da 1ª descoberta de cada área | Mobs por partida |
 | --- | --- | --- | --- | --- |
 | Zona segura | 1.303 × 1.954 | ×1,0 | 0 | nenhum |
-| Fácil | 6.742 × 2.201 | ×1,0 | 30 | 16 lobo, 5 aranha |
+| Fácil | 6.742 × 2.201 | ×1,0 | 30 | 10 lobo, 3 loboAlfa, 5 aranha |
 | Média | 6.981 × 2.204 | ×1,5 | 50 | 12 lobo, 10 aranha, 6 javali |
 | Difícil | 5.498 × 1.840 | ×2,2 | 80 | 12 lobo, 10 aranha, 10 javali |
 | Domínio do Boss | 2.058 × 1.815 | ×2,6 | 120 | 3 lobo |
-| Clareira da Entrada | 958 × 2.062 | ×1,0 | 10 | 2 cervo |
-| Vau do Riacho | 1.893 × 3.917 | ×1,0 | 10 | 3 cervo |
-| Campo dos Cervos | 2.046 × 3.697 | ×1,0 | 10 | 3 cervo |
-| Pouso do Caçador | 961 × 1.740 | ×1,0 | 10 | 2 cervo |
+| Clareira da Entrada | 958 × 2.062 | ×1,0 | 10 | 2 cervo, 3 coelho |
+| Vau do Riacho | 1.893 × 3.917 | ×1,0 | 10 | 3 cervo, 3 coelho |
+| Campo dos Cervos | 2.046 × 3.697 | ×1,0 | 10 | 3 cervo, 2 coelho |
+| Pouso do Caçador | 961 × 1.740 | ×1,0 | 10 | 2 cervo, 2 coelho |
 
 ### Mobs (TASK-012, provisório)
 
@@ -355,7 +355,9 @@ Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção
 | lobo | corpo a corpo | 55 / 121 | 10 / 22 | 18 / 40 | 10 / 22 | 340 px | 650 px | peleDeLobo (60%) |
 | aranha | atira de longe | 38 / 84 | 8 / 18 | 22 / 48 | 12 / 26 | 560 px | 800 px | teiaDeAranha (70%) |
 | javali | corpo a corpo | 110 / 242 | 18 / 40 | 35 / 77 | 18 / 40 | 300 px | 600 px | presaDeJavali (50%) |
-| cervo | corpo a corpo, não hostil | 45 / 99 | 7 / 15 | 12 / 26 | 6 / 13 | só se atacado | 700 px | chifreDeCervo (40%) |
+| loboAlfa | corpo a corpo | 150 / 330 | 15 / 33 | 45 / 99 | 25 / 55 | 360 px | 700 px | peleDeLobo (100%), pelagemDoAlfa (35%) |
+| cervo | pacífico (nunca ataca, foge) | 45 / 99 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 260 px | 900 px | chifreDeCervo (40%) |
+| coelho | pacífico (nunca ataca, foge) | 18 / 40 | 1 / 1 | 1 / 2 | 1 / 2 | foge a 220 px | 700 px | peDeCoelho (50%) |
 
 ### Boss da Floresta (TASK-065, provisório)
 
@@ -396,6 +398,8 @@ Quem vende (no Mercado, ou equipamento na Forja) recebe **50%** do preço, para 
 | Teia de aranha | material | Comum | 1 | 6 | 3 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Presa de javali | material | Incomum | 2 | 15 | 7 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Chifre de cervo | material | Incomum | 3 | 18 | 9 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Pelagem do Alfa | material | Raro | 3 | 45 | 22 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
+| Pé de coelho | material | Comum | 1 | 3 | 1 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Casca antiga | material | Raro | 4 | 60 | 30 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Minério de ferro | material | Comum | 3 | 12 | 6 | Material: entra nas receitas da Forja e nas trocas do Mercado. |
 | Poção de vida | consumivel | Comum | 1 | 25 | 12 | Recupera 40% da vida. Não levanta quem desmaiou. Na partida: Tab, depois E (Líder) ou R (aliado). |
@@ -500,6 +504,7 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 | Missão | Tipo | Objetivo | Ouro | XP | Multa por abandonar |
 | --- | --- | --- | --- | --- | --- |
 | Caçar lobos | matar | 8 lobo | 80 | 120 | 8 |
+| O alfa da matilha | matar | 1 Lobo Alfa | 120 | 160 | 12 |
 | Aranhas no caminho | matar | 6 aranha | 110 | 180 | 11 |
 | Javalis bravos | matar | 4 javali | 150 | 240 | 15 |
 | O Guardião da Floresta | matar | 1 Guardião da Floresta | 400 | 600 | 40 |
@@ -555,27 +560,27 @@ Modelo simplificado (sem física nem IA; detalhes em src/regras/simulador.js e s
 
 | Nível | Grupo | Região | Luta padrão | Mobs sem cair | XP/min | Fugir resolve |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Guerreiro sozinho | facil | vence em 2,3 s | 8 | 591 | sim |
+| 1 | Guerreiro sozinho | facil | vence em 3,5 s | 5 | 533 | sim |
 | 1 | Guerreiro sozinho | media | vence em 4,3 s | 3 | 417 | sim |
 | 1 | Guerreiro sozinho | dificil | perde em 2,9 s | 2 | 371 | sim |
 | 1 | Guerreiro sozinho | boss | perde em 5,4 s | 0 | 0 | sim |
-| 1 | grupo de 5 | facil | vence em 0,7 s | 12 | 957 | sim |
+| 1 | grupo de 5 | facil | vence em 1,7 s | 12 | 1225 | sim |
 | 1 | grupo de 5 | media | vence em 2,2 s | 12 | 1568 | sim |
 | 1 | grupo de 5 | dificil | vence em 2,5 s | 7 | 1294 | sim |
 | 1 | grupo de 5 | boss | perde em 11,4 s | 0 | 0 | sim |
-| 10 | Guerreiro sozinho | facil | vence em 1,9 s | 12 | 845 | sim |
+| 10 | Guerreiro sozinho | facil | vence em 3,1 s | 10 | 878 | sim |
 | 10 | Guerreiro sozinho | media | vence em 3,5 s | 6 | 814 | sim |
 | 10 | Guerreiro sozinho | dificil | vence em 4,7 s | 4 | 721 | sim |
 | 10 | Guerreiro sozinho | boss | perde em 11,4 s | 0 | 0 | sim |
-| 10 | grupo de 5 | facil | vence em 0,7 s | 12 | 1011 | sim |
+| 10 | grupo de 5 | facil | vence em 1,3 s | 12 | 1287 | sim |
 | 10 | grupo de 5 | media | vence em 1,5 s | 12 | 1629 | sim |
 | 10 | grupo de 5 | dificil | vence em 2,2 s | 12 | 2170 | sim |
 | 10 | grupo de 5 | boss | vence em 14,2 s | 1 | 918 | sim |
-| 30 | Guerreiro sozinho | facil | vence em 1,5 s | 12 | 909 | sim |
+| 30 | Guerreiro sozinho | facil | vence em 1,9 s | 12 | 1196 | sim |
 | 30 | Guerreiro sozinho | media | vence em 2,7 s | 11 | 1284 | sim |
 | 30 | Guerreiro sozinho | dificil | vence em 3,1 s | 8 | 1437 | sim |
 | 30 | Guerreiro sozinho | boss | vence em 18,3 s | 1 | 793 | sim |
-| 30 | grupo de 5 | facil | vence em 0,7 s | 12 | 1040 | sim |
+| 30 | grupo de 5 | facil | vence em 0,7 s | 12 | 1412 | sim |
 | 30 | grupo de 5 | media | vence em 0,7 s | 12 | 1802 | sim |
 | 30 | grupo de 5 | dificil | vence em 1,3 s | 12 | 2498 | sim |
 | 30 | grupo de 5 | boss | vence em 8,3 s | 1 | 1185 | sim |
