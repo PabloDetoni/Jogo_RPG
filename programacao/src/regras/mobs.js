@@ -1,5 +1,6 @@
 // Regras dos mobs do mundo (Fase 3, TASK-062): a força de cada um pela região, onde nascem e o território.
 // Funções puras; os números ficam em dados/balanceamento.js (mundo.mobs) e a população em dados/mundo/.
+import { regiaoEm } from './mundo.js'
 
 // A ficha do mob numa região: vida, dano, XP e ouro multiplicados pela força da região (o resto igual).
 // base: a ficha do tipo; forca: o multiplicador da região (1 na fácil).
@@ -29,6 +30,8 @@ export function espalharMobs(regioes, populacao, { proibidos = [], distanciaEntr
             x: Math.round(regiao.x0 + margem + sorteio() * (regiao.x1 - regiao.x0 - margem * 2)),
             y: Math.round(regiao.y0 + margem + sorteio() * (regiao.y1 - regiao.y0 - margem * 2)),
           }
+          // Floresta grande (Parte 5): a região é um polígono; o ponto (com a margem em volta) tem de ficar dentro dela
+          if (regiao.poligono && !pontoComMargemNaRegiao(regioes, regiao, ponto, margem)) continue
           const pertoDeProibido = proibidos.some((proibido) => Math.hypot(proibido.x - ponto.x, proibido.y - ponto.y) < proibido.raio)
           const pertoDeOutro = mobs.some((mob) => Math.hypot(mob.x - ponto.x, mob.y - ponto.y) < distanciaEntreMobs)
           if (pertoDeProibido || pertoDeOutro) continue
@@ -39,6 +42,13 @@ export function espalharMobs(regioes, populacao, { proibidos = [], distanciaEntr
     }
   }
   return mobs
+}
+
+// O ponto e os quatro pontos a "margem" dele (em cruz) ficam na região? (a primeira da lista que contém, como regiaoEm)
+function pontoComMargemNaRegiao(regioes, regiao, ponto, margem) {
+  return [ponto, { x: ponto.x + margem, y: ponto.y }, { x: ponto.x - margem, y: ponto.y }, { x: ponto.x, y: ponto.y + margem }, { x: ponto.x, y: ponto.y - margem }].every(
+    (p) => regiaoEm(regioes, p) === regiao,
+  )
 }
 
 // O território: o mob só persegue quem está a até "raio" de casa. Fora dele, desiste e volta (RF31, TASK-062).

@@ -1021,6 +1021,37 @@ body {
   border: 1px solid rgb(255 255 255 / 0.35);
 }
 
+/* Na pausa, o mapa inteiro (Parte 5): um painel à esquerda da janela de pausa, sem pegar o clique */
+.mapa-inteiro {
+  position: absolute;
+  left: 2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  max-width: 30cqw;
+  padding: 0.6em;
+  background: rgb(10 14 22 / 0.82);
+  border: 2px solid var(--cor-borda-dourada, #d4a017);
+  border-radius: 0.4cqw;
+  color: #fff;
+  font-size: 1cqw;
+  pointer-events: none;
+}
+
+.mapa-inteiro canvas {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.mapa-inteiro-titulo {
+  font-weight: bold;
+  text-align: center;
+}
+
 /* Só no npm run dev (RF61): o minimapa pega o clique (teletransporte); o HUD em volta continua sem pegar */
 .minimapa-clicavel {
   pointer-events: auto;

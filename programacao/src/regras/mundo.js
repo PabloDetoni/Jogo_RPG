@@ -1,7 +1,9 @@
-// Regras do mundo da partida (Fase 3): a mata fechada em volta (parede), as árvores e pedras espalhadas, em que
-// região e área cada ponto está, a borda usada pela taxa (RF48) e a névoa do minimapa (RF40).
-// Funções puras: o mapa vem de src/dados/mundo/. Retângulos de obstáculo têm x e y no centro; as regiões e
-// áreas são faixas { x0, x1, y0, y1 } (cantos), mais fáceis de escrever à mão.
+// Regras do mundo da partida (Fase 3; Floresta grande na Parte 5): as árvores e pedras espalhadas, em que região e área
+// cada ponto está, a borda usada pela taxa (RF48) e a névoa do minimapa (RF40). A mata fechada vem do terreno
+// (regras/terreno.js). Funções puras: o mapa vem de src/dados/mundo/. Retângulos de obstáculo têm x e y no centro.
+// Regiões: polígonos (com a caixa x0, x1, y0, y1 calculada ao montar o mapa) ou faixas { x0, x1, y0, y1 } (cantos).
+// Áreas: círculos { x, y, raio } ou faixas.
+import { pontoNoPoligono } from './terreno.js'
 
 // Sorteio com semente (mulberry32): o mesmo mapa sai igual toda vez
 export function criarSorteio(semente) {
@@ -15,46 +17,42 @@ export function criarSorteio(semente) {
   }
 }
 
-const daFaixa = (x0, x1, y0, y1) => ({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, largura: x1 - x0, altura: y1 - y0 })
-
-// A mata fechada: em cima e embaixo de cada região, e antes da primeira e depois da última (se sobrar espaço).
-// As regiões ficam lado a lado, da esquerda para a direita.
-export function paredesDaMata(regioes, { largura, altura }) {
-  const paredes = []
-  for (const regiao of regioes) {
-    if (regiao.y0 > 0) paredes.push(daFaixa(regiao.x0, regiao.x1, 0, regiao.y0))
-    if (regiao.y1 < altura) paredes.push(daFaixa(regiao.x0, regiao.x1, regiao.y1, altura))
-  }
-  const primeira = Math.min(...regioes.map((regiao) => regiao.x0))
-  const ultima = Math.max(...regioes.map((regiao) => regiao.x1))
-  if (primeira > 0) paredes.push(daFaixa(0, primeira, 0, altura))
-  if (ultima < largura) paredes.push(daFaixa(ultima, largura, 0, altura))
-  return paredes
-}
-
 const dentroDaFaixa = (faixa, ponto) => ponto.x >= faixa.x0 && ponto.x < faixa.x1 && ponto.y >= faixa.y0 && ponto.y <= faixa.y1
 
-// A região (ou a área) em que o ponto está; null fora de todas (dentro da mata)
-export function regiaoEm(regioes, ponto) {
-  return regioes.find((regiao) => dentroDaFaixa(regiao, ponto)) ?? regioes.find((regiao) => ponto.x === regiao.x1 && dentroDaFaixa({ ...regiao, x1: Infinity }, ponto)) ?? null
+// O ponto está dentro da região? Polígono (com a caixa para ser rápido) ou faixa
+export function dentroDaRegiao(regiao, ponto) {
+  if (regiao.poligono) {
+    if (ponto.x < regiao.x0 || ponto.x > regiao.x1 || ponto.y < regiao.y0 || ponto.y > regiao.y1) return false
+    return pontoNoPoligono(regiao.poligono, ponto)
+  }
+  return dentroDaFaixa(regiao, ponto)
 }
 
+// A região em que o ponto está (a primeira da lista, onde duas se sobrepõem); null fora de todas (dentro da mata)
+export function regiaoEm(regioes, ponto) {
+  return (
+    regioes.find((regiao) => dentroDaRegiao(regiao, ponto)) ??
+    regioes.find((regiao) => !regiao.poligono && ponto.x === regiao.x1 && dentroDaFaixa({ ...regiao, x1: Infinity }, ponto)) ??
+    null
+  )
+}
+
+// A área com nome em que o ponto está: círculo { x, y, raio } ou faixa
 export function areaEm(areas, ponto) {
-  return areas.find((area) => dentroDaFaixa(area, ponto)) ?? null
+  return areas.find((area) => (area.raio !== undefined ? Math.hypot(ponto.x - area.x, ponto.y - area.y) <= area.raio : dentroDaFaixa(area, ponto))) ?? null
 }
 
 // A borda da taxa (RF48): a maior distância em linha reta do ponto inicial do bioma até o ponto andável mais longe
 export function distanciaAteABorda(inicio, regioes) {
   let maior = 0
   for (const regiao of regioes) {
-    for (const [x, y] of [
+    const cantos = regiao.poligono ?? [
       [regiao.x0, regiao.y0],
       [regiao.x1, regiao.y0],
       [regiao.x0, regiao.y1],
       [regiao.x1, regiao.y1],
-    ]) {
-      maior = Math.max(maior, Math.hypot(x - inicio.x, y - inicio.y))
-    }
+    ]
+    for (const [x, y] of cantos) maior = Math.max(maior, Math.hypot(x - inicio.x, y - inicio.y))
   }
   return Math.round(maior)
 }
@@ -80,11 +78,15 @@ export function gerarObstaculos(regioes, livres, config, semente) {
         const largura = pedra ? entre(config.pedra.largura) : entre([config.arvore.min, config.arvore.max])
         const altura = pedra ? entre(config.pedra.altura) : largura
         if (!vale) continue
-        const dentro =
-          x - largura / 2 >= regiao.x0 &&
-          x + largura / 2 <= regiao.x1 &&
-          y - altura / 2 >= regiao.y0 + config.margem &&
-          y + altura / 2 <= regiao.y1 - config.margem
+        const m = config.margem
+        const dentro = regiao.poligono
+          ? [
+              [x - largura / 2 - m, y - altura / 2 - m],
+              [x + largura / 2 + m, y - altura / 2 - m],
+              [x - largura / 2 - m, y + altura / 2 + m],
+              [x + largura / 2 + m, y + altura / 2 + m],
+            ].every(([px, py]) => regiaoEm(regioes, { x: px, y: py }) === regiao)
+          : x - largura / 2 >= regiao.x0 && x + largura / 2 <= regiao.x1 && y - altura / 2 >= regiao.y0 + m && y + altura / 2 <= regiao.y1 - m
         if (!dentro) continue
         const meiaDiagonal = Math.hypot(largura, altura) / 2
         if (livres.some((livre) => Math.hypot(livre.x - x, livre.y - y) < livre.raio + meiaDiagonal)) continue
@@ -100,6 +102,18 @@ export function gerarObstaculos(regioes, livres, config, semente) {
     }
   }
   return obstaculos
+}
+
+// ---------- Minimapa que acompanha o Líder (Parte 5) ----------
+
+// O pedaço do mapa que o minimapa do HUD mostra: uma janela do tamanho dado em volta do Líder, sem sair do mapa. No mapa
+// que cabe inteiro na janela (a arena), o mapa todo. Devolve { x, y, largura, altura } em px do mundo (x e y no canto).
+export function janelaDoMinimapa(centro, tamanho, janela) {
+  if (!janela || (tamanho.largura <= janela.largura && tamanho.altura <= janela.altura)) return { x: 0, y: 0, largura: tamanho.largura, altura: tamanho.altura }
+  const largura = Math.min(janela.largura, tamanho.largura)
+  const altura = Math.min(janela.altura, tamanho.altura)
+  const limitar = (valor, maximo) => Math.min(Math.max(valor, 0), maximo)
+  return { x: limitar(centro.x - largura / 2, tamanho.largura - largura), y: limitar(centro.y - altura / 2, tamanho.altura - altura), largura, altura }
 }
 
 // ---------- Névoa do minimapa (RF40) ----------

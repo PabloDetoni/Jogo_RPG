@@ -80,12 +80,19 @@ function juntarDescobertas(progresso, descobertas) {
   const { bioma } = descobertas
   const antes = progresso.mapasDescobertos?.[bioma] ?? { nevoa: '', areas: [] }
   const nevoaNova = descobertas.nevoa ?? ''
-  const tamanho = Math.max(antes.nevoa.length, nevoaNova.length) * 4
+  // Outra versão do desenho do mapa (Parte 5): a névoa antiga é de outra grade e não se junta; as áreas ficam
+  const mesmoMapa = (antes.mapa ?? null) === (descobertas.mapa ?? null)
+  const nevoaAntes = mesmoMapa ? antes.nevoa : ''
+  const tamanho = Math.max(nevoaAntes.length, nevoaNova.length) * 4
   const regioesAntes = progresso.regioesDescobertas?.[bioma] ?? []
   return {
     mapasDescobertos: {
       ...progresso.mapasDescobertos,
-      [bioma]: { nevoa: juntarNevoas(antes.nevoa, nevoaNova, tamanho), areas: [...new Set([...antes.areas, ...(descobertas.areas ?? [])])] },
+      [bioma]: {
+        ...(descobertas.mapa ? { mapa: descobertas.mapa } : {}),
+        nevoa: juntarNevoas(nevoaAntes, nevoaNova, tamanho),
+        areas: [...new Set([...antes.areas, ...(descobertas.areas ?? [])])],
+      },
     },
     regioesDescobertas: {
       ...progresso.regioesDescobertas,

@@ -99,7 +99,7 @@ A taxa incide só sobre o **ouro ganho na partida** (RF48). Cada perdido paga pe
 
 | Bioma | Distância até a borda (provisório) |
 | --- | --- |
-| Floresta | 7.026 px (do ponto inicial até o canto andável mais longe do mapa) |
+| Floresta | 11.436 px (do ponto inicial até o canto andável mais longe do mapa) |
 | Deserto | fora do beta (1.000, sem mapa) |
 | Tundra | fora do beta (1.000, sem mapa) |
 | Vulcânico | fora do beta (1.000, sem mapa) |
@@ -332,15 +332,19 @@ Chance = **5% + 0,5% por ponto de Agilidade**; o golpe crítico causa **1,5×** 
 
 ## Mundo da Floresta (Fase 3, provisório)
 
-Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **7.200 × 3.600 px**, começando estreito na zona segura (perto do Reino) e se abrindo até o domínio do Boss. Fora das regiões é mata fechada (parede). O Líder anda a 220 px/s.
+Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **10.400 × 8.000 px**, fixo (o mesmo toda partida), com o caminho em "S": três faixas (ida, volta, ida) ligadas por curvas, da zona segura (perto do Reino) ao domínio do chefe no fim. Cada região e cada zona neutra é um polígono de bordas onduladas; as zonas neutras ficam entre as regiões (as paradas da Caravana e os animais pacíficos). Fora delas é mata fechada (parede, pela grade do terreno de 80 px). Na velocidade de um personagem do começo (~190 px/s), atravessar leva cerca de 3 minutos. Medidas da tabela: a caixa em volta de cada polígono.
 
 | Região | Tamanho (px) | Força dos mobs | XP da 1ª descoberta de cada área | Mobs por partida |
 | --- | --- | --- | --- | --- |
-| Zona segura | 1.000 × 600 | ×1,0 | 0 | nenhum |
-| Fácil | 1.800 × 1.600 | ×1,0 | 30 | 6 lobo, 4 cervo, 2 aranha |
-| Média | 1.800 × 2.600 | ×1,5 | 50 | 6 lobo, 5 aranha, 3 javali, 3 cervo |
-| Difícil | 1.400 × 3.200 | ×2,2 | 80 | 7 lobo, 6 aranha, 5 javali, 2 cervo |
-| Domínio do Boss | 1.200 × 1.600 | ×2,6 | 120 | 2 lobo |
+| Zona segura | 1.303 × 1.954 | ×1,0 | 0 | nenhum |
+| Fácil | 6.742 × 2.201 | ×1,0 | 30 | 16 lobo, 5 aranha |
+| Média | 6.981 × 2.204 | ×1,5 | 50 | 12 lobo, 10 aranha, 6 javali |
+| Difícil | 5.498 × 1.840 | ×2,2 | 80 | 12 lobo, 10 aranha, 10 javali |
+| Domínio do Boss | 2.058 × 1.815 | ×2,6 | 120 | 3 lobo |
+| Clareira da Entrada | 958 × 2.062 | ×1,0 | 10 | 2 cervo |
+| Vau do Riacho | 1.893 × 3.917 | ×1,0 | 10 | 3 cervo |
+| Campo dos Cervos | 2.046 × 3.697 | ×1,0 | 10 | 3 cervo |
+| Pouso do Caçador | 961 × 1.740 | ×1,0 | 10 | 2 cervo |
 
 ### Mobs (TASK-012, provisório)
 
@@ -504,7 +508,7 @@ Cada nível custa **1 ponto** de habilidade. A cada nível acima do 1: dano e cu
 | Peles para o curtidor | entregar | 4 Pele de lobo | 90 | 100 | 9 |
 | Fios para a tecelã | entregar | 5 Teia de aranha | 80 | 100 | 8 |
 | O coração da mata | explorar | Coração da Mata | 120 | 200 | 12 |
-| A clareira do Guardião | explorar | Clareira do Guardião | 150 | 250 | 15 |
+| A clareira do Guardião | explorar | Clareira do Chefe | 150 | 250 | 15 |
 
 ### Conquistas (TASK-103)
 

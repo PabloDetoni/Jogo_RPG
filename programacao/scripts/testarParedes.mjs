@@ -1,4 +1,5 @@
-// Varredura das paredes da Floresta (ajustes da partida, 14/10/2026): o Líder anda encostado em todas as bordas de
+// Varredura das paredes da Floresta (ajustes da partida, 14/10/2026; amostra da beira da mata na Floresta grande, Parte 5):
+// o Líder anda encostado nas bordas de
 // região (as paredes de mata), nas quinas e na borda do mapa, em todas as direções (de frente para a parede e em
 // diagonal ao longo dela), e um monitor dentro da página registra qualquer salto de posição num quadro: o Líder só pode
 // andar o que a velocidade permite (com a esquiva e o empurrão de golpe), nunca ser teletransportado.
@@ -74,51 +75,65 @@ try {
   await cena(`(c.invencivel = true, c.inimigos.forEach((i) => c.matarInimigo(i)), true)`)
   await aba.avaliar(MONITOR)
 
-  const regioes = await cena(`c.mapa.regioes.map((r) => ({ id: r.id, x0: r.x0, x1: r.x1, y0: r.y0, y1: r.y1 }))`)
   const raio = await cena(`c.lider.raio`)
-  console.log(`Regiões: ${regioes.map((r) => r.id).join(', ')} · corpo do Líder: ${raio * 2} px`)
+  // Floresta grande (Parte 5): a mata vem do terreno, com bordas onduladas. A varredura pega uma AMOSTRA espalhada por
+  // toda a beira da mata (casas andáveis encostadas numa casa de mata), com a parede de cada uma (cima, baixo, esquerda
+  // ou direita), e testa cada ponto como antes. Percorrer a borda inteira levaria quase uma hora.
+  const amostras = await cena(`(() => {
+    const t = c.mapa.terreno, cel = t.celula, todas = []
+    const mata = (cx, cy) => cx < 0 || cy < 0 || cx >= t.colunas || cy >= t.linhas || t.tipos[cy * t.colunas + cx] === 0
+    for (let l = 0; l < t.linhas; l++) for (let col = 0; col < t.colunas; col++) {
+      if (mata(col, l)) continue
+      for (const [dc, dl, lado] of [[0, -1, 'cima'], [0, 1, 'baixo'], [-1, 0, 'esquerda'], [1, 0, 'direita']]) {
+        if (!mata(col + dc, l + dl)) continue
+        const ponto = c.lugarLivre(c.lider.tamanho, { x: (col + 0.5) * cel, y: (l + 0.5) * cel }, c.lider, 2)
+        todas.push({ x: Math.round(ponto.x), y: Math.round(ponto.y), lado, regiao: c.regiaoEm(ponto)?.id ?? 'mata' })
+      }
+    }
+    const passo = Math.max(1, Math.floor(todas.length / 48))
+    return { total: todas.length, lista: todas.filter((_, i) => i % passo === 0).slice(0, 48) }
+  })()`)
+  console.log(`Beira da mata: ${amostras.total} pontos; testando ${amostras.lista.length} · corpo do Líder: ${raio * 2} px`)
   // Teclas de cada lado: a que vai contra a parede e as duas que andam ao longo dela
   const lados = {
-    cima: { contra: 'w', ao: ['a', 'd'], ponto: (r, t) => ({ x: r.x0 + (r.x1 - r.x0) * t, y: r.y0 + raio + 4 }) },
-    baixo: { contra: 's', ao: ['a', 'd'], ponto: (r, t) => ({ x: r.x0 + (r.x1 - r.x0) * t, y: r.y1 - raio - 4 }) },
-    esquerda: { contra: 'a', ao: ['w', 's'], ponto: (r, t) => ({ x: r.x0 + raio + 4, y: r.y0 + (r.y1 - r.y0) * t }) },
-    direita: { contra: 'd', ao: ['w', 's'], ponto: (r, t) => ({ x: r.x1 - raio - 4, y: r.y0 + (r.y1 - r.y0) * t }) },
+    cima: { contra: 'w', ao: ['a', 'd'] },
+    baixo: { contra: 's', ao: ['a', 'd'] },
+    esquerda: { contra: 'a', ao: ['w', 's'] },
+    direita: { contra: 'd', ao: ['w', 's'] },
   }
   let pontos = 0
   const deslizou = []
-  for (const regiao of regioes) {
+  const porRegiao = {}
+  for (const amostra of amostras.lista) {
     const antes = (await aba.avaliar(`window.__saltos.length`)) ?? 0
-    for (const [nome, lado] of Object.entries(lados)) {
-      for (const t of [0.04, 0.3, 0.5, 0.7, 0.96]) {
-        const alvo = lado.ponto(regiao, t)
-        await colocar(alvo.x, alvo.y)
-        await pausa(120)
-        // De frente para a parede: não pode virar deslizar para o lado
-        const antesDeFrente = await cena(`({ x: c.lider.x, y: c.lider.y })`)
-        await aba.segurar([lado.contra], 450)
-        const depoisDeFrente = await cena(`({ x: c.lider.x, y: c.lider.y })`)
-        const deLado = nome === 'cima' || nome === 'baixo' ? Math.abs(depoisDeFrente.x - antesDeFrente.x) : Math.abs(depoisDeFrente.y - antesDeFrente.y)
-        if (deLado > 6) deslizou.push({ regiao: regiao.id, lado: nome, t, deLado: Math.round(deLado) })
-        // Em diagonal ao longo dela para os dois lados (até a quina)
-        await aba.segurar([lado.contra, lado.ao[0]], 900)
-        await aba.segurar([lado.contra, lado.ao[1]], 900)
-        // Só ao longo dela, encostado
-        await aba.segurar([lado.ao[0]], 500)
-        pontos++
-      }
-      console.log(`  ${regiao.id} · ${nome}: ok`)
-    }
+    const lado = lados[amostra.lado]
+    await colocar(amostra.x, amostra.y)
+    await pausa(120)
+    // De frente para a parede: não pode virar deslizar para o lado
+    const antesDeFrente = await cena(`({ x: c.lider.x, y: c.lider.y })`)
+    await aba.segurar([lado.contra], 450)
+    const depoisDeFrente = await cena(`({ x: c.lider.x, y: c.lider.y })`)
+    const deLado = amostra.lado === 'cima' || amostra.lado === 'baixo' ? Math.abs(depoisDeFrente.x - antesDeFrente.x) : Math.abs(depoisDeFrente.y - antesDeFrente.y)
+    if (deLado > 6) deslizou.push({ ...amostra, deLado: Math.round(deLado) })
+    // Em diagonal ao longo dela para os dois lados, e só ao longo dela, encostado
+    await aba.segurar([lado.contra, lado.ao[0]], 700)
+    await aba.segurar([lado.contra, lado.ao[1]], 700)
+    await aba.segurar([lado.ao[0]], 400)
+    pontos++
     const depois = await aba.avaliar(`window.__saltos.length`)
-    const saltos = await aba.avaliar(`window.__saltos.slice(${antes})`)
-    conferir(`${regiao.id}: andando encostado em todas as paredes e quinas, o Líder nunca salta de lugar`, depois === antes, saltos.slice(0, 5))
-    if (depois !== antes) await aba.print(`salto-${regiao.id}`)
+    porRegiao[amostra.regiao] ??= { pontos: 0, saltos: [] }
+    porRegiao[amostra.regiao].pontos++
+    if (depois !== antes) porRegiao[amostra.regiao].saltos.push(...(await aba.avaliar(`window.__saltos.slice(${antes})`)))
+  }
+  for (const [regiao, { pontos: quantos, saltos }] of Object.entries(porRegiao)) {
+    conferir(`${regiao}: andando encostado na mata (${quantos} pontos da amostra), o Líder nunca salta de lugar`, saltos.length === 0, saltos.slice(0, 5))
   }
   console.log(`  (${pontos} pontos de parede · maior passo do Líder num quadro: ${(await aba.avaliar(`window.__maiorPasso`)).toFixed(1)} px)`)
   conferir('empurrando de frente contra a parede, o Líder nunca desliza para o lado (no máximo 6 px)', deslizou.length === 0, deslizou.slice(0, 5))
 
   // Com o grupo e mobs: andando encostado na parede da Fácil, ninguém salta de lugar à vista
-  const facil = regioes.find((r) => r.id === 'facil')
-  await colocar(facil.x0 + 300, facil.y0 + 40)
+  const naFacil = amostras.lista.find((a) => a.regiao === 'facil' && a.lado === 'cima') ?? amostras.lista.find((a) => a.regiao === 'facil')
+  await colocar(naFacil.x, naFacil.y)
   await cena(`(c.encherGrupo(), true)`)
   await pausa(800)
   await cena(`(() => { for (let i = 0; i < 3; i++) { const m = c.criarMobDoMundo('lobo', 'facil', { x: c.lider.x + 220 + i * 60, y: c.lider.y + 80 }); } return true })()`)

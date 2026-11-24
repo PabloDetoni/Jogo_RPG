@@ -61,12 +61,25 @@ try {
   // Quantos mobs nasceram em cada região (conferido na seção 7; até lá, o grupo derrota alguns)
   const nasceram = await cena(`(() => { const t = {}; for (const i of c.inimigos) t[i.regiao] = (t[i.regiao] ?? 0) + 1; return t })()`)
   await aba.print('01-floresta-inicio')
+  // Floresta grande (Parte 5): as posições do roteiro saem do mapa (os inícios das zonas), não de números soltos
+  const Z = await cena(`(() => { const z = {}; for (const r of c.mapa.regioes) z[r.id] = { x: Math.round(r.inicio.x), y: Math.round(r.inicio.y) }; return z })()`)
+  // Uma faixa reta de 1100 px na Fácil sem árvore nem pedra (para andar, mirar e atirar sem bater em nada)
+  const faixa = await cena(`(() => {
+    const livre = (x, y) => !c.mapa.obstaculos.some((o) => Math.abs(o.x - x) < o.largura / 2 + 70 && Math.abs(o.y - y) < o.altura / 2 + 70)
+    for (let y = 1000; y <= 1900; y += 25) for (let x = 2700; x <= 5500; x += 50) {
+      let ok = true
+      for (let d = 0; d <= 1100 && ok; d += 50) ok = livre(x + d, y) && c.regiaoEm({ x: x + d, y })?.id === 'facil'
+      if (ok) return { x, y }
+    }
+    return null
+  })()`)
+  conferir('achou uma faixa livre de 1100 px na Fácil para os testes de andar e mirar', Boolean(faixa), faixa)
 
   console.log('2. Câmera segue o Líder (TASK-060)')
   // A faixa y = 1900, de x = 1600 a 2600, não tem árvore nem pedra (o ponto 1800, 1800 caía dentro de uma árvore). Os mobs
   // da Fácil que estiverem passeando nela saem antes (um cervo parado na frente segura o Líder, como deve ser)
-  const noCaminho = await cena(`c.inimigos.filter((i) => i.x > 1650 && i.x < 2700 && Math.abs(i.y - 1900) < 160).map((i) => (c.matarInimigo(i), i.tipo))`)
-  await colocarLider(1800, 1900)
+  const noCaminho = await cena(`c.inimigos.filter((i) => i.x > ${faixa.x} - 150 && i.x < ${faixa.x} + 1250 && Math.abs(i.y - ${faixa.y}) < 300).map((i) => (c.matarInimigo(i), i.tipo))`)
+  await colocarLider(faixa.x, faixa.y)
   await pausa(300)
   const antes = await cena(`({ scrollX: c.cameras.main.scrollX, x: c.lider.x })`)
   // Segura D até o Líder andar uns 200 px (um aliado no caminho ou um quadro lento do navegador escondido não derrubam a
@@ -82,17 +95,19 @@ try {
   await aba.print('02-camera')
 
   console.log('3. A mira continua certa com a câmera andando (mouse parado)')
-  await colocarLider(2400, 1800)
+  const P3 = { x: faixa.x + 300, y: faixa.y }
+  const M3 = { x: P3.x + 300, y: P3.y - 100 }
+  await colocarLider(P3.x, P3.y)
   await pausa(400)
-  const alvo = await naTela(2700, 1700)
+  const alvo = await naTela(M3.x, M3.y)
   await aba.moverMouse(alvo.x, alvo.y)
   await pausa(150)
   // O ângulo esperado sai de onde o Líder está de verdade (um aliado pode tê-lo empurrado uns pixels depois de colocado)
   const miraParado = await cena(`({ angulo: c.anguloDaMira, mouse: c.mouseNoMundo, lider: { x: c.lider.x, y: c.lider.y } })`)
-  const esperadoParado = Math.atan2(1700 - miraParado.lider.y, 2700 - miraParado.lider.x)
+  const esperadoParado = Math.atan2(M3.y - miraParado.lider.y, M3.x - miraParado.lider.x)
   conferir(
     'com a câmera parada, a mira aponta para onde o mouse está',
-    Math.hypot(miraParado.mouse.x - 2700, miraParado.mouse.y - 1700) < 3 && Math.abs(miraParado.angulo - esperadoParado) < 0.05,
+    Math.hypot(miraParado.mouse.x - M3.x, miraParado.mouse.y - M3.y) < 3 && Math.abs(miraParado.angulo - esperadoParado) < 0.05,
     { miraParado, esperadoParado },
   )
   await aba.segurar(['s'], 900) // a câmera desce; o mouse fica parado na tela
@@ -117,33 +132,35 @@ try {
   console.log('4. Bordas e mata fechada: ninguém atravessa')
   // O corpo que colide é menor que o desenho (ajustes de 14/10): o limite é o raio dele
   const raioDoLider = await cena(`c.lider.raio`)
-  await colocarLider(60, 1800)
+  await colocarLider(Z.zonaSegura.x - 250, Z.zonaSegura.y)
   await aba.segurar(['a'], 900)
   const esquerda = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX })`)
   conferir('na beira esquerda do mapa, o Líder não passa e a câmera para no limite', esquerda.x >= raioDoLider - 1 && esquerda.scrollX === 0, esquerda)
-  await colocarLider(500, 1540)
-  await aba.segurar(['w'], 900)
-  const cima = await cena(`c.lider.y`)
-  conferir('na zona segura, a mata fechada de cima é parede', cima >= 1500 + raioDoLider - 1, Math.round(cima))
-  await colocarLider(500, 2060)
-  await aba.segurar(['s'], 900)
-  const baixo = await cena(`c.lider.y`)
-  conferir('...e a de baixo também', baixo <= 2100 - raioDoLider + 1, Math.round(baixo))
+  // (a mata da Floresta grande vem do terreno: depois de empurrar a parede, o Líder continua na zona)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y - 600)
+  await aba.segurar(['w'], 1500)
+  const cima = await cena(`({ y: Math.round(c.lider.y), regiao: c.regiaoEm(c.lider)?.id ?? null })`)
+  conferir('na zona segura, a mata fechada de cima é parede', cima.regiao === 'zonaSegura' && cima.y > 300, cima)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y + 600)
+  await aba.segurar(['s'], 1500)
+  const baixo = await cena(`({ y: Math.round(c.lider.y), regiao: c.regiaoEm(c.lider)?.id ?? null })`)
+  conferir('...e a de baixo também', baixo.regiao === 'zonaSegura' && baixo.y < 2600, baixo)
   // O fundo é o domínio do Boss: sozinho e sem o Invencível, o Líder às vezes caía antes da conferência, e Líder sozinho
   // caído é Derrota (a partida acabava no meio do roteiro)
   await cena(`(c.invencivel = true, true)`)
-  await colocarLider(7150, 1800)
-  await aba.segurar(['d'], 900)
+  const chefe = await cena(`({ x: Math.round(c.mapa.lugarDoChefe.x), y: Math.round(c.mapa.lugarDoChefe.y) })`)
+  await cena(`(() => { const p = c.lugarLivre(c.lider.tamanho, { x: ${chefe.x} + 300, y: ${chefe.y} }, c.lider, 4); c.lider.colocarEm(p.x, p.y); c.cameras.main.centerOn(p.x, p.y); return true })()`)
+  await aba.segurar(['d'], 1500)
   await pausa(600)
-  const direita = await cena(`({ x: c.lider.x, scrollX: c.cameras.main.scrollX, limite: c.mapa.tamanho.largura - c.cameras.main.width })`)
-  conferir('no fundo da Floresta, o Líder não sai do mapa e a câmera para no limite', direita.x <= 7200 - raioDoLider + 1 && Math.abs(direita.scrollX - direita.limite) < 2, direita)
+  const direita = await cena(`({ x: Math.round(c.lider.x), regiao: c.regiaoEm(c.lider)?.id ?? null, scrollX: c.cameras.main.scrollX, limite: c.mapa.tamanho.largura - c.cameras.main.width })`)
+  conferir('no fundo da Floresta, o Líder não sai do domínio do chefe e a câmera para no limite', direita.regiao === 'dominioDoBoss' && Math.abs(direita.scrollX - direita.limite) < 2, direita)
   await aba.print('03-fundo-da-floresta')
-  await colocarLider(400, 1800)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y)
   await cena(`(c.lider.vida = c.lider.vidaMaxima, c.invencivel = false, true)`)
 
   console.log('5. O grupo atravessa a Floresta junto')
   await cena(`(c.encherGrupo(), true)`)
-  await colocarLider(400, 1800)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y)
   for (const membro of await cena(`c.aliados.map((a, i) => i)`)) await cena(`(c.aliados[${membro}].colocarEm(c.lider.x - 60 - ${membro} * 10, c.lider.y + (${membro} - 2) * 50), true)`)
   await pausa(500)
   await aba.segurar(['d'], 6000)
@@ -154,7 +171,7 @@ try {
   // Corredor estreito (ajustes de 14/10, hitbox menor): o vão mais apertado entre dois obstáculos (árvore ou pedra), um ao
   // lado do outro, longe da mata fechada, com o grupo de um lado e o Líder indo para o outro; todos passam sem travar
   const corredor = await cena(`(() => {
-    const obs = c.mapa.obstaculos.filter((o) => o.tipo !== 'mata' && o.x > 1100 && o.x < 6200)
+    const obs = c.mapa.obstaculos.filter((o) => o.tipo !== 'mata' && c.regiaoEm(o)?.id === 'facil')
     const livre = (x, y) => !c.mapa.obstaculos.some((o) => Math.abs(o.x - x) < o.largura / 2 + 40 && Math.abs(o.y - y) < o.altura / 2 + 40)
     let melhor = null
     for (const a of obs) for (const b of obs) {
@@ -203,7 +220,7 @@ try {
       }
       return { regiao: document.querySelector('.hud-regiao')?.textContent ?? '', fora: problemas }
     })()`)
-  await colocarLider(700, 1800)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y)
   await pausa(500)
   const naZonaSegura = await quadroDoMinimapa()
   conferir('na zona segura, o HUD mostra "Zona segura"', naZonaSegura.regiao === 'Zona segura', naZonaSegura.regiao)
@@ -218,7 +235,7 @@ try {
   await aba.cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
   await pausa(400)
   conferir('...também em 1280×720 e em 1920×1080', Object.values(emOutrasTelas).every((lista) => lista.length === 0), emOutrasTelas)
-  await colocarLider(1400, 1800)
+  await colocarLider(Z.facil.x, Z.facil.y)
   await pausa(500)
   conferir('entrando na Fácil, o HUD mostra "Fácil"', (await quadroDoMinimapa()).regiao === 'Fácil')
   // A taxa da fuga como o HUD mostra ("Fuga (F): 11% · ...")
@@ -227,16 +244,23 @@ try {
     await pausa(400)
     return aba.avaliar(`parseInt(document.querySelector('.hud').innerText.split('Fuga (F): ')[1] ?? '', 10)`)
   }
-  const taxaPerto = await taxa(400, 1800)
-  const taxaMedia = await taxa(3600, 1800)
-  const taxaDificil = await taxa(5900, 1800)
-  const taxaBoss = await taxa(6100, 1800)
-  conferir('o custo da fuga sobe com a distância do ponto inicial', taxaPerto < taxaMedia && taxaMedia < taxaDificil, { taxaPerto, taxaMedia, taxaDificil })
-  conferir('no domínio do Boss, a fuga custa +7 pontos (RF48)', taxaBoss - taxaDificil >= 7 && taxaBoss - taxaDificil <= 8, { taxaDificil, taxaBoss })
+  // A taxa conta a distância em LINHA RETA até o início do bioma (RF48, mantido pelo Pablo em 20/11). Com o caminho em
+  // "S", o início da Difícil fica mais perto do começo, em linha reta, que o da Média: a conferência usa pontos em
+  // distâncias crescentes (zona segura, Fácil, Média) e, para o +7 do domínio, dois pontos dos lados da divisa do fim.
+  const taxaPerto = await taxa(Z.zonaSegura.x, Z.zonaSegura.y)
+  const taxaMedia = await taxa(Z.facil.x, Z.facil.y)
+  const taxaDificil = await taxa(Z.media.x, Z.media.y)
+  const antesDoDominio = await cena(`(() => { const p = c.lugarLivre(c.lider.tamanho, { x: ${Z.dominioDoBoss.x} - 600, y: ${Z.dominioDoBoss.y} }, c.lider, 4); return { x: Math.round(p.x), y: Math.round(p.y) } })()`)
+  const taxaAntes = await taxa(antesDoDominio.x, antesDoDominio.y)
+  const taxaBoss = await taxa(Z.dominioDoBoss.x, Z.dominioDoBoss.y)
+  conferir('o custo da fuga sobe com a distância (em linha reta) do ponto inicial', taxaPerto < taxaMedia && taxaMedia < taxaDificil, { taxaPerto, taxaMedia, taxaDificil })
+  conferir('no domínio do Boss, a fuga custa +7 pontos (RF48)', taxaBoss - taxaAntes >= 7 && taxaBoss - taxaAntes <= 10, { taxaAntes, taxaBoss })
   conferir('no domínio do Boss, o HUD avisa a região em destaque', await aba.avaliar(`!!document.querySelector('.hud-regiao-boss')`))
   const noDominio = await quadroDoMinimapa()
   conferir('...e o nome mais comprido ("Domínio do Boss") também cabe no quadro', noDominio.regiao === 'Domínio do Boss' && noDominio.fora.length === 0, noDominio)
   await aba.print('05-dominio-do-boss')
+  // (passa pela Difícil também: ela entra nas regiões descobertas, para o Ponto de partida da seção 15)
+  await taxa(Z.dificil.x, Z.dificil.y)
 
   console.log('7. Mobs por região (TASK-062)')
   // Onde cada um nasceu (a casa): depois de nascer, eles andam e perseguem. Dentro e encostado medem pelo corpo que
@@ -250,7 +274,7 @@ try {
   conferir('nenhum mob dentro de árvore, pedra ou mata', dentroDeObstaculo === 0, dentroDeObstaculo)
   const encostados = await cena(`(() => { const l = c.inimigos; let n = 0; for (let a = 0; a < l.length; a++) for (let b = a + 1; b < l.length; b++) { const m = l[a].raio + l[b].raio - 1; if (Math.abs(l[a].x - l[b].x) < m && Math.abs(l[a].y - l[b].y) < m) n++ } return n })()`)
   conferir('nenhum mob em cima de outro', encostados === 0, encostados)
-  await colocarLider(400, 1800)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y)
   await pausa(400)
   const dormindo = await cena(`({ dormindo: c.inimigos.filter((i) => i.dormindo).length, total: c.inimigos.length })`)
   conferir('longe do Líder, os mobs dormem (não pensam nem andam: 60 FPS)', dormindo.dormindo >= dormindo.total - 4, dormindo)
@@ -308,7 +332,7 @@ try {
   await cena(`(c.inimigos.filter((i) => i.__cervo).forEach((i) => c.matarInimigo(i)), true)`)
 
   console.log('10. Aliado longe ou preso volta por fora da tela')
-  await colocarLider(2400, 1800)
+  await colocarLider(faixa.x + 600, faixa.y)
   await pausa(600)
   await cena(`(() => { const a = c.aliados[0]; a.__longe = true; a.colocarEm(c.lider.x - 1500, c.lider.y); return true })()`)
   await pausa(4500)
@@ -321,6 +345,9 @@ try {
   conferir('...e chega andando até o grupo', (await cena(`Math.round(Math.hypot(c.aliados.find((um) => um.__longe).x - c.lider.x, c.aliados.find((um) => um.__longe).y - c.lider.y))`)) < 400)
 
   console.log('11. Minimapa e descoberta (TASK-063)')
+  // (a Clareira das Flores fica no meio da Fácil: o Líder passa por ela)
+  await cena(`(() => { const a = c.mapa.areas.find((u) => u.id === 'clareiraDasFlores'); const p = c.lugarLivre(c.lider.tamanho, a, c.lider, 4); c.lider.colocarEm(p.x, p.y); c.cameras.main.centerOn(p.x, p.y); return true })()`)
+  await pausa(600)
   const minimapa = await aba.avaliar(`(() => {
     const t = document.querySelector('.minimapa')
     if (!t) return null
@@ -336,9 +363,9 @@ try {
   await aba.print('07-minimapa')
 
   console.log('11b. Opções de desenvolvedor (RF61, só no npm run dev): super velocidade e teletransporte')
-  await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - 900, i.y - 1800) < 1600).forEach((i) => c.matarInimigo(i)), true)`)
+  await cena(`(c.inimigos.filter((i) => Math.hypot(i.x - ${faixa.x}, i.y - ${faixa.y}) < 1800).forEach((i) => c.matarInimigo(i)), true)`)
   const andarParaADireita = async () => {
-    await colocarLider(600, 1800)
+    await colocarLider(faixa.x, faixa.y)
     await pausa(300)
     const antes = await cena(`c.lider.x`)
     await aba.segurar(['d'], 500)
@@ -357,8 +384,15 @@ try {
   const travaNormal = await cena(`c.saltoMaximoPorQuadro(1000 / 60)`)
   conferir('6×: a trava do maior passo cresce só no dev; de volta a 1×, é a de sempre', travas.vezes === 6 && travas.dev > travaNormal * 3 && (await cena(`c.superVelocidade`)) === 1, { ...travas, normal: travaNormal })
   // Clique no minimapa: o grupo vai para o lugar livre mais perto do ponto, com a câmera junto
-  const alvoDoDev = await cena(`(() => { const r = c.mapa.regioes.find((u) => u.id === 'media'); return { x: Math.round(r.inicio.x), y: Math.round(r.inicio.y), largura: c.mapa.tamanho.largura, altura: c.mapa.tamanho.altura } })()`)
-  const noMinimapa = await aba.avaliar(`(() => { const r = document.querySelector('.minimapa').getBoundingClientRect(); return { x: r.left + r.width * ${alvoDoDev.x} / ${alvoDoDev.largura}, y: r.top + r.height * ${alvoDoDev.y} / ${alvoDoDev.altura} } })()`)
+  // (o minimapa mostra uma janela em volta do Líder: o alvo é um ponto livre dentro dela, 1000 px à direita)
+  const alvoDoDev = await cena(`(() => {
+    const p = c.lugarLivre(c.lider.tamanho, { x: c.lider.x + 1000, y: c.lider.y }, c.lider, 8)
+    const t = c.mapa.tamanho, j = { largura: Math.min(3600, t.largura), altura: Math.min(1800, t.altura) }
+    j.x = Math.min(Math.max(c.lider.x - j.largura / 2, 0), t.largura - j.largura)
+    j.y = Math.min(Math.max(c.lider.y - j.altura / 2, 0), t.altura - j.altura)
+    return { x: Math.round(p.x), y: Math.round(p.y), janela: j }
+  })()`)
+  const noMinimapa = await aba.avaliar(`(() => { const r = document.querySelector('.minimapa').getBoundingClientRect(), j = ${JSON.stringify(alvoDoDev.janela)}; return { x: r.left + r.width * (${alvoDoDev.x} - j.x) / j.largura, y: r.top + r.height * (${alvoDoDev.y} - j.y) / j.altura } })()`)
   await aba.clicarNaTela(noMinimapa.x, noMinimapa.y)
   await pausa(400)
   const depoisDoMinimapa = await cena(`(() => {
@@ -385,8 +419,8 @@ try {
   const depoisDoT = await cena(`({ dx: Math.round(c.lider.x - ${antesDoT.x}), vezes: c.teletransportes ?? 0, puxando: !!c.lider.puxando })`)
   conferir('T + clique: o grupo vai para o ponto clicado e o clique não vira ataque', depoisDoT.vezes === antesDoT.vezes + 1 && Math.abs(depoisDoT.dx - 320) < 120 && !depoisDoT.puxando, depoisDoT)
   // Volta ao Reino com Q (num lugar sem mobs, fora de combate; a contagem é adiantada)
-  await colocarLider(400, 1800)
-  await cena(`(c.inimigos.filter((i) => i.perseguindo || Math.hypot(i.x - 400, i.y - 1800) < 1500).forEach((i) => c.matarInimigo(i)), c.ultimoDano = -999999, true)`)
+  await colocarLider(Z.zonaSegura.x, Z.zonaSegura.y)
+  await cena(`(c.inimigos.filter((i) => i.perseguindo || Math.hypot(i.x - ${Z.zonaSegura.x}, i.y - ${Z.zonaSegura.y}) < 1500).forEach((i) => c.matarInimigo(i)), c.ultimoDano = -999999, true)`)
   await aba.esperar(`!${CENA}.emCombate`, 'sair de combate', 9000)
   await aba.apertar('q')
   await cena(`(c.retorno.msRestantes = 300, true)`)
@@ -492,8 +526,11 @@ try {
   await aba.clicar('Muito difícil')
   await aba.esperarTela('Preparação')
   await aba.clicar('Começar partida')
-  await aba.esperar(`!!${CENA}?.boss && !!${CENA}.lider`, 'o Boss', 20000)
+  await aba.esperar(`!!${CENA}?.lider`, 'a partida', 20000)
   await pausa(800)
+  // O Guardião saiu do mapa (Parte 5; o chefe da Floresta grande é o Ogro, Parte 6d): o roteiro o chama no lugar do chefe
+  await cena(`(c.criarGuardiao(c.mapa.lugarDoChefe), true)`)
+  await pausa(300)
   const boss = await cena(`({ x: Math.round(c.boss.x), y: Math.round(c.boss.y), noDominio: c.noDominioDeBoss(c.boss), liderNoDominio: c.noDominioDeBoss(c.lider) })`)
   conferir('o Boss nasce no domínio dele, e "Muito difícil" é a entrada do domínio', boss.noDominio && boss.liderNoDominio, boss)
   conferir('no domínio do Boss, a barra de vida grande aparece no HUD', await aba.avaliar(`!!document.querySelector('.barra-do-boss')`))

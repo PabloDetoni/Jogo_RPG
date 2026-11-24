@@ -2,7 +2,8 @@ import * as Phaser from 'phaser'
 import { coresDaArena } from '../dados/arenaDeTeste.js'
 import { arteDaFloresta } from '../dados/arte.js'
 import { chaveDaArte, escolherPedra, gramaDaRegiao } from '../regras/arte.js'
-import { criarSorteio } from '../regras/mundo.js'
+import { retangulosDoTipo } from '../regras/terreno.js'
+import { criarSorteio, dentroDaRegiao } from '../regras/mundo.js'
 import { imagemDaArte, texturaDaArte } from './arte.js'
 import { camadas } from './efeitos.js'
 
@@ -87,18 +88,31 @@ export function desenharFloresta(cena, mapa) {
   }
 
   // O chão de cada região: os tiles de grama com o tom dela, ou o tom de verde de hoje
+  // (de trás para a frente: onde duas zonas se sobrepõem, a primeira da lista fica por cima, como em regiaoEm)
   const comGrama = new Set()
-  for (const regiao of mapa.regioes) {
+  const chaoDosPoligonos = cena.add.graphics().setDepth(camadas.manchas - 12)
+  for (const regiao of [...mapa.regioes].reverse()) {
     const { x0, x1, y0, y1 } = regiao
     const grama = gramaDaRegiao(disponiveis, regiao.id)
     if (grama) {
       comGrama.add(regiao.id)
       const chao = texturaDoChao(cena, grama.chaves, sorteio)
-      cena.add
-        .tileSprite((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0, chao.nome)
-        .setTileScale(tamanhoDoTile / chao.lado)
-        .setTint(grama.tinta)
-        .setDepth(camadas.manchas - 12)
+      // Floresta grande (Parte 5): a grama cobre só as casas da zona (retângulos do terreno), não a caixa do polígono
+      const indice = mapa.regioes.indexOf(regiao)
+      const pedacos = mapa.terreno ? retangulosDoTipo(mapa.terreno, indice + 1) : [{ x: (x0 + x1) / 2, y: (y0 + y1) / 2, largura: x1 - x0, altura: y1 - y0 }]
+      // (o deslocamento do tile, em px da textura, faz os pedaços vizinhos continuarem o mesmo desenho)
+      const escalaDoTile = tamanhoDoTile / chao.lado
+      for (const pedaco of pedacos) {
+        cena.add
+          .tileSprite(pedaco.x, pedaco.y, pedaco.largura, pedaco.altura, chao.nome)
+          .setTilePosition((pedaco.x - pedaco.largura / 2) / escalaDoTile, (pedaco.y - pedaco.altura / 2) / escalaDoTile)
+          .setTileScale(escalaDoTile)
+          .setTint(grama.tinta)
+          .setDepth(camadas.manchas - 12)
+      }
+    } else if (regiao.poligono) {
+      // Floresta grande (Parte 5): o chão é o polígono da zona
+      chaoDosPoligonos.fillStyle(regiao.chao, 1).fillPoints(regiao.poligono.map(([x, y]) => ({ x, y })), true)
     } else {
       cena.add.rectangle((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0, regiao.chao).setDepth(camadas.manchas - 12)
     }
@@ -125,12 +139,13 @@ export function desenharFloresta(cena, mapa) {
     for (let i = 0; i < quantas; i++) {
       const x = entre(regiao.x0 + 60, regiao.x1 - 60)
       const y = entre(regiao.y0 + 60, regiao.y1 - 60)
+      if (regiao.poligono && !dentroDaRegiao(regiao, { x, y })) continue
       const mancha = cena.add.image(x, y, 'floresta-mancha').setTint(regiao.mancha).setDisplaySize(entre(120, 300), entre(60, 150))
       guardar(mancha.setDepth(camadas.manchas - 6), x, y)
     }
   }
 
-  // Beira da mata: copas ao longo de toda borda entre uma região e a mata (com a arte, árvores e arbustos)
+  // Copas na beira da mata (com a arte, árvores e arbustos)
   const arvore = imagemDaArte(cena, arteDaFloresta.arvore)
   const arbusto = imagemDaArte(cena, arteDaFloresta.arbusto)
   const copa = (x, y) => {
@@ -149,28 +164,9 @@ export function desenharFloresta(cena, mapa) {
     const imagem = cena.add.image(x, y, 'floresta-copa').setTint(sorteio() < 0.5 ? cores.copa : cores.copaClara).setDisplaySize(tamanho, tamanho)
     guardar(imagem.setDepth(camadas.manchas - 4), x, y)
   }
-  const linhaDeCopas = (xa, ya, xb, yb) => {
-    const comprimento = Math.hypot(xb - xa, yb - ya)
-    const passos = Math.max(1, Math.round(comprimento / 70))
-    for (let i = 0; i <= passos; i++) copa(xa + ((xb - xa) * i) / passos + entre(-10, 10), ya + ((yb - ya) * i) / passos + entre(-10, 10))
-  }
-  mapa.regioes.forEach((regiao, indice) => {
-    const anterior = mapa.regioes[indice - 1]
-    const seguinte = mapa.regioes[indice + 1]
-    if (regiao.y0 > 0) linhaDeCopas(regiao.x0, regiao.y0 - 18, regiao.x1, regiao.y0 - 18)
-    if (regiao.y1 < mapa.tamanho.altura) linhaDeCopas(regiao.x0, regiao.y1 + 18, regiao.x1, regiao.y1 + 18)
-    // Degraus entre regiões de alturas diferentes: a parede de lado
-    const lado = (vizinha, x, deslocamento) => {
-      if (!vizinha) {
-        linhaDeCopas(x + deslocamento, regiao.y0, x + deslocamento, regiao.y1)
-        return
-      }
-      if (vizinha.y0 > regiao.y0) linhaDeCopas(x + deslocamento, regiao.y0, x + deslocamento, vizinha.y0)
-      if (vizinha.y1 < regiao.y1) linhaDeCopas(x + deslocamento, vizinha.y1, x + deslocamento, regiao.y1)
-    }
-    lado(anterior, regiao.x0, -18)
-    lado(seguinte, regiao.x1, 18)
-  })
+
+  // Beira da mata (Parte 5): uma copa em cada lado de casa de mata encostado no chão (regras/terreno.js, beiraDaMata)
+  for (const ponto of mapa.beiraDaMata ?? []) copa(ponto.x + entre(-14, 14), ponto.y + entre(-14, 14))
 
   // Árvores e pedras soltas (as hitboxes são os retângulos; o desenho cabe neles)
   cena.copas = []
