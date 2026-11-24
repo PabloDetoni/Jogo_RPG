@@ -21,7 +21,7 @@ As sete partes (com a Parte 6 em quatro levas) estão feitas, testadas e publica
 | 7 | a Caravana | `0f433a6` | https://claude.ai/artifact/TEmeEinEPMKH8pmensPQb1 |
 | 8 | números das regiões (provisórios) | `e2fdbe6` | https://claude.ai/artifact/SGoTiJrSPhcaEno4tb8RV2 |
 | 9 | os NPCs do Reino | `e38128b` | https://claude.ai/artifact/HBdwBW3iiHxgUqstAeSNxk |
-| 10 | a pesca do Lago desenhada | `PARTE10_COMMIT` | PARTE10_PAGINA |
+| 10 | a pesca do Lago desenhada | `9d0aad2` | https://claude.ai/artifact/Ryo7ddT8LFGrdXm2nSneE8 |
 
 As páginas são privadas: o Pablo compartilha com o Uener e o Lucas pelo botão Share de cada uma.
 
@@ -116,11 +116,11 @@ Os achados que mais importam:
 |---|---|
 | Unitários (Vitest) | 1.031 passando (eram 974 no fim da Parte 3; 57 novos, incluindo as 13 metas) |
 | Lint e build | ok |
-| Floresta (TEST-005) | PARTE10_FLORESTA (eram 77 conferências no fim da Parte 3) |
-| Arena | PARTE10_ARENA |
-| Reino (TEST-006) | PARTE10_REINO |
-| Camadas, botões, paredes, arte | PARTE10_OUTROS |
-| Site (`conferir:configuracao`, contas no site) | tudo certo e 54/54 em cada parte (a da Parte 10 na seção 10) |
+| Floresta (TEST-005) | 105/105, FPS 61 (mínimo 56) (eram 77 conferências no fim da Parte 3) |
+| Arena | 254/254 |
+| Reino (TEST-006) | 84/84 |
+| Camadas, botões, paredes, arte | 34/34, 52/52, 12/12 e 39/39 |
+| Site (`conferir:configuracao`, contas, convidado) | tudo certo e contas 54/54 em cada parte; na Parte 10, também o convidado 11/11 (o roteiro do convidado ainda não passava pelo NPC: corrigido) |
 
 O que falhou no caminho e foi resolvido (detalhes em `testes/Registro.md`):
 - **Roteiros que ainda esperavam o jogo antigo**, ajustados em cada parte:
@@ -333,7 +333,7 @@ Comece com **Iniciar jogo → Jogar como convidado** (ou a sua conta). O que est
 **Próximo passo:** **parei aqui**, como pedido. A próxima mensagem é a da documentação final (diagramas de atividade, protótipos, PDF do Conceito).
 
 **Commits no `main`:**
-`4967aa8` (Parte 4), `a0782a1` (5), `716ca76` (6a), `2cd915f` (6b), `7f9af5b` (6c), `2fe63ba` (6d), `0f433a6` (7), `e2fdbe6` (8), `e38128b` (9), `PARTE10_COMMIT` (10).
+`4967aa8` (Parte 4), `a0782a1` (5), `716ca76` (6a), `2cd915f` (6b), `7f9af5b` (6c), `2fe63ba` (6d), `0f433a6` (7), `e2fdbe6` (8), `e38128b` (9), `9d0aad2` (10).
 
 ---
 
