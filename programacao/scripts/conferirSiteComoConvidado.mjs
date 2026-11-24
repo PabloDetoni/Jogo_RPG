@@ -24,6 +24,8 @@ const clicar = (texto, comeco = false) =>
 const passo = async (texto, comeco = false) => {
   if (!(await clicar(texto, comeco))) throw new Error(`não achei o botão "${texto}"`)
   await pausa(400)
+  // O Mercado, a Forja e a Guilda começam pela conversa com o NPC (Parte 9): a primeira opção do menu abre a tela
+  if (['Mercado', 'Forja', 'Guilda'].includes(texto) && (await aba.avaliar(`(() => { const b = document.querySelector('.npc-menu .botao-de-acao'); b?.click(); return !!b })()`))) await pausa(400)
 }
 
 try {
