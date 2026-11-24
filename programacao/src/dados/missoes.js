@@ -10,7 +10,7 @@ export const tiposDeMissao = ['matar', 'coletar', 'entregar', 'explorar']
 
 // QUADRO DE MISSÕES DA GUILDA (Fase 4, TASK-078). PROVISÓRIO – substituir pelo do grupo (missões do beta: TASK-015).
 // Só com o que existe no beta: os mobs, os itens e as áreas da Floresta. Para trocar, mude só esta lista.
-// alvo: o tipo do mob (matar: lobo, loboAlfa, aranha, javali, cervo, coelho, goblinLanceiro, goblinArqueiro, goblinXama, orc, aranhaMae, guardiao), o id do item (coletar, entregar) ou o id da
+// alvo: o tipo do mob (matar: lobo, loboAlfa, aranha, javali, cervo, coelho, goblinLanceiro, goblinArqueiro, goblinXama, orc, aranhaMae, ogro, guardiao), o id do item (coletar, entregar) ou o id da
 // área (explorar, dados/mundo/floresta.js).
 export const quadroDeMissoes = [
   { id: 'cacarLobos', titulo: 'Caçar lobos', descricao: 'Os lobos da Fácil estão atacando quem passa pela trilha.', tipo: 'matar', alvo: 'lobo', quantidade: 8, recompensa: { ouro: 80, xp: 120 } },
@@ -24,7 +24,8 @@ export const quadroDeMissoes = [
   { id: 'oXamaGoblin', titulo: 'O xamã do acampamento', descricao: 'Enquanto o xamã viver, os goblins não caem. Derrote um xamã.', tipo: 'matar', alvo: 'goblinXama', quantidade: 1, recompensa: { ouro: 120, xp: 180 } },
   { id: 'aranhasNoCaminho', titulo: 'Aranhas no caminho', descricao: 'As aranhas da Média cobriram a trilha de teias.', tipo: 'matar', alvo: 'aranha', quantidade: 6, recompensa: { ouro: 110, xp: 180 } },
   { id: 'javalisBravos', titulo: 'Javalis bravos', descricao: 'Os javalis da Difícil derrubaram a cerca da fazenda.', tipo: 'matar', alvo: 'javali', quantidade: 4, recompensa: { ouro: 150, xp: 240 } },
-  { id: 'oGuardiao', titulo: 'O Guardião da Floresta', descricao: 'Derrote o Guardião, no fundo da Floresta.', tipo: 'matar', alvo: 'guardiao', quantidade: 1, recompensa: { ouro: 400, xp: 600 } },
+  // O chefe da Floresta grande é o Ogro (Parte 6d); o id da missão continua o mesmo (saves antigos)
+  { id: 'oGuardiao', titulo: 'O Ogro da Floresta', descricao: 'Derrote o Ogro, no domínio do fim da Floresta.', tipo: 'matar', alvo: 'ogro', quantidade: 1, recompensa: { ouro: 400, xp: 600 } },
   { id: 'cogumelosParaPocoes', titulo: 'Cogumelos para poções', descricao: 'A curandeira precisa de cogumelos frescos.', tipo: 'coletar', alvo: 'cogumelo', quantidade: 6, recompensa: { ouro: 60, xp: 80 } },
   { id: 'lenhaParaOInverno', titulo: 'Lenha para o inverno', descricao: 'Junte madeira na Floresta.', tipo: 'coletar', alvo: 'madeira', quantidade: 8, recompensa: { ouro: 70, xp: 90 } },
   { id: 'pelesParaOCurtidor', titulo: 'Peles para o curtidor', descricao: 'Traga peles de lobo para a Guilda.', tipo: 'entregar', alvo: 'peleDeLobo', quantidade: 4, recompensa: { ouro: 90, xp: 100 } },
@@ -37,7 +38,7 @@ export function missaoDoQuadro(id) {
   return quadroDeMissoes.find((missao) => missao.id === id) ?? null
 }
 
-const nomesDosMobs = { lobo: 'lobo', loboAlfa: 'Lobo Alfa', coelho: 'coelho', goblinLanceiro: 'goblin lanceiro', goblinArqueiro: 'goblin arqueiro', goblinXama: 'goblin xamã', orc: 'orc', aranhaMae: 'Aranha-Mãe', aranha: 'aranha', javali: 'javali', cervo: 'cervo', guardiao: 'Guardião da Floresta' }
+const nomesDosMobs = { lobo: 'lobo', loboAlfa: 'Lobo Alfa', coelho: 'coelho', goblinLanceiro: 'goblin lanceiro', goblinArqueiro: 'goblin arqueiro', goblinXama: 'goblin xamã', orc: 'orc', aranhaMae: 'Aranha-Mãe', ogro: 'Ogro', aranha: 'aranha', javali: 'javali', cervo: 'cervo', guardiao: 'Guardião da Floresta' }
 
 // O nome do alvo de uma missão: o mob, o item ou a área (um alvo desconhecido aparece como ele mesmo)
 export function nomeDoAlvo(missao) {

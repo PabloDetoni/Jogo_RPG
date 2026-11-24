@@ -191,3 +191,13 @@ describe('contratos (RF29, RF52)', () => {
     expect(depois).toEqual([{ classe: 'arqueiro', partidasRestantes: 1, nivel: 5 }])
   })
 })
+
+describe('a missão do chefe (Parte 6d)', () => {
+  it('a missão aceita antes (alvo "guardiao") conta o Ogro, e a nova (alvo "ogro") também', () => {
+    const antiga = { id: 'oGuardiao', tipo: 'matar', alvo: 'guardiao', quantidade: 1, progresso: 0 }
+    expect(registrarNaMissao(antiga, { tipo: 'abate', alvo: 'ogro', quantidade: 1 }).progresso).toBe(1)
+    const nova = { ...antiga, alvo: 'ogro' }
+    expect(registrarNaMissao(nova, { tipo: 'abate', alvo: 'ogro', quantidade: 1 }).progresso).toBe(1)
+    expect(registrarNaMissao(nova, { tipo: 'abate', alvo: 'orc', quantidade: 1 }).progresso).toBe(0)
+  })
+})

@@ -22,13 +22,17 @@ export function aceitarMissao(progresso, missao) {
 // Conta um acontecimento da partida na missão ativa. O progresso soma entre partidas (RF26).
 // evento: { tipo: 'abate', alvo, quantidade } · { tipo: 'coleta', alvo, quantidade } · { tipo: 'exploracao', alvo }
 // Missão de entrega não conta eventos: ela olha a mochila na hora de entregar.
+// O chefe da Floresta: a missão aceita antes da Parte 6d guarda o alvo "guardiao" (o chefe antigo, que saiu do mapa);
+// derrotar o Ogro conta para ela também
+const mesmoAlvo = (alvoDaMissao, alvo) => alvoDaMissao === alvo || (['guardiao', 'ogro'].includes(alvoDaMissao) && ['guardiao', 'ogro'].includes(alvo))
+
 export function registrarNaMissao(missao, evento) {
   if (!missao) return missao
   const combina =
     (missao.tipo === 'matar' && evento.tipo === 'abate') ||
     (missao.tipo === 'coletar' && evento.tipo === 'coleta') ||
     (missao.tipo === 'explorar' && evento.tipo === 'exploracao')
-  if (!combina || evento.alvo !== missao.alvo) return missao
+  if (!combina || !mesmoAlvo(missao.alvo, evento.alvo)) return missao
   const soma = missao.tipo === 'explorar' ? 1 : Math.max(0, Math.floor(evento.quantidade ?? 1))
   return { ...missao, progresso: Math.min(missao.quantidade, missao.progresso + soma) }
 }

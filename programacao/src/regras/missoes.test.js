@@ -20,7 +20,7 @@ const base = (mudancas = {}) => ({ ...progressoInicial(), personagens: [novoPers
 describe('quadro de missões (TASK-078, provisório até a TASK-015)', () => {
   it('pelo menos uma de cada tipo, só com mobs, itens e áreas que existem no beta, e recompensa razoável', () => {
     expect(new Set(quadroDeMissoes.map((missao) => missao.tipo))).toEqual(new Set(tiposDeMissao))
-    const tiposDeMob = new Set([...Object.keys(mundo.mobs), 'guardiao'])
+    const tiposDeMob = new Set([...Object.keys(mundo.mobs), 'guardiao', 'ogro'])
     const areas = new Set(floresta.areas.map((area) => area.id))
     for (const missao of quadroDeMissoes) {
       if (missao.tipo === 'matar') expect(tiposDeMob.has(missao.alvo), missao.id).toBe(true)
@@ -36,7 +36,7 @@ describe('quadro de missões (TASK-078, provisório até a TASK-015)', () => {
   it('o nome do alvo e a linha do HUD do Reino', () => {
     expect(nomeDoAlvo(missaoDoQuadro('pelesParaOCurtidor'))).toBe('Pele de lobo')
     expect(nomeDoAlvo(missaoDoQuadro('coracaoDaMata'))).toBe('Coração da Mata')
-    expect(nomeDoAlvo(missaoDoQuadro('oGuardiao'))).toBe('Guardião da Floresta')
+    expect(nomeDoAlvo(missaoDoQuadro('oGuardiao'))).toBe('Ogro') // a missão do chefe pede o Ogro (Parte 6d), com o mesmo id
     expect(descreverMissao({ ...missaoDoQuadro('cacarLobos'), progresso: 3 })).toBe('Derrotar 8 lobo (3/8)')
   })
 })

@@ -411,6 +411,31 @@ export const mundo = {
     drops: [{ item: 'cascaAntiga', chance: 1, quantidade: [1, 2] }],
     especial: { item: 'coroaDeRaizes', chance: 0.08 },
   },
+  // O Ogro, chefe da Floresta grande (Parte 6d). PROVISÓRIO – substituir pelo do grupo. Os mesmos três golpes
+  // avisados do Guardião, com o terceiro trocado pelo arremesso (a pedra cai na marca onde o alvo estava). A investida
+  // continua passando do limite do escudo do Tanque do começo (32,5). "bonus" entra na pontuação (RF49); "especial" é a
+  // pequena chance do equipamento especial (RF39).
+  ogro: {
+    nome: 'Ogro',
+    cor: 0x55703f,
+    tamanho: 96,
+    vida: 3000,
+    velocidade: 100,
+    dano: 30,
+    xp: 500,
+    ouro: 300,
+    bonus: 600,
+    raioDeDeteccao: 620,
+    raioDeDesistencia: 900,
+    raioDoTerritorio: 760,
+    raioDoPasseio: 60,
+    msEntreAtaques: 1500,
+    pisao: { alcance: 230, raio: 200, msDeAviso: 900, dano: 30, empurrao: 540 },
+    investida: { alcance: 520, comprimento: 440, largura: 90, msDeAviso: 800, msDaInvestida: 380, dano: 42, empurrao: 500 },
+    arremesso: { alcance: 700, raio: 120, msDeAviso: 1000, dano: 24, empurrao: 260 },
+    drops: [{ item: 'couroDoOgro', chance: 1, quantidade: [1, 2] }],
+    especial: { item: 'cintoDoOgro', chance: 0.08 },
+  },
   // Vida, dano, XP e ouro dos mobs × este valor, pela dificuldade da região (regras/mobs.js)
   forcaDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 1.5, dificil: 2.2, boss: 2.6 },
   // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e

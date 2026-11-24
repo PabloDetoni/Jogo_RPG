@@ -112,7 +112,9 @@ describe('interface: Catálogo (de onde vem e o que já foi visto)', () => {
   it('cada item do beta diz de onde vem', () => {
     for (const { id } of catalogoDoBeta()) expect(origensDoItem(id).length, id).toBeGreaterThan(0)
     expect(origensDoItem('peleDeLobo')).toContain('Lobo (Floresta)')
-    expect(origensDoItem('coroaDeRaizes')).toContain('Guardião da Floresta (raro)')
+    expect(origensDoItem('coroaDeRaizes')).toContain('Guardião da Floresta (raro, fora do beta)')
+    expect(origensDoItem('cintoDoOgro')).toContain('Ogro (raro)')
+    expect(origensDoItem('couroDoOgro')).toContain('Ogro')
     expect(origensDoItem('cristal')).toContain('Minijogo: Mina (raro)')
     expect(origensDoItem('pocaoDeVida')).toContain('Mercado (sempre à venda)')
   })

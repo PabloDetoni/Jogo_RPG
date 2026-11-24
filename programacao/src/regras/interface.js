@@ -77,8 +77,11 @@ export function origensDoItem(id) {
   if (aVendaNaForja.includes(id)) origens.push('Forja (à venda)')
   if (receitas.some((receita) => receita.resultado === id)) origens.push('Forja (receita)')
   for (const [tipo, ficha] of Object.entries(mundo.mobs)) if (ficha.drops?.some((drop) => drop.item === id)) origens.push(`${comMaiuscula(tipo)} (Floresta)`)
-  if (mundo.boss.drops?.some((drop) => drop.item === id)) origens.push(mundo.boss.nome)
-  if (mundo.boss.especial?.item === id) origens.push(`${mundo.boss.nome} (raro)`)
+  // Os chefes: o Ogro (o da Floresta grande, Parte 6d) e o Guardião, que saiu do mapa (fora do beta)
+  for (const [chefe, extra] of [[mundo.ogro, ''], [mundo.boss, ', fora do beta']]) {
+    if (chefe.drops?.some((drop) => drop.item === id)) origens.push(`${chefe.nome}${extra ? ` (${extra.slice(2)})` : ''}`)
+    if (chefe.especial?.item === id) origens.push(`${chefe.nome} (raro${extra})`)
+  }
   if (Object.values(floresta.recursos ?? {}).some((recursos) => id in recursos)) origens.push('Chão da Floresta (E para pegar)')
   for (const minijogo of Object.values(dadosDosMinijogos)) {
     if (minijogo.item === id) origens.push(`Minijogo: ${minijogo.nome}`)

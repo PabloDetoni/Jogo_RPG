@@ -241,7 +241,8 @@ try {
 
   console.log('3. Mobs, Boss e itens no chão')
   // O Guardião saiu do mapa na Parte 5 (o chefe novo vem na Parte 6d): o roteiro cria um no lugar do chefe
-  await cena(`(c.boss ?? c.criarGuardiao(c.mapa.lugarDoChefe), true)`)
+  // (o chefe da Floresta grande é o Ogro, que não tem imagem: o Guardião, que tem, é criado só para esta conferência)
+  await cena(`(c.criarGuardiao(c.mapa.lugarDoChefe), true)`)
   const mobs = await cena(`(() => {
     const um = (tipo) => c.inimigos.find((i) => i.tipo === tipo)
     const desenho = (i) => (i ? { imagem: !!i.boneco, quadrado: i.quadrado.visible, blocos: !!i.desenhoEmCodigo?.grafico.visible, anim: i.boneco?.sprite.anims.currentAnim?.key ?? null } : null)

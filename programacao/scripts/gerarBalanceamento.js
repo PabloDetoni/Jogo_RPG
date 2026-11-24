@@ -493,7 +493,15 @@ escrever(
       ]
     }),
   ),
-  '### Boss da Floresta (TASK-065, provisório)',
+  '### Chefe da Floresta: o Ogro (Parte 6d, provisório)',
+  lista(
+    `**${mundo.ogro.nome}**: ${numero(mundo.ogro.vida)} de vida, ${mundo.ogro.xp} XP, ${mundo.ogro.ouro} de ouro e **+${mundo.ogro.bonus} na pontuação** (bônus de Boss, RF49). Território de ${mundo.ogro.raioDoTerritorio} px no domínio dele.`,
+    `Pancada (perto): área de ${mundo.ogro.pisao.raio} px em volta, aviso de ${segundosDoMundo(mundo.ogro.pisao.msDeAviso)}, ${mundo.ogro.pisao.dano} de dano.`,
+    `Investida (média distância): faixa de ${mundo.ogro.investida.comprimento} × ${mundo.ogro.investida.largura} px até o alvo, aviso de ${segundosDoMundo(mundo.ogro.investida.msDeAviso)}, ${mundo.ogro.investida.dano} de dano.`,
+    `Arremesso (até ${mundo.ogro.arremesso.alcance} px): a marca de ${mundo.ogro.arremesso.raio} px onde o alvo está, aviso de ${segundosDoMundo(mundo.ogro.arremesso.msDeAviso)}, ${mundo.ogro.arremesso.dano} de dano.`,
+    `Um ataque a cada ${segundosDoMundo(mundo.ogro.msEntreAtaques)} no máximo. Drop: ${mundo.ogro.drops.map((drop) => drop.item).join(', ')} sempre e **${numero(mundo.ogro.especial.chance * 100)}%** de chance do equipamento especial (${mundo.ogro.especial.item}, RF39; no npm run dev dá para forçar 100%).`,
+  ),
+  '### O Guardião da Floresta (fora do beta desde a Parte 5; fica no código)',
   lista(
     `**${mundo.boss.nome}**: ${numero(mundo.boss.vida)} de vida, ${mundo.boss.xp} XP, ${mundo.boss.ouro} de ouro e **+${mundo.boss.bonus} na pontuação** (bônus de Boss, RF49). Território de ${mundo.boss.raioDoTerritorio} px no domínio dele.`,
     `Pisão (perto): área de ${mundo.boss.pisao.raio} px em volta, aviso de ${segundosDoMundo(mundo.boss.pisao.msDeAviso)}, ${mundo.boss.pisao.dano} de dano.`,
