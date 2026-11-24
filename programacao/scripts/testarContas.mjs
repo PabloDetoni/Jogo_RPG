@@ -343,7 +343,9 @@ async function irAteAPartida(aba, noMapa) {
   if (noMapa) await noMapa()
   await aba.clicar('Floresta')
   // A Caravana aparece sempre (Parte 7): começa no início, de graça
-  await aba.passarPelaCaravana()
+  await aba.esperarTela('Caravana')
+  await aba.clicar('Começar no início')
+  await aba.esperarTela('Preparação')
   await aba.clicar('Começar partida')
 }
 // A partida aberta: o desenho do Phaser e o HUD com a região, que só aparece quando a cena já manda a situação

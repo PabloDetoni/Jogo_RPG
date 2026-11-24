@@ -40,7 +40,7 @@ import { efeitoDoAtaque } from '../../regras/som.js'
 import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
-import { espalharMobs, fichaNaRegiao, pontosEmVolta } from '../../regras/mobs.js'
+import { espalharMobs, fichaDoMob, pontosEmVolta } from '../../regras/mobs.js'
 import { lugaresNoAcampamento, raioExterno } from '../../regras/acampamento.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
@@ -370,7 +370,7 @@ export default class CenaArena extends Phaser.Scene {
   // Mob da Floresta: a ficha do tipo com a força da região (regras/mobs.js)
   criarMobDoMundo(tipo, idDaRegiao, ponto) {
     const regiao = this.mapa.regioes.find((uma) => uma.id === idDaRegiao)
-    const ficha = fichaNaRegiao(mundo.mobs[tipo], mundo.forcaDaRegiao[regiao?.dificuldade] ?? 1)
+    const ficha = fichaDoMob(tipo, regiao?.dificuldade)
     const lugar = this.lugarLivre(ficha.tamanho, ponto, null, mundo.nascimento.folga)
     const inimigo = this.adicionarInimigo(new classeDoComportamento[ficha.comportamento](this, lugar.x, lugar.y, { ...ficha, tipo }, ficha.cor))
     inimigo.tipo = tipo
