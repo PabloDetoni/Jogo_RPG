@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { andavelNoTerreno, beiraDaMata, caixaDoPoligono, criarTerreno, paredesDoTerreno, pontoNoPoligono, zonaNoTerreno, zonaQueContem } from './terreno.js'
+import { andavelNoTerreno, beiraDaMata, caixaDoPoligono, criarTerreno, paredesDoTerreno, pontoNoPoligono, retangulosDoTipo, zonaNoTerreno, zonaQueContem } from './terreno.js'
 
 const quadrado = [[100, 100], [500, 100], [500, 300], [100, 300]]
 const zonas = [{ poligono: quadrado, ...caixaDoPoligono(quadrado) }]
@@ -39,6 +39,13 @@ describe('terreno da Floresta grande (Parte 5)', () => {
     }
     // linhas iguais seguidas viram um retângulo só: a faixa de cima (linha 0) e a de baixo (linha 3), e as laterais
     expect(paredes.length).toBeLessThanOrEqual(4)
+  })
+
+  it('o chão de uma zona em retângulos: só as casas dela (para a grama com imagem não sair da zona)', () => {
+    const terreno = criarTerreno(zonas, tamanho, 100)
+    const chao = retangulosDoTipo(terreno, 1)
+    expect(chao).toEqual([{ x: 300, y: 200, largura: 400, altura: 200 }])
+    expect(retangulosDoTipo(terreno, 2)).toEqual([])
   })
 
   it('a beira da mata: um ponto por lado de casa de mata encostado no andável', () => {

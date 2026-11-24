@@ -66,7 +66,13 @@ export function zonaNoTerreno(terreno, zonas, { x, y }) {
 
 // A mata em retângulos: junta as casas de mata em faixas por linha e depois junta as faixas iguais de linhas seguidas.
 // Devolve retângulos com x e y no centro (o formato das paredes da cena).
-export function paredesDoTerreno({ colunas, linhas, celula, tipos }) {
+export function paredesDoTerreno(terreno) {
+  return retangulosDoTipo(terreno, 0)
+}
+
+// As casas de um tipo (0 = mata; o índice da zona + 1 = o chão dela) juntadas em retângulos, como as paredes. Serve
+// também para o chão com imagem de grama seguir a forma da zona (jogo/mapas.js).
+export function retangulosDoTipo({ colunas, linhas, celula, tipos }, tipo) {
   const abertas = new Map() // "c0,c1" → { c0, c1, l0 } da faixa que ainda pode crescer para baixo
   const paredes = []
   const fechar = ({ c0, c1, l0 }, l1) =>
@@ -76,12 +82,12 @@ export function paredesDoTerreno({ colunas, linhas, celula, tipos }) {
     if (l < linhas) {
       let c = 0
       while (c < colunas) {
-        if (tipos[l * colunas + c] !== 0) {
+        if (tipos[l * colunas + c] !== tipo) {
           c++
           continue
         }
         const c0 = c
-        while (c < colunas && tipos[l * colunas + c] === 0) c++
+        while (c < colunas && tipos[l * colunas + c] === tipo) c++
         faixas.add(`${c0},${c - 1}`)
       }
     }

@@ -240,6 +240,8 @@ try {
   await aba.print('04-floresta')
 
   console.log('3. Mobs, Boss e itens no chão')
+  // O Guardião saiu do mapa na Parte 5 (o chefe novo vem na Parte 6d): o roteiro cria um no lugar do chefe
+  await cena(`(c.boss ?? c.criarGuardiao(c.mapa.lugarDoChefe), true)`)
   const mobs = await cena(`(() => {
     const um = (tipo) => c.inimigos.find((i) => i.tipo === tipo)
     const desenho = (i) => (i ? { imagem: !!i.boneco, quadrado: i.quadrado.visible, blocos: !!i.desenhoEmCodigo?.grafico.visible, anim: i.boneco?.sprite.anims.currentAnim?.key ?? null } : null)
@@ -271,9 +273,10 @@ try {
     grama: c.children.list.filter((o) => o.type === 'TileSprite' && o.texture.key.startsWith('chao:')).length,
     mata: c.children.list.some((o) => o.type === 'TileSprite' && o.texture.key === 'arte:mata'),
     arvores: c.copas.length,
+    regioes: c.mapa.regioes.length,
     pedras: c.children.list.filter((o) => o.type === 'Image' && o.texture.key === 'arte:pedramedia').length,
   }))()`)
-  conferir('o chão de cada região usa os tiles de grama, e a mata o tile dela', chao.grama === 5 && chao.mata, chao)
+  conferir('o chão de cada região usa os tiles de grama (em pedaços que seguem a forma da zona), e a mata o tile dela', chao.grama >= chao.regioes && chao.mata, chao)
   conferir('as árvores e as pedras usam as imagens', chao.arvores > 10 && chao.pedras > 5, chao)
   // Uma árvore com lugar livre logo acima do tronco (atrás da copa)
   const copa = await cena(`(() => {

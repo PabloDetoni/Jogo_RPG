@@ -2,6 +2,7 @@ import * as Phaser from 'phaser'
 import { coresDaArena } from '../dados/arenaDeTeste.js'
 import { arteDaFloresta } from '../dados/arte.js'
 import { chaveDaArte, escolherPedra, gramaDaRegiao } from '../regras/arte.js'
+import { retangulosDoTipo } from '../regras/terreno.js'
 import { criarSorteio, dentroDaRegiao } from '../regras/mundo.js'
 import { imagemDaArte, texturaDaArte } from './arte.js'
 import { camadas } from './efeitos.js'
@@ -96,11 +97,19 @@ export function desenharFloresta(cena, mapa) {
     if (grama) {
       comGrama.add(regiao.id)
       const chao = texturaDoChao(cena, grama.chaves, sorteio)
-      cena.add
-        .tileSprite((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0, chao.nome)
-        .setTileScale(tamanhoDoTile / chao.lado)
-        .setTint(grama.tinta)
-        .setDepth(camadas.manchas - 12)
+      // Floresta grande (Parte 5): a grama cobre só as casas da zona (retângulos do terreno), não a caixa do polígono
+      const indice = mapa.regioes.indexOf(regiao)
+      const pedacos = mapa.terreno ? retangulosDoTipo(mapa.terreno, indice + 1) : [{ x: (x0 + x1) / 2, y: (y0 + y1) / 2, largura: x1 - x0, altura: y1 - y0 }]
+      // (o deslocamento do tile, em px da textura, faz os pedaços vizinhos continuarem o mesmo desenho)
+      const escalaDoTile = tamanhoDoTile / chao.lado
+      for (const pedaco of pedacos) {
+        cena.add
+          .tileSprite(pedaco.x, pedaco.y, pedaco.largura, pedaco.altura, chao.nome)
+          .setTilePosition((pedaco.x - pedaco.largura / 2) / escalaDoTile, (pedaco.y - pedaco.altura / 2) / escalaDoTile)
+          .setTileScale(escalaDoTile)
+          .setTint(grama.tinta)
+          .setDepth(camadas.manchas - 12)
+      }
     } else if (regiao.poligono) {
       // Floresta grande (Parte 5): o chão é o polígono da zona
       chaoDosPoligonos.fillStyle(regiao.chao, 1).fillPoints(regiao.poligono.map(([x, y]) => ({ x, y })), true)

@@ -458,7 +458,7 @@ escrever(
 const segundosDoMundo = (ms) => `${numero(ms / 1000)} s`
 escrever(
   '## Mundo da Floresta (Fase 3, provisório)',
-  `Layout em \`src/dados/mundo/floresta.js\` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **${numero(floresta.tamanho.largura)} × ${numero(floresta.tamanho.altura)} px**, começando estreito na zona segura (perto do Reino) e se abrindo até o domínio do Boss. Fora das regiões é mata fechada (parede). O Líder anda a ${combate.personagem.velocidade} px/s.`,
+  `Layout em \`src/dados/mundo/floresta.js\` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **${numero(floresta.tamanho.largura)} × ${numero(floresta.tamanho.altura)} px**, fixo (o mesmo toda partida), com o caminho em "S": três faixas (ida, volta, ida) ligadas por curvas, da zona segura (perto do Reino) ao domínio do chefe no fim. Cada região e cada zona neutra é um polígono de bordas onduladas; as zonas neutras ficam entre as regiões (as paradas da Caravana e os animais pacíficos). Fora delas é mata fechada (parede, pela grade do terreno de ${floresta.celulaDoTerreno} px). Na velocidade de um personagem do começo (~190 px/s), atravessar leva cerca de 3 minutos. Medidas da tabela: a caixa em volta de cada polígono.`,
   tabela(
     ['Região', 'Tamanho (px)', 'Força dos mobs', 'XP da 1ª descoberta de cada área', 'Mobs por partida'],
     floresta.regioes.map((regiao) => [
