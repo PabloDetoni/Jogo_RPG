@@ -711,7 +711,8 @@ try {
   conferir('o Ogro é desenhado em blocos (sem imagem ainda)', boss.blocos, boss)
   conferir('no domínio do Boss, a barra de vida grande aparece no HUD', await aba.avaliar(`!!document.querySelector('.barra-do-boss')`))
   // Ataque avisado: o pisão perto do Líder, sem Invencível
-  await cena(`(c.invencivel = false, c.lider.vida = c.lider.vidaMaxima, c.lider.fimDaImunidade = 0, c.lider.imunidades = null, c.inimigos.filter((i) => !i.ehBoss).forEach((i) => c.matarInimigo(i)), true)`)
+  // (Parte 8: os golpes do Ogro tiram 70 a 110; o Arqueiro de teste ganha vida de sobra para a conferência não acabar a partida)
+  await cena(`(c.invencivel = false, c.lider.vidaMaxima = 2000, c.lider.vida = c.lider.vidaMaxima, c.lider.fimDaImunidade = 0, c.lider.imunidades = null, c.inimigos.filter((i) => !i.ehBoss).forEach((i) => c.matarInimigo(i)), true)`)
   await cena(`(() => { c.lider.colocarEm(c.boss.x - 140, c.boss.y); c.boss.alvo = c.lider; c.boss.estado = 'perseguindo'; c.boss.comecarAtaque('pisao', c.agora); return true })()`)
   const durante = await cena(`({ aviso: !!c.boss.aviso, vida: c.lider.vida, maxima: c.lider.vidaMaxima, estado: c.boss.estado })`)
   conferir('antes do golpe, a marca aparece no chão e ninguém leva dano ainda', durante.aviso && durante.vida === durante.maxima && durante.estado === 'avisando', durante)

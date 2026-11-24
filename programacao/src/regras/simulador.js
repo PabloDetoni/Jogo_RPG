@@ -6,7 +6,7 @@ import { msDeRecargaDoArco, msParaCargaCheia, flechaDaCarga } from './arco.js'
 import { pontosDeAtributoAteONivel } from './atributos.js'
 import { golpeNoEscudo, imuneContra, registrarImunidade } from './combate.js'
 import { membroComAtributos } from './grupoDaPartida.js'
-import { fichaNaRegiao } from './mobs.js'
+import { fichaDoMob } from './mobs.js'
 
 // SIMULADOR DE BALANCEAMENTO (RF62, Parte 3 de 11/2026). Função pura, sem Phaser: um grupo de nível N contra os mobs
 // de uma região (ou o Boss), em passos de tempo fixos, sempre com o mesmo resultado para os mesmos dados.
@@ -66,32 +66,64 @@ export function ataqueDaClasse(membro) {
   }
 }
 
-// Os mobs de uma região, pela população da Floresta (sem o cervo, que não ataca), com a força da região
+// Um mob para a luta do simulador, pela ficha na dificuldade (com a cura do xamã e a prioridade de alvo)
+function mobDaLuta(tipo, dificuldade) {
+  const ficha = fichaDoMob(tipo, dificuldade)
+  const recargaMs = ficha.comportamento === 'corpoACorpo' ? ficha.recargaMs : ficha.msEntreTiros
+  return {
+    tipo,
+    vida: ficha.vida,
+    dano: ficha.dano,
+    recargaMs,
+    xp: ficha.xp,
+    ouro: ficha.ouro,
+    velocidade: ficha.velocidade,
+    area: false,
+    cura: ficha.cura ? { quanto: ficha.cura.quanto, ms: ficha.cura.msEntreCuras } : null,
+    prioridade: Boolean(ficha.prioridade),
+  }
+}
+
+// Os mobs de uma região, pela população da Floresta (sem os animais pacíficos, que não atacam), com tudo o que a
+// região muda. "boss" é o chefe (o Ogro, Parte 6d), a cada msEntreAtaques: dos três golpes, só a pancada é em área
+// (pega todo mundo); a investida e o arremesso pegam um só. No modelo, cada golpe vale um terço de cada um.
 export function mobsDaRegiao(regiao) {
   if (regiao === 'boss') {
-    const { boss } = mundo
-    // O Boss: o golpe médio dos três ataques (pisão, investida e espinhos) a cada msEntreAtaques
-    const media = (boss.pisao.dano + boss.investida.dano + boss.espinhos.dano * configDoSimulador.espinhosQueAcertam) / 3
-    return [{ tipo: 'boss', vida: boss.vida, dano: media, recargaMs: boss.msEntreAtaques, xp: boss.xp, ouro: boss.ouro, velocidade: boss.velocidade, area: true }]
+    const chefe = mundo.ogro
+    const noAlvo = (chefe.investida.dano + chefe.arremesso.dano) / 3
+    const emArea = chefe.pisao.dano / 3
+    return [{ tipo: 'ogro', vida: chefe.vida, dano: noAlvo, danoEmArea: emArea, recargaMs: chefe.msEntreAtaques, xp: chefe.xp, ouro: chefe.ouro, velocidade: chefe.velocidade, area: false }]
   }
   const chaveDaPopulacao = regiao === 'dominioDoBoss' ? 'dominioDoBoss' : regiao
   const populacao = floresta.populacao[chaveDaPopulacao] ?? {}
-  const forca = mundo.forcaDaRegiao[regiao === 'dominioDoBoss' ? 'boss' : regiao] ?? 1
+  const dificuldade = regiao === 'dominioDoBoss' ? 'boss' : regiao
   const tipos = []
   for (const [tipo, quantos] of Object.entries(populacao)) {
     const base = mundo.mobs[tipo]
     if (!base || base.hostil === false) continue
-    const ficha = fichaNaRegiao(base, forca)
-    const recargaMs = base.comportamento === 'atirador' ? base.msEntreTiros : base.recargaMs
-    for (let i = 0; i < quantos; i++) tipos.push({ tipo, vida: ficha.vida, dano: ficha.dano, recargaMs, xp: ficha.xp, ouro: ficha.ouro, velocidade: base.velocidade, area: false })
+    for (let i = 0; i < quantos; i++) tipos.push(mobDaLuta(tipo, dificuldade))
   }
   return tipos
+}
+
+// Os goblins de um acampamento ou do forte (Parte 6b e 6c), todos juntos (o acampamento acorda junto), com os
+// arqueiros das torres do forte
+export function mobsDoAcampamento(id) {
+  const acampamento = floresta.acampamentos.find((um) => um.id === id)
+  if (!acampamento) return []
+  const dificuldade = floresta.regioes.find((regiao) => regiao.id === acampamento.regiao)?.dificuldade ?? 'facil'
+  const mobs = []
+  for (const [tipo, quantos] of Object.entries(acampamento.populacao)) for (let i = 0; i < quantos; i++) mobs.push(mobDaLuta(tipo, dificuldade))
+  if (acampamento.arqueirosNasTorres) for (let i = 0; i < 4; i++) mobs.push(mobDaLuta('goblinArqueiro', dificuldade))
+  return mobs
 }
 
 // Uma luta: o grupo contra "mobs" (fichas de mobsDaRegiao), todos ao mesmo tempo. Devolve o que aconteceu.
 // Os mobs miram o Tanque de pé (ele provoca); sem ele, o primeiro do grupo de pé (o Líder). O grupo bate no mob com
 // menos vida. A imunidade depois de apanhar vale só contra o mesmo atacante.
-export function simularLuta(grupo, mobs, { passoMs = configDoSimulador.passoMs, msMaximo = configDoSimulador.msMaximoDaLuta } = {}) {
+// Parte 8: o xamã cura o mob mais ferido (pela fração da vida) a cada cura.ms; com "prioridade", o grupo bate primeiro
+// no mob marcado (o xamã), como a IA média e avançada dos aliados.
+export function simularLuta(grupo, mobs, { passoMs = configDoSimulador.passoMs, msMaximo = configDoSimulador.msMaximoDaLuta, prioridade = false } = {}) {
   const membros = grupo.map((membro, i) => ({
     id: i,
     classe: membro.classe,
@@ -105,7 +137,7 @@ export function simularLuta(grupo, mobs, { passoMs = configDoSimulador.passoMs, 
     danoRecebido: 0,
     imunidades: null,
   }))
-  const inimigos = mobs.map((mob, i) => ({ id: `mob${i}`, ...mob, vidaAtual: mob.vida, proximoGolpe: configDoSimulador.msAteOPrimeiroGolpe + i * 150, morreuEm: null }))
+  const inimigos = mobs.map((mob, i) => ({ id: `mob${i}`, ...mob, vidaAtual: mob.vida, proximoGolpe: configDoSimulador.msAteOPrimeiroGolpe + i * 150, proximaCura: mob.cura?.ms ?? Infinity, morreuEm: null }))
   let agora = 0
   const dePe = () => membros.filter((m) => m.caiuEm === null)
   const vivos = () => inimigos.filter((m) => m.morreuEm === null)
@@ -122,13 +154,21 @@ export function simularLuta(grupo, mobs, { passoMs = configDoSimulador.passoMs, 
         }
       }
       if (m.ataque.dano <= 0) continue
-      const alvos = vivos().sort((a, b) => a.vidaAtual - b.vidaAtual).slice(0, m.ataque.alvos)
+      const ordem = vivos().sort((a, b) => (prioridade && a.prioridade !== b.prioridade ? (a.prioridade ? -1 : 1) : a.vidaAtual - b.vidaAtual))
+      const alvos = ordem.slice(0, m.ataque.alvos)
       for (const alvo of alvos) {
         const dano = Math.min(alvo.vidaAtual, m.ataque.dano)
         alvo.vidaAtual -= dano
         m.danoDado += dano
         if (alvo.vidaAtual <= 0) alvo.morreuEm = agora
       }
+    }
+    // O xamã cura o mob mais ferido (Parte 6b)
+    for (const mob of vivos()) {
+      if (!mob.cura || agora < mob.proximaCura) continue
+      mob.proximaCura = agora + mob.cura.ms
+      const ferido = vivos().filter((outro) => outro.vidaAtual < outro.vida).sort((a, b) => a.vidaAtual / a.vida - b.vidaAtual / b.vida)[0]
+      if (ferido) ferido.vidaAtual = Math.min(ferido.vida, ferido.vidaAtual + mob.cura.quanto)
     }
     // Os mobs atacam
     for (const mob of vivos()) {
@@ -147,6 +187,14 @@ export function simularLuta(grupo, mobs, { passoMs = configDoSimulador.passoMs, 
         alvo.danoRecebido += dano
         alvo.imunidades = registrarImunidade(alvo.imunidades, mob.id, agora, personagem.msDeImunidade)
         if (alvo.vida <= 0) alvo.caiuEm = agora
+      }
+      // a parte em área do golpe do chefe (a pancada): todo mundo de pé leva
+      if (mob.danoEmArea) {
+        for (const alvo of dePe()) {
+          alvo.vida -= mob.danoEmArea
+          alvo.danoRecebido += mob.danoEmArea
+          if (alvo.vida <= 0) alvo.caiuEm = agora
+        }
       }
     }
     agora += passoMs

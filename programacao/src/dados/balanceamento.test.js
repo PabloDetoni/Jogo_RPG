@@ -4,6 +4,7 @@ import { capacidadeDaMochila } from '../regras/mochila.js'
 import { efeitoDoAtributo } from '../regras/atributos.js'
 import { chanceDeCritico, limiteDoEscudo } from '../regras/combate.js'
 import { taxaNaDistancia } from '../regras/taxa.js'
+import { fichaDoMob } from '../regras/mobs.js'
 import { xpParaSubir, xpTotalAteONivel } from '../regras/xp.js'
 import {
   atributoMaximo,
@@ -436,7 +437,8 @@ describe('limites do escudo do Tanque (ajustes na partida, 14/10)', () => {
   })
 
   it('com a Força no máximo, o escudo segura todo golpe de frente da Floresta', () => {
-    const maisForte = Math.max(mundo.boss.investida.dano, ...Object.values(mundo.mobs).map((mob) => mob.dano * mundo.forcaDaRegiao.boss))
+    // (Parte 8: o dano de cada mob na região mais funda, pela ficha da região, e a investida do chefe, o Ogro)
+    const maisForte = Math.max(mundo.ogro.investida.dano, ...Object.keys(mundo.mobs).map((tipo) => fichaDoMob(tipo, 'boss').dano))
     expect(limiteDoEscudo(atributoMaximo)).toBeGreaterThan(maisForte)
   })
 })

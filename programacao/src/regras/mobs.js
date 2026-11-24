@@ -1,18 +1,38 @@
 // Regras dos mobs do mundo (Fase 3, TASK-062): a força de cada um pela região, onde nascem e o território.
 // Funções puras; os números ficam em dados/balanceamento.js (mundo.mobs) e a população em dados/mundo/.
+import { mundo } from '../dados/balanceamento.js'
 import { regiaoEm } from './mundo.js'
 
 // A ficha do mob numa região: vida, dano, XP e ouro multiplicados pela força da região (o resto igual).
 // base: a ficha do tipo; forca: o multiplicador da região (1 na fácil).
-export function fichaNaRegiao(base, forca) {
+// Parte 8 (11/2026): "xp" multiplica o XP de novo (a curva de XP e o XP dos mobs foram decididos juntos) e
+// "dano" é o multiplicador do dano (sem ele, o da força), e "velocidade" ({ minima, maxima }) prende a velocidade dos mobs hostis: na Média e na Difícil eles são mais rápidos que
+// o Líder do começo (fugir não resolve sempre); na Fácil, mais lentos (dá para fugir de um lobo comum).
+export function fichaNaRegiao(base, forca, { xp = 1, velocidade = null, dano = forca } = {}) {
   const vezes = (valor) => Math.max(1, Math.round(valor * forca))
+  const hostil = base.hostil !== false
+  const minima = hostil ? (velocidade?.minima ?? 0) : 0
+  const maxima = hostil ? (velocidade?.maxima ?? Infinity) : Infinity
   return {
     ...base,
     vida: vezes(base.vida),
-    dano: vezes(base.dano),
-    xp: vezes(base.xp),
+    dano: Math.max(1, Math.round(base.dano * dano)),
+    xp: Math.max(1, Math.round(base.xp * forca * xp)),
     ouro: vezes(base.ouro),
+    velocidade: Math.min(maxima, Math.max(minima, base.velocidade)),
+    // a cura do xamã cresce com a força da região, como a vida dos goblins
+    ...(base.cura ? { cura: { ...base.cura, quanto: vezes(base.cura.quanto) } } : {}),
   }
+}
+
+// A ficha do tipo na dificuldade da região, com tudo o que a região muda (dados/balanceamento.js: forcaDaRegiao,
+// danoDaRegiao, xpDaRegiao, velocidadeDaRegiao). É a que a partida, o simulador e o Balanceamento.md usam.
+export function fichaDoMob(tipo, dificuldade, config = mundo) {
+  return fichaNaRegiao(config.mobs[tipo], config.forcaDaRegiao[dificuldade] ?? 1, {
+    xp: config.xpDaRegiao?.[dificuldade] ?? 1,
+    dano: config.danoDaRegiao?.[dificuldade] ?? config.forcaDaRegiao[dificuldade] ?? 1,
+    velocidade: config.velocidadeDaRegiao?.[dificuldade] ?? null,
+  })
 }
 
 // Onde cada mob nasce, a cada partida (o bioma reinicia: RF31). Para cada região, sorteia pontos dentro dela (longe

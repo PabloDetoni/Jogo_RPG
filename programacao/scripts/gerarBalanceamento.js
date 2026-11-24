@@ -57,7 +57,7 @@ import { multaDaMissao } from '../src/regras/guilda.js'
 import { chanceDeErro } from '../src/regras/nivelDaIA.js'
 import { calcularFimDaPartida } from '../src/regras/fimDaPartida.js'
 import { mapaDoBioma } from '../src/regras/mapaDaPartida.js'
-import { fichaNaRegiao } from '../src/regras/mobs.js'
+import { fichaDoMob } from '../src/regras/mobs.js'
 import { capacidadeDaMochila } from '../src/regras/mochila.js'
 import { aplicarTaxa, taxaNaDistancia } from '../src/regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../src/regras/xp.js'
@@ -461,11 +461,14 @@ escrever(
   '## Mundo da Floresta (Fase 3, provisório)',
   `Layout em \`src/dados/mundo/floresta.js\` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **${numero(floresta.tamanho.largura)} × ${numero(floresta.tamanho.altura)} px**, fixo (o mesmo toda partida), com o caminho em "S": três faixas (ida, volta, ida) ligadas por curvas, da zona segura (perto do Reino) ao domínio do chefe no fim. Cada região e cada zona neutra é um polígono de bordas onduladas; as zonas neutras ficam entre as regiões (as paradas da Caravana e os animais pacíficos). Fora delas é mata fechada (parede, pela grade do terreno de ${floresta.celulaDoTerreno} px). Na velocidade de um personagem do começo (~190 px/s), atravessar leva cerca de 3 minutos. Medidas da tabela: a caixa em volta de cada polígono.`,
   tabela(
-    ['Região', 'Tamanho (px)', 'Força dos mobs', 'XP da 1ª descoberta de cada área', 'Mobs por partida'],
+    ['Região', 'Tamanho (px)', 'Vida dos mobs', 'Dano', 'XP', 'Velocidade', 'XP da 1ª descoberta de cada área', 'Mobs por partida'],
     floresta.regioes.map((regiao) => [
       regiao.nome,
       `${numero(regiao.x1 - regiao.x0)} × ${numero(regiao.y1 - regiao.y0)}`,
       `×${numero(mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
+      `×${numero(mundo.danoDaRegiao?.[regiao.dificuldade] ?? mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
+      `×${numero((mundo.forcaDaRegiao[regiao.dificuldade] ?? 1) * (mundo.xpDaRegiao?.[regiao.dificuldade] ?? 1), 1)}`,
+      mundo.velocidadeDaRegiao?.[regiao.dificuldade]?.minima ? `no mínimo ${mundo.velocidadeDaRegiao[regiao.dificuldade].minima} px/s` : mundo.velocidadeDaRegiao?.[regiao.dificuldade]?.maxima ? `no máximo ${mundo.velocidadeDaRegiao[regiao.dificuldade].maxima} px/s` : '—',
       numero(mundo.xpPorArea[regiao.dificuldade] ?? 0),
       [
         ...Object.entries(floresta.populacao[regiao.id] ?? {}).map(([tipo, quantos]) => `${quantos} ${tipo}`),
@@ -475,18 +478,21 @@ escrever(
     ]),
   ),
   '### Mobs (TASK-012, provisório)',
-  'Vida, dano, XP e ouro multiplicados pela força da região. O raio de detecção é a distância em que o mob percebe o grupo; o território, até onde ele persegue (contando de onde nasceu): fora dele, desiste e volta para casa.',
+  'A ficha de cada mob na Fácil, na Média e na Difícil (Parte 8: a vida e o ouro pela força da região, o dano pelo dano da região, o XP pela força e pelo XP da região, e a velocidade presa na região). O raio de detecção é a distância em que o mob percebe o grupo; o território, até onde ele persegue (contando de onde nasceu): fora dele, desiste e volta para casa.',
   tabela(
-    ['Mob', 'Jeito', 'Vida (fácil / difícil)', 'Dano (fácil / difícil)', 'XP (fácil / difícil)', 'Ouro (fácil / difícil)', 'Detecção', 'Território', 'Drop'],
+    ['Mob', 'Jeito', 'Vida (fácil / média / difícil)', 'Dano', 'XP', 'Velocidade (px/s)', 'Ouro (fácil / difícil)', 'Detecção', 'Território', 'Drop'],
     Object.entries(mundo.mobs).map(([tipo, ficha]) => {
-      const facil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.facil)
-      const dificil = fichaNaRegiao(ficha, mundo.forcaDaRegiao.dificil)
+      const facil = fichaDoMob(tipo, 'facil')
+      const media = fichaDoMob(tipo, 'media')
+      const dificil = fichaDoMob(tipo, 'dificil')
+      const tres = (campo) => `${facil[campo]} / ${media[campo]} / ${dificil[campo]}`
       return [
         tipo,
         ficha.comportamento === 'pacifico' ? 'pacífico (nunca ataca, foge)' : ficha.teia ? `atira teia que prende por ${ficha.teia.msPreso / 1000} s` : ficha.comportamento === 'xama' ? `atira de longe e cura ${ficha.cura.quanto} a cada ${ficha.cura.msEntreCuras / 1000} s` : `${ficha.comportamento === 'atirador' ? 'atira de longe' : 'corpo a corpo'}${ficha.hostil ? '' : ', não hostil'}`,
-        `${facil.vida} / ${dificil.vida}`,
-        `${facil.dano} / ${dificil.dano}`,
-        `${facil.xp} / ${dificil.xp}`,
+        tres('vida'),
+        tres('dano'),
+        tres('xp'),
+        tres('velocidade'),
         `${facil.ouro} / ${dificil.ouro}`,
         ficha.raioDeDeteccao ? `${ficha.raioDeDeteccao} px` : ficha.raioDeFuga ? `foge a ${ficha.raioDeFuga} px` : 'só se atacado',
         `${ficha.raioDoTerritorio} px`,
