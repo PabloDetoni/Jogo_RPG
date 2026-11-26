@@ -1,8 +1,8 @@
 @startuml Diagrama_Casos_de_Uso
-' Diagrama de Casos de Uso - versao de 21/11/2026 (planejamento de 11/2026)
+' Diagrama de Casos de Uso - versao de 26/11/2026 (o jogo de hoje, Parte 12)
 ' Atores: Jogador e Desenvolvedor (o Desenvolvedor tambem joga: herda tudo do Jogador).
-' Casos de uso em azul-claro e com <<planejado>>: ainda nao feitos (UC44 a UC49).
-' O UC28 sera substituido pelo UC44 (Caravana) quando ele for feito.
+' UC44 a UC47 feitos em 11/2026. O UC28 (ponto de partida) foi substituido pelo UC44 (Caravana) e saiu do diagrama.
+' UC48 e UC49 (Area do Desenvolvedor) sao extra, fora do beta (ramo area-dev).
 ' Troque [Nome do Jogo] pelo nome final quando ele for definido.
 ' PNG: java -jar plantuml.jar 02_Diagrama_Casos_de_Uso.puml (sai "Diagrama_Casos_de_Uso.png"; renomear para 02_...)
 left to right direction
@@ -56,20 +56,19 @@ rectangle "Sistema: [Nome do Jogo]" {
     usecase "UC23\nEntregar missão" as UC23
     usecase "UC24\nAbandonar missão" as UC24
     usecase "UC25\nContratar personagem (Guilda)" as UC25
-    usecase "UC45\nConversar com NPC" as UC45 <<planejado>>
+    usecase "UC45\nConversar com NPC\n(comerciante, ferreiro, mestra)" as UC45
   }
 
   package "Partida" {
     usecase "UC26\nIniciar partida" as UC26
     usecase "UC27\nSelecionar bioma" as UC27
-    usecase "UC28\nEscolher ponto de partida\n(será substituído pelo UC44)" as UC28
-    usecase "UC44\nViajar de Caravana" as UC44 <<planejado>>
+    usecase "UC44\nViajar de Caravana" as UC44
     usecase "UC29\nSelecionar Líder" as UC29
     usecase "UC30\nPreparar mochila da partida" as UC30
     usecase "UC31\nJogar partida" as UC31
-    usecase "UC32\nCombater monstros" as UC32
+    usecase "UC32\nCombater monstros\n(lobos, aranhas, javalis,\ngoblins, orcs)" as UC32
     usecase "UC33\nUsar habilidade" as UC33
-    usecase "UC34\nEnfrentar Boss" as UC34
+    usecase "UC34\nEnfrentar o chefe\n(o Ogro)" as UC34
     usecase "UC35\nExplorar e coletar recursos" as UC35
     usecase "UC36\nUsar item" as UC36
     usecase "UC37\nLevantar aliado desmaiado" as UC37
@@ -85,8 +84,8 @@ rectangle "Sistema: [Nome do Jogo]" {
   }
 
   package "Desenvolvedor (só no npm run dev)" {
-    usecase "UC46\nUsar opções de desenvolvedor\n(super velocidade, teletransporte)" as UC46 <<planejado>>
-    usecase "UC47\nSimular balanceamento" as UC47 <<planejado>>
+    usecase "UC46\nUsar opções de desenvolvedor\n(super velocidade, teletransporte)" as UC46
+    usecase "UC47\nSimular balanceamento" as UC47
   }
 
   package "Extra (fora do beta)" {
@@ -142,7 +141,6 @@ UC20 ..> UC19 : <<extend>>
 UC22 ..> UC21 : <<extend>>
 UC23 ..> UC21 : <<extend>>
 UC24 ..> UC21 : <<extend>>
-UC28 ..> UC26 : <<extend>>
 UC44 ..> UC26 : <<extend>>
 UC30 ..> UC26 : <<extend>>
 UC32 ..> UC31 : <<extend>>
@@ -157,8 +155,8 @@ UC40 ..> UC31 : <<extend>>
 UC49 ..> UC48 : <<extend>>
 
 legend right
-  Bege: feito
-  Azul-claro <<planejado>>: planejado (11/2026)
-  Cinza <<extra>>: extra, fora do beta
+  Bege: feito (o jogo de 26/11/2026)
+  Cinza <<extra>>: extra, fora do beta (ramo area-dev)
+  O UC28 (ponto de partida) virou o UC44 (Caravana)
 endlegend
 @enduml
