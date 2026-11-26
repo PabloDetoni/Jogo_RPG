@@ -90,11 +90,15 @@ describe('metas da região Difícil (níveis 16 a 28) e do Ogro (por volta de 30
     expect(simularLuta(grupo(cinco, 11), bandoDaRegiao('dificil', 3)).venceu).toBe(false)
   })
 
-  it('o forte é para o fim da faixa: uma leva de 5 goblins cai para o grupo de 5 no nível 28; no 22 e no 16, não', () => {
-    const leva = mobsDoAcampamento('forteGoblin').slice(0, 5)
-    expect(simularLuta(grupo(cinco, 28), leva, { prioridade: true }).venceu).toBe(true)
-    expect(simularLuta(grupo(cinco, 22), leva, { prioridade: true }).venceu).toBe(false)
-    expect(simularLuta(grupo(cinco, 16), leva, { prioridade: true }).venceu).toBe(false)
+  // Parte 11: o forte acorda por partes (Portão, Pátio, Torre); cada uma é uma luta (com os arqueiros das torres do
+  // lado dela). O Portão é a entrada (cai antes); o Pátio e a Torre são para o fim da faixa
+  it('o forte é para o fim da faixa: cada parte cai para o grupo de 5 no nível 28; no 16, nenhuma; no 22, o Pátio e a Torre ainda não', () => {
+    for (const parte of ['portao', 'patio', 'torre']) {
+      const leva = mobsDoAcampamento('forteGoblin', parte)
+      expect(simularLuta(grupo(cinco, 28), leva, { prioridade: true }).venceu, parte).toBe(true)
+      expect(simularLuta(grupo(cinco, 16), leva, { prioridade: true }).venceu, parte).toBe(false)
+    }
+    for (const parte of ['patio', 'torre']) expect(simularLuta(grupo(cinco, 22), mobsDoAcampamento('forteGoblin', parte), { prioridade: true }).venceu, parte).toBe(false)
   })
 
   it('nível 1 contra o Ogro perde rápido', () => {

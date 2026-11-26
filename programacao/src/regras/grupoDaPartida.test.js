@@ -63,7 +63,7 @@ describe('montarGrupoDaPartida (RF34)', () => {
     const [lider, aliado] = montarGrupoDaPartida(progresso, 'guerreiro')
     expect(lider).toMatchObject({ classe: 'guerreiro', nivel: 29, xp: 2899 })
     expect(lider.chanceDeCritico).toBeCloseTo(0.05 + 13 * 0.005)
-    expect(aliado.chanceDeCritico).toBeCloseTo(0.05 + 22 * 0.005) // Arqueiro: o crítico mais alto
+    expect(aliado.chanceDeCritico).toBeCloseTo(0.05 + 22 * 0.005 + 0.1) // Arqueiro: o crítico mais alto (e o bônus da classe, Parte 11)
     expect(membroDeTeste('mago')).toMatchObject({ nivel: 1, xp: 0 })
   })
 

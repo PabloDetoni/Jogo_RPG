@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { acampamentoEm, dentroDoAcampamento, diferencaDeAngulo, goblinParaCurar, lugaresNoAcampamento, murosDoForte, raioExterno, torresDoForte, troncosDaPalicada } from './acampamento.js'
+import { floresta } from '../dados/mundo/floresta.js'
+import { acampamentoEm, centrosDasLevas, dentroDaLeva, dentroDoAcampamento, faixaDaLeva, levaEm, lugaresNaLeva, diferencaDeAngulo, goblinParaCurar, lugaresNoAcampamento, murosDoForte, raioExterno, torresDoForte, troncosDaPalicada } from './acampamento.js'
 
 const acampamento = { centro: { x: 1000, y: 1000 }, raio: 300, entradas: [0, Math.PI] }
 const medidas = { tronco: 30, larguraDaEntrada: 120 }
@@ -102,6 +103,65 @@ describe('forte goblin (Parte 6c)', () => {
       expect(Math.abs(t.x - 1000)).toBe(330)
       expect(Math.abs(t.y - 1000)).toBe(230)
     }
+  })
+})
+
+describe('o forte por partes (Parte 11)', () => {
+  const forte = floresta.acampamentos.find((um) => um.id === 'forteGoblin')
+  const [portao, patio, torre] = forte.levas
+
+  it('as três partes cobrem o forte de oeste a leste, sem buraco nem sobra', () => {
+    expect(forte.levas.map((leva) => leva.id)).toEqual(['portao', 'patio', 'torre'])
+    expect(portao.de).toBe(-0.5)
+    expect(torre.ate).toBe(0.5)
+    for (let i = 1; i < forte.levas.length; i++) expect(forte.levas[i].de).toBe(forte.levas[i - 1].ate)
+  })
+
+  it('a população do forte é a soma das partes', () => {
+    const soma = {}
+    for (const leva of forte.levas) for (const [tipo, n] of Object.entries(leva.populacao)) soma[tipo] = (soma[tipo] ?? 0) + n
+    expect(soma).toEqual(forte.populacao)
+  })
+
+  it('cada ponto do forte está numa parte só; a folga deixa ver um pouco além', () => {
+    const { x, y } = forte.centro
+    expect(levaEm(forte, { x: x - 400, y })?.id).toBe('portao')
+    expect(levaEm(forte, { x, y })?.id).toBe('patio')
+    expect(levaEm(forte, { x: x + 400, y })?.id).toBe('torre')
+    expect(levaEm(forte, { x: x - 600, y })).toBe(null) // fora do forte
+    const fora = { x: x - forte.largura / 2 - 100, y }
+    expect(dentroDaLeva(forte, portao, fora)).toBe(false)
+    expect(dentroDaLeva(forte, portao, fora, 150)).toBe(true) // quem chega pelo portão oeste
+    expect(dentroDaLeva(forte, torre, { x: x - 400, y }, 150)).toBe(false) // a Torre não vê o Portão
+  })
+
+  it('a faixa vai de "de" a "ate" da largura', () => {
+    expect(faixaDaLeva(forte, patio)).toEqual({ x0: forte.centro.x - 0.17 * forte.largura, x1: forte.centro.x + 0.17 * forte.largura })
+  })
+
+  it('os goblins de cada parte nascem na faixa dela, longe dos muros e da fogueira', () => {
+    for (const leva of forte.levas) {
+      const lugares = lugaresNaLeva(forte, leva, { longeDosMuros: 110, longeDaFogueira: 90 })
+      expect(lugares.length).toBe(Object.values(leva.populacao).reduce((a, b) => a + b, 0))
+      for (const lugar of lugares) {
+        expect(dentroDaLeva(forte, leva, lugar, 110)).toBe(true)
+        expect(Math.abs(lugar.y - forte.centro.y)).toBeLessThanOrEqual(forte.altura / 2 - 110)
+        expect(Math.hypot(lugar.x - forte.centro.x, lugar.y - forte.centro.y)).toBeGreaterThanOrEqual(90)
+      }
+    }
+  })
+
+  it('os pontos de perigo ficam no meio de cada parte', () => {
+    const centros = centrosDasLevas(forte)
+    expect(centros.map((c) => c.nome)).toEqual(['Portão', 'Pátio', 'Torre'])
+    expect(centros[1]).toMatchObject({ x: forte.centro.x, y: forte.centro.y })
+    expect(centros[0].x).toBeLessThan(centros[1].x)
+    expect(centros[2].x).toBeGreaterThan(centros[1].x)
+  })
+
+  it('as torres dos cantos ficam no Portão (oeste) e na Torre (leste), duas em cada', () => {
+    const torres = torresDoForte(forte, 75)
+    expect(torres.map((um) => levaEm(forte, um)?.id).sort()).toEqual(['portao', 'portao', 'torre', 'torre'])
   })
 })
 

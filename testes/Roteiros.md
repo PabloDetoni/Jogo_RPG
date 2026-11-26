@@ -56,6 +56,28 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## AJ. Os ajustes da Parte 11 (11/2026)
+
+**AJ-01 · O forte acorda por partes**
+- Fazer: no `npm run dev`, numa partida da Floresta, use o teletransporte (painel </> DEV) até perto do Forte Goblin, na região Difícil. Chegue pelo portão oeste e pare na entrada; depois ande até o meio; depois até o lado leste.
+- Deve acontecer: na entrada, só os goblins do Portão (e os arqueiros das duas torres do oeste) vêm atrás de você; os do meio e o Orc ficam parados. No meio, acorda o Pátio; do lado leste, a Torre (o Orc e os arqueiros das torres do leste).
+
+**AJ-02 · Os pontos de perigo no mapa da pausa**
+- Fazer: numa partida, fora de combate, aperte Esc.
+- Deve acontecer: no mapa inteiro, três bolinhas vermelhas com "!" no Forte Goblin (passe o mouse: "Perigo: Portão do Forte Goblin", "Pátio", "Torre").
+
+**AJ-03 · Os preços novos da Caravana**
+- Fazer: Jogar → Floresta. Veja os preços das paradas.
+- Deve acontecer: Clareira da Entrada 175, Vau do Riacho 710, Campo dos Cervos 2.815 e Pouso do Caçador 2.815 de ouro. Com os 120 do começo, todas ficam apagadas com "Falta N de ouro"; o início continua de graça.
+
+**AJ-04 · Sem dica no Mercado, na Forja e na Guilda**
+- Fazer: com um convidado novo, entre no Mercado, na Forja e na Guilda. Clique no "?".
+- Deve acontecer: não aparece a caixa de dica com "Entendi": quem explica é o NPC. O "?" abre o "Como funciona". Nas outras telas (Árvores, Mochila...), a dica da primeira visita continua.
+
+**AJ-05 · O dano das classes**
+- Fazer: na arena de teste (npm run dev), bata no boneco de treino com cada classe por 10 s.
+- Deve acontecer: o Guerreiro e o Arqueiro (carga cheia) tiram mais ou menos o mesmo por segundo (~55), o Arqueiro com mais números amarelos de crítico; o Mago tira ~28 em cada um dentro da explosão; o Tanque ~15; o Sacerdote ~8 com a aura.
+
 ## PE. A pesca visual do Lago (Parte 10, 11/2026)
 
 **PE-01 · Pescar**

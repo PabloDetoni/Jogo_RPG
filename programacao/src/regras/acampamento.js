@@ -119,3 +119,49 @@ export function goblinParaCurar(xama, bando, raio) {
   }
   return melhor?.goblin ?? null
 }
+
+// ---------- O forte por partes (Parte 11) ----------
+
+// A faixa de uma parte do forte, em x: de "de" a "ate" (frações da largura, de -0,5 a 0,5), com a folga para os lados
+// (a de fora vai além do muro: os da ponta veem quem chega pelo portão)
+export function faixaDaLeva({ centro, largura }, { de, ate }, folga = 0) {
+  return { x0: centro.x + de * largura - folga, x1: centro.x + ate * largura + folga }
+}
+
+// O ponto está na parte do forte (na faixa dela, com a folga, e na altura do forte, com a folga)?
+export function dentroDaLeva(forte, leva, ponto, folga = 0) {
+  const { x0, x1 } = faixaDaLeva(forte, leva, folga)
+  return ponto.x >= x0 && ponto.x <= x1 && Math.abs(ponto.y - forte.centro.y) <= forte.altura / 2 + folga
+}
+
+// A parte do forte onde fica o ponto (sem folga), ou null
+export function levaEm(forte, ponto) {
+  return (forte.levas ?? []).find((leva) => dentroDaLeva(forte, leva, ponto)) ?? null
+}
+
+// O meio de cada parte (os pontos de perigo do mapa da pausa)
+export function centrosDasLevas(forte) {
+  return (forte.levas ?? []).map((leva) => {
+    const { x0, x1 } = faixaDaLeva(forte, leva)
+    return { id: leva.id, nome: leva.nome, x: Math.round((x0 + x1) / 2), y: forte.centro.y }
+  })
+}
+
+// Onde os goblins de uma parte nascem: numa coluna no meio da faixa dela, espalhados de cima a baixo (longe dos muros),
+// em zigue-zague, e nunca em cima da fogueira do meio. Devolve [{ tipo, x, y }] na ordem da população.
+export function lugaresNaLeva(forte, leva, { longeDosMuros, longeDaFogueira }) {
+  const tipos = Object.entries(leva.populacao ?? {}).flatMap(([tipo, quantos]) => Array.from({ length: quantos }, () => tipo))
+  const { x0, x1 } = faixaDaLeva(forte, leva)
+  const meio = (x0 + x1) / 2
+  const topo = forte.centro.y - forte.altura / 2 + longeDosMuros
+  const altura = forte.altura - longeDosMuros * 2
+  return tipos.map((tipo, i) => {
+    let x = meio + (i % 2 === 0 ? -1 : 1) * Math.min(60, (x1 - x0) / 4)
+    const y = topo + ((i + 0.5) / tipos.length) * altura
+    // perto da fogueira: empurra para o lado (em x) até ficar a "longeDaFogueira" dela
+    const dy = y - forte.centro.y
+    if (Math.hypot(x - forte.centro.x, dy) < longeDaFogueira) x = forte.centro.x + (x < forte.centro.x ? -1 : 1) * Math.ceil(Math.sqrt(longeDaFogueira ** 2 - dy ** 2) + 1)
+    return { tipo, x: Math.round(x), y: Math.round(y) }
+  })
+}
+

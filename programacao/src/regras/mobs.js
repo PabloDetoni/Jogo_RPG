@@ -8,7 +8,7 @@ import { regiaoEm } from './mundo.js'
 // Parte 8 (11/2026): "xp" multiplica o XP de novo (a curva de XP e o XP dos mobs foram decididos juntos) e
 // "dano" é o multiplicador do dano (sem ele, o da força), e "velocidade" ({ minima, maxima }) prende a velocidade dos mobs hostis: na Média e na Difícil eles são mais rápidos que
 // o Líder do começo (fugir não resolve sempre); na Fácil, mais lentos (dá para fugir de um lobo comum).
-export function fichaNaRegiao(base, forca, { xp = 1, velocidade = null, dano = forca } = {}) {
+export function fichaNaRegiao(base, forca, { xp = 1, velocidade = null, dano = forca, cura = forca } = {}) {
   const vezes = (valor) => Math.max(1, Math.round(valor * forca))
   const hostil = base.hostil !== false
   const minima = hostil ? (velocidade?.minima ?? 0) : 0
@@ -20,18 +20,19 @@ export function fichaNaRegiao(base, forca, { xp = 1, velocidade = null, dano = f
     xp: Math.max(1, Math.round(base.xp * forca * xp)),
     ouro: vezes(base.ouro),
     velocidade: Math.min(maxima, Math.max(minima, base.velocidade)),
-    // a cura do xamã cresce com a força da região, como a vida dos goblins
-    ...(base.cura ? { cura: { ...base.cura, quanto: vezes(base.cura.quanto) } } : {}),
+    // a cura do xamã cresce com a região (Parte 11: pelo curaDaRegiao; sem ele, pela força, como a vida dos goblins)
+    ...(base.cura ? { cura: { ...base.cura, quanto: Math.max(1, Math.round(base.cura.quanto * cura)) } } : {}),
   }
 }
 
 // A ficha do tipo na dificuldade da região, com tudo o que a região muda (dados/balanceamento.js: forcaDaRegiao,
-// danoDaRegiao, xpDaRegiao, velocidadeDaRegiao). É a que a partida, o simulador e o Balanceamento.md usam.
+// danoDaRegiao, xpDaRegiao, velocidadeDaRegiao, curaDaRegiao). É a que a partida, o simulador e o Balanceamento.md usam.
 export function fichaDoMob(tipo, dificuldade, config = mundo) {
   return fichaNaRegiao(config.mobs[tipo], config.forcaDaRegiao[dificuldade] ?? 1, {
     xp: config.xpDaRegiao?.[dificuldade] ?? 1,
     dano: config.danoDaRegiao?.[dificuldade] ?? config.forcaDaRegiao[dificuldade] ?? 1,
     velocidade: config.velocidadeDaRegiao?.[dificuldade] ?? null,
+    cura: config.curaDaRegiao?.[dificuldade] ?? config.forcaDaRegiao[dificuldade] ?? 1,
   })
 }
 

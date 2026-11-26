@@ -41,7 +41,8 @@ export const capacidadePorPontoDeForca = 2
 // Crítico (Conceito §6: a Agilidade dá a chance de crítico). Aprovado pelo Pablo em 07/10:
 // chance = chanceBase + Agilidade × chancePorPontoDeAgilidade (Arqueiro inicial, Agilidade 22: 16%; Agilidade 100: 55%).
 // O golpe crítico causa o dano × multiplicador.
-export const critico = { chanceBase: 0.05, chancePorPontoDeAgilidade: 0.005, multiplicador: 1.5 }
+// bonusDaClasse (Parte 11, decisão do Pablo de 26/11): o Arqueiro tem o crítico mais alto
+export const critico = { chanceBase: 0.05, chancePorPontoDeAgilidade: 0.005, multiplicador: 1.5, bonusDaClasse: { arqueiro: 0.1 } }
 
 // Pontuação base (RF49) = soma de cada parte × o seu peso, mais o bônus de Boss
 export const pesosDaPontuacao = { porMonstro: 10, porOuro: 1, porRecurso: 5, porSegundoAtivo: 1 }
@@ -198,10 +199,10 @@ export const mundo = {
       cor: 0x6f747c,
       xp: 45,
       ouro: 25,
-      vida: 520,
+      vida: 440, // Parte 11: 520 → 440 (as classes novas; meta F3)
       tamanho: 44,
       velocidade: 150,
-      dano: 34,
+      dano: 32,
       raioDeDeteccao: 360,
       raioDeDesistencia: 560,
       raioDoTerritorio: 700,
@@ -290,7 +291,7 @@ export const mundo = {
       dano: 14,
       empurrao: 120,
       raioDoPasseio: 50,
-      cura: { quanto: 100, msEntreCuras: 2200, raio: 450 }, // a cura também cresce com a força da região (Parte 8)
+      cura: { quanto: 125, msEntreCuras: 2200, raio: 450 }, // a cura também cresce com a força da região (Parte 8)
       drops: [
         { item: 'orelhaDeGoblin', chance: 1, quantidade: [1, 1] },
         { item: 'totemDoXama', chance: 0.3, quantidade: [1, 1] },
@@ -437,20 +438,25 @@ export const mundo = {
     especial: { item: 'cintoDoOgro', chance: 0.08 },
   },
   // Vida, dano, XP e ouro dos mobs × este valor, pela dificuldade da região (regras/mobs.js)
-  forcaDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 2.2, dificil: 5.5, boss: 5.5 },
+  forcaDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 2.2, dificil: 6.5, boss: 6.5 },
   // Parte 8 (11/2026; PROVISÓRIO, para o Pablo discutir): o dano dos mobs cresce menos que a vida (senão a Média
   // derrubava o grupo de uma vez); o XP cresce mais (vale a pena ir mais fundo; a curva de XP foi decidida junto); a
   // velocidade dos mobs hostis fica presa na região: na Fácil, abaixo do Líder do começo (dá para fugir de um lobo); na
   // Média e na Difícil, acima dele (mais de 185 px/s: fugir não resolve sempre)
-  danoDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 1.2, dificil: 2.6, boss: 2.6 },
+  danoDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 1.2, dificil: 3, boss: 3 },
+  // Parte 11: a cura do xamã cresce menos que a vida na Difícil (com a força de 6,5, uma parte do forte com xamã não
+  // caía nem no nível 28: ele curava mais do que o grupo tirava)
+  curaDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 2.2, dificil: 3, boss: 3 },
   xpDaRegiao: { segura: 1, neutra: 1, facil: 1, media: 3.5, dificil: 4, boss: 4 },
   velocidadeDaRegiao: { facil: { maxima: 165 }, media: { minima: 205 }, dificil: { minima: 220 }, boss: { minima: 220 } },
   // Onde os mobs nascem: longe dos inícios das regiões (o grupo nunca nasce com mob perto), longe uns dos outros e
   // longe da mata; "folga" é o espaço livre em volta de cada um ao nascer (ninguém nasce encostado em ninguém)
   nascimento: { longeDosInicios: 700, distanciaEntreMobs: 140, margem: 90, folga: 24 },
-  // A Caravana (RF56, Parte 7): o preço de cada parada = base + porMilPx por 1.000 px ANDADOS pelo caminho até ela,
-  // arredondado para múltiplos de "arredondar" (o início é de graça). "Tem que doer para um iniciante" (Pablo, 22/11).
-  caravana: { base: 40, porMilPx: 25, arredondar: 5 },
+  // A Caravana (RF56; Parte 11, decisão do Pablo de 26/11): cada parada custa perto do ouro de uma partida inteira
+  // típica na região perto dela. Partida típica (PROVISÓRIO): o grupo derruba "fracaoDosMobs" dos mobs da região (os
+  // soltos, as matilhas e os acampamentos) e, no domínio do chefe, também o chefe. Arredondado para múltiplos de
+  // "arredondar"; o início é de graça; uma parada mais longe nunca custa menos que a de antes.
+  caravana: { fracaoDosMobs: 0.6, arredondar: 5 },
   // Bando (Parte 6a): quem começa a perseguir chama os do mesmo bando a até este raio (a matilha do Alfa; na 6b, o
   // acampamento goblin acorda junto)
   // raioProvocado: atacado (ou chamado pelo bando), o mob só desiste do alvo além deste raio (um tiro de longe tem
@@ -464,7 +470,9 @@ export const mundo = {
   // Forte goblin (Parte 6c): a espessura dos muros, a largura dos portões, o tamanho de cada pedaço de muro (o desenho
   // aparece por pedaços do mapa), o recuo das torres a partir dos cantos, o tamanho da torre e o alcance a mais dos
   // arqueiros nela (lá de cima eles veem e atiram mais longe; ficam parados)
-  forte: { espessura: 40, larguraDoPortao: 170, pedaco: 180, recuoDaTorre: 75, torre: 84, alcanceNaTorre: 1.3 },
+  // folgaDaLeva (Parte 11): quanto cada parte do forte enxerga e persegue para fora da faixa dela; longeDosMuros: onde
+  // os goblins de cada parte nascem (longe dos muros e da fogueira)
+  forte: { espessura: 40, larguraDoPortao: 170, pedaco: 180, recuoDaTorre: 75, torre: 84, alcanceNaTorre: 1.3, folgaDaLeva: 150, longeDosMuros: 110 },
   acampamento: { tronco: 34, larguraDaEntrada: 140, longeDaFogueira: 95, longeDaPalicada: 85, folgaDoTerritorio: 220, fogueira: 44, longeDosOutros: 200 },
   pacificos: { raioFugindo: 1.3, raioAtacado: 1.8, msFugindoAtacado: 4000, msParadoDepoisDoSusto: 1200 },
   // Mob que desistiu volta para casa sem olhar para o grupo por este tempo (dá para fugir dele)
@@ -600,7 +608,7 @@ export const combateDeTeste = {
     msMinimoParaCarregar: 450,
     curvaDaAgilidade: 1, // 1 = linha reta: cada ponto tira o mesmo tanto (6,5 ms), até o mínimo no 100
     fracaoDaRecarga: 0.6,
-    danoBase: 26,
+    danoBase: 62,
     danoPorForca: 1.2,
     fracaoMinimaDoDano: 0.3,
     alcanceMaximo: 700,
@@ -653,12 +661,14 @@ export const combateDeTeste = {
   caminho: { celula: 20, msEntreRecalculos: 500, areaMaximaDaGradeUnica: 40000000, folgaDaGradeLocal: 700 },
   // Ataque de teste de cada classe (clique esquerdo). "empurrao" = velocidade do empurrão no alvo
   ataques: {
-    guerreiro: { dano: 25, alcance: 70, aberturaGraus: 120, recargaMs: 400, empurrao: 260 },
+    // Parte 11 (decisão do Pablo de 26/11, pelo Conceito): no nível 1, o Guerreiro e o Arqueiro dão perto de 55 de dano
+    // por segundo, o Mago perto de 28 por alvo (em área), o Tanque perto de 15 e o Sacerdote perto de 8
+    guerreiro: { dano: 21, alcance: 70, aberturaGraus: 120, recargaMs: 400, empurrao: 260 },
     // Arqueiro (ajustes de 14/10): o dano, a velocidade e a recarga da flecha vêm do arco que carrega (arco, abaixo);
     // daqui ficam o tamanho da flecha, o empurrão e o alcance que a IA usa para se posicionar (o máximo do arco)
     arqueiro: { dano: 18, velocidade: 900, alcance: 700, raio: 5, recargaMs: 350, empurrao: 140 },
     mago: {
-      dano: 30,
+      dano: 40,
       velocidade: 350,
       alcance: 500,
       raioInicial: 10,
@@ -671,13 +681,13 @@ export const combateDeTeste = {
     // duração, então uma aura nova sai assim que a anterior acaba, sem pausa e sem duas ao mesmo tempo. 5 por pulso a
     // cada 0,5 s = 10 de vida por segundo. Não gasta mana (é o ataque de clique, RF36).
     // danoPorPulso (Parte 3 de 11/2026, PROVISÓRIO): a aura também machuca de leve os inimigos dentro dela
-    sacerdote: { raio: 150, curaPorPulso: 5, danoPorPulso: 3, msEntrePulsos: 500, msDeDuracao: 3000, recargaMs: 3000 },
+    sacerdote: { raio: 150, curaPorPulso: 5, danoPorPulso: 4, msEntrePulsos: 500, msDeDuracao: 3000, recargaMs: 3000 },
     tanque: {
       larguraDoEscudo: 70,
       espessuraDoEscudo: 16,
       distanciaDoEscudo: 40,
       aberturaDoBloqueioGraus: 100,
-      dano: 8,
+      dano: 9,
       alcanceDoEmpurrao: 90,
       recargaMs: 600,
       empurrao: 560,

@@ -17,6 +17,7 @@ import {
   trilhaDaTela,
 } from './interface.js'
 import { dicasDasTelas } from '../dados/ajuda.js'
+import { npcDoLugar, npcs } from '../dados/npcs.js'
 
 const arqueiro = {
   classe: 'arqueiro',
@@ -160,9 +161,17 @@ describe('trilha, Esc e dica da primeira visita (ajustes de 14/10)', () => {
     for (const tela of ['telaInicial', 'reino', 'partida', 'cutsceneDerrota', 'narrativaInicial', 'selecaoClasse']) expect(telaDeCima(tela), tela).toBe(null)
   })
 
-  it('toda tela fora da partida tem uma dica curta (uma ou duas frases)', () => {
+  // Parte 11: nas telas com NPC (Mercado, Forja, Guilda), a apresentação do NPC na primeira visita faz o papel da dica
+  it('toda tela fora da partida tem uma dica curta (uma ou duas frases) ou a apresentação do NPC', () => {
     for (const [id, tela] of Object.entries(telas)) {
       if (tela.naPartida && id !== 'partida') continue
+      const npc = npcDoLugar(id)
+      if (npc) {
+        expect(dicasDasTelas[id], `${id}: o NPC já explica`).toBeUndefined()
+        expect(npcs[npc].apresentacao.length, id).toBeGreaterThan(0)
+        expect(ajudaDasTelas[id], `${id}: o "?" abre o Como funciona`).toBeTruthy()
+        continue
+      }
       expect(dicasDasTelas[id], id).toBeTruthy()
       expect(dicasDasTelas[id].length, id).toBeLessThanOrEqual(160)
     }

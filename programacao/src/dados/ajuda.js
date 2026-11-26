@@ -15,9 +15,8 @@ export const dicasDasTelas = {
   selecaoClasse: 'Clique numa classe para ver o que ela faz. A escolhida vira o seu primeiro personagem e o Líder.',
   reino: 'O Reino é a sua base entre as partidas. Clique num lugar para entrar; Jogar abre o mapa.',
   mochila: 'Tudo o que você tem no Reino. Clique num item para pegar (o botão direito pega a metade) e solte noutro lugar ou na lixeira.',
-  mercado: 'Compre, venda e troque itens. Antes de cada compra, a tela mostra quanto ouro sobra.',
-  forja: 'Equipe os personagens e fabrique equipamento. Antes de equipar, a tela mostra o que muda nos atributos.',
-  guilda: 'Aceite uma missão no quadro ou contrate personagens para o seu grupo.',
+  // Mercado, Forja e Guilda não têm dica (Parte 11, decisão do Pablo de 26/11): quem explica o lugar na primeira visita
+  // é o NPC (dados/npcs.js, a apresentação); o "?" abre o "Como funciona"
   arvores: 'Distribua os pontos de atributo e aprenda habilidades de cada personagem.',
   salaoGloria: 'O ranking dos jogadores com conta, o seu histórico de partidas e as conquistas.',
   mapa: 'Clique na Floresta para jogar. No Planalto, o castelo volta ao Reino e a fazenda, a mina e o lago abrem os minijogos.',

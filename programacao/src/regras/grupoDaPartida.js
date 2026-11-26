@@ -38,7 +38,7 @@ function numerosDoMembro(atributosSemEquipamento, equipamento = {}, arvore = {})
     vidaMaxima: Math.round(vidaMaximaPelaVitalidade(atributos.vitalidade) * (1 + passivas.vida)),
     manaMaxima: manaMaxima(atributos.inteligencia),
     manaPorSegundo: manaPorSegundo(atributos.sabedoria) * (1 + passivas.mana),
-    chanceDeCritico: chanceDeCritico(atributos.agilidade, critico) + passivas.critico,
+    chanceDeCritico: chanceDeCritico(atributos.agilidade, critico) + passivas.critico + (critico.bonusDaClasse?.[arvore.classe] ?? 0),
     multiplicadorDeCura: 1 + passivas.cura,
     teclas: habilidadesNasTeclas(arvore),
   }

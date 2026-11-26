@@ -1,11 +1,11 @@
 // A Caravana (RF56, Parte 7 de 11/2026). Funções puras.
 // Substitui o Ponto de partida (RF32): o grupo pode começar a partida no início do bioma (de graça) ou pagar para a
-// Caravana levá-lo a uma zona neutra mais à frente (nunca dentro de uma região). O preço é alto e cresce com a
-// distância ANDADA pelo caminho (a soma dos trechos entre os inícios das zonas, na ordem do caminho em "S"; a distância
-// em linha reta não serve, porque o "S" volta para perto do começo). A Caravana está sempre disponível: só o preço
-// barra. O ouro é reservado no "Começar partida" e só sai do progresso no fim da partida (como os itens levados da
-// Mochila do Reino): se a partida cair, nada é cobrado (RF12).
-import { caravana } from '../dados/balanceamento.js'
+// Caravana levá-lo a uma zona neutra mais à frente (nunca dentro de uma região). Parte 11 (Pablo, 26/11): cada parada
+// custa perto do ouro de uma partida inteira típica na região perto dela (o ouro das fichas de hoje, fichaDoMob). A
+// Caravana está sempre disponível: só o preço barra. O ouro é reservado no "Começar partida" e só sai do progresso no
+// fim da partida (como os itens levados da Mochila do Reino): se a partida cair, nada é cobrado (RF12).
+import { caravana, mundo } from '../dados/balanceamento.js'
+import { fichaDoMob } from './mobs.js'
 
 // A distância andada do começo do caminho até o início da zona "id" (px). ordem: os ids das zonas na ordem do caminho;
 // regioes: [{ id, inicio: { x, y } }]. Zona fora do caminho: null.
@@ -23,19 +23,54 @@ export function distanciaPeloCaminho(regioes, ordem, id) {
   return soma
 }
 
-// O preço de uma parada: o começo do caminho é de graça; as outras, base + porMilPx por 1.000 px andados, arredondado
-// para múltiplos de "arredondar". Parada desconhecida (um ponto de partida antigo, de antes da Caravana): de graça.
-export function precoDaParada(regioes, ordem, parada, config = caravana) {
-  if (!parada || parada.regiao === ordem[0]) return 0
-  const distancia = distanciaPeloCaminho(regioes, ordem, parada.regiao)
-  if (distancia === null) return 0
-  return Math.round((config.base + (config.porMilPx * distancia) / 1000) / config.arredondar) * config.arredondar
+// Os mobs de uma região do bioma, { tipo: quantos }: os soltos (com a matilha de cada Lobo Alfa), os dos acampamentos
+// e do forte (com os arqueiros das torres) e, no domínio do chefe, o chefe
+export function mobsDaRegiaoDoBioma(bioma, idDaRegiao, config = mundo) {
+  const mobs = {}
+  const somar = (tipo, n) => (mobs[tipo] = (mobs[tipo] ?? 0) + n)
+  for (const [tipo, n] of Object.entries(bioma.populacao?.[idDaRegiao] ?? {})) {
+    somar(tipo, n)
+    const matilha = config.mobs[tipo]?.matilha
+    if (matilha) somar('lobo', n * matilha.lobos)
+  }
+  for (const acampamento of (bioma.acampamentos ?? []).filter((um) => um.regiao === idDaRegiao)) {
+    for (const [tipo, n] of Object.entries(acampamento.populacao)) somar(tipo, n)
+    if (acampamento.arqueirosNasTorres) somar('goblinArqueiro', 4) // uma torre em cada canto
+  }
+  if (bioma.regioes?.find((regiao) => regiao.id === idDaRegiao)?.dificuldade === 'boss') somar('chefe', 1)
+  return mobs
 }
 
-// As paradas do bioma com o preço de cada uma (na ordem do caminho)
-export function paradasComPreco(bioma, config = caravana) {
+// O ouro de uma partida típica na região: "fracaoDosMobs" do ouro de todos os mobs dela (pela ficha na dificuldade da
+// região) mais o chefe inteiro (quem vai ao domínio vai pelo chefe)
+export function ouroDaPartidaTipica(bioma, idDaRegiao, config = caravana, configDoMundo = mundo) {
+  const dificuldade = bioma.regioes?.find((regiao) => regiao.id === idDaRegiao)?.dificuldade ?? 'facil'
+  let ouro = 0
+  for (const [tipo, n] of Object.entries(mobsDaRegiaoDoBioma(bioma, idDaRegiao, configDoMundo))) {
+    if (tipo === 'chefe') ouro += configDoMundo.ogro?.ouro ?? 0
+    else ouro += fichaDoMob(tipo, dificuldade, configDoMundo).ouro * n * config.fracaoDosMobs
+  }
+  return ouro
+}
+
+// O preço de uma parada: o começo do caminho é de graça; as outras, o ouro de uma partida típica na região perto dela,
+// arredondado para múltiplos de "arredondar". Parada desconhecida (um ponto de partida antigo, de antes da Caravana) ou
+// sem região perto: de graça.
+export function precoDaParada(bioma, parada, config = caravana, configDoMundo = mundo) {
+  if (!parada || parada.regiao === bioma.ordemDoCaminho?.[0] || !parada.regiaoPerto) return 0
+  return Math.round(ouroDaPartidaTipica(bioma, parada.regiaoPerto, config, configDoMundo) / config.arredondar) * config.arredondar
+}
+
+// As paradas do bioma com o preço de cada uma (na ordem do caminho); uma parada mais longe nunca custa menos que a de
+// antes (senão começar mais à frente sairia mais barato)
+export function paradasComPreco(bioma, config = caravana, configDoMundo = mundo) {
   if (!bioma?.caravana) return []
-  return bioma.caravana.map((parada) => ({ ...parada, preco: precoDaParada(bioma.regioes, bioma.ordemDoCaminho, parada, config) }))
+  let antes = 0
+  return bioma.caravana.map((parada) => {
+    const preco = Math.max(antes, precoDaParada(bioma, parada, config, configDoMundo))
+    antes = preco
+    return { ...parada, preco }
+  })
 }
 
 // O preço da parada escolhida (pelo id), ou 0

@@ -2410,6 +2410,27 @@ button.slot:hover {
 }
 
 /* A Caravana (Parte 7): a lista das paradas */
+/* O mapa da pausa (Parte 11): os pontos de perigo das partes do forte, por cima do desenho */
+.mapa-inteiro-desenho {
+  position: relative;
+  line-height: 0;
+}
+.ponto-de-perigo {
+  position: absolute;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 1.4cqw;
+  height: 1.4cqw;
+  font-size: 1cqw;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: #c92a2a;
+  border: 0.15cqw solid #fff;
+  border-radius: 50%;
+}
+
 .caravana {
   display: flex;
   flex-direction: column;

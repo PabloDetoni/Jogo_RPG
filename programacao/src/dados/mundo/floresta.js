@@ -147,10 +147,11 @@ export const floresta = {
   // neutras perto de cada região. Nunca dentro de uma região. O "id" vira o ponto de partida da partida.
   caravana: [
     { id: 'inicio', regiao: 'zonaSegura', nome: 'Início do bioma', perto: 'A zona segura, perto do Reino' },
-    { id: 'neutraDaEntrada', regiao: 'neutraDaEntrada', nome: 'Clareira da Entrada', perto: 'Perto da região Fácil' },
-    { id: 'neutraDaCurva1', regiao: 'neutraDaCurva1', nome: 'Vau do Riacho', perto: 'Perto da região Média' },
-    { id: 'neutraDaCurva2', regiao: 'neutraDaCurva2', nome: 'Campo dos Cervos', perto: 'Perto da região Difícil' },
-    { id: 'neutraDoFim', regiao: 'neutraDoFim', nome: 'Pouso do Caçador', perto: 'Perto do domínio do chefe' },
+    // regiaoPerto (Parte 11): a região cujo ouro de uma partida típica dá o preço da parada
+    { id: 'neutraDaEntrada', regiao: 'neutraDaEntrada', regiaoPerto: 'facil', nome: 'Clareira da Entrada', perto: 'Perto da região Fácil' },
+    { id: 'neutraDaCurva1', regiao: 'neutraDaCurva1', regiaoPerto: 'media', nome: 'Vau do Riacho', perto: 'Perto da região Média' },
+    { id: 'neutraDaCurva2', regiao: 'neutraDaCurva2', regiaoPerto: 'dificil', nome: 'Campo dos Cervos', perto: 'Perto da região Difícil' },
+    { id: 'neutraDoFim', regiao: 'neutraDoFim', regiaoPerto: 'dominioDoBoss', nome: 'Pouso do Caçador', perto: 'Perto do domínio do chefe' },
   ],
   // Acampamentos goblin (Parte 6b; PROVISÓRIO – substituir pelo do grupo): um círculo com a paliçada (raio) e as
   // entradas (ângulos: 0 = leste, π = oeste, π/2 = sul), dentro da região; a população nasce dentro, em volta da
@@ -160,7 +161,18 @@ export const floresta = {
     // O forte goblin da Difícil (Parte 6c): um retângulo de muros com portões a oeste e a leste e uma torre de arqueiro
     // em cada canto ("arqueirosNasTorres"); "raio" é só para espalhar a população em volta do meio. Único lugar da
     // Difícil onde ele cabe (um círculo de 820 px inteiro dentro dela), perto do fim do caminho.
-    { id: 'forteGoblin', nome: 'Forte Goblin', regiao: 'dificil', forma: 'retangulo', centro: { x: 6420, y: 6833 }, largura: 900, altura: 760, raio: 380, portoes: ['oeste', 'leste'], arqueirosNasTorres: true, populacao: { goblinLanceiro: 5, goblinArqueiro: 2, goblinXama: 2, orc: 1 } },
+    // Parte 11 (decisão do Pablo de 26/11): o forte acorda POR PARTES. Cada parte (de oeste para leste, em frações da
+    // largura) é um bando e um território: os goblins dela só veem e só perseguem quem está nela (com a folga); os
+    // arqueiros das torres ficam com a parte do lado deles
+    {
+      id: 'forteGoblin', nome: 'Forte Goblin', regiao: 'dificil', forma: 'retangulo', centro: { x: 6420, y: 6833 }, largura: 900, altura: 760, raio: 380, portoes: ['oeste', 'leste'], arqueirosNasTorres: true,
+      populacao: { goblinLanceiro: 5, goblinArqueiro: 2, goblinXama: 1, orc: 1 }, // a soma das partes (mais os 4 arqueiros das torres)
+      levas: [
+        { id: 'portao', nome: 'Portão', de: -0.5, ate: -0.17, populacao: { goblinLanceiro: 3 } },
+        { id: 'patio', nome: 'Pátio', de: -0.17, ate: 0.17, populacao: { goblinLanceiro: 2, goblinArqueiro: 2, goblinXama: 1 } },
+        { id: 'torre', nome: 'Torre', de: 0.17, ate: 0.5, populacao: { orc: 1 } },
+      ],
+    },
     { id: 'acampamentoDaPedra', nome: 'Acampamento da Pedra', regiao: 'media', centro: { x: 3260, y: 4450 }, raio: 380, entradas: [0], populacao: { goblinLanceiro: 4, goblinArqueiro: 3, goblinXama: 1 } },
   ],
   // Recursos no chão de cada região, a cada partida (coletados com E). PROVISÓRIO – substituir pelo do grupo (TASK-012).

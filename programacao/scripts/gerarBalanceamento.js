@@ -46,7 +46,8 @@ import {
 import { resultados } from '../src/dados/resultados.js'
 import { adicionalNoDominioDeBoss } from '../src/dados/taxas.js'
 import { efeitoComExpoente, fatorDoAtributo, pontosDeAtributoAteONivel, velocidadePelaAgilidade } from '../src/regras/atributos.js'
-import { simular } from '../src/regras/simulador.js'
+import { ataqueDaClasse, atributosNoNivel, simular } from '../src/regras/simulador.js'
+import { membroComAtributos } from '../src/regras/grupoDaPartida.js'
 import { atributosNoCombate as noCombate } from '../src/dados/balanceamento.js'
 import { chanceDeCritico, limiteDoEscudo } from '../src/regras/combate.js'
 import { saltoMaximoPorQuadro } from '../src/regras/movimento.js'
@@ -62,7 +63,7 @@ import { capacidadeDaMochila } from '../src/regras/mochila.js'
 import { aplicarTaxa, taxaNaDistancia } from '../src/regras/taxa.js'
 import { xpParaSubir, xpTotalAteONivel } from '../src/regras/xp.js'
 import { danoPorSegundo, flechaDaCarga, msDeRecargaDoArco, msParaCargaCheia } from '../src/regras/arco.js'
-import { paradasComPreco } from '../src/regras/caravana.js'
+import { ouroDaPartidaTipica, paradasComPreco } from '../src/regras/caravana.js'
 
 // Fica junto da documentação, que é a fonte de verdade do grupo (TASK-011)
 const destino = fileURLToPath(new URL('../../documentacao/Balanceamento.md', import.meta.url))
@@ -461,19 +462,24 @@ escrever(
   '## Mundo da Floresta (Fase 3, provisório)',
   `Layout em \`src/dados/mundo/floresta.js\` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **${numero(floresta.tamanho.largura)} × ${numero(floresta.tamanho.altura)} px**, fixo (o mesmo toda partida), com o caminho em "S": três faixas (ida, volta, ida) ligadas por curvas, da zona segura (perto do Reino) ao domínio do chefe no fim. Cada região e cada zona neutra é um polígono de bordas onduladas; as zonas neutras ficam entre as regiões (as paradas da Caravana e os animais pacíficos). Fora delas é mata fechada (parede, pela grade do terreno de ${floresta.celulaDoTerreno} px). Na velocidade de um personagem do começo (~190 px/s), atravessar leva cerca de 3 minutos. Medidas da tabela: a caixa em volta de cada polígono.`,
   tabela(
-    ['Região', 'Tamanho (px)', 'Vida dos mobs', 'Dano', 'XP', 'Velocidade', 'XP da 1ª descoberta de cada área', 'Mobs por partida'],
+    ['Região', 'Tamanho (px)', 'Vida dos mobs', 'Dano', 'Cura do xamã', 'XP', 'Velocidade', 'XP da 1ª descoberta de cada área', 'Mobs por partida'],
     floresta.regioes.map((regiao) => [
       regiao.nome,
       `${numero(regiao.x1 - regiao.x0)} × ${numero(regiao.y1 - regiao.y0)}`,
       `×${numero(mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
       `×${numero(mundo.danoDaRegiao?.[regiao.dificuldade] ?? mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
+      `×${numero(mundo.curaDaRegiao?.[regiao.dificuldade] ?? mundo.forcaDaRegiao[regiao.dificuldade], 1)}`,
       `×${numero((mundo.forcaDaRegiao[regiao.dificuldade] ?? 1) * (mundo.xpDaRegiao?.[regiao.dificuldade] ?? 1), 1)}`,
       mundo.velocidadeDaRegiao?.[regiao.dificuldade]?.minima ? `no mínimo ${mundo.velocidadeDaRegiao[regiao.dificuldade].minima} px/s` : mundo.velocidadeDaRegiao?.[regiao.dificuldade]?.maxima ? `no máximo ${mundo.velocidadeDaRegiao[regiao.dificuldade].maxima} px/s` : '—',
       numero(mundo.xpPorArea[regiao.dificuldade] ?? 0),
       [
         ...Object.entries(floresta.populacao[regiao.id] ?? {}).map(([tipo, quantos]) => `${quantos} ${tipo}`),
         // os acampamentos goblin da região (Parte 6b)
-        ...(floresta.acampamentos ?? []).filter((a) => a.regiao === regiao.id).map((a) => `${a.nome} (${Object.entries(a.populacao).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ')}${a.arqueirosNasTorres ? ' e 4 goblinArqueiro nas torres' : ''})`),
+        ...(floresta.acampamentos ?? []).filter((a) => a.regiao === regiao.id).map((a) =>
+          a.levas
+            ? `${a.nome}, em ${a.levas.length} partes que acordam uma de cada vez (${a.levas.map((leva) => `${leva.nome}: ${Object.entries(leva.populacao).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ')}`).join('; ')}; e 4 goblinArqueiro nas torres, 2 do Portão e 2 da Torre)`
+            : `${a.nome} (${Object.entries(a.populacao).map(([tipo, quantos]) => `${quantos} ${tipo}`).join(', ')}${a.arqueirosNasTorres ? ' e 4 goblinArqueiro nas torres' : ''})`,
+        ),
       ].join(', ') || 'nenhum',
     ]),
   ),
@@ -516,10 +522,10 @@ escrever(
     `Espinhos (longe): leque de ${mundo.boss.espinhos.quantos} tiros, aviso de ${segundosDoMundo(mundo.boss.espinhos.msDeAviso)}, ${mundo.boss.espinhos.dano} de dano cada.`,
     `Um ataque a cada ${segundosDoMundo(mundo.boss.msEntreAtaques)} no máximo. Drop: ${mundo.boss.drops.map((drop) => drop.item).join(', ')} sempre e **${numero(mundo.boss.especial.chance * 100)}%** de chance do equipamento especial (${mundo.boss.especial.item}, RF39; no npm run dev dá para forçar 100%).`,
   ),
-  '### A Caravana (RF56, Parte 7, provisório)',
+  '### A Caravana (RF56, Partes 7 e 11, provisório)',
   lista(
-    `Preço de cada parada: ${mundo.caravana.base} + ${mundo.caravana.porMilPx} por 1.000 px andados pelo caminho até ela, arredondado de ${mundo.caravana.arredondar} em ${mundo.caravana.arredondar}; o início é de graça. Sai do ouro no fim da partida.`,
-    ...paradasComPreco(floresta).map((parada) => `${parada.nome} (${parada.perto.toLowerCase()}): **${parada.preco} de ouro**.`),
+    `Preço de cada parada (Parte 11, decisão do Pablo de 26/11): perto do ouro de uma partida inteira típica na região perto dela. Partida típica (provisório): o grupo derruba **${numero(mundo.caravana.fracaoDosMobs * 100)}%** dos mobs da região (os soltos, as matilhas, os acampamentos e o forte, pelo ouro das fichas de hoje) e, no domínio do chefe, o chefe inteiro. Arredondado de ${mundo.caravana.arredondar} em ${mundo.caravana.arredondar}; o início é de graça; uma parada mais longe nunca custa menos que a de antes. Sai do ouro no fim da partida.`,
+    ...paradasComPreco(floresta).map((parada) => `${parada.nome} (${parada.perto.toLowerCase()}): **${parada.preco} de ouro**${parada.regiaoPerto ? ` (partida típica: ${numero(Math.round(ouroDaPartidaTipica(floresta, parada.regiaoPerto)))} de ouro)` : ''}.`),
   ),
   '### Coleta, minimapa e outros',
   lista(
@@ -609,6 +615,16 @@ escrever(
   tabela(
     ['Atributo', 'Fator (referência 14, o Guerreiro)', 'Velocidade com essa Agilidade (px/s)'],
     [14, 25, 50, 75, 100].map((v) => [numero(v), `${numero(fatorDoAtributo(v, 14), 2)}×`, numero(velocidadePelaAgilidade(v))]),
+  ),
+  '### Dano por segundo das classes no nível 1 (Parte 11, metas do Pablo de 26/11)',
+  'O ataque de clique de cada classe no nível 1, com a média do crítico (o Arqueiro com a carga cheia e +10% de chance de crítico da classe). Metas: Guerreiro e Arqueiro ~55 (o Arqueiro com mais crítico, um alvo); Mago ~28 por alvo, em área; Tanque ~15; Sacerdote ~8 (a aura).',
+  tabela(
+    ['Classe', 'Dano por segundo (por alvo)', 'Alvos por golpe', 'Chance de crítico'],
+    ['guerreiro', 'arqueiro', 'mago', 'tanque', 'sacerdote'].map((classe) => {
+      const membro = membroComAtributos(classe, atributosNoNivel(classe, 1), 1)
+      const ataque = ataqueDaClasse(membro)
+      return [classe, numero(ataque.dano / (ataque.ms / 1000), 1), ataque.alvos === Infinity ? 'todos na aura' : String(ataque.alvos), `${numero(membro.chanceDeCritico * 100, 1)}%`]
+    }),
   ),
   '### Simulador (npm run simular)',
   'Modelo simplificado (sem física nem IA; detalhes em src/regras/simulador.js e src/dados/simulador.js). Bando padrão de 3 mobs da região; no Boss, ele sozinho. "Mobs sem cair": o maior bando (até 12) que o grupo vence sem ninguém cair.',

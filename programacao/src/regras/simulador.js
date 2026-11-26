@@ -67,7 +67,7 @@ export function ataqueDaClasse(membro) {
 }
 
 // Um mob para a luta do simulador, pela ficha na dificuldade (com a cura do xamã e a prioridade de alvo)
-function mobDaLuta(tipo, dificuldade) {
+export function mobDaLuta(tipo, dificuldade) {
   const ficha = fichaDoMob(tipo, dificuldade)
   const recargaMs = ficha.comportamento === 'corpoACorpo' ? ficha.recargaMs : ficha.msEntreTiros
   return {
@@ -108,10 +108,18 @@ export function mobsDaRegiao(regiao) {
 
 // Os goblins de um acampamento ou do forte (Parte 6b e 6c), todos juntos (o acampamento acorda junto), com os
 // arqueiros das torres do forte
-export function mobsDoAcampamento(id) {
+// leva (Parte 11): só uma parte do forte ('portao', 'patio' ou 'torre'), com os arqueiros das torres do lado dela
+export function mobsDoAcampamento(id, leva = null) {
   const acampamento = floresta.acampamentos.find((um) => um.id === id)
   if (!acampamento) return []
   const dificuldade = floresta.regioes.find((regiao) => regiao.id === acampamento.regiao)?.dificuldade ?? 'facil'
+  if (leva && acampamento.levas) {
+    const parte = acampamento.levas.find((uma) => uma.id === leva)
+    const daParte = Object.entries(parte?.populacao ?? {}).flatMap(([tipo, quantos]) => Array.from({ length: quantos }, () => mobDaLuta(tipo, dificuldade)))
+    // as torres ficam nos cantos: duas do lado oeste (Portão) e duas do leste (Torre)
+    const torres = leva === 'patio' ? 0 : 2
+    return [...daParte, ...Array.from({ length: acampamento.arqueirosNasTorres ? torres : 0 }, () => mobDaLuta('goblinArqueiro', dificuldade))]
+  }
   const mobs = []
   for (const [tipo, quantos] of Object.entries(acampamento.populacao)) for (let i = 0; i < quantos; i++) mobs.push(mobDaLuta(tipo, dificuldade))
   if (acampamento.arqueirosNasTorres) for (let i = 0; i < 4; i++) mobs.push(mobDaLuta('goblinArqueiro', dificuldade))
