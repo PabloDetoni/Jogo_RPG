@@ -80,6 +80,14 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ## PE. A pesca visual do Lago (Parte 10, 11/2026)
 
+**PE-02 · A Fazenda desenhada (Parte 11b)**
+- Fazer: Jogar → Fazenda → Começar rodada. Espere e olhe os canteiros; clique num maduro e num que não está.
+- Deve acontecer: o seu Líder em blocos ao lado de 9 canteiros de terra. Cada um mostra o broto, depois a planta, depois o trigo dourado com um brilho pulsando e, se ninguém colher, a planta murcha (marrom, caída). Clicando, o bonequinho anda até o canteiro; no maduro, o trigo pula para ele e o placar soma 1.
+
+**PE-03 · A Mina desenhada (Parte 11b)**
+- Fazer: Jogar → Mina → Começar rodada. Clique na pedra 3 vezes.
+- Deve acontecer: a caverna vista de cima, com o seu Líder segurando a picareta ao lado da pedra. A cada clique, a picareta desce, a pedra ganha uma rachadura e saem faíscas amarelas; no terceiro, a pedra se quebra em pedaços, o minério laranja pula até o bonequinho, o placar soma 1 e ele anda até a pedra nova.
+
 **PE-01 · Pescar**
 - Fazer: Jogar → Lago → Começar rodada. Espere a boia afundar e clique; depois clique antes da hora.
 - Deve acontecer: o seu Líder (na cor e com o chapéu da classe) na margem, com a vara, a linha e a boia balançando na água. Quando a boia afunda, aparece um "!" amarelo: clicando aí, a vara sobe, o peixe pula fora d'água e o placar soma 1. Clicando cedo, a boia treme e aparece "…" (sem ponto). As rodadas do dia e o XP no fim são os de sempre. Com "reduzir movimento" no Windows, a boia fica parada, mas o "!" e o peixe continuam.

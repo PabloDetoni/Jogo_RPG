@@ -35,6 +35,27 @@ export function colherNaFazenda(canteiros, indice, agora, sorteio) {
   return { canteiros: novos, ponto: true }
 }
 
+// A etapa que a Fazenda desenhada mostra (Parte 11b; só desenho): crescendo é "broto" e, quando faltam msDaPlanta para
+// madurar, "planta"; madura é "maduro" (com brilho); murcha é "murcho"
+export function etapaDoCanteiro(canteiro, agora, msDaPlanta) {
+  if (canteiro?.estado === 'madura') return 'maduro'
+  if (canteiro?.estado === 'murcha') return 'murcho'
+  return canteiro && canteiro.ate - agora <= msDaPlanta ? 'planta' : 'broto'
+}
+
+// Onde fica o canteiro "indice" na Fazenda desenhada (Parte 11b; em unidades da cena): { x, y, largura, altura }.
+// layout: { x, y, largura, altura, espaco, colunas } (dados/minijogos.js, fazendaDesenhada.canteiros)
+export function lugarDoCanteiro(indice, layout) {
+  const coluna = indice % layout.colunas
+  const linha = Math.floor(indice / layout.colunas)
+  return { x: layout.x + coluna * (layout.largura + layout.espaco), y: layout.y + linha * (layout.altura + layout.espaco), largura: layout.largura, altura: layout.altura }
+}
+
+// Quantas rachaduras a pedra da Mina mostra (Parte 11b): uma por golpe já dado
+export function rachadurasDaPedra(pedra) {
+  return Math.max(0, minijogos.mina.cliquesPorPedra - (pedra?.golpes ?? minijogos.mina.cliquesPorPedra))
+}
+
 // ---------- Mina: uma pedra por vez, num lugar sorteado, que quebra com alguns cliques ----------
 export function novaPedra(sorteio) {
   return { x: 10 + sorteio() * 80, y: 15 + sorteio() * 70, golpes: minijogos.mina.cliquesPorPedra }
