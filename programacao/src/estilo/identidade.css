@@ -409,3 +409,38 @@ body {
 .carregando-caixa .botao {
   color: var(--texto-da-placa);
 }
+
+/* ---------- O nome do jogo na Tela inicial (Parte 13; o nome vem de dados/jogo.js) ---------- */
+.nome-do-jogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
+  text-align: center;
+  pointer-events: none;
+}
+.nome-do-jogo-titulo {
+  margin: 0;
+  font-size: 7cqw;
+  line-height: 1;
+  letter-spacing: 0.25cqw;
+  text-transform: uppercase;
+  color: var(--ouro-claro);
+  text-shadow:
+    0 0.35cqw 0 var(--vermelho-escuro),
+    0.25cqw 0 0 var(--contorno),
+    -0.25cqw 0 0 var(--contorno),
+    0 0.25cqw 0 var(--contorno),
+    0 -0.25cqw 0 var(--contorno),
+    0 0.7cqw 0 var(--contorno);
+  white-space: nowrap;
+}
+.nome-do-jogo-frase {
+  margin: 0;
+  font-size: 1.5cqw;
+  color: var(--texto-da-placa);
+  background: var(--placa);
+  border: 0.14cqw solid var(--ouro);
+  border-radius: 0.3cqw;
+  padding: 0.4cqw 1.2cqw;
+}
