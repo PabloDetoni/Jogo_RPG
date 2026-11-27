@@ -55,7 +55,7 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 |---|---|---|---|---|---|
 | UC26 | Iniciar partida | Associação | «include» UC27, UC29 e UC09; estendido por UC28 e UC30 | — | Abre o mapa, passa pela preparação e começa a partida. Da preparação dá para voltar ao Mapa ou ao Reino. |
 | UC27 | Selecionar bioma | Incluído por UC26 | — | — | Escolhe Floresta, Deserto, Tundra ou Vulcânico no mapa em ovo, clicando no desenho do bioma (o contorno dourado acende em volta dele e mostra o nome; os de fora do beta mostram o cadeado e "Em breve" ao passar o mouse e não abrem); o castelo do Planalto volta ao Reino. |
-| UC28 | Escolher ponto de partida (dificuldade) | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil, entre as já descobertas; sem outra descoberta, a tela não aparece. **Substituído pelo UC44 (Viajar de Caravana).** |
+| UC28 | Escolher ponto de partida (dificuldade) — **substituído pelo UC44 (Caravana, Parte 7)** | «extend» de UC26 | — | Condição: já ter descoberto outras regiões do bioma | Escolhe nascer na região Fácil, Média, Difícil ou Muito difícil, entre as já descobertas; sem outra descoberta, a tela não aparece. **Substituído pelo UC44 (Viajar de Caravana).** |
 | UC29 | Selecionar Líder | Incluído por UC26 | — | — | Escolhe o personagem controlado entre os permanentes. |
 | UC30 | Preparar mochila da partida | «extend» de UC26 | — | Condição: o jogador quer levar itens | Leva itens da Mochila do Reino respeitando o limite de peso. |
 | UC31 | Jogar partida | Associação | «include» UC41; estendido por UC32 e UC35 a UC40 | — | Estado "jogo em andamento": o jogador controla o Líder e os aliados agem sozinhos, com uma IA que melhora com o nível de cada personagem (básica, média e avançada), sem que um nível atrapalhe o outro. O Sacerdote cura sempre que alguém não está com a vida cheia. Só o Líder esquiva. Começa com uma tela de carregamento (progresso real e uma dica); o HUD é translúcido, em grupos nos cantos. **Feito em 11/2026:** mapa fixo maior, com zonas neutras e o minimapa que acompanha o Líder (o mapa inteiro na pausa); animais pacíficos nas zonas neutras e cada mob na sua área (Parte 6a). |
@@ -72,9 +72,9 @@ Regras de leitura do diagrama: no «include», o caso base **sempre** executa o 
 | UC42 | Visualizar resumo da partida | Incluído por UC41 | — | — | Mostra o resumo e permite jogar de novo sem recarregar a página. |
 | UC43 | Jogar minijogo do Planalto | Associação | Condição: sobra rodada hoje | Joga na Fazenda, na Mina ou no Lago, pelo Mapa, para conseguir recursos e XP; ao sair, volta ao Mapa. Cada minijogo tem 3 rodadas por dia (provisório), que renovam à meia-noite de Brasília. **Feito em 11/2026 (Parte 10):** a pesca visual no Lago. |
 
-## Planejado (11/2026)
+## Feitos em 11/2026 e extras
 
-Casos de uso novos, ainda não feitos (planejamento de 11/2026). Passam para a seção da área quando forem programados.
+Os casos de uso do planejamento de 11/2026. O UC44 a UC47 foram feitos (Partes 1 a 9); o UC48 e o UC49 são extras da Área do Desenvolvedor, que fica no ramo `area-dev`, fora do beta: **trabalho futuro**.
 
 | Código | Caso de uso | Tipo | Relacionamentos | Condição | Descrição |
 |---|---|---|---|---|---|
@@ -82,8 +82,8 @@ Casos de uso novos, ainda não feitos (planejamento de 11/2026). Passam para a s
 | UC45 | Conversar com NPC | Incluído por UC16, UC17 e UC21 | — | — | **Feito em 11/2026 (Parte 9).** O NPC se apresenta na primeira visita (tutorial) e diz uma fala aleatória nas outras; o menu leva à ação da tela ou a "Ir embora". |
 | UC46 | Usar opções de desenvolvedor | Associação (Desenvolvedor) | — | Condição: o jogo está no `npm run dev` | Na partida, liga a super velocidade (1×, 3×, 6×) e se teletransporta clicando no minimapa ou com "T + clique" no mapa. Não existe no site publicado. **Feito em 11/2026.** |
 | UC47 | Simular balanceamento | Associação (Desenvolvedor) | — | — | Roda o simulador (`npm run simular`) com um grupo de nível X contra a região Y e lê o tempo até cada um cair, o dano dado e recebido, quantos mobs dá para enfrentar e o XP e o ouro por minuto. **Feito em 11/2026.** |
-| UC48 | Acessar a Área do Desenvolvedor (extra) | Associação (Desenvolvedor) | Estendido por UC49 | Condição: conta de desenvolvedor, com a segunda etapa de verificação | Entra na Área do Desenvolvedor (auditoria e consultas). **Extra**, fora do beta; fica num pacote separado no diagrama. |
-| UC49 | Banir e desbanir conta (extra) | «extend» de UC48 | — | Condição: a conta escolhida existe | Bloqueia ou libera uma conta, com o motivo registrado. **Extra**, só se essa parte da Área do Desenvolvedor for feita. |
+| UC48 | Acessar a Área do Desenvolvedor (extra, trabalho futuro) | Associação (Desenvolvedor) | Estendido por UC49 | Condição: conta de desenvolvedor, com a segunda etapa de verificação | Entra na Área do Desenvolvedor (auditoria e consultas). **Extra**, fora do beta; fica num pacote separado no diagrama. |
+| UC49 | Banir e desbanir conta (extra, trabalho futuro) | «extend» de UC48 | — | Condição: a conta escolhida existe | Bloqueia ou libera uma conta, com o motivo registrado. **Extra**, só se essa parte da Área do Desenvolvedor for feita. |
 
 ## Alterações do projeto
 
@@ -91,6 +91,7 @@ Decisões tomadas durante a programação (outubro de 2026). As descrições aci
 
 | Caso de uso | O que mudou |
 |---|---|
+| UC27, UC28, UC32, UC34, UC44 a UC49 | Parte 12 (26/11): a situação real de cada caso de uso. O UC28 foi substituído pelo UC44 (Caravana); o UC34 é o Ogro (o Guardião fica como chefe avançado, trabalho futuro); no UC27 só a Floresta abre (os outros biomas são trabalho futuro); o UC44 a UC47 estão feitos; o UC48 e o UC49 são extras fora do beta. |
 | UC16, UC17, UC21, UC28, UC31, UC32, UC34, UC43, **UC44 a UC49** | Planejamento de 11/2026 (mensagem de 20/11): casos de uso novos e mudanças marcados "planejado (11/2026)" (Caravana no lugar do Ponto de partida, NPCs no Mercado, na Forja e na Guilda, mapa maior com o Ogro, pesca visual, opções de desenvolvedor, simulador e a Área do Desenvolvedor como extra). Entra o ator **Desenvolvedor**. |
 | UC19, UC27, UC43 e o Reino | Visual novo (20/10): o Reino e o Mapa são as imagens do Pablo, com áreas clicáveis em cima do que está desenhado (no Reino, as placas; no Mapa, o contorno de cada região, o castelo e os minijogos do Planalto). Nenhum caso de uso foi criado ou removido. |
 | UC19, UC27, UC43 e o Reino | Camadas (20/10; com as peças do Pablo desde 21/10): o Reino e o Mapa são montados em camadas (o fundo e as peças que o Pablo fez, com transparência, e as placas em código); o jogador clica no desenho do lugar (o prédio, a mochila, a árvore, o bioma) ou na placa dele, e o lugar acende com um contorno dourado ao passar o mouse. Os fluxos dos casos de uso não mudam. |

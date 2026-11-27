@@ -123,6 +123,37 @@ Não mude o `{{ .ConfirmationURL }}`: é ele que leva de volta ao jogo.
 
 ---
 
+## Parte 3: os SQL que vieram depois (002 e 004)
+
+Cada arquivo de `programacao/supabase/` roda **uma vez**, em ordem, do mesmo jeito do Passo A (painel do Supabase → **SQL Editor** → **New query** → colar o arquivo inteiro → **Run**). Todos podem rodar de novo sem estragar nada. Arquivo já rodado não se edita: uma mudança vira um arquivo novo.
+
+| Arquivo | Para que serve | Situação |
+|---|---|---|
+| `001_contas.sql` | Perfis (apelido), sessão única, saves com versão, partidas e o ranking público (Passo A) | rodado |
+| `002_hora_do_servidor.sql` | A hora do servidor: as 3 rodadas por dia dos minijogos renovam à meia-noite de Brasília pela hora do banco, e não pelo relógio do computador (não lê nem escreve tabela nenhuma) | rodado |
+| `003_...` | **Só para a Área do Desenvolvedor** (extra, fora do beta): existe só no ramo `area-dev` e **não deve ser rodado** no projeto do jogo | não rodar |
+| `004_apelido_de_conta_nao_confirmada.sql` | O apelido passa a ser reservado só quando a conta **confirma o e-mail**: quem se cadastra e nunca confirma não prende mais o apelido | rodar, se ainda não rodou |
+
+### Passo G · Rodar o 002 (se o projeto for novo)
+
+1. SQL Editor → New query → cole `programacao/supabase/002_hora_do_servidor.sql` inteiro → **Run**. Deve aparecer "Success. No rows returned".
+2. Conferir (opcional), numa query nova: `select public.hora_do_servidor();` mostra a hora de agora.
+
+### Passo H · Rodar o 004
+
+1. SQL Editor → New query → cole `programacao/supabase/004_apelido_de_conta_nao_confirmada.sql` inteiro → **Run**. Deve aparecer "Success" (ou o número de perfis presos que foram soltos).
+2. Conferir (opcional), numa query nova:
+   ```sql
+   select tgname from pg_trigger where tgrelid = 'auth.users'::regclass and not tgisinternal;
+   ```
+   Tem que listar `ao_criar_conta` e `ao_confirmar_conta`.
+3. Teste (opcional): crie uma conta com um apelido novo e **não** confirme o e-mail; numa aba anônima, a tela Criar conta tem que aceitar o mesmo apelido.
+4. Avise o Claude que rodou (ele marca no `PLANO.md` e em `programacao/supabase/README.md`).
+
+Depois de qualquer SQL, `npm run conferir:configuracao` (dentro de `programacao/`) confere o Supabase e a Vercel sem mudar nada.
+
+---
+
 ## Como fica a segurança (resumo)
 
 - Cada conta só lê o próprio perfil, o próprio save e as próprias partidas (RLS).

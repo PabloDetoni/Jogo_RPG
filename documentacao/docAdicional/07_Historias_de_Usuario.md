@@ -247,7 +247,7 @@ Critérios de aceite:
 - Clico na região desenhada no mapa; passando o mouse, o contorno acende e mostra o nome; os biomas de fora do beta aparecem com cadeado e "Em breve".
 - Requisitos atendidos: RF30, RF31.
 
-### HU28 · Escolher ponto de partida (dificuldade) (UC28)
+### HU28 · Escolher ponto de partida (dificuldade) (UC28) — substituída pela HU44 (Caravana, Parte 7)
 
 Como jogador, quero escolher onde nascer para jogar direto na dificuldade que eu quiser.
 
@@ -445,7 +445,7 @@ Critérios de aceite:
 - O resultado é o mesmo toda vez que rodo com os mesmos dados.
 - Requisitos atendidos: RF62.
 
-### HU48 · Acessar a Área do Desenvolvedor (UC48) — extra, planejado (11/2026)
+### HU48 · Acessar a Área do Desenvolvedor (UC48) — extra, fora do beta (trabalho futuro)
 
 Como desenvolvedor, quero uma área protegida para consultar o jogo, para acompanhar contas e partidas.
 
@@ -453,7 +453,7 @@ Critérios de aceite:
 - Só contas de desenvolvedor entram, com uma segunda etapa de verificação.
 - Fica fora do beta.
 
-### HU49 · Banir e desbanir conta (UC49) — extra, planejado (11/2026)
+### HU49 · Banir e desbanir conta (UC49) — extra, fora do beta (trabalho futuro)
 
 Como desenvolvedor, quero bloquear uma conta que trapaceia, para manter o ranking justo.
 
