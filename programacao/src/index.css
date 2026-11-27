@@ -2451,14 +2451,14 @@ button.slot:hover {
   translate: -50% -50%;
   display: grid;
   place-items: center;
-  width: 1.4cqw;
-  height: 1.4cqw;
-  font-size: 1cqw;
+  width: 0.95cqw;
+  height: 0.95cqw;
+  font-size: 0.7cqw;
   font-weight: 700;
   line-height: 1;
   color: #fff;
   background: #c92a2a;
-  border: 0.15cqw solid #fff;
+  border: 0.1cqw solid #fff;
   border-radius: 50%;
 }
 
