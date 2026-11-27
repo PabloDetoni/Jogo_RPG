@@ -22,7 +22,7 @@ export function criarJogo(elemento, { ponte, grupo, partida }) {
     physics: { default: 'arcade', arcade: { debug: false, overlapBias: 16 } },
     disableContextMenu: true,
     banner: false,
-    audio: { noAudio: true }, // o som entra na etapa 9
+    audio: { noAudio: true }, // o som não é do Phaser: é do gerenciador (audio/gerenciador.js), um áudio só para o jogo inteiro
   })
   jogo.scene.add('arena', CenaArena, true, { ponte, grupo, partida })
   return jogo

@@ -188,26 +188,36 @@ O jogo já está pronto para receber a arte: é só gerar, salvar com o nome cer
 
 Não precisa entregar tudo de uma vez: o que faltar continua como hoje.
 
-## 6. Som (TASK-104)
+## 6. Som (TASK-104; Parte 13: música e efeitos feitos em código)
 
-| Tipo | O quê | Arquivo sugerido |
-|---|---|---|
-| Música | Tela inicial e Reino (calma) | `musica-reino.ogg` |
-| Música | Partida na Floresta (aventura, em loop) | `musica-floresta.ogg` |
-| Música | Combate com o Boss (opcional) | `musica-boss.ogg` |
-| Música | Derrota (curta) | `musica-derrota.ogg` |
-| Efeito | Ataque de cada classe (espada, flecha, magia, escudo, cura) | `ataque-guerreiro.ogg` e assim por diante (5) |
-| Efeito | Acerto, crítico e bloqueio | `acerto.ogg`, `critico.ogg`, `bloqueio.ogg` |
-| Efeito | Esquiva | `esquiva.ogg` |
-| Efeito | Desmaio, levantar e perdido (Pedra de Retorno) | `desmaio.ogg`, `levantar.ogg`, `perdido.ogg` |
-| Efeito | Subir de nível | `nivel.ogg` |
-| Efeito | Moeda (ouro ganho) e clique de botão | `moeda.ogg`, `clique.ogg` |
-| Efeito | Fuga começando | `fuga.ogg` |
+Desde 27/11/2026, **todo som desta tabela já existe, feito em código** (chiptune no clima medieval, pela Web Audio API do navegador, sem arquivo e sem biblioteca: `programacao/src/audio/sintetizador.js`, com as músicas escritas em `programacao/src/dados/musicas.js` e os efeitos em `programacao/src/dados/sons.js`). Um arquivo com o nome da tabela, se um dia for feito, **toca no lugar** do som em código.
 
-**Onde pôr os sons (pronto desde a Fase 4, TASK-105):** salve cada arquivo em `programacao/src/assets/audio/`, com o nome desta tabela (`.ogg`, `.mp3` ou `.wav`). O jogo encontra sozinho o que estiver lá, sem mexer em código; os nomes ficam em `programacao/src/dados/sons.js`.
+| Tipo | O quê | Onde toca | Arquivo (opcional) |
+|---|---|---|---|
+| Música | Calma (ré menor, alaúde e flauta doce; 50 s em laço) | Tela inicial, telas de conta, Reino e as telas dele | `musica-reino.ogg` |
+| Música | Aventura (sol, marcha com tambor; 34 s em laço) | Mapa, Caravana e Preparação | `musica-aventura.ogg` |
+| Música | Exploração (mi menor, harpa e flauta; 44 s em laço) | Partida na Floresta, fora de combate | `musica-floresta.ogg` |
+| Música | Combate (lá menor, mais rápida; 41 s em laço; entra e sai devagar) | Partida, em combate | `musica-combate.ogg` |
+| Música | Chefe (dó menor, a mais rápida e tensa; 38 s em laço) | Partida, perto do Ogro | `musica-boss.ogg` |
+| Música | Leve (fá maior, sininhos; 33 s em laço) | Minijogos da Fazenda, da Mina e do Lago | `musica-minijogo.ogg` |
+| Música | Fanfarra da vitória (4 s, uma vez) | Resumo de uma Vitória ou Grande Vitória | `musica-vitoria.ogg` |
+| Música | Derrota (7 s, uma vez) | Cutscene da Derrota | `musica-derrota.ogg` |
+| Efeito | Ataque de cada classe: espada, flecha solta, bola mágica, empurrão do escudo, aura | Ataque do Líder | `ataque-guerreiro.ogg` e assim por diante (5) |
+| Efeito | Puxar o arco | Arqueiro Líder segurando o clique | `arco-puxar.ogg` |
+| Efeito | Acerto, crítico e escudo bloqueando | Golpe do grupo que acerta; golpe bloqueado | `acerto.ogg`, `critico.ogg`, `bloqueio.ogg` |
+| Efeito | Esquiva e dano recebido | Esquiva do Líder; o Líder levando dano | `esquiva.ogg`, `dano.ogg` |
+| Efeito | Desmaio, levantar e perdido (Pedra de Retorno) | Partida | `desmaio.ogg`, `levantar.ogg`, `perdido.ogg` |
+| Efeito | Subir de nível | Na partida e ao evoluir uma habilidade | `nivel.ogg` |
+| Efeito | Pegar item e abrir a mochila | E perto de um item; Tab | `pegar-item.ogg`, `mochila.ogg` |
+| Efeito | Moeda e clique de botão | Ouro ganho na partida, comprar, vender, trocar e entregar missão; todo botão | `moeda.ogg`, `clique.ogg` |
+| Efeito | Bigorna e equipar | Fabricar na Forja; equipar e tirar | `forjar.ogg`, `equipar.ogg` |
+| Efeito | Colher, picareta e fisgar | Cada jogada da Fazenda, da Mina e do Lago | `colher.ogg`, `picareta.ogg`, `fisgar.ogg` |
+| Efeito | Fuga começando | Tecla F | `fuga.ogg` |
 
-- **Sem arquivo:** cada efeito toca um bipe curto provisório, e a música fica em silêncio.
-- **Música do Boss (opcional):** sem ela, continua a da Floresta.
+**Onde pôr os arquivos (se um dia forem feitos):** salve cada um em `programacao/src/assets/audio/`, com o nome desta tabela (`.ogg`, `.mp3` ou `.wav`). O jogo encontra sozinho o que estiver lá, sem mexer em código; os nomes ficam em `programacao/src/dados/sons.js`.
+
+- **Volume:** baixo por padrão (a música mais baixa que os efeitos).
+- **Ouvir sem abrir o jogo:** `npm run testar:som` grava 20 s de cada música em WAV em `programacao/testes-do-navegador/som/`.
 - **Configurações:** Música e Som ligam e desligam cada parte, e a tecla M silencia tudo.
 - **Primeiro som:** o áudio começa no primeiro clique ou tecla (os navegadores bloqueiam som automático).
 - **Ataque básico:** na partida, só o do Líder toca som (o dos aliados encheria de barulho).

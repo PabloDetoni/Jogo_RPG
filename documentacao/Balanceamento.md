@@ -366,7 +366,7 @@ A ficha de cada mob na Fácil, na Média e na Difícil (Parte 8: a vida e o ouro
 
 ### Chefe da Floresta: o Ogro (Parte 6d, provisório)
 
-- **Ogro**: 14.000 de vida, 6000 XP, 300 de ouro e **+600 na pontuação** (bônus de Boss, RF49). Território de 760 px no domínio dele.
+- **Ogro**: 14.000 de vida, 6000 XP, 3000 de ouro e **+600 na pontuação** (bônus de Boss, RF49). Território de 760 px no domínio dele.
 - Pancada (perto): área de 200 px em volta, aviso de 1 s, 90 de dano.
 - Investida (média distância): faixa de 440 × 90 px até o alvo, aviso de 1 s, 110 de dano.
 - Arremesso (até 700 px): a marca de 120 px onde o alvo está, aviso de 1 s, 70 de dano.
@@ -387,7 +387,7 @@ A ficha de cada mob na Fácil, na Média e na Difícil (Parte 8: a vida e o ouro
 - Clareira da Entrada (perto da região fácil): **175 de ouro** (partida típica: 177 de ouro).
 - Vau do Riacho (perto da região média): **710 de ouro** (partida típica: 708 de ouro).
 - Campo dos Cervos (perto da região difícil): **2815 de ouro** (partida típica: 2.816 de ouro).
-- Pouso do Caçador (perto do domínio do chefe): **2815 de ouro** (partida típica: 417 de ouro).
+- Pouso do Caçador (perto do domínio do chefe): **3115 de ouro** (partida típica: 3.117 de ouro).
 
 ### Coleta, minimapa e outros
 

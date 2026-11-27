@@ -243,7 +243,10 @@ export default class CenaArena extends Phaser.Scene {
       if (!ponteiro.leftButtonDown() || this.lider.caido || this.mochilaAberta) return
       if (import.meta.env.DEV && this.teclaDeTeletransporte?.isDown) return // T + clique: teletransporte (só no dev)
       if (usaArco(this.lider)) {
-        if (podePuxar(this.lider, this.agora)) comecarAPuxar(this.lider, this.agora)
+        if (podePuxar(this.lider, this.agora)) {
+          comecarAPuxar(this.lider, this.agora)
+          tocarEfeito('arcoPuxar')
+        }
       } else this.usarAtaque(this.lider, this.anguloDaMira)
     })
     const soltarDoLider = () => {
@@ -533,6 +536,7 @@ export default class CenaArena extends Phaser.Scene {
         })
       }
       numeroFlutuante(this, this.lider.x, this.lider.y - 44, `+${pegou} ${item.nome}`, '#e8ffd0', 18)
+      tocarEfeito('pegarItem')
     }
     if (!sobra) {
       this.itensNoChao = this.itensNoChao.filter((outro) => outro !== noChao)
@@ -1521,7 +1525,10 @@ export default class CenaArena extends Phaser.Scene {
     membro.imunidades = registrarImunidade(membro.imunidades, atacante, agora, personagem.msDeImunidade)
     membro.fimDoPiscarDeDano = agora + personagem.msDeImunidade // só o desenho pisca
     this.ultimoDano = agora
-    if (membro.lider) tremerTela(this, 90, 0.004)
+    if (membro.lider) {
+      tremerTela(this, 90, 0.004)
+      tocarEfeito('dano')
+    }
     if (vida <= 0) this.desmaiar(membro)
     return 'acertou'
   }

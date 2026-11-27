@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tocarEfeitoDaOperacao } from '../../audio/gerenciador.js'
 import { useJogo } from '../../estado/contexto.js'
 import { aplicarNoReino } from '../../regras/reino.js'
 
@@ -17,6 +18,7 @@ export function useNoReino() {
       return false
     }
     acoes.noReino(operacao, ...argumentos)
+    tocarEfeitoDaOperacao(operacao) // a moeda ao comprar e vender, a bigorna ao fabricar (Parte 13)
     setMensagem({ texto: resultado.mensagem, erro: false })
     return true
   }

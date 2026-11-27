@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { tocarEfeitoDoMinijogo } from '../../audio/gerenciador.js'
 import Area from '../../componentes/Area.jsx'
 import Botao from '../../componentes/Botao.jsx'
 import Tela from '../../componentes/Tela.jsx'
@@ -161,9 +162,11 @@ function Rodada({ jogo, dados }) {
               key={indice}
               type="button"
               className={`canteiro canteiro-${canteiro.estado}`}
+              data-som="proprio"
               style={porcento(lugarDoCanteiro(indice, fazendaDesenhada.canteiros), fazendaDesenhada)}
               aria-label={`Canteiro ${indice + 1}: ${canteiro.estado}`}
               onClick={() => {
+                tocarEfeitoDoMinijogo('fazenda')
                 const resultado = colherNaFazenda(cena, indice, performance.now() - inicio.current, sortear)
                 setCena(resultado.canteiros)
                 setColheita({ indice, quando: performance.now(), ponto: resultado.ponto })
@@ -177,9 +180,11 @@ function Rodada({ jogo, dados }) {
           <button
             type="button"
             className="pedra-da-mina"
+            data-som="proprio"
             style={{ left: `${cena.x}%`, top: `${cena.y}%`, width: `${((minaDesenhada.raioDaPedra * 2) / minaDesenhada.largura) * 100}%`, height: `${((minaDesenhada.raioDaPedra * 2) / minaDesenhada.altura) * 100}%` }}
             aria-label={`Pedra: faltam ${cena.golpes} golpes`}
             onClick={() => {
+              tocarEfeitoDoMinijogo('mina')
               const resultado = baterNaPedra(cena, sortear)
               setGolpe({ quando: performance.now(), ponto: resultado.ponto, onde: { x: cena.x, y: cena.y } })
               setCena(resultado.pedra)
@@ -192,8 +197,10 @@ function Rodada({ jogo, dados }) {
           <button
             type="button"
             className={`boia pesca boia-${cena.estado}`}
+            data-som="proprio"
             aria-label={cena.estado === 'fisgando' ? 'A boia afundou: puxe!' : 'Boia'}
             onClick={() => {
+              tocarEfeitoDoMinijogo('lago')
               const resultado = puxarNoLago(cena, performance.now() - inicio.current, sortear)
               setCena(resultado.boia)
               setPuxao({ quando: performance.now(), ponto: resultado.ponto })
