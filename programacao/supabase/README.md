@@ -8,9 +8,9 @@ Todo o SQL do jogo fica nesta pasta, em arquivos numerados. Cada um é rodado **
 | `002_hora_do_servidor.sql` | a hora do servidor, para as rodadas diárias dos minijogos da conta | ajustes de 14/10 · **rodado** |
 | `003_...` | Área do Desenvolvedor (D1): **só existe no ramo `area-dev`** e **não roda agora** | parada |
 | `004_apelido_de_conta_nao_confirmada.sql` | o apelido de quem nunca confirmou o e-mail não fica mais preso | Parte 0b (21/11) · **rodado em 27/11** (pelo Claude do chat, pela conexão do Supabase; os dois gatilhos conferidos; nenhum perfil preso existia) |
-| `005_contas_de_teste_fora_do_ranking.sql` | as contas de teste (TesteA, TesteB e TesteC) fora do ranking público, sem apagar nada; cada uma ainda se vê logada | Parte 13 (27/11) · **falta rodar** |
+| `005_contas_de_teste_fora_do_ranking.sql` | as contas de teste (TesteA, TesteB e TesteC) fora do ranking público, sem apagar nada; cada uma ainda se vê logada | Parte 13 (27/11) · **rodado em 27/11** (pelo Claude do chat; o ranking público mostra só as contas reais) |
 
-## Rodar o 005 (para o Pablo)
+## Rodar o 005 (feito em 27/11)
 
 1. Abra o painel do Supabase do jogo → **SQL Editor** → **New query**.
 2. Abra `programacao/supabase/005_contas_de_teste_fora_do_ranking.sql`, copie **tudo**, cole e clique em **Run**.
