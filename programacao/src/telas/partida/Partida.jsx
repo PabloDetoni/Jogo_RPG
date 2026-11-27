@@ -5,7 +5,7 @@ import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 import ArenaDaPartida from '../../jogo/ArenaDaPartida.jsx'
 import { criarPonte } from '../../jogo/ponte.js'
-import { prepararSonsDaPartida, tocarMusica } from '../../audio/gerenciador.js'
+import { prepararSonsDaPartida, tocarEfeito, tocarMusica } from '../../audio/gerenciador.js'
 import { carregamentoDaPartida, gradeComMao } from '../../dados/interface.js'
 import { carregamentoInicial, demorouDemais, progressoDoCarregamento } from '../../regras/carregamento.js'
 import CarregandoAPartida from './CarregandoAPartida.jsx'
@@ -97,9 +97,10 @@ export default function Partida() {
     setAndamento(carregamentoInicial())
     setTentativa((atual) => atual + 1)
   }
-  // A música do Boss quando a barra dele aparece (Fase 4, TASK-105)
+  // A música do chefe quando a barra dele aparece (Fase 4, TASK-105) e a do combate em combate (Parte 13)
   const bossPorPerto = Boolean(situacao?.boss)
-  useEffect(() => tocarMusica(musicaDaTela('partida', { bossPorPerto })), [bossPorPerto])
+  const emCombate = Boolean(situacao?.emCombate)
+  useEffect(() => tocarMusica(musicaDaTela('partida', { bossPorPerto, emCombate })), [bossPorPerto, emCombate])
   // Fim da partida (retorno, fuga, desmaio ou botão de teste): as contas e o save ficam com o estado do jogo
   useEffect(() => ponte.ouvir('fimDaPartida', acoes.encerrarPartida), [ponte, acoes])
   // "Em combate", "retornando" e "fugindo", na hora em que mudam (o Esc e a pausa dependem disso)
@@ -152,6 +153,9 @@ export default function Partida() {
   const itensDaMochila = itensDaJanela(situacao?.mochila?.itens).map(({ id, quantidade }) => ({ id, quantidade }))
   const gradeDaMochila = useGradeComMao(itensDaMochila, { ...gradeComMao.partida, aberta: mochilaAberta })
   useEffect(() => ponte.avisar('comando', { tipo: 'mochilaAberta', aberta: mochilaAberta }), [ponte, mochilaAberta])
+  useEffect(() => {
+    if (mochilaAberta) tocarEfeito('mochila') // o som de abrir a mochila (Parte 13)
+  }, [mochilaAberta])
 
   // O que as teclas precisam saber agora (as janelas abertas, a situação, a fuga e o item em foco na mochila)
   const itemEmFoco = gradeDaMochila.itemEmFoco?.id ?? null

@@ -424,7 +424,7 @@ export const mundo = {
     velocidade: 100,
     dano: 30,
     xp: 6000,
-    ouro: 300,
+    ouro: 3000,
     bonus: 600,
     raioDeDeteccao: 620,
     raioDeDesistencia: 900,

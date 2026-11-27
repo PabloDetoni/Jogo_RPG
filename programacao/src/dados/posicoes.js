@@ -20,6 +20,7 @@ export const posicoes = {
 
   // ---------- Acesso ----------
   telaInicial: {
+    nome: { x: 50, y: 37 }, // o nome do jogo, grande (Parte 13: dados/jogo.js), abaixo da dica da primeira visita
     iniciarJogo: { x: 50, y: 55, grande: true }, // o botão principal (vermelho e dourado, como o JOGAR)
     comoJogar: { x: 50, y: 67 },
   },

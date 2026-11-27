@@ -123,7 +123,7 @@ Não mude o `{{ .ConfirmationURL }}`: é ele que leva de volta ao jogo.
 
 ---
 
-## Parte 3: os SQL que vieram depois (002 e 004)
+## Parte 3: os SQL que vieram depois (002, 004 e 005)
 
 Cada arquivo de `programacao/supabase/` roda **uma vez**, em ordem, do mesmo jeito do Passo A (painel do Supabase → **SQL Editor** → **New query** → colar o arquivo inteiro → **Run**). Todos podem rodar de novo sem estragar nada. Arquivo já rodado não se edita: uma mudança vira um arquivo novo.
 
@@ -132,7 +132,8 @@ Cada arquivo de `programacao/supabase/` roda **uma vez**, em ordem, do mesmo jei
 | `001_contas.sql` | Perfis (apelido), sessão única, saves com versão, partidas e o ranking público (Passo A) | rodado |
 | `002_hora_do_servidor.sql` | A hora do servidor: as 3 rodadas por dia dos minijogos renovam à meia-noite de Brasília pela hora do banco, e não pelo relógio do computador (não lê nem escreve tabela nenhuma) | rodado |
 | `003_...` | **Só para a Área do Desenvolvedor** (extra, fora do beta): existe só no ramo `area-dev` e **não deve ser rodado** no projeto do jogo | não rodar |
-| `004_apelido_de_conta_nao_confirmada.sql` | O apelido passa a ser reservado só quando a conta **confirma o e-mail**: quem se cadastra e nunca confirma não prende mais o apelido | rodar, se ainda não rodou |
+| `004_apelido_de_conta_nao_confirmada.sql` | O apelido passa a ser reservado só quando a conta **confirma o e-mail**: quem se cadastra e nunca confirma não prende mais o apelido | **rodado em 27/11/2026** (os gatilhos `ao_criar_conta` e `ao_confirmar_conta` conferidos) |
+| `005_contas_de_teste_fora_do_ranking.sql` | As contas de teste (TesteA, TesteB e TesteC) saem do ranking público, sem apagar nada (cada uma ainda se vê quando está logada, para o roteiro das contas) | **rodar** (Passo I) |
 
 ### Passo G · Rodar o 002 (se o projeto for novo)
 
@@ -149,6 +150,13 @@ Cada arquivo de `programacao/supabase/` roda **uma vez**, em ordem, do mesmo jei
    Tem que listar `ao_criar_conta` e `ao_confirmar_conta`.
 3. Teste (opcional): crie uma conta com um apelido novo e **não** confirme o e-mail; numa aba anônima, a tela Criar conta tem que aceitar o mesmo apelido.
 4. Avise o Claude que rodou (ele marca no `PLANO.md` e em `programacao/supabase/README.md`).
+
+### Passo I · Rodar o 005 (as contas de teste fora do ranking)
+
+1. SQL Editor → New query → cole `programacao/supabase/005_contas_de_teste_fora_do_ranking.sql` inteiro → **Run**. Deve aparecer "Success" (ou "3 rows affected": as três contas marcadas).
+2. Conferir: abra o Salão da Glória no site sem entrar numa conta: TesteA, TesteB e TesteC não aparecem em nenhuma aba. Ou, dentro de `programacao/`, `npm run conferir:configuracao` diz "as contas de teste não aparecem no ranking público".
+3. As contas continuam existindo e os roteiros das contas continuam funcionando. Para pôr uma conta de volta no ranking: `update public.perfis set fora_do_ranking = false where apelido = 'TesteA';`.
+4. Avise o Claude que rodou.
 
 Depois de qualquer SQL, `npm run conferir:configuracao` (dentro de `programacao/`) confere o Supabase e a Vercel sem mudar nada.
 

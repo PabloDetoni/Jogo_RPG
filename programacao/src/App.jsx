@@ -28,10 +28,10 @@ function Jogo() {
   const TelaAtual = componentesDasTelas[estado.tela]
 
   // Som (Fase 4, TASK-105): o áudio espera o primeiro clique; Música, Som e o mudo seguem as Configurações; a música
-  // muda com a tela (a do Boss, a Partida pede quando ele está por perto)
+  // muda com a tela (na partida, a Partida pede a do combate e a do chefe; no Resumo, a fanfarra pelo resultado)
   useEffect(() => prepararAudio(), [])
   useEffect(() => aplicarPreferencias(estado.preferencias), [estado.preferencias])
-  useEffect(() => tocarMusica(musicaDaTela(estado.tela)), [estado.tela])
+  useEffect(() => tocarMusica(musicaDaTela(estado.tela, { resultado: estado.ultimoResultado?.resultado })), [estado.tela]) // eslint-disable-line react-hooks/exhaustive-deps
   // As imagens grandes do Reino e do Mapa chegam antes de a tela abrir (componentes/cenario/preCarregar.js)
   useEffect(() => preCarregarCenario(estado.tela), [estado.tela])
 

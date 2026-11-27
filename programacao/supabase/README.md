@@ -7,9 +7,17 @@ Todo o SQL do jogo fica nesta pasta, em arquivos numerados. Cada um é rodado **
 | `001_contas.sql` | perfis (apelido), sessão única, saves com versão, partidas e o ranking público | Fase 2 |
 | `002_hora_do_servidor.sql` | a hora do servidor, para as rodadas diárias dos minijogos da conta | ajustes de 14/10 · **rodado** |
 | `003_...` | Área do Desenvolvedor (D1): **só existe no ramo `area-dev`** e **não roda agora** | parada |
-| `004_apelido_de_conta_nao_confirmada.sql` | o apelido de quem nunca confirmou o e-mail não fica mais preso | Parte 0b (21/11) · **falta rodar** |
+| `004_apelido_de_conta_nao_confirmada.sql` | o apelido de quem nunca confirmou o e-mail não fica mais preso | Parte 0b (21/11) · **rodado em 27/11** (pelo Claude do chat, pela conexão do Supabase; os dois gatilhos conferidos; nenhum perfil preso existia) |
+| `005_contas_de_teste_fora_do_ranking.sql` | as contas de teste (TesteA, TesteB e TesteC) fora do ranking público, sem apagar nada; cada uma ainda se vê logada | Parte 13 (27/11) · **falta rodar** |
 
-## Rodar o 004 (para o Pablo)
+## Rodar o 005 (para o Pablo)
+
+1. Abra o painel do Supabase do jogo → **SQL Editor** → **New query**.
+2. Abra `programacao/supabase/005_contas_de_teste_fora_do_ranking.sql`, copie **tudo**, cole e clique em **Run**.
+3. Conferir: dentro de `programacao/`, `npm run conferir:configuracao` deve dizer "as contas de teste não aparecem no ranking público" (antes do 005, ele avisa que elas aparecem).
+4. Avise o Claude que rodou. Nada é apagado: as contas, os saves e as partidas continuam, e os roteiros das contas continuam funcionando.
+
+## Rodar o 004 (feito em 27/11)
 
 O que ele resolve: hoje o apelido é reservado no **cadastro**. Quem se cadastra e nunca confirma o e-mail deixa o
 apelido preso para sempre. Com o 004, o apelido só é reservado quando a conta **confirma o e-mail**; os já presos de

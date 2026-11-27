@@ -56,6 +56,15 @@ const ranking = await anonimo.rpc('ranking', { p_aba: 'ouro' })
 if (ranking.error?.code === 'PGRST202') falta('a função ranking não existe', 'rode o 001_contas.sql no SQL Editor (Supabase_passo_a_passo.md, passo A)')
 else if (ranking.error) falta(`o ranking deu erro: ${ranking.error.message}`, 'me mande essa mensagem')
 else ok(`o ranking abre sem login (${ranking.data.length} jogador(es) nele agora)`)
+// Parte 13: as contas de teste (TesteA, TesteB e TesteC) ficam fora do ranking público depois do 005
+if (!ranking.error) {
+  const deTeste = new Set(['testea', 'testeb', 'testec'])
+  const abas = ['ouro', 'melhoresPontuacoes', 'nivelTotal', 'monstros', 'maiorDuracao']
+  const vistas = []
+  for (const aba of abas) for (const linha of (await anonimo.rpc('ranking', { p_aba: aba, p_limite: 100 })).data ?? []) if (deTeste.has(linha.apelido.toLowerCase())) vistas.push(`${linha.apelido} (${aba})`)
+  if (vistas.length) aviso(`as contas de teste ainda aparecem no ranking público: ${[...new Set(vistas)].join(', ')}`, 'rode o 005_contas_de_teste_fora_do_ranking.sql no SQL Editor (programacao/supabase/README.md)')
+  else ok('as contas de teste não aparecem no ranking público')
+}
 const apelido = await anonimo.rpc('apelido_disponivel', { p_apelido: 'NinguemUsaEste123' })
 if (apelido.error) falta(`apelido_disponivel deu erro: ${apelido.error.message}`, 'rode o 001_contas.sql de novo')
 else ok('a conferência de apelido funciona')

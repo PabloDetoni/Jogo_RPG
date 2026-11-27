@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jogo RPG</title>
+    <title>%NOME_DO_JOGO%</title>
     <!-- Tela de carregamento (ajustes de 14/10/2026): aparece na hora, antes do React, e some quando o jogo monta (o React
          troca o conteúdo do #root). Se demorar demais ou o código não chegar, mostra o que houve e "Tentar de novo". -->
     <style>
@@ -92,7 +92,7 @@
     <div id="root">
       <div class="carregando-o-site" id="carregando-o-site" role="status" aria-live="polite">
         <div>
-          <h1>Jogo RPG</h1>
+          <h1>%NOME_DO_JOGO%</h1>
           <div class="barra"><span></span></div>
           <p id="carregando-texto">Carregando o jogo...</p>
         </div>
@@ -105,7 +105,7 @@
           var tela = document.getElementById('carregando-o-site')
           if (!tela) return
           tela.innerHTML =
-            '<div><h1>Jogo RPG</h1><p>' +
+            '<div><h1>%NOME_DO_JOGO%</h1><p>' +
             texto +
             '</p><button type="button" onclick="location.reload()">Tentar de novo</button></div>'
         }
