@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { mundo } from '../../dados/balanceamento.js'
 import { coresDaDificuldade, coresDoMinimapa } from '../../dados/mundo/minimapa.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
+import { centrosDasLevas } from '../../regras/acampamento.js'
 import { decodificarNevoa, janelaDoMinimapa, regiaoEm } from '../../regras/mundo.js'
 import { pontoDoMinimapa } from '../../regras/opcoesDeDev.js'
 
@@ -103,13 +104,25 @@ export function MapaInteiro({ bioma, minimapa }) {
   const tela = useRef(null)
   const celulas = useCelulas(bioma)
   const { largura, altura } = celulas.mapa.tamanho
+  const perigos = useMemo(
+    () => (celulas.mapa.acampamentos ?? []).filter((um) => um.levas).flatMap((forte) => centrosDasLevas(forte).map((centro) => ({ ...centro, id: `${forte.id}-${centro.id}`, nome: `${centro.nome} do ${forte.nome}` }))),
+    [celulas.mapa],
+  )
   useEffect(() => {
     desenhar(tela.current, celulas, minimapa, { x: 0, y: 0, largura, altura })
   }, [celulas, minimapa, largura, altura])
   return (
     <div className="mapa-inteiro" aria-label="Mapa inteiro">
       <span className="mapa-inteiro-titulo">Mapa · {celulas.mapa.nome}</span>
-      <canvas ref={tela} width={Math.round((520 * largura) / Math.max(largura, altura))} height={Math.round((520 * altura) / Math.max(largura, altura))} />
+      <div className="mapa-inteiro-desenho">
+        <canvas ref={tela} width={Math.round((520 * largura) / Math.max(largura, altura))} height={Math.round((520 * altura) / Math.max(largura, altura))} />
+        {/* As partes do forte (Parte 11): pontos de perigo, cada uma acorda quando o grupo chega nela */}
+        {perigos.map((perigo) => (
+          <span key={perigo.id} className="ponto-de-perigo" style={{ left: `${(perigo.x / largura) * 100}%`, top: `${(perigo.y / altura) * 100}%` }} aria-label={`Perigo: ${perigo.nome}`} title={`Perigo: ${perigo.nome}`}>
+            !
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

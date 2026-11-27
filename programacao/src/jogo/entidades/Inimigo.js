@@ -4,7 +4,7 @@ import { combateDeTeste, mundo } from '../../dados/balanceamento.js'
 import { alvoDoInimigo, maisProximo } from '../../regras/iaDosAliados.js'
 import { dentroDoTerritorio, passoNaArea } from '../../regras/mobs.js'
 import { zonaNoTerreno } from '../../regras/terreno.js'
-import { dentroDoAcampamento } from '../../regras/acampamento.js'
+import { dentroDaLeva, dentroDoAcampamento } from '../../regras/acampamento.js'
 import { bichosEmBlocos } from '../../dados/bonecos.js'
 import { escalaDoBicho, pecasDoBicho } from '../../regras/bonecos.js'
 import { numeroFlutuante, particulas } from '../efeitos.js'
@@ -48,6 +48,7 @@ export default class Inimigo extends Entidade {
     this.dormindo = false // longe do Líder (Fase 3): não pensa nem anda
     this.bando = null // os mobs do mesmo bando (lista compartilhada), ou null
     this.acampamento = null // o acampamento goblin de quem mora nele (Parte 6b), ou null
+    this.leva = null // a parte do forte (Parte 11: Portão, Pátio ou Torre), ou null
     this.corpo.body.setCollideWorldBounds(true)
   }
 
@@ -71,6 +72,8 @@ export default class Inimigo extends Entidade {
     const terreno = this.cena.mapa?.terreno
     if (!this.regiao || !terreno) return true
     const { acampamento } = mundo
+    // o forte por partes (Parte 11): o goblin de uma parte só vê e só persegue quem está nela (com a folga)
+    if (this.leva) return dentroDaLeva(this.acampamento, this.leva, ponto, mundo.forte.folgaDaLeva)
     if (this.acampamento) return dentroDoAcampamento(this.acampamento, ponto, acampamento.folgaDoTerritorio)
     if (this.cena.mapa.acampamentos?.some((um) => dentroDoAcampamento(um, ponto, acampamento.tronco))) return false
     const zona = zonaNoTerreno(terreno, this.cena.mapa.regioes, ponto)

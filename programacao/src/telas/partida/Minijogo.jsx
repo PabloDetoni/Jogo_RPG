@@ -6,7 +6,7 @@ import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
 import { useAgora } from '../../componentes/useAgora.js'
 import { horaDoJogo } from '../../conta/horaDoServidor.js'
 import { minijogos } from '../../dados/balanceamento.js'
-import { dadosDosMinijogos } from '../../dados/minijogos.js'
+import { dadosDosMinijogos, fazendaDesenhada, minaDesenhada } from '../../dados/minijogos.js'
 import { posicoes } from '../../dados/posicoes.js'
 import { useJogo } from '../../estado/contexto.js'
 import {
@@ -16,12 +16,15 @@ import {
   colherNaFazenda,
   comecarFazenda,
   comecarLago,
+  lugarDoCanteiro,
   novaPedra,
   puxarNoLago,
   sortearRaros,
 } from '../../regras/minijogos.js'
 import { podeJogarRodada, textoDasRodadas } from '../../regras/rodadasDoDia.js'
 import { useNoReino } from '../reino/useNoReino.js'
+import CenaDaFazenda from './CenaDaFazenda.jsx'
+import CenaDaMina from './CenaDaMina.jsx'
 import CenaDaPesca from './CenaDaPesca.jsx'
 import { corDaClasse } from '../../dados/classes.js'
 import { chapeuDaClasse } from '../../regras/bonecos.js'
@@ -29,6 +32,8 @@ import { chapeuDaClasse } from '../../regras/bonecos.js'
 const pos = posicoes.minijogo
 const sortear = () => Math.random()
 const duracao = minijogos.segundos * 1000
+// a posição (em % do campo) de um pedaço da cena desenhada (Parte 11b): os botões ficam em cima do desenho
+const porcento = ({ x, y, largura, altura }, cena) => ({ left: `${(x / cena.largura) * 100}%`, top: `${(y / cena.altura) * 100}%`, width: `${(largura / cena.largura) * 100}%`, height: `${(altura / cena.altura) * 100}%` })
 
 // Minijogos do Planalto (TASK-080 e TASK-081; RF54): Fazenda, Mina e Lago, com a mesma base. Uma rodada de 30 s; no
 // fim, os recursos vão para a Mochila do Reino e o XP é dividido entre os permanentes (regras/minijogos.js). Não é
@@ -60,16 +65,22 @@ function Rodada({ jogo, dados }) {
   const [pontos, setPontos] = useState(0)
   const [cena, setCena] = useState(null) // canteiros (Fazenda), pedra (Mina) ou boia (Lago)
   const [puxao, setPuxao] = useState(null) // o último clique no Lago (Parte 10: a vara sobe e o peixe pula)
+  const [colheita, setColheita] = useState(null) // o último clique na Fazenda (Parte 11b: o bonequinho vai até o canteiro)
+  const [golpe, setGolpe] = useState(null) // o último golpe na Mina (Parte 11b: a picareta, as faíscas e a quebra)
   const lider = progresso.lider
   const inicio = useRef(0)
+  const [inicioDaRodada, setInicioDaRodada] = useState(0) // o mesmo, para o desenho da Fazenda (Parte 11b)
 
   function comecar() {
     // A rodada conta já ao começar (no dia de Brasília, pela hora do jogo); sem rodadas, nada começa
     if (!fazer('comecarRodadaDoMinijogo', jogo, horaDoJogo())) return
     const zero = performance.now()
     inicio.current = zero
+    setInicioDaRodada(zero)
     setAgora(0)
     setPontos(0)
+    setColheita(null)
+    setGolpe(null)
     setCena(jogo === 'fazenda' ? comecarFazenda(0, sortear) : jogo === 'mina' ? novaPedra(sortear) : comecarLago(0, sortear))
     setFase('jogando')
   }
@@ -141,35 +152,40 @@ function Rodada({ jogo, dados }) {
       <p className="minijogo-placar">
         {dados.nome} · {restante} s · <strong>{pontos}</strong> ponto{pontos === 1 ? '' : 's'}
       </p>
-      <div className={`minijogo-campo minijogo-${jogo}`}>
+      <div className={`minijogo-campo minijogo-${jogo}${jogo === 'lago' ? '' : ' minijogo-desenhado'}`}>
+        {/* A Fazenda desenhada (Parte 11b): o canvas embaixo e um botão (sem cor) em cima de cada canteiro */}
+        {jogo === 'fazenda' && <CenaDaFazenda canteiros={cena} inicio={inicioDaRodada} colheita={colheita} boneco={{ cor: corDaClasse(lider), chapeu: chapeuDaClasse(lider) }} />}
         {jogo === 'fazenda' &&
           cena.map((canteiro, indice) => (
             <button
               key={indice}
               type="button"
               className={`canteiro canteiro-${canteiro.estado}`}
+              style={porcento(lugarDoCanteiro(indice, fazendaDesenhada.canteiros), fazendaDesenhada)}
               aria-label={`Canteiro ${indice + 1}: ${canteiro.estado}`}
               onClick={() => {
                 const resultado = colherNaFazenda(cena, indice, performance.now() - inicio.current, sortear)
                 setCena(resultado.canteiros)
+                setColheita({ indice, quando: performance.now(), ponto: resultado.ponto })
                 marcar(resultado.ponto)
               }}
             />
           ))}
+        {/* A Mina desenhada (Parte 11b): o canvas embaixo e o botão (sem cor) em cima da pedra */}
+        {jogo === 'mina' && <CenaDaMina pedra={cena} golpe={golpe} boneco={{ cor: corDaClasse(lider), chapeu: chapeuDaClasse(lider) }} />}
         {jogo === 'mina' && (
           <button
             type="button"
             className="pedra-da-mina"
-            style={{ left: `${cena.x}%`, top: `${cena.y}%` }}
+            style={{ left: `${cena.x}%`, top: `${cena.y}%`, width: `${((minaDesenhada.raioDaPedra * 2) / minaDesenhada.largura) * 100}%`, height: `${((minaDesenhada.raioDaPedra * 2) / minaDesenhada.altura) * 100}%` }}
             aria-label={`Pedra: faltam ${cena.golpes} golpes`}
             onClick={() => {
               const resultado = baterNaPedra(cena, sortear)
+              setGolpe({ quando: performance.now(), ponto: resultado.ponto, onde: { x: cena.x, y: cena.y } })
               setCena(resultado.pedra)
               marcar(resultado.ponto)
             }}
-          >
-            {cena.golpes}
-          </button>
+          />
         )}
         {jogo === 'lago' && (
           // A pesca visual (Parte 10): a cena inteira é o botão de puxar (as regras e o nome do botão são os de sempre)

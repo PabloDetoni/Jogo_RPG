@@ -41,7 +41,7 @@ import { avancarComEventos, avisoDaMissao } from '../../regras/missoes.js'
 import { mapaDoBioma } from '../../regras/mapaDaPartida.js'
 import { capacidadeDaMochila, descartarDaMochilaDaPartida, guardarNaMochila, itensLevados, pesoTotal } from '../../regras/mochila.js'
 import { espalharMobs, fichaDoMob, pontosEmVolta } from '../../regras/mobs.js'
-import { lugaresNoAcampamento, raioExterno } from '../../regras/acampamento.js'
+import { levaEm, lugaresNaLeva, lugaresNoAcampamento, raioExterno } from '../../regras/acampamento.js'
 import { areaEm, codificarNevoa, criarNevoa, criarSorteio, decodificarNevoa, inicioDoPontoDePartida, regiaoEm, revelarEmVolta } from '../../regras/mundo.js'
 import { idsDosNiveisDaIA, nivelDaIA, nivelParaTestar } from '../../regras/nivelDaIA.js'
 import { acompanharTravamento, desfazerSobreposicoes, escorregar, linhaLivre, manobraParaDestravar, pontoLivreMaisProximo, separacao, tirarDasParedes } from '../../regras/movimento.js'
@@ -408,6 +408,10 @@ export default class CenaArena extends Phaser.Scene {
   // (acorda junto) e o território deles (Inimigo.naMinhaArea)
   criarAcampamentos() {
     for (const acampamento of this.mapa.acampamentos ?? []) {
+      if (acampamento.levas) {
+        this.criarForte(acampamento)
+        continue
+      }
       const bando = []
       for (const lugar of lugaresNoAcampamento(acampamento, acampamento.populacao, mundo.acampamento)) {
         const goblin = this.criarMobDoMundo(lugar.tipo, acampamento.regiao, lugar)
@@ -430,6 +434,35 @@ export default class CenaArena extends Phaser.Scene {
       }
       for (const goblin of bando) goblin.bando = bando
     }
+  }
+
+  // O forte por partes (Parte 11): cada parte (Portão, Pátio, Torre) é um bando e um território; o arqueiro de cada
+  // torre fica com a parte do lado dele
+  criarForte(forte) {
+    const bandos = Object.fromEntries(forte.levas.map((leva) => [leva.id, []]))
+    const morador = (goblin, leva) => {
+      goblin.acampamento = forte
+      goblin.leva = leva
+      goblin.casa = { x: goblin.x, y: goblin.y }
+      bandos[leva.id].push(goblin)
+    }
+    for (const leva of forte.levas) {
+      for (const lugar of lugaresNaLeva(forte, leva, { longeDosMuros: mundo.forte.longeDosMuros, longeDaFogueira: mundo.acampamento.longeDaFogueira })) {
+        morador(this.criarMobDoMundo(lugar.tipo, forte.regiao, lugar), leva)
+      }
+    }
+    if (forte.arqueirosNasTorres) {
+      for (const torre of forte.torres ?? []) {
+        const arqueiro = this.criarMobDoMundo('goblinArqueiro', forte.regiao, torre)
+        arqueiro.naTorre = true
+        arqueiro.podeSerEmpurrado = false // fixo: não anda nem é empurrado
+        arqueiro.colocarEm(torre.x, torre.y)
+        const vezes = mundo.forte.alcanceNaTorre
+        arqueiro.config = { ...arqueiro.config, alcanceDoTiro: arqueiro.config.alcanceDoTiro * vezes, distanciaMinima: 0 }
+        morador(arqueiro, levaEm(forte, torre) ?? forte.levas[0])
+      }
+    }
+    for (const bando of Object.values(bandos)) for (const goblin of bando) goblin.bando = bando
   }
 
   // A matilha do Lobo Alfa (Parte 6a): lobos em volta dele, na mesma zona, todos no mesmo bando (acordam juntos)

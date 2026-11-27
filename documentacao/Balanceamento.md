@@ -215,11 +215,11 @@ Valores da arena de teste da etapa 5 (TASK-004 e TASK-042). Servem para sentir o
 
 | Classe | Vida (nível 1) | Ataque de teste | Dano | Recarga | Detalhe |
 | --- | --- | --- | --- | --- | --- |
-| Guerreiro | 120 | Espada: varre um arco na frente | 25 | 0,4 s | arco de 120°, alcance 70 |
-| Mago | 80 | Bola mágica: explode em área | 30 | 1,5 s | cresce de 10 a 26; explosão de raio 90 |
-| Tanque | 180 | Escudo: bloqueia; o clique empurra | 8 | 0,6 s | escudo de 70 px; empurrão até 90; segura golpe de frente até 10 + 1,5 × Força de dano (Força 15: 32,5; 50: 85,0; 100: 160,0); acima, rompe e o Tanque leva o dano inteiro |
+| Guerreiro | 120 | Espada: varre um arco na frente | 21 | 0,4 s | arco de 120°, alcance 70 |
+| Mago | 80 | Bola mágica: explode em área | 40 | 1,5 s | cresce de 10 a 26; explosão de raio 90 |
+| Tanque | 180 | Escudo: bloqueia; o clique empurra | 9 | 0,6 s | escudo de 70 px; empurrão até 90; segura golpe de frente até 10 + 1,5 × Força de dano (Força 15: 32,5; 50: 85,0; 100: 160,0); acima, rompe e o Tanque leva o dano inteiro |
 | Sacerdote | 80 | Aura: cura quem está dentro | cura 5 por pulso | 3 s | raio 150; pulso a cada 0,5 s por 3 s |
-| Arqueiro | 60 | Arco que carrega: segura e solta (ver abaixo) | 30% a 100% de 26 + 1,2 × Força | 60% da carga cheia | 450 a 1.000 px/s, até 245 a 700 px |
+| Arqueiro | 60 | Arco que carrega: segura e solta (ver abaixo) | 30% a 100% de 62 + 1,2 × Força | 60% da carga cheia | 450 a 1.000 px/s, até 245 a 700 px |
 
 - Andar: **220 px/s**, igual na diagonal.
 - Esquiva (Espaço): avança **160 px** em 0,15 s, sem levar dano; recarga de **0,8 s**.
@@ -243,11 +243,11 @@ Segurar o clique puxa; soltar atira. Tempo da carga cheia = 0,45 s + (1,1 s − 
 
 | Agilidade | Carga cheia | Recarga | Força 10: dano rápido / cheio | Dano por segundo (rápido / cheio) |
 | --- | --- | --- | --- | --- |
-| 5 | 1,07 s | 0,64 s | 11 / 38 | 17,2 / 22,2 |
-| 22 | 0,96 s | 0,57 s | 11 / 38 | 19,2 / 24,8 |
-| 50 | 0,78 s | 0,47 s | 11 / 38 | 23,7 / 30,6 |
-| 75 | 0,61 s | 0,37 s | 11 / 38 | 29,9 / 38,8 |
-| 100 | 0,45 s | 0,27 s | 11 / 38 | 40,7 / 52,8 |
+| 5 | 1,07 s | 0,64 s | 22 / 74 | 34,3 / 43,3 |
+| 22 | 0,96 s | 0,57 s | 22 / 74 | 38,3 / 48,3 |
+| 50 | 0,78 s | 0,47 s | 22 / 74 | 47,3 / 59,7 |
+| 75 | 0,61 s | 0,37 s | 22 / 74 | 59,8 / 75,5 |
+| 100 | 0,45 s | 0,27 s | 22 / 74 | 81,5 / 102,8 |
 
 Arqueiro aliado: a avançada carrega o bastante para a distância (com **10%** de folga); a média erra até **15%** da carga para mais ou para menos; a básica, metade das vezes, carrega de 30% a 75% do que precisa e, na outra metade, segura de 0,25 s a 0,7 s além da carga cheia.
 
@@ -334,17 +334,17 @@ Chance = **5% + 0,5% por ponto de Agilidade**; o golpe crítico causa **1,5×** 
 
 Layout em `src/dados/mundo/floresta.js` (PROVISÓRIO – substituir pelo do grupo, TASK-013): mapa de **10.400 × 8.000 px**, fixo (o mesmo toda partida), com o caminho em "S": três faixas (ida, volta, ida) ligadas por curvas, da zona segura (perto do Reino) ao domínio do chefe no fim. Cada região e cada zona neutra é um polígono de bordas onduladas; as zonas neutras ficam entre as regiões (as paradas da Caravana e os animais pacíficos). Fora delas é mata fechada (parede, pela grade do terreno de 80 px). Na velocidade de um personagem do começo (~190 px/s), atravessar leva cerca de 3 minutos. Medidas da tabela: a caixa em volta de cada polígono.
 
-| Região | Tamanho (px) | Vida dos mobs | Dano | XP | Velocidade | XP da 1ª descoberta de cada área | Mobs por partida |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Zona segura | 1.303 × 1.954 | ×1,0 | ×1,0 | ×1,0 | — | 0 | nenhum |
-| Fácil | 6.742 × 2.201 | ×1,0 | ×1,0 | ×1,0 | no máximo 165 px/s | 30 | 10 lobo, 3 loboAlfa, 5 aranha |
-| Média | 6.981 × 2.204 | ×2,2 | ×1,2 | ×7,7 | no mínimo 205 px/s | 50 | 6 lobo, 8 aranha, 2 aranhaMae, 6 javali, Acampamento do Riacho (3 goblinLanceiro, 2 goblinArqueiro, 1 goblinXama), Acampamento da Pedra (4 goblinLanceiro, 3 goblinArqueiro, 1 goblinXama) |
-| Difícil | 5.498 × 1.840 | ×5,5 | ×2,6 | ×22,0 | no mínimo 220 px/s | 80 | 6 lobo, 8 aranha, 2 aranhaMae, 10 javali, 2 orc, Forte Goblin (5 goblinLanceiro, 2 goblinArqueiro, 2 goblinXama, 1 orc e 4 goblinArqueiro nas torres) |
-| Domínio do Boss | 2.058 × 1.815 | ×5,5 | ×2,6 | ×22,0 | no mínimo 220 px/s | 120 | 3 lobo |
-| Clareira da Entrada | 958 × 2.062 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 2 cervo, 3 coelho |
-| Vau do Riacho | 1.893 × 3.917 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 3 cervo, 3 coelho |
-| Campo dos Cervos | 2.046 × 3.697 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 3 cervo, 2 coelho |
-| Pouso do Caçador | 961 × 1.740 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 2 cervo, 2 coelho |
+| Região | Tamanho (px) | Vida dos mobs | Dano | Cura do xamã | XP | Velocidade | XP da 1ª descoberta de cada área | Mobs por partida |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Zona segura | 1.303 × 1.954 | ×1,0 | ×1,0 | ×1,0 | ×1,0 | — | 0 | nenhum |
+| Fácil | 6.742 × 2.201 | ×1,0 | ×1,0 | ×1,0 | ×1,0 | no máximo 165 px/s | 30 | 10 lobo, 3 loboAlfa, 5 aranha |
+| Média | 6.981 × 2.204 | ×2,2 | ×1,2 | ×2,2 | ×7,7 | no mínimo 205 px/s | 50 | 6 lobo, 8 aranha, 2 aranhaMae, 6 javali, Acampamento do Riacho (3 goblinLanceiro, 2 goblinArqueiro, 1 goblinXama), Acampamento da Pedra (4 goblinLanceiro, 3 goblinArqueiro, 1 goblinXama) |
+| Difícil | 5.498 × 1.840 | ×6,5 | ×3,0 | ×3,0 | ×26,0 | no mínimo 220 px/s | 80 | 6 lobo, 8 aranha, 2 aranhaMae, 10 javali, 2 orc, Forte Goblin, em 3 partes que acordam uma de cada vez (Portão: 3 goblinLanceiro; Pátio: 2 goblinLanceiro, 2 goblinArqueiro, 1 goblinXama; Torre: 1 orc; e 4 goblinArqueiro nas torres, 2 do Portão e 2 da Torre) |
+| Domínio do Boss | 2.058 × 1.815 | ×6,5 | ×3,0 | ×3,0 | ×26,0 | no mínimo 220 px/s | 120 | 3 lobo |
+| Clareira da Entrada | 958 × 2.062 | ×1,0 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 2 cervo, 3 coelho |
+| Vau do Riacho | 1.893 × 3.917 | ×1,0 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 3 cervo, 3 coelho |
+| Campo dos Cervos | 2.046 × 3.697 | ×1,0 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 3 cervo, 2 coelho |
+| Pouso do Caçador | 961 × 1.740 | ×1,0 | ×1,0 | ×1,0 | ×1,0 | — | 10 | 2 cervo, 2 coelho |
 
 ### Mobs (TASK-012, provisório)
 
@@ -352,17 +352,17 @@ A ficha de cada mob na Fácil, na Média e na Difícil (Parte 8: a vida e o ouro
 
 | Mob | Jeito | Vida (fácil / média / difícil) | Dano | XP | Velocidade (px/s) | Ouro (fácil / difícil) | Detecção | Território | Drop |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| lobo | corpo a corpo | 185 / 407 / 1018 | 30 / 36 / 78 | 25 / 193 / 550 | 150 / 205 / 220 | 10 / 55 | 340 px | 650 px | peleDeLobo (60%) |
-| aranha | atira de longe | 130 / 286 / 715 | 18 / 22 / 47 | 22 / 169 / 484 | 105 / 205 / 220 | 12 / 66 | 560 px | 800 px | teiaDeAranha (70%) |
-| javali | corpo a corpo | 380 / 836 / 2090 | 40 / 48 / 104 | 35 / 270 / 770 | 125 / 205 / 220 | 18 / 99 | 300 px | 600 px | presaDeJavali (50%) |
-| loboAlfa | corpo a corpo | 520 / 1144 / 2860 | 34 / 41 / 88 | 45 / 347 / 990 | 150 / 205 / 220 | 25 / 138 | 360 px | 700 px | peleDeLobo (100%), pelagemDoAlfa (35%) |
-| goblinLanceiro | corpo a corpo | 280 / 616 / 1540 | 24 / 29 / 62 | 26 / 200 / 572 | 165 / 205 / 220 | 14 / 77 | 330 px | 900 px | orelhaDeGoblin (60%) |
-| goblinArqueiro | atira de longe | 200 / 440 / 1100 | 20 / 24 / 52 | 24 / 185 / 528 | 150 / 205 / 220 | 14 / 77 | 480 px | 900 px | orelhaDeGoblin (60%) |
-| goblinXama | atira de longe e cura 100 a cada 2.2 s | 240 / 528 / 1320 | 14 / 17 / 36 | 40 / 308 / 880 | 140 / 205 / 220 | 22 / 121 | 480 px | 900 px | orelhaDeGoblin (100%), totemDoXama (30%) |
-| orc | corpo a corpo | 600 / 1320 / 3300 | 45 / 54 / 117 | 90 / 693 / 1980 | 150 / 205 / 220 | 50 / 275 | 340 px | 800 px | presaDeOrc (60%), orelhaDeGoblin (50%) |
-| aranhaMae | atira teia que prende por 1.3 s | 450 / 990 / 2475 | 26 / 31 / 68 | 60 / 462 / 1320 | 110 / 205 / 220 | 30 / 165 | 560 px | 800 px | teiaDeAranha (100%), sedaDaMae (35%) |
-| cervo | pacífico (nunca ataca, foge) | 45 / 99 / 248 | 1 / 1 / 1 | 1 / 8 / 22 | 175 / 175 / 175 | 1 / 6 | foge a 260 px | 900 px | chifreDeCervo (40%) |
-| coelho | pacífico (nunca ataca, foge) | 18 / 40 / 99 | 1 / 1 / 1 | 1 / 8 / 22 | 200 / 200 / 200 | 1 / 6 | foge a 220 px | 700 px | peDeCoelho (50%) |
+| lobo | corpo a corpo | 185 / 407 / 1203 | 30 / 36 / 90 | 25 / 193 / 650 | 150 / 205 / 220 | 10 / 65 | 340 px | 650 px | peleDeLobo (60%) |
+| aranha | atira de longe | 130 / 286 / 845 | 18 / 22 / 54 | 22 / 169 / 572 | 105 / 205 / 220 | 12 / 78 | 560 px | 800 px | teiaDeAranha (70%) |
+| javali | corpo a corpo | 380 / 836 / 2470 | 40 / 48 / 120 | 35 / 270 / 910 | 125 / 205 / 220 | 18 / 117 | 300 px | 600 px | presaDeJavali (50%) |
+| loboAlfa | corpo a corpo | 440 / 968 / 2860 | 32 / 38 / 96 | 45 / 347 / 1170 | 150 / 205 / 220 | 25 / 163 | 360 px | 700 px | peleDeLobo (100%), pelagemDoAlfa (35%) |
+| goblinLanceiro | corpo a corpo | 280 / 616 / 1820 | 24 / 29 / 72 | 26 / 200 / 676 | 165 / 205 / 220 | 14 / 91 | 330 px | 900 px | orelhaDeGoblin (60%) |
+| goblinArqueiro | atira de longe | 200 / 440 / 1300 | 20 / 24 / 60 | 24 / 185 / 624 | 150 / 205 / 220 | 14 / 91 | 480 px | 900 px | orelhaDeGoblin (60%) |
+| goblinXama | atira de longe e cura 125 a cada 2.2 s | 240 / 528 / 1560 | 14 / 17 / 42 | 40 / 308 / 1040 | 140 / 205 / 220 | 22 / 143 | 480 px | 900 px | orelhaDeGoblin (100%), totemDoXama (30%) |
+| orc | corpo a corpo | 600 / 1320 / 3900 | 45 / 54 / 135 | 90 / 693 / 2340 | 150 / 205 / 220 | 50 / 325 | 340 px | 800 px | presaDeOrc (60%), orelhaDeGoblin (50%) |
+| aranhaMae | atira teia que prende por 1.3 s | 450 / 990 / 2925 | 26 / 31 / 78 | 60 / 462 / 1560 | 110 / 205 / 220 | 30 / 195 | 560 px | 800 px | teiaDeAranha (100%), sedaDaMae (35%) |
+| cervo | pacífico (nunca ataca, foge) | 45 / 99 / 293 | 1 / 1 / 1 | 1 / 8 / 26 | 175 / 175 / 175 | 1 / 7 | foge a 260 px | 900 px | chifreDeCervo (40%) |
+| coelho | pacífico (nunca ataca, foge) | 18 / 40 / 117 | 1 / 1 / 1 | 1 / 8 / 26 | 200 / 200 / 200 | 1 / 7 | foge a 220 px | 700 px | peDeCoelho (50%) |
 
 ### Chefe da Floresta: o Ogro (Parte 6d, provisório)
 
@@ -380,14 +380,14 @@ A ficha de cada mob na Fácil, na Média e na Difícil (Parte 8: a vida e o ouro
 - Espinhos (longe): leque de 5 tiros, aviso de 1 s, 12 de dano cada.
 - Um ataque a cada 2 s no máximo. Drop: cascaAntiga sempre e **8%** de chance do equipamento especial (coroaDeRaizes, RF39; no npm run dev dá para forçar 100%).
 
-### A Caravana (RF56, Parte 7, provisório)
+### A Caravana (RF56, Partes 7 e 11, provisório)
 
-- Preço de cada parada: 40 + 25 por 1.000 px andados pelo caminho até ela, arredondado de 5 em 5; o início é de graça. Sai do ouro no fim da partida.
+- Preço de cada parada (Parte 11, decisão do Pablo de 26/11): perto do ouro de uma partida inteira típica na região perto dela. Partida típica (provisório): o grupo derruba **60%** dos mobs da região (os soltos, as matilhas, os acampamentos e o forte, pelo ouro das fichas de hoje) e, no domínio do chefe, o chefe inteiro. Arredondado de 5 em 5; o início é de graça; uma parada mais longe nunca custa menos que a de antes. Sai do ouro no fim da partida.
 - Início do bioma (a zona segura, perto do reino): **0 de ouro**.
-- Clareira da Entrada (perto da região fácil): **70 de ouro**.
-- Vau do Riacho (perto da região média): **265 de ouro**.
-- Campo dos Cervos (perto da região difícil): **495 de ouro**.
-- Pouso do Caçador (perto do domínio do chefe): **675 de ouro**.
+- Clareira da Entrada (perto da região fácil): **175 de ouro** (partida típica: 177 de ouro).
+- Vau do Riacho (perto da região média): **710 de ouro** (partida típica: 708 de ouro).
+- Campo dos Cervos (perto da região difícil): **2815 de ouro** (partida típica: 2.816 de ouro).
+- Pouso do Caçador (perto do domínio do chefe): **2815 de ouro** (partida típica: 417 de ouro).
 
 ### Coleta, minimapa e outros
 
@@ -576,7 +576,7 @@ Rodada de **30 s**, no máximo 60 pontos; **3 rodadas por dia** em cada minijogo
 
 ## Atributos no combate e simulador (Parte 3, 11/2026, provisório)
 
-O dano da arma (Força: espada, escudo e Giro; Inteligência: bola mágica e Meteoro; Sabedoria: a aura) e a força da cura (Sabedoria) são multiplicados por **fator = (1 + efeito(valor) ÷ 30) ÷ (1 + efeito(valor inicial da classe) ÷ 30)**, com o efeito da curva acima. No valor inicial da classe o fator é 1: o nível 1 continua como era. O Arqueiro continua com a Força no arco (sem fator a mais). A aura do Sacerdote também tira **3 de vida por pulso** dos inimigos dentro dela. A velocidade de andar é **170 + 1,5 × Agilidade** (px/s). A imunidade depois de apanhar (500 ms) vale **só contra o mesmo atacante**.
+O dano da arma (Força: espada, escudo e Giro; Inteligência: bola mágica e Meteoro; Sabedoria: a aura) e a força da cura (Sabedoria) são multiplicados por **fator = (1 + efeito(valor) ÷ 30) ÷ (1 + efeito(valor inicial da classe) ÷ 30)**, com o efeito da curva acima. No valor inicial da classe o fator é 1: o nível 1 continua como era. O Arqueiro continua com a Força no arco (sem fator a mais). A aura do Sacerdote também tira **4 de vida por pulso** dos inimigos dentro dela. A velocidade de andar é **170 + 1,5 × Agilidade** (px/s). A imunidade depois de apanhar (500 ms) vale **só contra o mesmo atacante**.
 
 | Atributo | Fator (referência 14, o Guerreiro) | Velocidade com essa Agilidade (px/s) |
 | --- | --- | --- |
@@ -586,36 +586,48 @@ O dano da arma (Força: espada, escudo e Giro; Inteligência: bola mágica e Met
 | 75 | 2,69× | 283 |
 | 100 | 3,69× | 320 |
 
+### Dano por segundo das classes no nível 1 (Parte 11, metas do Pablo de 26/11)
+
+O ataque de clique de cada classe no nível 1, com a média do crítico (o Arqueiro com a carga cheia e +10% de chance de crítico da classe). Metas: Guerreiro e Arqueiro ~55 (o Arqueiro com mais crítico, um alvo); Mago ~28 por alvo, em área; Tanque ~15; Sacerdote ~8 (a aura).
+
+| Classe | Dano por segundo (por alvo) | Alvos por golpe | Chance de crítico |
+| --- | --- | --- | --- |
+| guerreiro | 55,5 | 2 | 11,5% |
+| arqueiro | 54,6 | 1 | 26,0% |
+| mago | 27,9 | 3 | 9,0% |
+| tanque | 15,6 | 2 | 8,5% |
+| sacerdote | 8,0 | todos na aura | 8,5% |
+
 ### Simulador (npm run simular)
 
 Modelo simplificado (sem física nem IA; detalhes em src/regras/simulador.js e src/dados/simulador.js). Bando padrão de 3 mobs da região; no Boss, ele sozinho. "Mobs sem cair": o maior bando (até 12) que o grupo vence sem ninguém cair.
 
 | Nível | Grupo | Região | Luta padrão | Mobs sem cair | XP/min | Fugir resolve |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Guerreiro sozinho | facil | perde em 2,5 s | 1 | 100 | sim |
+| 1 | Guerreiro sozinho | facil | perde em 2,5 s | 1 | 95 | sim |
 | 1 | Guerreiro sozinho | media | perde em 2,2 s | 0 | 0 | não |
 | 1 | Guerreiro sozinho | dificil | perde em 1,0 s | 0 | 0 | não |
 | 1 | Guerreiro sozinho | boss | perde em 2,4 s | 0 | 0 | sim |
-| 1 | grupo de 5 | facil | vence em 5,1 s | 4 | 393 | sim |
-| 1 | grupo de 5 | media | vence em 9,7 s | 3 | 2284 | não |
+| 1 | grupo de 5 | facil | vence em 3,8 s | 7 | 665 | sim |
+| 1 | grupo de 5 | media | vence em 8,2 s | 3 | 2454 | não |
 | 1 | grupo de 5 | dificil | perde em 6,1 s | 0 | 0 | não |
 | 1 | grupo de 5 | boss | perde em 6,9 s | 0 | 0 | sim |
 | 10 | Guerreiro sozinho | facil | perde em 7,0 s | 2 | 225 | sim |
-| 10 | Guerreiro sozinho | media | perde em 4,8 s | 2 | 1245 | não |
-| 10 | Guerreiro sozinho | dificil | perde em 2,2 s | 0 | 0 | não |
+| 10 | Guerreiro sozinho | media | perde em 4,8 s | 1 | 635 | não |
+| 10 | Guerreiro sozinho | dificil | perde em 1,2 s | 0 | 0 | não |
 | 10 | Guerreiro sozinho | boss | perde em 3,9 s | 0 | 0 | sim |
-| 10 | grupo de 5 | facil | vence em 3,7 s | 10 | 846 | sim |
-| 10 | grupo de 5 | media | vence em 7,9 s | 7 | 4384 | não |
-| 10 | grupo de 5 | dificil | perde em 35,0 s | 0 | 0 | não |
+| 10 | grupo de 5 | facil | vence em 3,1 s | 12 | 1049 | sim |
+| 10 | grupo de 5 | media | vence em 6,7 s | 7 | 4594 | não |
+| 10 | grupo de 5 | dificil | perde em 14,2 s | 0 | 0 | não |
 | 10 | grupo de 5 | boss | perde em 14,4 s | 0 | 0 | sim |
-| 30 | Guerreiro sozinho | facil | vence em 5,5 s | 5 | 510 | sim |
-| 30 | Guerreiro sozinho | media | vence em 10,3 s | 3 | 2222 | sim |
-| 30 | Guerreiro sozinho | dificil | perde em 3,8 s | 0 | 0 | não |
+| 30 | Guerreiro sozinho | facil | vence em 5,5 s | 6 | 568 | sim |
+| 30 | Guerreiro sozinho | media | vence em 12,3 s | 3 | 2039 | sim |
+| 30 | Guerreiro sozinho | dificil | perde em 3,5 s | 0 | 0 | não |
 | 30 | Guerreiro sozinho | boss | perde em 6,9 s | 0 | 0 | sim |
-| 30 | grupo de 5 | facil | vence em 2,7 s | 12 | 1184 | sim |
-| 30 | grupo de 5 | media | vence em 4,7 s | 12 | 7530 | não |
-| 30 | grupo de 5 | dificil | vence em 11,2 s | 3 | 6101 | não |
-| 30 | grupo de 5 | boss | vence em 54,7 s | 0 | 0 | sim |
+| 30 | grupo de 5 | facil | vence em 1,9 s | 12 | 1265 | sim |
+| 30 | grupo de 5 | media | vence em 4,3 s | 12 | 7989 | não |
+| 30 | grupo de 5 | dificil | vence em 11,5 s | 3 | 7118 | não |
+| 30 | grupo de 5 | boss | vence em 42,7 s | 0 | 0 | sim |
 
 ## Ainda sem valor (a decidir)
 

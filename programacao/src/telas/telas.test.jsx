@@ -18,6 +18,8 @@ import { itensDaJanela } from '../regras/itensNaPartida.js'
 import Pentagono from '../componentes/Pentagono.jsx'
 import { atributosIniciaisDaClasse } from '../dados/classes.js'
 import { descreverMissao } from '../dados/missoes.js'
+import { paradasComPreco } from '../regras/caravana.js'
+import { floresta } from '../dados/mundo/floresta.js'
 import { ContratosPermanentes, ContratosTemporarios } from './reino/Contratos.jsx'
 import { Comprar as ComprarNoMercado } from './reino/Mercado.jsx'
 import { Equipar } from './reino/Forja.jsx'
@@ -96,13 +98,14 @@ describe('o que cada tela mostra', () => {
     expect(desenhar('login', 'nenhum')).toContain('fica só neste navegador e você não aparece no ranking')
   })
 
-  it('Caravana (Parte 7): o início de graça; só o preço barra, com o antes → depois e o motivo', () => {
+  it('Caravana (Partes 7 e 11): o início de graça; só o preço barra, com o antes → depois e o motivo', () => {
     const html = desenhar('pontoPartida', 'convidado')
     expect(html).toContain('Começar no início</button>')
-    expect(html).toContain('Viajar por 70 de ouro</button>') // a Clareira da Entrada cabe nos 120 de ouro
-    expect(html).toContain('<span class="mudanca-antes">120</span> → <span class="mudanca-depois">50')
-    expect(html).toContain('disabled="" title="Falta 145 de ouro"') // o Vau do Riacho custa 265
-    expect(html).toContain('<span class="motivo-do-botao">Falta 145 de ouro</span>')
+    // Parte 11: a parada mais perto custa a partida típica da Fácil, mais que os 120 de ouro do começo
+    const [, clareira] = paradasComPreco(floresta)
+    expect(html).toContain(`<span class="mudanca-antes">120</span> → <span class="mudanca-depois">${120 - clareira.preco}`)
+    expect(html).toContain(`disabled="" title="Falta ${clareira.preco - 120} de ouro"`)
+    expect(html).toContain(`<span class="motivo-do-botao">Falta ${clareira.preco - 120} de ouro</span>`)
   })
 
   it('Preparação: o Líder salvo vem selecionado', () => {

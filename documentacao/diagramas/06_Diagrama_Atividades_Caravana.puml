@@ -1,0 +1,47 @@
+@startuml Atividades_Caravana
+title Diagrama de Atividades — Caravana (RF56, UC44)
+skinparam ActivityBackgroundColor #FFF6E0
+skinparam ActivityBorderColor #7A6440
+skinparam ActivityDiamondBackgroundColor #E4EEFA
+skinparam ActivityDiamondBorderColor #3A6898
+skinparam ArrowColor #444444
+skinparam NoteBackgroundColor #FFFBE0
+skinparam NoteBorderColor #C8B560
+start
+:Escolher a Floresta no Mapa;
+:Mostrar as paradas da Caravana: o início (de graça)\ne as zonas neutras perto de cada região;
+note right
+  O preço de cada parada é perto do ouro de uma
+  partida típica na região perto dela; uma parada
+  mais longe nunca custa menos que a anterior.
+end note
+:Para cada parada, mostrar o ouro antes → depois;
+repeat
+  :Escolher uma parada;
+  if (O preço cabe no ouro?) then (sim)
+    break
+  else (não)
+    :O botão fica apagado e diz "Falta N de ouro";
+  endif
+repeat while (Escolher outra?) is (sim) not (não)
+if (Escolheu uma parada?) then (não)
+  :Voltar ao Mapa (nada é cobrado);
+  stop
+else (sim)
+endif
+:Preparação: mostrar a parada e o preço da Caravana;
+if (Começar partida?) then (não)
+  :Voltar (nada é cobrado);
+  stop
+else (sim)
+endif
+:Conferir o preço de novo e reservar\n(o ouro ainda não sai do progresso);
+:O grupo nasce na zona neutra da parada\n(a taxa da fuga já conta a distância dela);
+:Jogar a partida;
+if (A partida terminou normalmente?) then (sim)
+  #palegreen:No fim, tirar o preço do ouro\n(o Resumo mostra a linha "Caravana");
+else (não: a página fechou ou caiu)
+  #lightyellow:Descartar a partida: nada é cobrado\n(o progresso salvo continua como antes, RF12);
+endif
+stop
+@enduml

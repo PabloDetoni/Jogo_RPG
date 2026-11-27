@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { minijogos } from '../dados/balanceamento.js'
 import { itemDoCatalogo } from '../dados/itens.js'
-import { dadosDosMinijogos } from '../dados/minijogos.js'
+import { dadosDosMinijogos, fazendaDesenhada } from '../dados/minijogos.js'
 import { novoPersonagem, progressoInicial } from '../estado/progresso.js'
 import {
   aplicarMinijogo,
@@ -11,8 +11,11 @@ import {
   colherNaFazenda,
   comecarFazenda,
   comecarLago,
+  etapaDoCanteiro,
+  lugarDoCanteiro,
   novaPedra,
   puxarNoLago,
+  rachadurasDaPedra,
   recompensaDaRodada,
   sortearRaros,
 } from './minijogos.js'
@@ -96,3 +99,39 @@ describe('resultado da rodada (RF54, RF50)', () => {
     expect(aplicarMinijogo(antes, 'cassino', 5, 0).ok).toBe(false)
   })
 })
+
+describe('Fazenda e Mina desenhadas (Parte 11b): só desenho, as regras são as de sempre', () => {
+  it('o canteiro crescendo é broto e, perto de madurar, planta; madura é maduro; murcha é murcho', () => {
+    expect(etapaDoCanteiro({ estado: 'crescendo', ate: 5000 }, 1000, 1100)).toBe('broto')
+    expect(etapaDoCanteiro({ estado: 'crescendo', ate: 5000 }, 3900, 1100)).toBe('planta')
+    expect(etapaDoCanteiro({ estado: 'crescendo', ate: 5000 }, 5000, 1100)).toBe('planta')
+    expect(etapaDoCanteiro({ estado: 'madura', ate: 6000 }, 5000, 1100)).toBe('maduro')
+    expect(etapaDoCanteiro({ estado: 'murcha', ate: 6000 }, 5000, 1100)).toBe('murcho')
+  })
+
+  it('os 9 canteiros em 3 × 3, sem um encostar no outro, dentro da cena', () => {
+    const layout = fazendaDesenhada.canteiros
+    const lugares = Array.from({ length: minijogos.fazenda.canteiros }, (_, i) => lugarDoCanteiro(i, layout))
+    expect(lugares[0]).toMatchObject({ x: layout.x, y: layout.y })
+    expect(lugares[4].x).toBe(layout.x + layout.largura + layout.espaco)
+    expect(lugares[3].y).toBe(layout.y + layout.altura + layout.espaco)
+    for (const lugar of lugares) {
+      expect(lugar.x + lugar.largura).toBeLessThanOrEqual(fazendaDesenhada.largura)
+      expect(lugar.y + lugar.altura).toBeLessThanOrEqual(fazendaDesenhada.altura)
+    }
+  })
+
+  it('a pedra mostra uma rachadura por golpe dado; a pedra nova, nenhuma', () => {
+    const sorteio = criarSorteio(3)
+    let pedra = novaPedra(sorteio)
+    expect(rachadurasDaPedra(pedra)).toBe(0)
+    pedra = baterNaPedra(pedra, sorteio).pedra
+    expect(rachadurasDaPedra(pedra)).toBe(1)
+    pedra = baterNaPedra(pedra, sorteio).pedra
+    expect(rachadurasDaPedra(pedra)).toBe(minijogos.mina.cliquesPorPedra - 1)
+    const quebrou = baterNaPedra(pedra, sorteio)
+    expect(quebrou.ponto).toBe(true)
+    expect(rachadurasDaPedra(quebrou.pedra)).toBe(0)
+  })
+})
+

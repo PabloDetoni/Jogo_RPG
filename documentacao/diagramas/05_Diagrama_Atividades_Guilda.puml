@@ -1,8 +1,22 @@
 @startuml Atividades_Guilda
-title Diagrama de Atividades — Guilda (missões e contratos)
+title Diagrama de Atividades — Guilda (Mestra Isolda, missões e contratos)
 start
 :Abrir a Guilda no Reino;
-if (Missões ou contratos?) then (missões)
+if (Primeira visita?) then (sim)
+  :A Mestra Isolda se apresenta em partes\n(balão de fala com "Continuar"; serve de tutorial);
+  :Guardar que ela já é conhecida (no save);
+else (não)
+  :A Mestra Isolda diz uma fala sorteada\n(nunca a mesma da última vez);
+endif
+note right
+  O menu fica sempre visível:
+  não é preciso ler a conversa toda.
+end note
+switch (Menu da Mestra Isolda?)
+case (Ir embora)
+  :Voltar ao Reino;
+  stop
+case (Missões)
   if (Tem missão ativa?) then (não)
     :Escolher uma missão no quadro\n(matar, coletar, entregar ou explorar);
     :Aceitar a missão (o progresso começa a contar agora);
@@ -31,7 +45,7 @@ if (Missões ou contratos?) then (missões)
       endif
     endswitch
   endif
-else (contratos)
+case (Contratos)
   :Listar só as classes que o jogador ainda não possui;
   if (Tipo de contrato?) then (temporário)
     :Pagar o contrato temporário;
@@ -43,6 +57,7 @@ else (contratos)
       :Encerrar o contrato temporário daquela classe;
     endif
   endif
-endif
+endswitch
+:"Falar com a Mestra Isolda" volta à conversa;\n"Voltar ao Reino" sai;
 stop
 @enduml

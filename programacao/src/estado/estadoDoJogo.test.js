@@ -274,23 +274,26 @@ describe('navegação, janelas e preferências', () => {
   })
 
   it('fora da partida, o Esc fecha a dica da primeira visita e depois faz o mesmo que o Voltar (ajustes de 14/10)', () => {
-    let e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'forja' })
-    expect(e.preferencias.dicasVistas).not.toContain('forja')
+    let e = fazer(convidadoComMago(), { tipo: 'irPara', destino: 'arvores' })
+    expect(e.preferencias.dicasVistas).not.toContain('arvores')
     e = fazer(e, { tipo: 'esc' })
-    expect(e.tela).toBe('forja')
-    expect(e.preferencias.dicasVistas).toContain('forja')
+    expect(e.tela).toBe('arvores')
+    expect(e.preferencias.dicasVistas).toContain('arvores')
     e = fazer(e, { tipo: 'esc' })
     expect(e.tela).toBe('reino')
     // O "?" reabre; Esc fecha de novo sem sair
-    e = fazer(e, { tipo: 'irPara', destino: 'forja' }, { tipo: 'reabrirDica' })
-    expect(e.dicaReaberta).toBe('forja')
+    e = fazer(e, { tipo: 'irPara', destino: 'arvores' }, { tipo: 'reabrirDica' })
+    expect(e.dicaReaberta).toBe('arvores')
     e = fazer(e, { tipo: 'esc' })
-    expect([e.tela, e.dicaReaberta]).toEqual(['forja', null])
+    expect([e.tela, e.dicaReaberta]).toEqual(['arvores', null])
     // Com janela aberta, o Esc fecha só a janela
     e = fazer(e, { tipo: 'abrirJanela', janela: 'configuracoes' }, { tipo: 'esc' })
-    expect([e.tela, e.janelas]).toEqual(['forja', []])
+    expect([e.tela, e.janelas]).toEqual(['arvores', []])
     // No Reino (sem tela de cima), o Esc não sai
     e = fazer(e, { tipo: 'irPara', destino: 'reino' }, { tipo: 'fecharDica' }, { tipo: 'esc' })
+    expect(e.tela).toBe('reino')
+    // Na Forja (Parte 11: sem dica, quem explica é o NPC), o Esc já volta
+    e = fazer(e, { tipo: 'irPara', destino: 'forja' }, { tipo: 'esc' })
     expect(e.tela).toBe('reino')
   })
 

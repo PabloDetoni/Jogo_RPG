@@ -454,17 +454,42 @@ try {
   conferir('o forte tem muros, 4 torres com um arqueiro parado em cada e o Orc dentro', forte.muros > 10 && forte.torres === 4 && forte.naTorre === 4 && forte.torreFixa && forte.orc, forte)
   await cena(`(c.invencivel = true, c.inimigos.filter((i) => i.acampamento?.forma === 'retangulo').forEach((g) => { g.__forte = true; g.vida = g.vidaMaxima = 1e6 }), true)`)
   await cena(`(c.inimigos.filter((i) => !i.__forte && Math.hypot(i.x - ${forte.x}, i.y - ${forte.y}) < 2000).forEach((i) => c.matarInimigo(i)), true)`)
-  // Entrando pelo portão oeste: o forte inteiro acorda junto
+  // Parte 11: o forte acorda POR PARTES. Entrando pelo portão oeste, só o Portão (e as torres do lado dele) acorda
+  const partesAcordadas = () =>
+    cena(`(() => { const r = {}; for (const i of c.inimigos.filter((g) => g.__forte && !g.morto)) { const id = i.leva?.id ?? 'sem'; r[id] = r[id] ?? { todos: 0, perseguindo: 0 }; r[id].todos++; if (i.perseguindo) r[id].perseguindo++ } return r })()`)
+  const parteAcordou = (parte) => parte && parte.todos > 0 && parte.perseguindo === parte.todos
+  const parteDormindo = (parte) => parte && parte.perseguindo === 0
   await colocarLider(forte.x - forte.largura / 2 - 80, forte.y)
   await pausa(1500)
-  const acordouForte = await cena(`c.inimigos.filter((i) => i.__forte).map((i) => i.perseguindo)`)
-  conferir('chegando no portão, o forte acorda junto (todos perseguem)', acordouForte.length >= 10 && acordouForte.every(Boolean), acordouForte.length)
+  let partes = await partesAcordadas()
+  conferir('o forte tem as três partes (Portão, Pátio, Torre) e todo goblin dele é de uma parte', partes.portao && partes.patio && partes.torre && !partes.sem, partes)
+  conferir('chegando no portão, só o Portão acorda (todos dele perseguem); o Pátio e a Torre continuam parados', parteAcordou(partes.portao) && parteDormindo(partes.patio) && parteDormindo(partes.torre), partes)
+  // No meio do forte, o Pátio acorda; a Torre (do outro lado) ainda não
+  await colocarLider(forte.x - 60, forte.y + 120)
+  await pausa(1500)
+  partes = await partesAcordadas()
+  conferir('no pátio, o Pátio acorda e a Torre ainda não', parteAcordou(partes.patio) && parteDormindo(partes.torre), partes)
+  // Do lado leste, a Torre acorda
+  await colocarLider(forte.x + forte.largura / 2 - 140, forte.y)
+  await pausa(1500)
+  partes = await partesAcordadas()
+  conferir('chegando na Torre, ela acorda (com o Orc)', parteAcordou(partes.torre), partes)
   const torreParada = await cena(`(() => { const a = c.inimigos.find((i) => i.__forte && i.naTorre); a.__antes = { x: a.x, y: a.y }; return true })()`)
   await pausa(1500)
   const moveu = await cena(`(() => { const a = c.inimigos.find((i) => i.__forte && i.naTorre && i.__antes); return Math.round(Math.hypot(a.x - a.__antes.x, a.y - a.__antes.y)) })()`)
   conferir('o arqueiro da torre não sai do lugar', torreParada && moveu <= 2, moveu)
   await aba.print('06e-forte')
   await cena(`(c.inimigos.filter((i) => i.__forte).forEach((i) => c.matarInimigo(i)), true)`)
+  // Parte 11: no mapa da pausa, as três partes do forte são pontos de perigo
+  await colocarLider(forte.x - forte.largura / 2 - 400, forte.y)
+  await aba.esperar(`!${CENA}.emCombate`, 'o grupo sair de combate', 12000)
+  await aba.apertar('esc')
+  await aba.esperar(`!!document.querySelector('.mapa-inteiro')`, 'o mapa da pausa', 4000)
+  const perigos = await aba.avaliar(`[...document.querySelectorAll('.mapa-inteiro .ponto-de-perigo')].map((p) => p.getAttribute('aria-label'))`)
+  conferir('no mapa da pausa, o Portão, o Pátio e a Torre do forte são pontos de perigo', perigos.length === 3 && ['Portão', 'Pátio', 'Torre'].every((nome) => perigos.some((p) => p.includes(nome))), perigos)
+  await aba.print('06f-perigos-no-mapa')
+  await aba.apertar('esc')
+  await pausa(400)
   // A teia da Aranha-Mãe: prende o Líder (não anda) e solta depois do tempo
   const teia = await cena(`(() => {
     c.invencivel = false
@@ -600,7 +625,8 @@ try {
   let paradas = await paradasDaCaravana()
   const ouroAntes = await ouroDoSave()
   const precos = paradas.map((p) => p.preco)
-  conferir('a Caravana tem o início de graça e 4 zonas neutras, cada vez mais caras', paradas.length === 5 && precos[0] === 0 && precos.slice(1).every((p, i) => p > precos[i]) && paradas[0].ativo, paradas)
+  // Parte 11: o preço é o ouro de uma partida típica da região perto (a do chefe pode ficar no preço da de antes)
+  conferir('a Caravana tem o início de graça e 4 zonas neutras, nenhuma mais barata que a de antes', paradas.length === 5 && precos[0] === 0 && precos.slice(1).every((p, i) => p >= precos[i] && p > 0) && precos[1] < precos[2] && precos[2] < precos[3] && paradas[0].ativo, paradas)
   conferir('só o preço barra: quem custa mais que o ouro fica apagado, com "Falta N de ouro"', paradas.every((p) => p.ativo === (p.preco <= ouroAntes) && (p.ativo || p.motivo?.startsWith('Falta'))), { ouroAntes, paradas })
   await aba.print('08-caravana')
   // Ouro de teste (painel </> DEV, só no npm run dev)
