@@ -56,6 +56,38 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## SO. Música e efeitos feitos em código (Parte 13, 11/2026)
+
+Use fone ou caixa de som com volume normal. Roteiro automático: `npm run testar:som`.
+
+**SO-01 · Nada antes do clique**
+- Fazer: abra o site numa aba nova e espere 5 s sem clicar.
+- Deve acontecer: silêncio. No primeiro clique (em qualquer lugar), começa a música calma da Tela inicial, baixinha.
+
+**SO-02 · Uma música para cada lugar**
+- Fazer: entre como convidado, vá ao Reino, depois em Jogar (Mapa), num minijogo, de volta ao Mapa, na Floresta (Caravana e Preparação) e comece a partida.
+- Deve acontecer: calma no Reino; aventura (com tambor de marcha) no Mapa, na Caravana e na Preparação, sem recomeçar entre elas; leve (sininhos) no minijogo; na partida, a de exploração (harpa e flauta).
+
+**SO-03 · Combate e chefe**
+- Fazer: na partida, chegue perto de um lobo até ele atacar; depois afaste-se e espere uns 5 s sem apanhar. No `npm run dev`, teletransporte para perto do Ogro.
+- Deve acontecer: em combate, a música troca devagar para uma mais rápida e tensa; fora de combate, volta devagar para a de exploração. Perto do Ogro, a mais tensa de todas.
+
+**SO-04 · Fanfarras**
+- Fazer: termine uma partida com Vitória (Q fora de combate); em outra, deixe todos desmaiarem.
+- Deve acontecer: no Resumo da vitória, uma fanfarra curta, uma vez só (depois, silêncio). Na Derrota, uma música curta e triste na cutscene.
+
+**SO-05 · Efeitos**
+- Fazer: clique em botões; compre e venda no Mercado; fabrique na Forja; na partida, ataque com cada classe (o Arqueiro segura e solta), aperte Espaço, pegue um item com E, abra a mochila com Tab, apanhe de um mob; nos minijogos, colha, bata na pedra e fisgue.
+- Deve acontecer: cada um tem o seu som (clique; moeda; bigorna; espada, puxar e soltar o arco, bola mágica, empurrão do escudo, aura; esquiva; item; mochila; dano; colher, picareta, fisgar). Nos minijogos, a jogada não toca o clique de botão junto.
+
+**SO-06 · Mudo e Configurações**
+- Fazer: aperte M; depois M de novo. Nas Configurações, desligue só a Música; depois só o Som.
+- Deve acontecer: M deixa tudo mudo e volta na mesma música (sem recomeçar). Só a Música desligada: os efeitos continuam. Só o Som desligado: a música continua.
+
+**SO-07 · O nome do jogo**
+- Fazer: abra o site.
+- Deve acontecer: o título da aba e a tela de carregamento dizem "Jogo RPG"; a Tela inicial mostra "JOGO RPG" grande, com a frase embaixo, e a dica da primeira visita não cobre o nome.
+
 ## AJ. Os ajustes da Parte 11 (11/2026)
 
 **AJ-01 · O forte acorda por partes**
