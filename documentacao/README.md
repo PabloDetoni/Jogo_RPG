@@ -4,7 +4,7 @@
 
 **Alunos:** Pablo Detoni, Lucas Garcia e Uener Peres
 
-Esta pasta reúne a documentação do projeto para Análise e Projeto de Sistemas (TI23L) e Desenvolvimento Web 2. Em caso de divergência, vale o conteúdo desta documentação. Atualizada em 26/11/2026 (Parte 12) pelo jogo publicado em https://jogo-rpg-six.vercel.app.
+Esta pasta reúne a documentação do projeto para Análise e Projeto de Sistemas (TI23L) e Desenvolvimento Web 2. Em caso de divergência, vale o conteúdo desta documentação. Atualizada em 27/11/2026 (Parte 13) pelo jogo publicado em https://jogo-rpg-six.vercel.app. A apresentação do projeto (como jogar, equipe, tecnologias e como rodar) está no [README da raiz](../README.md).
 
 ## Diagrama de Casos de Uso
 
@@ -29,8 +29,8 @@ Esta pasta reúne a documentação do projeto para Análise e Projeto de Sistema
 | [Arquitetura do código](Arquitetura_do_Codigo.md) | Onde fica cada parte do código e como elas conversam (React, Phaser, estado, regras puras, Supabase) |
 | [Guia de interface](Guia_de_Interface.md) | O padrão visual das telas: cores e símbolos das ações, raridade pela cor da borda, tamanhos e estados |
 | [Guia de arte](Guia_de_Arte.md) | A identidade visual e as decisões de arte do Pablo |
-| [Lista de arte e som](Lista_de_Arte_e_Som.md) | O que precisa de arte e de som, com tamanhos e nomes de arquivo |
-| [Supabase: passo a passo](Supabase_passo_a_passo.md) | Como criar o projeto no Supabase e rodar os SQL (001, 002 e 004) |
+| [Lista de arte e som](Lista_de_Arte_e_Som.md) | O que precisa de arte e de som, com tamanhos e nomes de arquivo; as músicas e os efeitos feitos em código e onde cada um toca |
+| [Supabase: passo a passo](Supabase_passo_a_passo.md) | Como criar o projeto no Supabase e rodar os SQL (001, 002, 004 e 005) |
 | [Vercel: passo a passo](Vercel_passo_a_passo.md) | Como o site é publicado |
 
 ## Como regerar o que sai do código
