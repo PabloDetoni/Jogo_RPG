@@ -1,4 +1,5 @@
 import { coresDaArena } from '../dados/arenaDeTeste.js'
+import { controlesDeToque } from '../dados/interface.js'
 
 // Resposta visual dos golpes (referência: Everything is Crab): números que sobem,
 // quadradinhos de partícula e a tela tremendo. Nada aqui muda regra; é só desenho.
@@ -44,7 +45,15 @@ export function numeroFlutuante(cena, x, y, texto, cor = coresDaArena.numeroDeDa
 }
 
 // Explosão de quadradinhos
+// No celular (Parte 14), menos partículas: no toque e, menos ainda, no modo leve (no computador, a quantidade de sempre)
+function quantasParticulas(cena, quantidade) {
+  const ponte = cena.ponte
+  const fracao = ponte?.modoLeve ? controlesDeToque.particulas.leve : ponte?.toque ? controlesDeToque.particulas.toque : 1
+  return fracao === 1 ? quantidade : Math.max(1, Math.round(quantidade * fracao))
+}
+
 export function particulas(cena, x, y, cor, quantidade = 10, velocidade = 220) {
+  quantidade = quantasParticulas(cena, quantidade)
   const emissor = cena.add.particles(x, y, 'particula', {
     speed: { min: velocidade * 0.35, max: velocidade },
     angle: { min: 0, max: 360 },

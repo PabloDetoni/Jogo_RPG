@@ -3,7 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Parte 14: o jogo instalável no celular ("Adicionar à tela inicial"): o manifesto, o ícone e a tela cheia do app -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
+    <meta name="theme-color" content="#172240" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="%NOME_DO_JOGO%" />
     <title>%NOME_DO_JOGO%</title>
     <!-- Tela de carregamento (ajustes de 14/10/2026): aparece na hora, antes do React, e some quando o jogo monta (o React
          troca o conteúdo do #root). Se demorar demais ou o código não chegar, mostra o que houve e "Tentar de novo". -->

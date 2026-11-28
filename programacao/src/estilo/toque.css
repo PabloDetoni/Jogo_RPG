@@ -1,0 +1,602 @@
+/* ==========================================================================================================
+   TOQUE (Parte 14, 28/11/2026): o jogo no celular e no tablet. Tudo aqui só vale com data-toque na moldura (o dedo é
+   o jeito principal de apontar) ou na raiz; com mouse e teclado nada muda (no computador --letra-minima é 0).
+   ========================================================================================================== */
+.moldura {
+  --letra-minima: 0px;
+}
+
+.moldura[data-toque] {
+  /* nenhum texto menor que 12 px (todas as letras usam max(tamanho, --letra-minima)) */
+  --letra-minima: 12px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html[data-toque],
+html[data-toque] body {
+  /* sem o zoom do toque duplo, sem puxar a página para recarregar */
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+.moldura[data-toque] input,
+.moldura[data-toque] textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  /* 16 px: o iPhone não dá zoom no campo ao tocar nele */
+  font-size: max(1em, 16px);
+}
+
+/* Botões: no mínimo 44 px de toque (a área que recebe o dedo; o desenho fica igual) */
+.moldura[data-toque] .botao {
+  min-height: 36px;
+}
+
+/* Janelas: quando não cabem, viram tela cheia com rolagem */
+.moldura[data-toque] .janela-fundo:not(.janela-fundo-leve):not(.janela-fundo-mochila) .janela {
+  max-width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.moldura[data-toque] .janela-fundo-mochila .janela-mochila {
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* A tela "Gire o celular" (fora da moldura, por cima de tudo) */
+.gire-o-celular {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 0%, #2a3a64 0%, #172240 50%, #0b1124 100%);
+  color: #fff6d8;
+  font-family: 'Pixelify Sans', system-ui, sans-serif;
+  text-align: center;
+}
+
+.gire-o-celular h2 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 0.04em;
+}
+
+.gire-o-celular p {
+  margin: 0;
+  max-width: 22em;
+  font-size: 17px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.gire-o-celular-desenho {
+  width: 140px;
+  height: 140px;
+}
+
+.gire-o-celular-aparelho {
+  transform-origin: 60px 64px;
+  animation: gire-o-celular 2.4s ease-in-out infinite;
+}
+
+.gire-o-celular-aparelho rect:first-child {
+  fill: #1a110c;
+  stroke: #f0a000;
+  stroke-width: 3;
+}
+
+.gire-o-celular-tela {
+  fill: #6fa8dc;
+}
+
+.gire-o-celular-botao {
+  fill: #f0a000;
+}
+
+.gire-o-celular-seta {
+  fill: none;
+  stroke: #f8c400;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes gire-o-celular {
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+  55%,
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gire-o-celular-aparelho {
+    animation: none;
+    transform: rotate(90deg);
+  }
+}
+
+/* ---------- Partida no toque ---------- */
+
+/* A barra de ações e as teclas do computador dão lugar aos botões de toque; a barra de teste (só no npm run dev) some */
+.moldura[data-toque] .hud-barra-de-acoes,
+.moldura[data-toque] .hud-teclas,
+.moldura[data-toque] .hud-item-perto,
+.moldura[data-toque] .hud-numeros .hud-fuga,
+.moldura[data-toque] .hud-numeros .hud-som,
+.moldura[data-toque] .hud-numeros .hud-mudo,
+.moldura[data-toque] .barra-de-teste {
+  display: none;
+}
+
+.moldura[data-toque] .hud {
+  --barra-de-baixo: 0px !important;
+}
+
+/* O HUD do toque: o Líder e o grupo mais estreitos, os números numa linha embaixo dos botões do alto */
+.moldura[data-toque] .hud-principal {
+  width: auto;
+  max-width: 30cqw;
+  padding: 4px 6px;
+  gap: 2px;
+}
+
+.moldura[data-toque] .hud-numeros {
+  top: 56px;
+  flex-direction: row;
+  gap: 8px;
+  padding: 2px 8px;
+}
+
+.moldura[data-toque] .hud-numeros .hud-linha {
+  gap: 8px;
+}
+
+.moldura[data-toque] .avisos-da-partida {
+  top: 86px;
+}
+
+.moldura[data-toque] .hud-minimapa {
+  top: 50px;
+  width: 15cqw;
+  padding: 3px;
+}
+
+.controles-de-toque {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.9);
+}
+
+.controles-de-toque-parados {
+  opacity: 0.35;
+}
+
+.controles-de-toque-parados > * {
+  pointer-events: none !important;
+}
+
+.controles-de-toque button {
+  font-family: inherit;
+  touch-action: none;
+}
+
+/* O joystick: a metade de baixo à esquerda (o HUD do Líder fica em cima) */
+.toque-joystick-zona {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 45%;
+  top: 38%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.toque-joystick {
+  position: absolute;
+  width: calc(var(--raio) * 2);
+  height: calc(var(--raio) * 2);
+  margin: calc(var(--raio) * -1) 0 0 calc(var(--raio) * -1);
+  border: 2px solid rgb(255 255 255 / 0.6);
+  border-radius: 50%;
+  background: rgb(10 14 22 / 0.3);
+  pointer-events: none;
+}
+
+.toque-joystick-parado {
+  left: calc(var(--raio) + 26px);
+  top: auto;
+  bottom: calc(var(--raio) + 22px);
+  margin: 0 0 calc(var(--raio) * -1) calc(var(--raio) * -1);
+  opacity: 0.5;
+}
+
+.toque-joystick-botao {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.75);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+/* Os botões do alto: mochila, mapa, pausa e "Mais" */
+.toque-topo {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.toque-botao-do-topo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 44px;
+  padding: 2px 6px;
+  border: 2px solid rgb(255 255 255 / 0.55);
+  border-radius: 8px;
+  background: rgb(10 14 22 / 0.62);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toque-botao-do-topo-ativo {
+  border-color: #ffd23f;
+}
+
+.toque-botao-do-topo-nome {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.toque-mais {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 210px;
+  padding: 8px;
+  border: 2px solid #f0a000;
+  border-radius: 8px;
+  background: rgb(10 14 22 / 0.92);
+}
+
+.toque-mais-item {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid rgb(255 255 255 / 0.4);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+  font-size: 14px;
+  text-align: left;
+}
+
+.toque-mais-fugir {
+  border-color: #e07a2f;
+}
+
+.toque-mais-item:disabled {
+  opacity: 0.55;
+}
+
+/* Pegar (E): só com um item perto, logo acima do ataque */
+.toque-interagir {
+  position: absolute;
+  right: 150px;
+  bottom: 140px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  max-width: 40%;
+  padding: 4px 12px;
+  border: 2px solid #ffd23f;
+  border-radius: 22px;
+  background: rgb(10 14 22 / 0.8);
+  color: #fff;
+  font-size: 13px;
+  pointer-events: auto;
+}
+
+.toque-interagir-cheia {
+  border-color: #e05a4f;
+  opacity: 0.85;
+}
+
+/* O ataque, embaixo à direita, e as habilidades e a esquiva em arco em volta dele */
+.toque-acoes {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  width: 78px;
+  height: 78px;
+  pointer-events: none;
+}
+
+.toque-botao {
+  --tamanho: 54px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--tamanho);
+  height: var(--tamanho);
+  margin: calc(var(--tamanho) / -2) 0 0 calc(var(--tamanho) / -2);
+  translate: var(--dx, 0px) var(--dy, 0px);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  /* a recarga: o anel em volta enche (dourado) até ficar pronto */
+  background:
+    radial-gradient(circle, rgb(12 18 28 / 0.82) 62%, transparent 63%),
+    conic-gradient(#ffd23f calc(var(--recarga, 1) * 360deg), rgb(255 255 255 / 0.25) 0);
+  color: #fff;
+  font-size: 13px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.toque-botao.toque-pronto {
+  box-shadow: 0 0 0 2px rgb(255 210 63 / 0.6);
+}
+
+.toque-botao:active {
+  filter: brightness(1.25);
+}
+
+.toque-ataque {
+  --tamanho: 78px;
+  font-size: 30px;
+}
+
+.toque-ataque.toque-carregando {
+  background:
+    radial-gradient(circle, transparent 62%, transparent 63%),
+    linear-gradient(to top, rgb(255 212 59 / 0.85) calc(var(--carga) * 100%), rgb(12 18 28 / 0.85) 0);
+}
+
+.toque-esquiva {
+  --tamanho: 50px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.toque-esquiva,
+.toque-habilidade {
+  grid-template-rows: auto;
+}
+
+.toque-nome {
+  position: absolute;
+  top: -16px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.toque-inicial {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.toque-custo {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 20px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: #2f6fd6;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.toque-vazio {
+  opacity: 0.4;
+}
+
+.toque-sem-mana {
+  filter: saturate(0.3);
+}
+
+/* A seta de quem mira arrastando */
+.toque-seta-da-mira {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 4px;
+  margin-top: -2px;
+  background: linear-gradient(to right, rgb(255 210 63 / 0), #ffd23f);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+/* O mapa pelo botão Mapa (sem pausar): no meio, maior, com o botão Fechar */
+.mapa-inteiro.mapa-inteiro-do-toque {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: none;
+  width: min(56cqw, 70cqh);
+  pointer-events: auto;
+  z-index: 45;
+}
+
+.mapa-inteiro-fechar {
+  min-height: 44px;
+}
+
+/* A mochila da partida no toque: os botões de usar e o fechar */
+.mochila-usar-no-toque {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mochila-usar-no-toque .botao,
+.mochila-fechar-no-toque {
+  min-height: 44px;
+}
+
+.moldura[data-toque] .celula-da-grade {
+  touch-action: none;
+}
+
+/* Outro lugar e outra altura só no toque (dados/posicoes.js, "toque"; componentes/posicao.js) */
+.moldura[data-toque] [style*='--x-no-toque'] {
+  left: var(--x-no-toque) !important;
+}
+
+.moldura[data-toque] [style*='--y-no-toque'] {
+  top: var(--y-no-toque) !important;
+}
+
+.moldura[data-toque] [style*='--altura-no-toque'] {
+  max-height: var(--altura-no-toque);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Os botões da tela um pouco mais justos (o texto é maior no toque) */
+.moldura[data-toque] .botao.posicionado {
+  padding: 0.3em 0.6em;
+}
+
+/* ---------- Telas do Reino e menus no toque (o texto maior pede um pouco mais de espaço) ---------- */
+.moldura[data-toque] .tela > .area {
+  max-width: 94cqw;
+}
+
+.moldura[data-toque] .balcao-com-mensagem {
+  width: 92cqw;
+}
+
+.moldura[data-toque] .balcao-grade {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.moldura[data-toque] .filtro {
+  min-height: 32px;
+  padding: 0.1em 0.45em;
+}
+
+/* As abas: numa linha só, que rola de lado quando não cabe */
+.moldura[data-toque] .abas {
+  flex-wrap: nowrap;
+  justify-content: safe center;
+  max-width: 96cqw;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+}
+
+.moldura[data-toque] .abas > * {
+  flex: none;
+}
+
+/* Conquistas: a tabela mais larga e as colunas mais justas */
+.moldura[data-toque] .conquistas {
+  width: 90cqw;
+}
+
+.moldura[data-toque] .lista-de-conquistas li {
+  grid-template-columns: 9em minmax(0, 1fr) 6em 7em;
+  gap: 0.5em;
+}
+
+.moldura[data-toque] .lista-de-conquistas {
+  max-height: none;
+}
+
+/* O "?" redondo, sem esticar */
+.moldura[data-toque] .botao-ajuda {
+  min-height: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.moldura[data-toque] .tela-reino .botao-ajuda {
+  top: 24px !important;
+}
+
+.moldura[data-toque] .placa-do-reino-nome {
+  letter-spacing: 0;
+}
+
+/* O HUD do grupo mais curto no toque (a IA de cada um fica nas Árvores; o nome e a vida ficam) */
+.moldura[data-toque] .hud-ia,
+.moldura[data-toque] .hud-grupo > .hud-rotulo,
+.moldura[data-toque] .toque-nome {
+  display: none;
+}
+
+.moldura[data-toque] .hud-grupo {
+  margin-top: 0;
+  padding-top: 2px;
+}
+
+.moldura[data-toque] .hud-aliado .medidor-barra {
+  min-width: 48px;
+}
+
+/* A mochila da partida: o texto da explicação legível no fundo claro */
+.moldura[data-toque] .janela-mochila {
+  color: #2b1d12;
+}
+
+.moldura[data-toque] .janela-mochila .nota {
+  color: #2b1d12;
+  opacity: 0.85;
+}
+
+/* O Mapa no toque: sem "mouse em cima", os nomes dos lugares aparecem sempre e o toque no nome também abre */
+.moldura[data-toque] .placa-do-lugar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Sempre à mostra, as placas do Mapa ficam só com o nome (as rodadas do dia e os detalhes aparecem no minijogo; com
+   eles, as placas do Planalto ficavam uma em cima da outra) */
+.moldura[data-toque] .placa-do-lugar .placa-do-lugar-detalhe,
+.moldura[data-toque] .placa-do-lugar .rodadas-do-dia {
+  display: none;
+}
+
+.moldura[data-toque] .placa-do-lugar {
+  padding: 2px 8px;
+}

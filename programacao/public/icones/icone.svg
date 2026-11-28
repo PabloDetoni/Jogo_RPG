@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- Ícone provisório do app (Parte 14): a noite azul e o dourado da identidade, com as espadas cruzadas do JOGAR -->
+  <rect width="64" height="64" fill="#172240"/>
+  <rect x="2" y="2" width="60" height="60" fill="#0b1124"/>
+  <rect x="4" y="4" width="56" height="56" fill="#22325c"/>
+  <rect x="4" y="4" width="56" height="2" fill="#f0a000"/>
+  <rect x="4" y="58" width="56" height="2" fill="#f0a000"/>
+  <rect x="4" y="4" width="2" height="56" fill="#f0a000"/>
+  <rect x="58" y="4" width="2" height="56" fill="#f0a000"/>
+  <!-- espada 1 (de baixo à esquerda para cima à direita) -->
+  <g fill="#e8eef8">
+    <rect x="40" y="12" width="4" height="4"/><rect x="36" y="16" width="4" height="4"/><rect x="32" y="20" width="4" height="4"/>
+    <rect x="28" y="24" width="4" height="4"/><rect x="24" y="28" width="4" height="4"/><rect x="20" y="32" width="4" height="4"/>
+    <rect x="44" y="8" width="4" height="4"/>
+  </g>
+  <g fill="#9fb0c8"><rect x="42" y="14" width="2" height="2"/><rect x="38" y="18" width="2" height="2"/><rect x="34" y="22" width="2" height="2"/><rect x="30" y="26" width="2" height="2"/><rect x="26" y="30" width="2" height="2"/></g>
+  <g fill="#f0a000"><rect x="14" y="34" width="12" height="4"/><rect x="18" y="30" width="4" height="12"/></g>
+  <g fill="#8a4a14"><rect x="12" y="42" width="4" height="4"/><rect x="16" y="38" width="4" height="4"/></g>
+  <rect x="8" y="46" width="6" height="6" fill="#d41a1a"/>
+  <!-- espada 2 (de baixo à direita para cima à esquerda) -->
+  <g fill="#e8eef8">
+    <rect x="20" y="12" width="4" height="4"/><rect x="24" y="16" width="4" height="4"/><rect x="28" y="20" width="4" height="4"/>
+    <rect x="36" y="28" width="4" height="4"/><rect x="40" y="32" width="4" height="4"/>
+    <rect x="16" y="8" width="4" height="4"/>
+  </g>
+  <g fill="#9fb0c8"><rect x="20" y="14" width="2" height="2"/><rect x="24" y="18" width="2" height="2"/><rect x="36" y="30" width="2" height="2"/></g>
+  <g fill="#f0a000"><rect x="38" y="34" width="12" height="4"/><rect x="42" y="30" width="4" height="12"/></g>
+  <g fill="#8a4a14"><rect x="48" y="42" width="4" height="4"/><rect x="44" y="38" width="4" height="4"/></g>
+  <rect x="50" y="46" width="6" height="6" fill="#d41a1a"/>
+</svg>

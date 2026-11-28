@@ -46,5 +46,13 @@ export function useGradeComMao(itens, { minimo, passo = 1, aberta = true }) {
     },
     // Põe um item de volta na grade (o cancelar da lixeira)
     guardar: (item) => mudar((atual) => guardar(atual, item)),
+    // Toque (Parte 14): arrastar a pilha de um quadradinho para fora da janela (com a mão vazia) tira ela da grade e
+    // devolve o que era (para o chão)
+    tirarDaGrade: (indice) => {
+      if (estado.mao || !estado.slots[indice]) return null
+      const { estado: novo, noChao } = soltarFora(cliqueEsquerdo(estado, indice))
+      setGuardado((atual) => ({ ...atual, estado: completarGrade(novo, { minimo, passo }) }))
+      return noChao
+    },
   }
 }

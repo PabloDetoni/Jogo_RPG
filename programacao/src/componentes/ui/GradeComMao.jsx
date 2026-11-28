@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { acoes, arteDaAcao, coresDasRaridades, ladoDoSlot, nomesDosTipos } from '../../dados/interface.js'
+import { acoes, arteDaAcao, controlesDeToque, coresDasRaridades, ladoDoSlot, nomesDosTipos } from '../../dados/interface.js'
 import { funcaoDoItem, itemDoCatalogo, nomesDasRaridades } from '../../dados/itens.js'
+import { useToque } from '../useToque.js'
 import Simbolo from './Simbolo.jsx'
 import Slot from './Slot.jsx'
 
@@ -13,13 +14,19 @@ import Slot from './Slot.jsx'
 // apagado(id): o quadradinho fica apagado (o filtro do Reino destaca só os do tipo); dica(item): uma linha a mais na
 // caixinha do mouse (na partida, as teclas E e R); aoClicar(slot): o quadradinho clicado (o Reino mostra o detalhe dele).
 // O item na mão e a caixinha ficam numa camada na moldura do jogo (a caixa 16:9), por cima de tudo, sem pegar o clique.
-export default function GradeComMao({ grade, tamanho = 'medio', colunas, rotulo, apagado, dica, lixeira, aoClicar }) {
+// No toque (Parte 14): tocar pega e põe (o clique de sempre); segurar 0,5 s num quadradinho pega a metade (o botão
+// direito); arrastar a pilha para fora da janela chama aoArrastarParaFora(indice) (a mochila da partida joga no chão) e
+// arrastar até outro quadradinho põe lá. "janela": o seletor da janela (fora dela = fora).
+export default function GradeComMao({ grade, tamanho = 'medio', colunas, rotulo, apagado, dica, lixeira, aoClicar, janela, aoArrastarParaFora }) {
   const { estado, sobre, setSobre } = grade
+  const { toque } = useToque()
   const [moldura, setMoldura] = useState(null)
   const [ponto, setPonto] = useState(null)
   const guardarRaiz = useCallback((elemento) => setMoldura(elemento?.closest('.moldura') ?? null), [])
+  const dedo = useRef(null) // { id, indice, x, y, arrastando, relogio }
+  const ignorarCliqueAte = useRef(0)
 
-  // O mouse em relação à moldura (o item na mão e a caixinha andam com ele)
+  // O mouse em relação à moldura (o item na mão e a caixinha andam com ele); no toque, o dedo também
   useEffect(() => {
     if (!moldura) return undefined
     function aoMover(evento) {
@@ -27,8 +34,50 @@ export default function GradeComMao({ grade, tamanho = 'medio', colunas, rotulo,
       setPonto({ x: evento.clientX - caixa.left, y: evento.clientY - caixa.top, largura: caixa.width, altura: caixa.height })
     }
     window.addEventListener('mousemove', aoMover)
-    return () => window.removeEventListener('mousemove', aoMover)
-  }, [moldura])
+    if (toque) window.addEventListener('pointermove', aoMover)
+    return () => {
+      window.removeEventListener('mousemove', aoMover)
+      window.removeEventListener('pointermove', aoMover)
+    }
+  }, [moldura, toque])
+  useEffect(() => () => clearTimeout(dedo.current?.relogio), [])
+
+  function apertarComDedo(evento, indice) {
+    if (!toque || evento.pointerType === 'mouse' || dedo.current) return
+    const relogio = setTimeout(() => {
+      if (!dedo.current || dedo.current.arrastando) return
+      dedo.current.segurou = true
+      ignorarCliqueAte.current = performance.now() + 600
+      aoClicar?.(estado.slots[indice])
+      grade.direito(indice)
+    }, controlesDeToque.msParaAMetade)
+    dedo.current = { id: evento.pointerId, indice, x: evento.clientX, y: evento.clientY, arrastando: false, segurou: false, relogio }
+  }
+  function moverComDedo(evento) {
+    const atual = dedo.current
+    if (!atual || evento.pointerId !== atual.id || atual.arrastando) return
+    if (Math.hypot(evento.clientX - atual.x, evento.clientY - atual.y) < controlesDeToque.arrasteMinimo) return
+    clearTimeout(atual.relogio)
+    // só arrasta a pilha com a mão vazia (com item na mão, o toque é que põe)
+    if (!estado.mao && estado.slots[atual.indice] && !atual.segurou) atual.arrastando = true
+  }
+  function soltarComDedo(evento) {
+    const atual = dedo.current
+    if (!atual || evento.pointerId !== atual.id) return
+    clearTimeout(atual.relogio)
+    dedo.current = null
+    if (!atual.arrastando) return
+    ignorarCliqueAte.current = performance.now() + 600
+    const embaixo = document.elementFromPoint(evento.clientX, evento.clientY)
+    const celula = embaixo?.closest?.('.celula-da-grade')
+    const destino = celula ? Number(celula.dataset.indice) : null
+    if (Number.isInteger(destino) && destino !== atual.indice) {
+      grade.esquerdo(atual.indice)
+      grade.esquerdo(destino)
+      return
+    }
+    if (janela && !embaixo?.closest?.(janela)) aoArrastarParaFora?.(atual.indice)
+  }
 
   const lado = ladoDoSlot[tamanho]
   const estilo = colunas ? { gridTemplateColumns: `repeat(${colunas}, ${lado}px)` } : undefined
@@ -38,6 +87,10 @@ export default function GradeComMao({ grade, tamanho = 'medio', colunas, rotulo,
   function clique(evento, indice, botao) {
     evento.preventDefault()
     evento.stopPropagation()
+    // o clique que chega depois de segurar ou arrastar com o dedo não vale (já foi feito)
+    if (toque && evento.timeStamp < ignorarCliqueAte.current) return
+    // no toque, o "segurar" do navegador (menu do botão direito) não pega a metade: quem pega é o relógio de 0,5 s
+    if (toque && botao === 'direito' && dedo.current) return
     aoClicar?.(estado.slots[indice])
     if (botao === 'direito') grade.direito(indice)
     else grade.esquerdo(indice)
@@ -53,6 +106,11 @@ export default function GradeComMao({ grade, tamanho = 'medio', colunas, rotulo,
               key={indice}
               type="button"
               className="celula-da-grade"
+              data-indice={indice}
+              onPointerDown={(evento) => apertarComDedo(evento, indice)}
+              onPointerMove={moverComDedo}
+              onPointerUp={soltarComDedo}
+              onPointerCancel={soltarComDedo}
               aria-label={slot ? `${nome}${slot.quantidade > 1 ? ` ×${slot.quantidade}` : ''}` : 'Quadradinho vazio'}
               onClick={(evento) => clique(evento, indice, 'esquerdo')}
               onContextMenu={(evento) => clique(evento, indice, 'direito')}
@@ -80,7 +138,7 @@ export default function GradeComMao({ grade, tamanho = 'medio', colunas, rotulo,
           aria-label={naMao ? `Jogar ${itemDoCatalogo(naMao.id)?.nome ?? naMao.id} na lixeira` : 'Lixeira (pegue um item com o clique e clique aqui)'}
         >
           <Simbolo simbolo={acoes.perder.simbolo} cor={acoes.perder.cor} arte={arteDaAcao('perder')} />
-          <span>{naMao ? 'Soltar aqui para descartar' : 'Lixeira · clique: pega a pilha · botão direito: a metade'}</span>
+          <span>{naMao ? 'Soltar aqui para descartar' : toque ? 'Lixeira · toque: pega a pilha · segure: a metade' : 'Lixeira · clique: pega a pilha · botão direito: a metade'}</span>
         </button>
       )}
       {moldura &&

@@ -56,6 +56,45 @@ Legenda: **Fazer** = o que você faz. **Deve acontecer** = o que o jogo tem que 
 
 ---
 
+## CE. O jogo no celular (Parte 14, 11/2026)
+
+Num celular de verdade (Android ou iPhone), no endereço principal `https://jogo-rpg-six.vercel.app`. Roteiro automático
+(celular emulado no Edge): `npm run testar:celular` (e `npm run testar:celular:publicado` no site publicado).
+
+**CE-01 · Gire o celular**
+- Fazer: abra o site com o celular em pé; depois deite o celular.
+- Deve acontecer: em pé, a tela "Gire o celular" com o desenho do celular girando; deitado, a Tela inicial (com o nome do jogo e o botão Iniciar jogo).
+
+**CE-02 · Entrar e as telas**
+- Fazer: toque em Iniciar jogo (o jogo entra em tela cheia no Android), Jogar como convidado, Continuar, escolha uma classe; no Reino, toque em cada placa (Mercado, Forja, Guilda, Mochila, Árvores, Salão da Glória, Configurações).
+- Deve acontecer: cada tela cabe na tela do celular, sem nada cortado e com letra legível; o que não cabe (listas, cartas, a Caravana) rola com o dedo. As dicas falam em "toque".
+
+**CE-03 · Mapa e minijogo**
+- Fazer: toque em Jogar; no Mapa, toque na Mina e jogue uma rodada tocando nas pedras.
+- Deve acontecer: no Mapa, os nomes de todos os lugares aparecem (sem passar o mouse); cada toque na pedra é um golpe, e a pedra quebra no terceiro.
+
+**CE-04 · Andar, atacar e as habilidades**
+- Fazer: comece uma partida na Floresta. Encoste o polegar esquerdo na metade de baixo à esquerda e arraste; perto de um lobo, toque no botão grande de ataque; depois arraste a partir dele para um lado; toque numa habilidade e na esquiva (»).
+- Deve acontecer: o joystick aparece onde o polegar encostou e o Líder anda para onde o polegar vai; o ataque acerta o inimigo mais perto sem mirar; arrastando a partir do ataque, mira para o lado do arraste (aparece uma seta); a habilidade e a esquiva saem, com a recarga desenhada em volta do botão. Com o Arqueiro: segure o ataque (o botão enche) e solte para atirar.
+
+**CE-05 · Pegar, mochila e mapa**
+- Fazer: perto de um item no chão, toque em "Pegar"; toque em Mochila; toque numa poção, depois em "Usar no Líder"; segure meio segundo numa pilha; arraste uma pilha para fora da janela; toque em Fechar a mochila; toque em Mapa e em Fechar o mapa.
+- Deve acontecer: "Pegar" só aparece com um item perto; tocar pega a pilha (ela segue o dedo) e "Usar no Líder" usa; segurar pega a metade; arrastar para fora joga no chão; o mapa inteiro aparece sem pausar.
+
+**CE-06 · Pausa, mudo e voltar ao Reino**
+- Fazer: fora de combate, toque em Pausa e em Continuar; toque em Mais › Mudo; toque em Mais › Voltar ao Reino (Q) e, de novo, em Mais › Cancelar a volta; depois volte de vez.
+- Deve acontecer: a pausa para o jogo; o mudo cala a música; a contagem da volta aparece e some ao cancelar; voltando, o Resumo.
+
+**CE-07 · Instalar como app**
+- Fazer: no Android (Chrome), menu ⋮ › "Adicionar à tela inicial" (ou "Instalar app"); no iPhone (Safari), Compartilhar › "Adicionar à Tela de Início". Abra pelo ícone novo.
+- Deve acontecer: o ícone com as espadas cruzadas na tela inicial; o jogo abre deitado, sem a barra do navegador, e abre rápido na segunda vez.
+
+**CE-08 · Modo leve**
+- Fazer: nas Configurações, toque em "Modo leve" até ficar "ligado"; jogue um pouco; volte para "automático".
+- Deve acontecer: com o modo leve, menos faíscas nos golpes; no automático, se o celular ficar lento por alguns segundos, aparece "Modo leve ligado: o jogo estava lento".
+
+---
+
 ## SO. Música e efeitos feitos em código (Parte 13, 11/2026)
 
 Use fone ou caixa de som com volume normal. Roteiro automático: `npm run testar:som`.

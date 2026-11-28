@@ -64,6 +64,29 @@ export const gradeComMao = {
 }
 export const ladoDoIconeNoSlot = { grande: 64, medio: 32, pequeno: 32 }
 
+// Controles de toque da partida (Parte 14; telas/partida/ControlesDeToque.jsx e regras/toque.js). Tamanhos em px da tela
+// do aparelho: nenhum botão menor que o mínimo de toque (44 px).
+export const controlesDeToque = {
+  minimoDeToque: 44,
+  joystick: { raio: 54, zonaMorta: 0.22 },
+  // arrastar a partir do botão de ataque ou de uma habilidade mira; abaixo disso, é um toque (mira automática)
+  arrasteMinimo: 18,
+  // mira automática: o inimigo mais perto até esta distância (o alcance de cada ataque, com uma folga para os de perto)
+  alcanceDaMira: { guerreiro: 170, tanque: 170, mago: 520, arqueiro: 700, sacerdote: 240 },
+  // o Meteoro e as outras habilidades com lugar: sem alvo, caem a esta distância à frente
+  distanciaSemAlvo: 220,
+  // as 3 habilidades em arco em volta do botão de ataque e a esquiva (ângulos em graus: 0 = direita, 90 = para cima)
+  arco: { raio: 96, habilidades: [154, 117, 80], esquiva: 194 },
+  // mochila no toque: segurar este tempo num quadradinho pega a metade
+  msParaAMetade: 500,
+  // Modo leve (desempenho): liga sozinho com o FPS abaixo do limite por estes segundos seguidos (no "automático")
+  modoLeve: { limite: 40, segundos: 4 },
+  // menos partículas: no toque e no modo leve (frações da quantidade do computador)
+  particulas: { toque: 0.6, leve: 0.3 },
+  // no modo leve, os pedaços do chão e os mobs aparecem só até esta folga em volta da câmera (no computador, 200 px)
+  folgaDoDesenhoNoModoLeve: 40,
+}
+
 // Missões: símbolo e cor de cada tipo (o ícone do cartaz)
 export const tiposDeMissaoNaTela = {
   matar: { nome: 'Matar', simbolo: '⚔', cor: '#c92a2a' },

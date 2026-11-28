@@ -23,6 +23,8 @@
     "testar:botoes": "node scripts/testarBotoes.mjs",
     "testar:camadas": "node scripts/testarCamadas.mjs",
     "testar:som": "node scripts/testarSom.mjs",
+    "testar:celular": "node scripts/testarCelular.mjs",
+    "testar:celular:publicado": "node scripts/testarCelular.mjs --publicado",
     "conferir:configuracao": "node scripts/conferirConfiguracao.mjs",
     "balanceamento": "node scripts/gerarBalanceamento.js",
     "simular": "node scripts/simular.js"

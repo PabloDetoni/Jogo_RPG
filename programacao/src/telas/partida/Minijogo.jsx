@@ -5,6 +5,8 @@ import Botao from '../../componentes/Botao.jsx'
 import Tela from '../../componentes/Tela.jsx'
 import BotaoDeAcao from '../../componentes/ui/BotaoDeAcao.jsx'
 import { useAgora } from '../../componentes/useAgora.js'
+import { useToque } from '../../componentes/useToque.js'
+import { textoParaOToque } from '../../regras/toque.js'
 import { horaDoJogo } from '../../conta/horaDoServidor.js'
 import { minijogos } from '../../dados/balanceamento.js'
 import { dadosDosMinijogos, fazendaDesenhada, minaDesenhada } from '../../dados/minijogos.js'
@@ -58,6 +60,7 @@ export default function Minijogo() {
 
 function Rodada({ jogo, dados }) {
   const { fazer, mensagem, progresso } = useNoReino()
+  const { toque } = useToque() // no toque (Parte 14), a regra fala em "toque"
   const agoraDoDia = useAgora()
   const pode = podeJogarRodada(progresso.minijogosDoDia, jogo, agoraDoDia)
   const rodadas = textoDasRodadas(progresso.minijogosDoDia, jogo, agoraDoDia)
@@ -116,7 +119,7 @@ function Rodada({ jogo, dados }) {
         <h2>
           {dados.nome}: {dados.titulo}
         </h2>
-        <p>{dados.regra}</p>
+        <p>{toque ? textoParaOToque(dados.regra) : dados.regra}</p>
         <p className="nota">Rodada de {minijogos.segundos} s. Não conta como partida (sem taxa, sem ranking).</p>
         <p className="rodadas-do-dia">{rodadas}</p>
         <BotaoDeAcao acao="jogar" desativado={!pode.ok} motivo={pode.motivo} onClick={comecar}>

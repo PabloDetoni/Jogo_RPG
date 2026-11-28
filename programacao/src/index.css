@@ -51,7 +51,7 @@ body {
   inset: 0;
   background: var(--tela);
   color: var(--texto);
-  font-size: 1.5cqw;
+  font-size: max(1.5cqw, var(--letra-minima, 0px));
 }
 
 /* O tema muda telas e menus, não a partida (Conceito §15) */
@@ -70,7 +70,7 @@ body {
 
 .titulo {
   margin: 0;
-  font-size: 3.5cqw;
+  font-size: max(3.5cqw, var(--letra-minima, 0px));
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -97,7 +97,7 @@ body {
 }
 
 .botao-grande {
-  font-size: 2.2cqw;
+  font-size: max(2.2cqw, var(--letra-minima, 0px));
   padding: 0.4em 1.6em;
 }
 
@@ -120,7 +120,7 @@ body {
 /* Mensagens das telas de acesso (Fase 2): e-mail confirmado, senha errada, conta em uso... */
 .mensagem-do-acesso {
   max-width: 64cqw;
-  font-size: 1.3cqw;
+  font-size: max(1.3cqw, var(--letra-minima, 0px));
 }
 
 .mensagem-do-acesso p {
@@ -159,7 +159,7 @@ body {
 }
 
 .nota {
-  font-size: 1.15cqw;
+  font-size: max(1.15cqw, var(--letra-minima, 0px));
 }
 
 /* Pentágono dos atributos (TASK-071): Seleção de classe e Árvores */
@@ -211,7 +211,7 @@ body {
 
 .texto-da-classe h2 {
   margin: 0;
-  font-size: 2.2cqw;
+  font-size: max(2.2cqw, var(--letra-minima, 0px));
 }
 
 .texto-da-classe p {
@@ -234,7 +234,7 @@ body {
 
 .contratos h3 {
   margin: 0.4em 0 0;
-  font-size: 1em;
+  font-size: max(1em, var(--letra-minima, 0px));
 }
 
 .contratos p {
@@ -278,7 +278,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
-  font-size: 1.4cqw;
+  font-size: max(1.4cqw, var(--letra-minima, 0px));
 }
 
 .aviso {
@@ -303,11 +303,11 @@ body {
   justify-content: center;
   gap: 0.3em;
   width: 92cqw;
-  font-size: 1.2cqw;
+  font-size: max(1.2cqw, var(--letra-minima, 0px));
 }
 
 .resultado {
-  font-size: 3cqw;
+  font-size: max(3cqw, var(--letra-minima, 0px));
   font-weight: bold;
   padding: 0.1em 0.6em;
 }
@@ -356,7 +356,7 @@ body {
   display: grid;
   place-items: center;
   background: rgb(0 0 0 / 0.45);
-  font-size: 1.5cqw;
+  font-size: max(1.5cqw, var(--letra-minima, 0px));
 }
 
 /* Janela leve (aviso da fuga): perto do topo, sem escurecer a tela e sem bloquear o clique em volta */
@@ -371,7 +371,7 @@ body {
   max-width: 40cqw;
   min-width: 30cqw;
   padding: 0.7em 1.4em;
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   pointer-events: auto;
   box-shadow: 0 0.3em 1em rgb(0 0 0 / 0.4);
 }
@@ -394,12 +394,12 @@ body {
 
 .janela h3 {
   margin: 0.4em 0 0;
-  font-size: 1em;
+  font-size: max(1em, var(--letra-minima, 0px));
 }
 
 .janela p.dica-das-configuracoes {
   margin: 0.2em 0 0;
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   opacity: 0.85;
 }
 
@@ -497,7 +497,7 @@ body {
   position: absolute;
   inset: 0;
   color: #f5f5f5;
-  font-size: 0.86cqw;
+  font-size: max(0.86cqw, var(--letra-minima, 0px));
   text-shadow: var(--sombra-do-texto);
   pointer-events: none;
 }
@@ -515,7 +515,7 @@ body {
 }
 
 .tela-partida > .botao.posicionado {
-  font-size: 1cqw;
+  font-size: max(1cqw, var(--letra-minima, 0px));
   padding: 0.25em 0.7em;
 }
 
@@ -549,7 +549,7 @@ body {
 }
 
 .hud-numero strong {
-  font-size: 1.15em;
+  font-size: max(1.15em, var(--letra-minima, 0px));
   font-variant-numeric: tabular-nums;
 }
 
@@ -591,12 +591,12 @@ body {
   align-items: center;
   gap: 0.2em;
   padding: 0.4em;
-  font-size: 0.9em;
+  font-size: max(0.9em, var(--letra-minima, 0px));
 }
 
 .hud-regiao {
   flex: none;
-  font-size: 0.95em;
+  font-size: max(0.95em, var(--letra-minima, 0px));
   line-height: 1.2;
   max-width: 100%;
   white-space: nowrap;
@@ -632,7 +632,7 @@ body {
 
 .hud-teclas {
   margin: 0;
-  font-size: 0.82em;
+  font-size: max(0.82em, var(--letra-minima, 0px));
   opacity: 0.9;
   white-space: nowrap;
 }
@@ -671,7 +671,7 @@ body {
 }
 
 .hud-espaco-inicial {
-  font-size: 1.35cqw;
+  font-size: max(1.35cqw, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -680,7 +680,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
 }
 
 .hud-espaco-vazio {
@@ -706,7 +706,7 @@ body {
   background: rgb(12 18 28 / 0.92);
   text-align: center;
   font-weight: bold;
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   line-height: 1.35;
 }
 
@@ -718,7 +718,7 @@ body {
   border-radius: 3px;
   background: rgb(12 18 28 / 0.92);
   color: #8fd3ff;
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -753,7 +753,7 @@ body {
 }
 
 .hud-ia {
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   opacity: 0.75;
 }
 
@@ -771,7 +771,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5em;
-  font-size: 1.12cqw;
+  font-size: max(1.12cqw, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -809,7 +809,7 @@ body {
 }
 
 .hud-dica {
-  font-size: 0.85cqw;
+  font-size: max(0.85cqw, var(--letra-minima, 0px));
   opacity: 0.85;
 }
 
@@ -828,7 +828,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.3em;
-  font-size: 1.02cqw;
+  font-size: max(1.02cqw, var(--letra-minima, 0px));
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.9);
   pointer-events: none;
 }
@@ -855,7 +855,7 @@ body {
 }
 
 .hud-item-perto {
-  font-size: 0.95cqw;
+  font-size: max(0.95cqw, var(--letra-minima, 0px));
 }
 
 .mensagem-da-partida {
@@ -863,7 +863,7 @@ body {
   background: rgb(10 14 22 / 0.55);
   border-radius: 0.3cqw;
   color: #fff;
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   white-space: nowrap;
   animation: mensagem-entra 0.15s ease-out;
 }
@@ -906,12 +906,12 @@ body {
   background: rgb(15 20 30 / 0.85);
   border-top: 2px dashed #ffd23f;
   color: #f5f5f5;
-  font-size: 0.9cqw;
+  font-size: max(0.9cqw, var(--letra-minima, 0px));
 }
 
 .dica-de-teclas {
   margin: 0;
-  font-size: 0.85cqw;
+  font-size: max(0.85cqw, var(--letra-minima, 0px));
   opacity: 0.85;
 }
 
@@ -975,7 +975,7 @@ body {
 .tabela {
   border-collapse: collapse;
   min-width: 40cqw;
-  font-size: 1.2cqw;
+  font-size: max(1.2cqw, var(--letra-minima, 0px));
   background: var(--janela);
 }
 
@@ -1037,7 +1037,7 @@ body {
   border: 2px solid var(--cor-borda-dourada, #d4a017);
   border-radius: 0.4cqw;
   color: #fff;
-  font-size: 1cqw;
+  font-size: max(1cqw, var(--letra-minima, 0px));
   pointer-events: none;
 }
 
@@ -1161,7 +1161,7 @@ body {
 
 .lista-com-detalhe-vazio {
   padding: 0.5em;
-  font-size: 1.15cqw;
+  font-size: max(1.15cqw, var(--letra-minima, 0px));
 }
 
 .lista-com-detalhe-detalhe {
@@ -1177,7 +1177,7 @@ body {
 
 .detalhe-do-item h3 {
   margin: 0;
-  font-size: 1.1em;
+  font-size: max(1.1em, var(--letra-minima, 0px));
 }
 
 .detalhe-do-item p {
@@ -1232,7 +1232,7 @@ body {
 
 .mochila-da-preparacao h2 {
   margin: 0;
-  font-size: 1.2em;
+  font-size: max(1.2em, var(--letra-minima, 0px));
 }
 
 .mochila-da-preparacao p {
@@ -1255,7 +1255,7 @@ body {
   min-width: 0;
   max-height: calc(100cqh - 2cqw);
   padding: 0.8em 1.2em;
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   box-shadow: 0 0.4em 1.4em rgb(0 0 0 / 0.45);
 }
 
@@ -1332,7 +1332,7 @@ body {
   gap: 0.15em;
   max-width: 24cqw;
   padding: 0.45em 0.7em;
-  font-size: 1.15cqw;
+  font-size: max(1.15cqw, var(--letra-minima, 0px));
   line-height: 1.3;
   color: #f4f0ff;
   background: rgb(22 16 34 / 0.95);
@@ -1342,12 +1342,12 @@ body {
 
 .caixinha-do-item-nome {
   color: #fff;
-  font-size: 1.1em;
+  font-size: max(1.1em, var(--letra-minima, 0px));
   text-shadow: 0 1px 2px #000;
 }
 
 .caixinha-do-item-tipo {
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   opacity: 0.8;
 }
 
@@ -1398,7 +1398,7 @@ body {
   flex-direction: column;
   gap: 0.5em;
   min-width: 60cqw;
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
 }
 
 .ficha-da-arvore-topo {
@@ -1493,7 +1493,7 @@ body {
 }
 
 .no-da-arvore-nivel {
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
 }
 
 .no-aprendida,
@@ -1864,7 +1864,7 @@ body {
 .placa-do-reino-principal .placa-do-reino-nome::after {
   content: '◆';
   margin: 0 0.9em;
-  font-size: 0.45em;
+  font-size: max(0.45em, var(--letra-minima, 0px));
   color: #f8c400;
   vertical-align: middle;
 }
@@ -1920,7 +1920,7 @@ body {
 /* A legenda de cada lugar ("missões e contratos"): aparece ao passar o mouse ou com o foco, numa plaquinha */
 .tela-reino .legenda-do-lugar {
   padding: 0.25em 0.7em;
-  font-size: 0.72em;
+  font-size: max(0.72em, var(--letra-minima, 0px));
   white-space: nowrap;
   color: #fff6d8;
   background: rgb(11 8 7 / 0.88);
@@ -1976,7 +1976,7 @@ body {
   align-items: center;
   gap: 0.1em;
   padding: 0.3em 0.8em;
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   line-height: 1.2;
   white-space: nowrap;
   color: #fff6d8;
@@ -1998,13 +1998,13 @@ body {
 }
 
 .placa-do-lugar strong {
-  font-size: 1.1em;
+  font-size: max(1.1em, var(--letra-minima, 0px));
   letter-spacing: 0.04em;
 }
 
 .placa-do-lugar-detalhe,
 .placa-do-lugar .rodadas-do-dia {
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   color: #ffd98a;
 }
 
@@ -2019,7 +2019,7 @@ body {
   align-items: center;
   gap: 0.2em;
   padding: 0.3em 1em;
-  font-size: 0.78em;
+  font-size: max(0.78em, var(--letra-minima, 0px));
   white-space: nowrap;
   color: #fff6d8;
   background: rgb(11 8 7 / 0.82);
@@ -2081,7 +2081,7 @@ body {
   background: var(--cor-do-simbolo, var(--borda));
   color: #fff;
   border-radius: 3px;
-  font-size: 0.92em;
+  font-size: max(0.92em, var(--letra-minima, 0px));
   line-height: 1;
 }
 
@@ -2093,7 +2093,7 @@ body {
 .simbolo-grande {
   width: 2.3em;
   height: 2.3em;
-  font-size: 1.15em;
+  font-size: max(1.15em, var(--letra-minima, 0px));
 }
 
 .simbolo-com-arte {
@@ -2117,14 +2117,14 @@ body {
 }
 
 .botao-de-acao-grande {
-  font-size: 1.1em;
+  font-size: max(1.1em, var(--letra-minima, 0px));
   padding: 0.45em 1.1em 0.45em 0.8em;
 }
 
 .motivo-do-botao {
   max-width: 30cqw;
   color: var(--ruim);
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   font-weight: bold;
   white-space: normal;
 }
@@ -2181,7 +2181,7 @@ button.slot:hover {
   background: var(--cor-do-item, #999);
   border: 2px solid rgb(0 0 0 / 0.55);
   color: #fff;
-  font-size: calc(var(--lado-do-slot) * 0.3);
+  font-size: max(calc(var(--lado-do-slot) * 0.3), var(--letra-minima, 0px));
   font-weight: bold;
   line-height: 1;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.85);
@@ -2219,7 +2219,7 @@ button.slot:hover {
   right: 3px;
   bottom: 1px;
   color: #fff;
-  font-size: calc(var(--lado-do-slot) * 0.22);
+  font-size: max(calc(var(--lado-do-slot) * 0.22), var(--letra-minima, 0px));
   font-weight: bold;
   line-height: 1;
   text-shadow:
@@ -2241,7 +2241,7 @@ button.slot:hover {
   padding: 1px 0;
   background: rgb(0 0 0 / 0.68);
   color: #ffd43b;
-  font-size: calc(var(--lado-do-slot) * 0.19);
+  font-size: max(calc(var(--lado-do-slot) * 0.19), var(--letra-minima, 0px));
   font-weight: bold;
   line-height: 1.1;
   text-align: center;
@@ -2259,7 +2259,7 @@ button.slot:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25em;
-  font-size: 0.78em;
+  font-size: max(0.78em, var(--letra-minima, 0px));
 }
 
 .filtro {
@@ -2267,7 +2267,7 @@ button.slot:hover {
 }
 
 .filtro-contagem {
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   opacity: 0.7;
 }
 
@@ -2317,7 +2317,7 @@ button.slot:hover {
 
 .painel-titulo {
   margin: 0;
-  font-size: 1em;
+  font-size: max(1em, var(--letra-minima, 0px));
 }
 
 /* Selo: uma etiqueta curta */
@@ -2328,7 +2328,7 @@ button.slot:hover {
   padding: 0.1em 0.6em;
   border: 2px solid var(--cor-do-selo, var(--borda));
   border-radius: 999px;
-  font-size: 0.78em;
+  font-size: max(0.78em, var(--letra-minima, 0px));
   font-weight: bold;
   white-space: nowrap;
 }
@@ -2364,7 +2364,7 @@ button.slot:hover {
   display: grid;
   place-items: center;
   color: var(--texto);
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   font-weight: bold;
   text-shadow:
     0 0 3px var(--painel),
@@ -2404,11 +2404,11 @@ button.slot:hover {
 }
 .npc-nome {
   font-weight: 700;
-  font-size: 1.5cqw;
+  font-size: max(1.5cqw, var(--letra-minima, 0px));
 }
 .npc-oficio {
   opacity: 0.8;
-  font-size: 1.1cqw;
+  font-size: max(1.1cqw, var(--letra-minima, 0px));
 }
 .npc-conversa {
   display: flex;
@@ -2420,7 +2420,7 @@ button.slot:hover {
   position: relative;
   margin: 0;
   padding: 1cqw 1.3cqw;
-  font-size: 1.35cqw;
+  font-size: max(1.35cqw, var(--letra-minima, 0px));
   line-height: 1.45;
   background: var(--painel);
   border: 0.18cqw solid var(--borda);
@@ -2453,7 +2453,7 @@ button.slot:hover {
   place-items: center;
   width: 0.95cqw;
   height: 0.95cqw;
-  font-size: 0.7cqw;
+  font-size: max(0.7cqw, var(--letra-minima, 0px));
   font-weight: 700;
   line-height: 1;
   color: #fff;
@@ -2500,7 +2500,7 @@ button.slot:hover {
 .caravana-perto,
 .caravana-gratis {
   opacity: 0.85;
-  font-size: 0.92em;
+  font-size: max(0.92em, var(--letra-minima, 0px));
 }
 
 .mudanca {
@@ -2538,7 +2538,7 @@ button.slot:hover {
   height: 2.8cqw;
   padding: 0;
   border-radius: 50%;
-  font-size: 1.6cqw;
+  font-size: max(1.6cqw, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -2547,14 +2547,14 @@ button.slot:hover {
   flex-direction: column;
   gap: 0.6em;
   max-width: 50cqw;
-  font-size: 0.9em;
+  font-size: max(0.9em, var(--letra-minima, 0px));
   text-align: left;
 }
 
 /* Conquista nova: no canto, some sozinha */
 .avisos-de-conquista {
   width: 25cqw;
-  font-size: 1.05cqw;
+  font-size: max(1.05cqw, var(--letra-minima, 0px));
 }
 
 .aviso-de-conquista {
@@ -2565,7 +2565,7 @@ button.slot:hover {
 
 .aviso-de-conquista-selo {
   color: var(--destaque);
-  font-size: 1.6em;
+  font-size: max(1.6em, var(--letra-minima, 0px));
 }
 
 /* Arte da interface (com a imagem em src/assets/arte/): molduras de 9 pedaços, fundos dos quadradinhos e da barra */
@@ -2626,7 +2626,7 @@ button.slot:hover {
   flex-direction: column;
   gap: 0.4em;
   width: 78cqw;
-  font-size: 1.25cqw;
+  font-size: max(1.25cqw, var(--letra-minima, 0px));
   text-align: left;
 }
 
@@ -2672,7 +2672,7 @@ button.slot:hover {
   padding: 0.1em 0.6em;
   border: 2px solid #b8740a;
   border-radius: 4px;
-  font-size: 1.1em;
+  font-size: max(1.1em, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -2741,7 +2741,7 @@ button.slot:hover {
 }
 
 .troca-rotulo {
-  font-size: 0.8em;
+  font-size: max(0.8em, var(--letra-minima, 0px));
   font-weight: bold;
   opacity: 0.8;
 }
@@ -2760,7 +2760,7 @@ button.slot:hover {
 }
 
 .troca-conta {
-  font-size: 0.75em;
+  font-size: max(0.75em, var(--letra-minima, 0px));
 }
 
 .troca-item-falta .troca-conta {
@@ -2852,19 +2852,19 @@ button.slot:hover {
   place-items: center;
   width: 56px;
   height: 56px;
-  font-size: 0.7em;
+  font-size: max(0.7em, var(--letra-minima, 0px));
   opacity: 0.7;
   border: 2px dashed var(--borda);
   border-radius: 4px;
 }
 
 .espaco-nome {
-  font-size: 0.68em;
+  font-size: max(0.68em, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
 .comparacao {
-  font-size: 0.9em;
+  font-size: max(0.9em, var(--letra-minima, 0px));
 }
 
 .comparacao .sem-mudanca {
@@ -2895,7 +2895,7 @@ button.slot:hover {
   width: 44px;
   height: 44px;
   color: #3b2a00;
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   font-weight: bold;
   background: #f2c230;
   border: 3px solid #b8740a;
@@ -2944,7 +2944,7 @@ button.slot:hover {
   gap: 0.25em;
   padding: 0.7em 0.55em 0.5em;
   color: var(--tinta);
-  font-size: 0.82em;
+  font-size: max(0.82em, var(--letra-minima, 0px));
   background: var(--papel);
   border: 2px solid #6b5432;
   border-top: 0.45em solid var(--cor-do-tipo, #6b5432);
@@ -2968,14 +2968,14 @@ button.slot:hover {
 
 .cartaz h4 {
   margin: 0;
-  font-size: 1.05em;
+  font-size: max(1.05em, var(--letra-minima, 0px));
 }
 
 .cartaz-cabeca {
   display: flex;
   align-items: center;
   color: var(--cor-do-tipo);
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -2994,7 +2994,7 @@ button.slot:hover {
 }
 
 .recompensa {
-  font-size: 0.9em;
+  font-size: max(0.9em, var(--letra-minima, 0px));
 }
 
 .recompensa-ouro {
@@ -3063,7 +3063,7 @@ button.slot:hover {
   align-items: center;
   gap: 0.3em;
   padding: 0.6em;
-  font-size: 0.88em;
+  font-size: max(0.88em, var(--letra-minima, 0px));
   text-align: center;
   background: var(--painel);
   border-radius: 8px;
@@ -3087,7 +3087,7 @@ button.slot:hover {
 
 .carta-cabeca h4 {
   margin: 0;
-  font-size: 1.1em;
+  font-size: max(1.1em, var(--letra-minima, 0px));
 }
 
 .retrato-da-carta {
@@ -3116,7 +3116,7 @@ button.slot:hover {
 }
 
 .carta-preco {
-  font-size: 1.05em;
+  font-size: max(1.05em, var(--letra-minima, 0px));
   font-weight: bold;
 }
 
@@ -3171,7 +3171,7 @@ button.slot:hover {
   width: 46cqw;
   max-height: none;
   overflow: visible;
-  font-size: 1.25cqw;
+  font-size: max(1.25cqw, var(--letra-minima, 0px));
 }
 
 .duas-grades {
@@ -3249,7 +3249,7 @@ button.slot:hover {
 /* Reino: o que é cada lugar, embaixo do botão */
 .legenda-do-lugar {
   padding: 0.1em 0.5em;
-  font-size: 1.05cqw;
+  font-size: max(1.05cqw, var(--letra-minima, 0px));
   white-space: nowrap;
   background: rgb(0 0 0 / 0.55);
   color: #fff;
@@ -3274,7 +3274,7 @@ button.slot:hover {
   display: flex;
   align-items: center;
   gap: 0.35em;
-  font-size: 1cqw;
+  font-size: max(1cqw, var(--letra-minima, 0px));
   white-space: nowrap;
   color: var(--texto);
   opacity: 0.85;
@@ -3323,7 +3323,7 @@ button.slot:hover {
   border: 2px solid var(--borda);
   border-left: 0.45em solid var(--destaque, #e67700);
   box-shadow: 0 0.3em 0.9em rgb(0 0 0 / 35%);
-  font-size: 1.15cqw;
+  font-size: max(1.15cqw, var(--letra-minima, 0px));
 }
 
 .dica-da-tela p {
@@ -3339,7 +3339,7 @@ button.slot:hover {
 }
 
 .botao-discreto {
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--letra-minima, 0px));
   background: transparent;
 }
 
@@ -3351,7 +3351,7 @@ button.slot:hover {
   max-width: 78cqw;
   max-height: 66cqh;
   overflow-y: auto;
-  font-size: 0.72em;
+  font-size: max(0.72em, var(--letra-minima, 0px));
   text-align: left;
 }
 
@@ -3440,7 +3440,7 @@ button.slot:hover {
 .descartar-numero {
   min-width: 2ch;
   font-weight: bold;
-  font-size: 1.15em;
+  font-size: max(1.15em, var(--letra-minima, 0px));
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -3468,7 +3468,7 @@ button.slot:hover {
   place-items: center;
   padding: 0;
   font: inherit;
-  font-size: 1cqw;
+  font-size: max(1cqw, var(--letra-minima, 0px));
   color: #fff;
   background: rgb(0 0 0 / 35%);
   border: 1px solid rgb(255 255 255 / 35%);
@@ -3487,7 +3487,7 @@ button.slot:hover {
   top: 0.5cqw;
   right: 0.5cqw;
   z-index: 30;
-  font-size: 1cqw;
+  font-size: max(1cqw, var(--letra-minima, 0px));
 }
 
 /* Na partida, a dica não segura o clique (o jogo continua embaixo); só os botões dela pegam o clique */
@@ -3511,7 +3511,7 @@ button.slot:hover {
 }
 
 .rodadas-do-dia {
-  font-size: 0.78em;
+  font-size: max(0.78em, var(--letra-minima, 0px));
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   opacity: 0.9;
@@ -3538,7 +3538,7 @@ button.slot:hover {
   place-items: center;
   background: radial-gradient(circle at 50% 40%, #1f2a1f, #0d120d 70%);
   color: #f2f2f2;
-  font-size: 1.3cqw;
+  font-size: max(1.3cqw, var(--letra-minima, 0px));
   transition: opacity 0.35s ease-out;
 }
 
@@ -3558,7 +3558,7 @@ button.slot:hover {
 
 .carregando-caixa h2 {
   margin: 0;
-  font-size: 2.2cqw;
+  font-size: max(2.2cqw, var(--letra-minima, 0px));
 }
 
 .carregando-barra {

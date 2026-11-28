@@ -150,6 +150,21 @@ O tamanho dos cantos (a "fatia") fica em `programacao/src/dados/interface.js` (`
 - **Descartar:** "Descartar…" abre a escolha (1, − e +, Todas) e a confirmação com o quadradinho do item, a quantidade e o que acontece com ele; só "Sim, descartar N" descarta.
 - **Mochila com o item na mão (ajustes na partida, 14/10; `GradeComMao`):** como o inventário do Minecraft. Clique pega a pilha inteira, o botão direito pega a metade (ou põe 1); o item na mão segue o mouse, com sombra, e clicar noutro quadradinho põe, junta ou troca. Passar o mouse mostra uma caixinha escura perto do cursor com o nome, a raridade, o tipo, o peso, o que o item faz e, na partida, as teclas E e R. Na partida, a janela "MOCHILA" fica no meio da tela, com a barra "Peso usado / capacidade", o mapa um pouco escuro atrás (30%) e 18 quadradinhos em 6 colunas; clicar fora dela com item na mão joga no chão. No Reino, a grade ganha a **lixeira** embaixo (tracejada; vermelha com item na mão), que abre a confirmação no detalhe; o filtro por tipo **apaga** os outros itens em vez de escondê-los, para ninguém mudar de lugar.
 
+## 7c. Toque: celular e tablet (Parte 14, 28/11/2026)
+
+- **Quando vale:** só com o dedo como jeito principal de apontar (`pointer: coarse`), nunca pelo tamanho da tela. Com
+  mouse e teclado, tudo fica como nas seções acima. Em pé aparece "Gire o celular"; o jogo é deitado.
+- **Letra mínima de 12 px** em tudo (no computador as letras seguem a caixa 16:9, como antes). O que não cabe rola por
+  dentro (as listas, as cartas, a Caravana, as janelas); nada fica cortado de 640 × 360 a 932 × 430.
+- **Toque mínimo de 44 px** nos controles da partida; os botões das telas têm pelo menos 36 px de altura.
+- **Partida:** joystick à esquerda (aparece onde o polegar encosta), ataque grande à direita com as 3 habilidades e a
+  esquiva em arco em volta (a recarga é o anel dourado), "Pegar" só com item perto, e no alto Mochila, Mapa, Pausa e
+  "Mais" (Voltar ao Reino, Fugir, Mudo). A barra de ações e a linha das teclas do computador somem.
+- **Textos:** as dicas dizem "toque" em vez de "clique"; as que falam de teclas têm um texto próprio do toque.
+- **Mapa:** sem "mouse em cima", os nomes dos lugares aparecem sempre (só o nome) e tocar no nome também abre.
+- **Lugar diferente só no toque:** pelo campo `toque` de `dados/posicoes.js` (`{ x, y, altura }`); a "altura" faz o bloco
+  rolar por dentro.
+
 ## 8. Temas claro e escuro
 
 As cores ficam em variáveis (`--tela`, `--janela`, `--painel`, `--botao`, `--texto`, `--borda`, `--boa`, `--ruim`, `--destaque`, `--quadro`, `--papel`), redefinidas no tema escuro; as da identidade (`--ouro`, `--placa`, `--vermelho`, `--texto-da-placa`) são as mesmas nos dois (seção 0). Algumas peças ficam iguais nos dois temas, porque imitam objetos:
