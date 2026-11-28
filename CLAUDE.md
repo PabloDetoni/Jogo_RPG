@@ -5,6 +5,7 @@ RPG 2D visto de cima, em pixel art, só para computador (teclado e mouse). Traba
 
 ## Como trabalhar (skills do projeto em `.claude/skills/`)
 - **Modo contínuo ativo** (Pablo, 08/10): skill `modo-continuo`. "Continue o modo contínuo de onde parou" = ler o "Onde parei" do `PLANO.md` e seguir.
+- **Regras de trabalho (Pablo, 28/11):** não parar no meio (trabalhar até terminar a mensagem ou o limite acabar; sem "posso continuar?", sem parar no fim de parte; parar só com decisão impossível, adiantando o resto). Avisar antes de cada teste demorado numa linha: `Rodando o testar:floresta (cerca de 6 min). Começou às 14h20; deve terminar perto das 14h26.` O "Onde parei" do `PLANO.md` sempre diz o próximo passo.
 - `verify`: testes antes de cada commit e qual roteiro do navegador rodar. `publicar`: regra do `main` e do endereço principal. `relatorio-de-fase`: os dois relatórios. `balanceamento`: onde ficam os números. `run-jogo-rpg`: abrir o jogo num Edge escondido e tirar prints. `gerar-arte`: fora de uso por enquanto (a pixel art fica para o final).
 - Protocolo curto: ler CLAUDE.md, PLANO.md e os documentos da tarefa → plano curto (no modo contínuo, escrito no PLANO.md, sem esperar) → programar → testar (dizer o que não deu para testar) → atualizar PLANO.md, CLAUDE.md, documento afetado e `testes/` → relatórios. Se travar ou algo der errado, parar e explicar em vez de improvisar.
 - Mensagens entre o Claude do chat e o Claude Code ficam em `mensagens-claude/` (vão para o git).
