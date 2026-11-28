@@ -307,13 +307,21 @@ describe('navegação, janelas e preferências', () => {
 
   it('música, som e tema alternam', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'tema' }, { tipo: 'alternarPreferencia', chave: 'musica' })
-    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro', telaCheia: true, animacoesDoCenario: true, dicasVistas: [] })
+    expect(e.preferencias).toEqual({ musica: false, som: true, mudo: false, tema: 'escuro', telaCheia: true, animacoesDoCenario: true, modoLeve: 'automatico', dicasVistas: [] })
   })
 
   it('o mudo (tecla M) alterna sem mexer na música nem no som (RF18)', () => {
     const e = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'mudo' })
-    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro', telaCheia: true, animacoesDoCenario: true, dicasVistas: [] })
+    expect(e.preferencias).toEqual({ musica: true, som: true, mudo: true, tema: 'claro', telaCheia: true, animacoesDoCenario: true, modoLeve: 'automatico', dicasVistas: [] })
     expect(fazer(e, { tipo: 'alternarPreferencia', chave: 'mudo' }).preferencias.mudo).toBe(false)
+  })
+
+  it('o modo leve (Parte 14) passa por automático, ligado e desligado', () => {
+    const modo = (e) => e.preferencias.modoLeve
+    const um = fazer(inicio(), { tipo: 'alternarPreferencia', chave: 'modoLeve' })
+    const dois = fazer(um, { tipo: 'alternarPreferencia', chave: 'modoLeve' })
+    const tres = fazer(dois, { tipo: 'alternarPreferencia', chave: 'modoLeve' })
+    expect([modo(inicio()), modo(um), modo(dois), modo(tres)]).toEqual(['automatico', 'ligado', 'desligado', 'automatico'])
   })
 })
 

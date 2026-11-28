@@ -1,4 +1,5 @@
 import { devePedirTelaCheia } from '../regras/telaCheia.js'
+import { estaNoToque } from './useToque.js'
 
 // Tela cheia no navegador (ajustes de 14/10/2026). Nada aqui lança erro: se o navegador recusar ou não tiver tela cheia,
 // o jogo segue como estava. No Chrome e no Edge, o Esc fica "travado" na tela cheia (Keyboard Lock): ele chega ao jogo
@@ -23,13 +24,26 @@ function travarEsc() {
   }
 }
 
+// No celular (Parte 14), em tela cheia o jogo fica deitado (o Android deixa travar; o iPhone não tem, e o app instalado
+// já abre deitado pelo manifesto)
+function travarDeitado() {
+  try {
+    if (estaNoToque()) screen.orientation?.lock?.('landscape')?.catch?.(() => {})
+  } catch {
+    // sem trava de orientação: segue como está
+  }
+}
+
 // Chamar dentro do clique. preferencia: a das Configurações (telaCheia).
 export function pedirTelaCheia(preferencia) {
   if (!devePedirTelaCheia({ preferencia, suportada: telaCheiaSuportada(), emTelaCheia: estaEmTelaCheia() })) return
   try {
     saidaPedida = false
     const pedido = document.documentElement.requestFullscreen({ navigationUI: 'hide' })
-    pedido?.then?.(travarEsc, () => {})
+    pedido?.then?.(() => {
+      travarEsc()
+      travarDeitado()
+    }, () => {})
   } catch {
     // recusada: segue sem tela cheia
   }

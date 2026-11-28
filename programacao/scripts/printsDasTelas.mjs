@@ -4,6 +4,9 @@
 //          "prototipos" (Parte 12): salva em documentacao/prototipos/ (escuro: em documentacao/prototipos/escuro/), com o
 //          caso de uso no nome (ex.: UC16_mercado_comerciante.png), e, no tema claro, escreve o README com a tabela
 //          print → tela → caso de uso → requisitos. Só apaga os UCxx_*.png da pasta (a subpasta iniciais/ fica).
+//          "prototipos-celular" (Parte 14): os mesmos prints num celular deitado (844 × 390, com toque), em
+//          documentacao/prototipos/celular/, com o README de lá; a cada print, diz o que ficou cortado ou pequeno.
+//          CELULAR=640x360 (ou outro tamanho) troca o tamanho do celular.
 //   escuro: tira os prints no tema escuro.
 // Liga o Vite e um Edge escondido (1366 × 768), joga como convidado com os itens de teste do painel DEV e passa por
 // cada tela, aba e janela: o acesso (Tela inicial, Login, Criar conta, Confirme o e-mail, Esqueci a senha, Senha nova,
@@ -16,8 +19,13 @@ import { join, resolve } from 'node:path'
 import { abrirNavegador, ligarVite, pausa } from './ferramentasDoNavegador.mjs'
 
 const [pastaPedida = 'atual', tema = 'claro'] = process.argv.slice(2)
-const PROTOTIPOS = pastaPedida === 'prototipos'
-const PASTA = PROTOTIPOS ? resolve('..', 'documentacao', 'prototipos', ...(tema === 'escuro' ? ['escuro'] : [])) : resolve('testes-do-navegador', 'telas', pastaPedida)
+const CELULAR = pastaPedida === 'prototipos-celular' || Boolean(process.env.CELULAR)
+const PROTOTIPOS = pastaPedida === 'prototipos' || pastaPedida === 'prototipos-celular'
+const [larguraDoCelular, alturaDoCelular] = (process.env.CELULAR && process.env.CELULAR !== '1' ? process.env.CELULAR : '844x390').split('x').map(Number)
+const PASTA = PROTOTIPOS
+  ? resolve('..', 'documentacao', 'prototipos', ...(CELULAR ? ['celular'] : []), ...(tema === 'escuro' ? ['escuro'] : []))
+  : resolve('testes-do-navegador', 'telas', pastaPedida)
+const problemasDosPrints = []
 if (PROTOTIPOS) {
   mkdirSync(PASTA, { recursive: true })
   for (const arquivo of readdirSync(PASTA)) if (/^UC\d+_.*\.png$/.test(arquivo)) rmSync(join(PASTA, arquivo))
@@ -112,6 +120,15 @@ async function print(nome, { uc, rf, tela = null, manterDica = false }) {
   await aba.avaliar(`(() => { document.querySelectorAll('.avisos .aviso button').forEach((b) => b.click()); for (const p of document.querySelectorAll('.painel-dev, .painel-dev-mini, .barra-de-teste')) p.style.visibility = 'hidden'; return true })()`)
   await pausa(120)
   await aba.print(arquivo)
+  // No celular (Parte 14): o que ficou cortado ou pequeno nesta tela
+  if (CELULAR) {
+    const problemas = await aba.problemasNaTela()
+    const lista = Object.entries(problemas).filter(([, itens]) => itens.length)
+    if (lista.length) {
+      problemasDosPrints.push({ arquivo, lista })
+      console.log(`  ${arquivo}: ${lista.map(([tipo, itens]) => `${tipo} ${JSON.stringify(itens)}`).join(' · ')}`)
+    }
+  }
   await aba.avaliar(`(() => { for (const p of document.querySelectorAll('.painel-dev, .painel-dev-mini, .barra-de-teste')) p.style.visibility = ''; return true })()`)
   tirados.push({ arquivo, uc, rf, tela: tela ?? (await tituloDaTela()) })
 }
@@ -147,7 +164,10 @@ async function comecarPartida({ printDoCarregamento = false } = {}) {
 try {
   navegador = await abrirNavegador('prints', PASTA)
   aba = await navegador.novaAba('aba1')
+  if (CELULAR) await aba.emularCelular({ largura: larguraDoCelular, altura: alturaDoCelular, densidade: 2 })
   await aba.abrir(vite.site)
+  // no celular o painel DEV começa minimizado; o roteiro usa a lista "Pular para" dele (e o esconde nos prints)
+  if (CELULAR) await aba.avaliar(`(document.querySelector('.painel-dev-mini')?.click(), true)`)
   if (tema === 'escuro') {
     await passo('Configurações')
     await passo('Tema', true)
@@ -356,9 +376,29 @@ try {
     }
   }
   console.log(`${tirados.length} prints em ${PASTA}`)
+  if (CELULAR) console.log(problemasDosPrints.length ? `${problemasDosPrints.length} prints com algo cortado ou pequeno` : 'nada cortado nem pequeno em nenhum print')
+
+  // O README dos protótipos do celular (Parte 14)
+  if (PROTOTIPOS && CELULAR && tema !== 'escuro') {
+    const linhas = tirados.map(({ arquivo, uc, rf, tela }) => `| [${arquivo}.png](${arquivo}.png) | ${tela} | ${uc} ${casosDeUso[uc] ?? ''} | ${rf} |`)
+    const texto = [
+      '# Protótipos no celular (prints do jogo)',
+      '',
+      `As mesmas telas dos [protótipos do computador](../README.md), num celular deitado de ${larguraDoCelular} × ${alturaDoCelular} (com toque), tiradas pelo próprio jogo com \`npm run prints -- prototipos-celular\` (Parte 14). Com toque, o jogo mostra os controles na tela (joystick, ataque, habilidades, esquiva e os botões do alto), nenhum texto fica menor que 12 px e as janelas que não cabem rolam. O nome de cada arquivo começa pelo caso de uso que a tela atende.`,
+      '',
+      'O painel DEV e a barra de teste (que só existem no `npm run dev`) não aparecem nos prints. O roteiro `npm run testar:celular` confere estas telas em 640 × 360 e em 932 × 430 (nada cortado, nenhuma letra menor que 12 px) e joga com o toque.',
+      '',
+      '| Print | Tela | Caso de uso | Requisitos |',
+      '| --- | --- | --- | --- |',
+      ...linhas,
+      '',
+    ].join('\n')
+    writeFileSync(join(PASTA, 'README.md'), texto)
+    console.log('README.md escrito')
+  }
 
   // O README dos protótipos (só no tema claro): a tabela print → tela → caso de uso → requisitos
-  if (PROTOTIPOS && tema !== 'escuro') {
+  if (PROTOTIPOS && !CELULAR && tema !== 'escuro') {
     const linhas = tirados.map(({ arquivo, uc, rf, tela }) => `| [${arquivo}.png](${arquivo}.png) · [escuro](escuro/${arquivo}.png) | ${tela} | ${uc} ${casosDeUso[uc] ?? ''} | ${rf} |`)
     const texto = [
       '# Protótipos (prints do jogo)',
@@ -366,6 +406,8 @@ try {
       `Prints de todas as telas do jogo como ele está hoje, em 1366 × 768, tirados pelo próprio jogo com \`npm run prints -- prototipos\` (tema claro, nesta pasta) e \`npm run prints -- prototipos escuro\` (tema escuro, na subpasta [escuro/](escuro/)). O nome de cada arquivo começa pelo caso de uso que a tela atende. Os protótipos iniciais, feitos antes do jogo, ficam em [iniciais/](iniciais/).`,
       '',
       'O painel DEV e a barra de teste (que só existem no `npm run dev`) não aparecem nos prints. A matriz completa (cada requisito com o caso de uso, a história, o diagrama, o protótipo e o teste) fica em [09_Matriz_de_Rastreabilidade.md](../docAdicional/09_Matriz_de_Rastreabilidade.md).',
+      '',
+      'As mesmas telas no celular (deitado, com os controles de toque; Parte 14) ficam em [celular/](celular/README.md), com a mesma ligação aos casos de uso.',
       '',
       '| Print | Tela | Caso de uso | Requisitos |',
       '| --- | --- | --- | --- |',

@@ -4,6 +4,8 @@ Prints de todas as telas do jogo como ele está hoje, em 1366 × 768, tirados pe
 
 O painel DEV e a barra de teste (que só existem no `npm run dev`) não aparecem nos prints. A matriz completa (cada requisito com o caso de uso, a história, o diagrama, o protótipo e o teste) fica em [09_Matriz_de_Rastreabilidade.md](../docAdicional/09_Matriz_de_Rastreabilidade.md).
 
+As mesmas telas no celular (deitado, com os controles de toque; Parte 14) ficam em [celular/](celular/README.md), com a mesma ligação aos casos de uso.
+
 | Print | Tela | Caso de uso | Requisitos |
 | --- | --- | --- | --- |
 | [UC10_tela_inicial.png](UC10_tela_inicial.png) · [escuro](escuro/UC10_tela_inicial.png) | Tela inicial | UC10 Consultar instruções do jogo | RF13, RF14 |

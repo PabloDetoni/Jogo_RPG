@@ -4,10 +4,14 @@
 //   'andamento' ({ emCombate, retornando, fugindo }, na hora em que muda: o Esc depende disso)
 //   'mensagem' ({ texto, tipo }: crítico, nível, desmaio, perdido, retorno...)
 //   'fimDaPartida' (como acabou e os números para o Resumo: CenaArena.terminar)
-// React → Phaser: 'comando' ({ tipo, ... }: Q, fuga confirmada, Voltar ao Reino da pausa e a barra de teste) e a pausa.
+// React → Phaser: 'comando' ({ tipo, ... }: Q, fuga confirmada, Voltar ao Reino da pausa, os controles de toque e a barra
+// de teste), a pausa e dois estados que a cena lê a cada quadro (Parte 14): se o jogo está no toque (celular, tablet) e
+// se o modo leve está ligado (menos partículas e desenho mais perto da câmera).
 export function criarPonte() {
   const ouvintes = new Map()
   let pausado = false
+  let toque = false
+  let modoLeve = false
 
   function avisar(evento, dados) {
     for (const funcao of ouvintes.get(evento) ?? []) funcao(dados)
@@ -29,6 +33,18 @@ export function criarPonte() {
       if (valor === pausado) return
       pausado = valor
       avisar('pausa', valor)
+    },
+    get toque() {
+      return toque
+    },
+    definirToque(valor) {
+      toque = Boolean(valor)
+    },
+    get modoLeve() {
+      return modoLeve
+    },
+    definirModoLeve(valor) {
+      modoLeve = Boolean(valor)
     },
   }
 }

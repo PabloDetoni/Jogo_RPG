@@ -18,6 +18,10 @@ import MochilaNaPartida from './MochilaNaPartida.jsx'
 import { itensDaJanela } from '../../regras/itensNaPartida.js'
 import { useGradeComMao } from '../../componentes/ui/useGradeComMao.js'
 import { itemDoCatalogo, usavelNaPartida } from '../../dados/itens.js'
+import { useToque } from '../../componentes/useToque.js'
+import { controlesDeToque } from '../../dados/interface.js'
+import { deveLigarModoLeve, modoLeveAtivo } from '../../regras/toque.js'
+import ControlesDeToque from './ControlesDeToque.jsx'
 
 const pos = posicoes.partida
 const { msDaMensagem, mensagensNoMaximo, msParaJuntar } = combateDeTeste.hud
@@ -48,6 +52,18 @@ export default function Partida() {
   const partida = useMemo(() => ({ bioma, pontoPartida, descobertas, levar, missao }), [bioma, pontoPartida, descobertas, levar, missao])
 
   useEffect(() => ponte.ouvir('situacao', setSituacao), [ponte])
+
+  // Toque (Parte 14): a cena lê pela ponte se o jogo está no toque (a mira automática, o joystick) e se o modo leve está
+  // ligado. O modo leve "automático" liga sozinho com o FPS abaixo do limite por alguns segundos seguidos.
+  const { toque } = useToque()
+  useEffect(() => ponte.definirToque(toque), [ponte, toque])
+  const opcaoDoModoLeve = estado.preferencias.modoLeve
+  const [leveSozinho, setLeveSozinho] = useState(false)
+  const leve = modoLeveAtivo({ opcao: opcaoDoModoLeve, ligouSozinho: leveSozinho })
+  useEffect(() => ponte.definirModoLeve(leve), [ponte, leve])
+  const amostrasDoFps = useRef([])
+  // (no computador o automático nunca liga: lá o jogo fica igual ao de sempre)
+  const medindo = toque && opcaoDoModoLeve === 'automatico' && !leveSozinho && Boolean(situacao)
 
   // Tela de carregamento (ajustes de 14/10): o motor (o Phaser), a arte, os sons e o mapa, com o progresso de verdade.
   // O mapa fica pronto quando chega a primeira situação. Demorou demais ou falhou: "Tentar de novo" monta o jogo outra vez.
@@ -133,6 +149,9 @@ export default function Partida() {
     return () => ativos.forEach(clearTimeout)
   }, [])
   useEffect(() => ponte.ouvir('mensagem', mostrar), [ponte, mostrar])
+  useEffect(() => {
+    if (leveSozinho) mostrar({ texto: 'Modo leve ligado: o jogo estava lento (dá para mudar nas Configurações)', tipo: 'alerta' })
+  }, [leveSozinho, mostrar])
 
   // Esc em combate não pausa (RF44): o estado conta a recusa e aqui aparece o aviso
   const { recusasDePausa, pedido } = controle
@@ -164,6 +183,18 @@ export default function Partida() {
     atual.current = { janelas, situacao, fugindo: controle.andamento.fugindo, itemEmFoco }
   }, [janelas, situacao, controle.andamento.fugindo, itemEmFoco])
 
+  // O FPS de cada segundo (a pausa não conta): baixo por alguns segundos seguidos, o modo leve liga sozinho
+  useEffect(() => {
+    if (!medindo) return undefined
+    const relogio = setInterval(() => {
+      const { situacao: agora, janelas: abertas } = atual.current
+      if (abertas.includes('pausa') || document.hidden) return
+      amostrasDoFps.current = [...amostrasDoFps.current, agora?.fps ?? 0].slice(-controlesDeToque.modoLeve.segundos)
+      if (deveLigarModoLeve(amostrasDoFps.current, controlesDeToque.modoLeve)) setLeveSozinho(true)
+    }, 1000)
+    return () => clearInterval(relogio)
+  }, [medindo])
+
   const usarItem = useCallback(
     (em) => {
       const { situacao: agora, itemEmFoco: id } = atual.current
@@ -173,20 +204,42 @@ export default function Partida() {
     [ponte],
   )
 
-  // Teclas Q (retorno) e F (fuga). Q só sem janela aberta (a mochila não conta); F abre o aviso da fuga e, com ele
-  // aberto, confirma.
+  // O mapa inteiro sem pausar (Parte 14: o botão Mapa do toque; na pausa ele aparece sempre)
+  const [mapaAberto, setMapaAberto] = useState(false)
+
+  // O que as teclas fazem, também pelos botões de toque (Parte 14): Tab abre e fecha a mochila (com outra janela por
+  // cima, nada); Q só sem janela aberta (a mochila não conta); F abre o aviso da fuga e, com ele aberto, confirma.
+  const comandos = useMemo(() => {
+    const bloqueiam = () => atual.current.janelas.filter((janela) => janela !== 'mochilaDaPartida')
+    return {
+      mochila: () => {
+        const abertas = atual.current.janelas
+        if (abertas.at(-1) === 'mochilaDaPartida') acoes.fecharJanela()
+        else if (abertas.length === 0) acoes.abrirJanela('mochilaDaPartida')
+      },
+      retorno: () => {
+        if (bloqueiam().length === 0) ponte.avisar('comando', { tipo: 'alternarRetorno' })
+      },
+      fugir: () => {
+        const { janelas: abertas, situacao: agora, fugindo } = atual.current
+        if (abertas.at(-1) === 'confirmarFuga') acoes.confirmarFuga()
+        else if (bloqueiam().length === 0 && !fugindo && agora) acoes.pedirFuga(agora.custoDaFuga)
+      },
+      pausar: () => acoes.esc(),
+      mapa: () => setMapaAberto((aberto) => !aberto),
+      mudo: () => acoes.alternarPreferencia('mudo'),
+    }
+  }, [ponte, acoes])
+
   useEffect(() => {
     function aoApertarTecla(evento) {
       if (evento.ctrlKey || evento.altKey || evento.metaKey) return
       const tecla = evento.key.toLowerCase()
-      const { janelas: abertas, situacao: agora, fugindo } = atual.current
-      const mochila = abertas.at(-1) === 'mochilaDaPartida'
-      // Tab nunca troca o foco da página na partida: abre ou fecha a mochila (com outra janela por cima, nada)
+      const mochila = atual.current.janelas.at(-1) === 'mochilaDaPartida'
+      // Tab nunca troca o foco da página na partida
       if (tecla === 'tab') {
         evento.preventDefault()
-        if (evento.repeat) return
-        if (mochila) acoes.fecharJanela()
-        else if (abertas.length === 0) acoes.abrirJanela('mochilaDaPartida')
+        if (!evento.repeat) comandos.mochila()
         return
       }
       if (evento.repeat) return
@@ -194,16 +247,12 @@ export default function Partida() {
         usarItem(tecla === 'e' ? 'lider' : 'aliado')
         return
       }
-      const bloqueiam = abertas.filter((janela) => janela !== 'mochilaDaPartida')
-      if (tecla === 'q' && bloqueiam.length === 0) ponte.avisar('comando', { tipo: 'alternarRetorno' })
-      if (tecla === 'f') {
-        if (abertas.at(-1) === 'confirmarFuga') acoes.confirmarFuga()
-        else if (bloqueiam.length === 0 && !fugindo && agora) acoes.pedirFuga(agora.custoDaFuga)
-      }
+      if (tecla === 'q') comandos.retorno()
+      if (tecla === 'f') comandos.fugir()
     }
     window.addEventListener('keydown', aoApertarTecla)
     return () => window.removeEventListener('keydown', aoApertarTecla)
-  }, [ponte, acoes, usarItem])
+  }, [comandos, usarItem])
 
   return (
     <Tela className="tela-partida" semTitulo configuracoesEm={pos.configuracoes} dicaEm={pos.dica}>
@@ -216,13 +265,20 @@ export default function Partida() {
         aoTeletransportar={import.meta.env.DEV ? (ponto) => ponte.avisar('comando', { tipo: 'teletransportar', ponto }) : undefined}
       />
       <AvisosDaPartida situacao={situacao} mensagens={mensagens} />
-      {/* Na pausa, o mapa inteiro com a névoa do que não foi descoberto (Parte 5) */}
+      {/* Na pausa, o mapa inteiro com a névoa do que não foi descoberto (Parte 5); no toque, também pelo botão Mapa */}
       {pausado && situacao?.minimapa && <MapaInteiro bioma={bioma} minimapa={situacao.minimapa} />}
+      {!pausado && mapaAberto && situacao?.minimapa && <MapaInteiro bioma={bioma} minimapa={situacao.minimapa} aoFechar={() => setMapaAberto(false)} />}
       <BarraDeTeste ponte={ponte} situacao={situacao} />
+      {toque && (
+        <ControlesDeToque ponte={ponte} situacao={situacao} mudo={estado.preferencias.mudo} comandos={comandos} ativo={janelas.length === 0 && carregado && !mapaAberto} />
+      )}
       {mochilaAberta && (
         <MochilaNaPartida
           mochila={situacao?.mochila}
           grade={gradeDaMochila}
+          toque={toque}
+          aoUsar={usarItem}
+          aoFechar={acoes.fecharJanela}
           aoSoltarNoChao={({ id, quantidade }) => ponte.avisar('comando', { tipo: 'descartarItem', id, quantidade })}
         />
       )}

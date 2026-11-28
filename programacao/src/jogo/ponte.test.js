@@ -27,4 +27,14 @@ describe('ponte entre o React e o Phaser', () => {
     expect(ponte.pausado).toBe(true)
     expect(ouvinte).toHaveBeenCalledTimes(1)
   })
+
+  it('o toque e o modo leve são estados que a cena lê (começam desligados)', () => {
+    const ponte = criarPonte()
+    expect(ponte.toque).toBe(false)
+    expect(ponte.modoLeve).toBe(false)
+    ponte.definirToque(true)
+    ponte.definirModoLeve(1)
+    expect(ponte.toque).toBe(true)
+    expect(ponte.modoLeve).toBe(true)
+  })
 })

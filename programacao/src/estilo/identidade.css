@@ -99,7 +99,7 @@ body {
 /* O título de cada tela: uma faixa vermelha com borda dourada (como o "Hero Selection" e o JOGAR) */
 .titulo:not(.so-leitor) {
   padding: 0.12em 1.1em 0.18em;
-  font-size: 2.6cqw;
+  font-size: max(2.6cqw, var(--letra-minima, 0px));
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--texto-da-placa);
@@ -186,7 +186,7 @@ body {
 .botao-principal::after {
   content: '◆';
   margin: 0 0.6em;
-  font-size: 0.6em;
+  font-size: max(0.6em, var(--letra-minima, 0px));
   color: var(--ouro-claro);
   vertical-align: middle;
 }
@@ -421,7 +421,7 @@ body {
 }
 .nome-do-jogo-titulo {
   margin: 0;
-  font-size: 7cqw;
+  font-size: max(7cqw, var(--letra-minima, 0px));
   line-height: 1;
   letter-spacing: 0.25cqw;
   text-transform: uppercase;
@@ -437,7 +437,7 @@ body {
 }
 .nome-do-jogo-frase {
   margin: 0;
-  font-size: 1.5cqw;
+  font-size: max(1.5cqw, var(--letra-minima, 0px));
   color: var(--texto-da-placa);
   background: var(--placa);
   border: 0.14cqw solid var(--ouro);

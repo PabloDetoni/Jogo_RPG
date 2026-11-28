@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { estaNoToque } from './useToque.js'
 import { nomeDaClasse } from '../dados/classes.js'
 import { telas } from '../dados/telas.js'
 import { useInfoDoSalvamento, useJogo } from '../estado/contexto.js'
@@ -15,11 +16,13 @@ function limitar(valor, minimo, maximo) {
 // Minimizado ou aberto: lembrado só neste navegador (conveniência de quem programa, fora do save)
 const chaveMinimizado = 'jogo-rpg:painelDevMinimizado'
 
+// No celular (Parte 14), começa minimizado: aberto, ele cobre metade da tela e pega o toque dos botões
 function lerMinimizado() {
   try {
-    return window.localStorage.getItem(chaveMinimizado) === 'sim'
+    const guardado = window.localStorage.getItem(chaveMinimizado)
+    return guardado === null ? estaNoToque() : guardado === 'sim'
   } catch {
-    return false
+    return estaNoToque()
   }
 }
 

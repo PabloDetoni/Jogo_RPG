@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { chavesDaArte, urlDaArte } from '../arte/indice.js'
-import { ajudaDasTelas, dicasDasTelas } from '../dados/ajuda.js'
+import { ajudaDasTelas, dicasDasTelas, dicasNoToque } from '../dados/ajuda.js'
 import { posicoes } from '../dados/posicoes.js'
 import { telas } from '../dados/telas.js'
 import { useJogo } from '../estado/contexto.js'
 import { fundoDaTela } from '../regras/arte.js'
 import { dicaVisivel, trilhaDaTela } from '../regras/interface.js'
+import { textoParaOToque } from '../regras/toque.js'
+import { useToque } from './useToque.js'
 import Botao from './Botao.jsx'
 import { estiloPosicao } from './posicao.js'
 import { ContextoDaTrilha } from './trilha.js'
@@ -37,7 +39,9 @@ export default function Tela({
   const fundo = imagemDeFundo ?? urlDaArte(fundoDaTela(chavesDaArte, estado.tela))
   const [aba, setAba] = useState(null)
   const trilha = trilhaDaTela(estado.tela, estado.anteriores, aba)
-  const dica = dicasDasTelas[estado.tela]
+  // No toque (Parte 14), a dica fala do dedo, não do mouse
+  const { toque } = useToque()
+  const dica = toque ? (dicasNoToque[estado.tela] ?? textoParaOToque(dicasDasTelas[estado.tela])) : dicasDasTelas[estado.tela]
   const mostrarDica = (!semTitulo || dicaEm) && estado.janelas.length === 0 && dicaVisivel(estado.tela, estado.preferencias?.dicasVistas, estado.dicaReaberta, Boolean(dica))
   const temAjuda = Boolean(ajudaDasTelas[estado.tela])
   // Transição suave (ajustes de 14/10): o Reino, o Mapa, a Preparação, a partida e o Resumo entram num fade curto

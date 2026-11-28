@@ -3,6 +3,8 @@ import { coresDaArena, faixaDeBaixo, faixas, tamanhoDaArena } from '../../dados/
 import { arteDaFloresta } from '../../dados/arte.js'
 import { combateDeTeste, critico, mundo } from '../../dados/balanceamento.js'
 import { nomeDaClasse } from '../../dados/classes.js'
+import { controlesDeToque } from '../../dados/interface.js'
+import { miraDoToque, pontoNaDirecao } from '../../regras/toque.js'
 import {
   segundosDaAjuda,
   segundosDaFuga,
@@ -241,6 +243,8 @@ export default class CenaArena extends Phaser.Scene {
     // Clique: o ataque da classe. O Arqueiro (ajustes de 14/10) puxa o arco enquanto segura e atira ao soltar
     this.input.on('pointerdown', (ponteiro) => {
       if (!ponteiro.leftButtonDown() || this.lider.caido || this.mochilaAberta) return
+      // No toque (Parte 14), o dedo no mapa não ataca: o ataque é o botão dos controles de toque
+      if (this.modoToque && ponteiro.wasTouch) return
       if (import.meta.env.DEV && this.teclaDeTeletransporte?.isDown) return // T + clique: teletransporte (só no dev)
       if (usaArco(this.lider)) {
         if (podePuxar(this.lider, this.agora)) {
@@ -254,6 +258,9 @@ export default class CenaArena extends Phaser.Scene {
     }
     this.input.on('pointerup', soltarDoLider)
     this.input.on('pointerupoutside', soltarDoLider)
+    // Controles de toque (Parte 14; telas/partida/ControlesDeToque.jsx): o joystick, o botão de ataque segurado (e o
+    // arraste que mira) e os pedidos de um toque (esquiva, E, habilidades, ataque), feitos no próximo quadro
+    this.toque = { mover: { x: 0, y: 0 }, atacando: false, arraste: null, pedidos: [] }
     this.desenhoDoArco = new DesenhoDoArco(this)
     // Super velocidade e teletransporte (RF61): só no npm run dev. Dentro do if, o import() some do jogo publicado
     this.superVelocidade = 1
@@ -622,11 +629,15 @@ export default class CenaArena extends Phaser.Scene {
     const lider = this.lider
     this.corrigirSobreposicoes(agora)
 
-    // O mouse no mapa é recalculado a cada quadro: com a câmera andando e o mouse parado, a mira continua certa
-    this.mouseNoMundo = this.pontoDoMouse()
-    if (!lider.caido) {
-      this.anguloDaMira = Math.atan2(this.mouseNoMundo.y - lider.y, this.mouseNoMundo.x - lider.x)
-      lider.anguloDaMira = this.anguloDaMira
+    // O mouse no mapa é recalculado a cada quadro: com a câmera andando e o mouse parado, a mira continua certa.
+    // No toque (Parte 14), a mira é a do arraste, a automática (o inimigo mais perto) ou para onde anda.
+    if (this.modoToque) this.mirarPeloToque(lider)
+    else {
+      this.mouseNoMundo = this.pontoDoMouse()
+      if (!lider.caido) {
+        this.anguloDaMira = Math.atan2(this.mouseNoMundo.y - lider.y, this.mouseNoMundo.x - lider.x)
+        lider.anguloDaMira = this.anguloDaMira
+      }
     }
     lider.atualizarMira(this.anguloDaMira)
     this.atualizarLider(agora)
@@ -835,7 +846,8 @@ export default class CenaArena extends Phaser.Scene {
   // Desenha só o que aparece na tela (com uma folga): os pedaços do chão da Floresta e os mobs longe
   esconderForaDaTela() {
     const vista = this.cameras.main.worldView
-    const folga = 200
+    // No modo leve (Parte 14), desenha ainda mais perto da câmera
+    const folga = this.ponte?.modoLeve ? controlesDeToque.folgaDoDesenhoNoModoLeve : 200
     const naTela = (x0, y0, x1, y1) => x1 >= vista.x - folga && x0 <= vista.right + folga && y1 >= vista.y - folga && y0 <= vista.bottom + folga
     for (const pedaco of this.pedacosDoChao ?? []) {
       const visivel = naTela(pedaco.x0, pedaco.y0, pedaco.x1, pedaco.y1)
@@ -858,10 +870,17 @@ export default class CenaArena extends Phaser.Scene {
       lider.parar()
       // O que foi apertado agora não vale depois (o E da mochila não pega do chão ao fechar)
       for (const tecla of ['esquiva', 'interagir', 'habilidade1', 'habilidade2', 'habilidade3']) Phaser.Input.Keyboard.JustDown(this.teclas[tecla])
+      this.toque.pedidos.length = 0 // o mesmo com os botões de toque
       return
     }
-    const dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
-    const dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
+    let dx = (this.teclas.direita.isDown ? 1 : 0) - (this.teclas.esquerda.isDown ? 1 : 0)
+    let dy = (this.teclas.baixo.isDown ? 1 : 0) - (this.teclas.cima.isDown ? 1 : 0)
+    // O joystick do toque (Parte 14) vale quando nenhuma tecla de andar está apertada
+    if (this.modoToque && !dx && !dy) {
+      dx = this.toque.mover.x
+      dy = this.toque.mover.y
+    }
+    if (this.modoToque) this.fazerPedidosDoToque(agora, dx, dy)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.esquiva)) this.esquivar(agora, dx, dy)
     if (Phaser.Input.Keyboard.JustDown(this.teclas.interagir)) this.coletar(agora)
     // Teclas 1, 2 e 3: as habilidades do Líder (TASK-046)
@@ -878,6 +897,91 @@ export default class CenaArena extends Phaser.Scene {
       return
     }
     lider.andar(velocidadeDoMovimento(dx, dy, lider.velocidade ?? personagem.velocidade)) // pela Agilidade (Parte 3)
+  }
+
+  // ---------- Toque (Parte 14) ----------
+
+  // O jogo está no toque (celular, tablet)? O React diz pela ponte; com mouse e teclado é sempre false
+  get modoToque() {
+    return Boolean(this.ponte?.toque)
+  }
+
+  // A mira do Líder no toque (regras/toque.js): o arraste, o inimigo mais perto dentro do alcance da mira ou para onde
+  // anda. O "ponto" (o Meteoro) é o alvo ou um pouco à frente.
+  mirarPeloToque(lider) {
+    const mira = miraDoToque({
+      lider,
+      inimigos: this.inimigos,
+      alcance: controlesDeToque.alcanceDaMira[lider.classe] ?? controlesDeToque.distanciaSemAlvo,
+      arraste: this.toque.arraste,
+      andando: this.toque.mover,
+      anguloAnterior: this.anguloDaMira,
+    })
+    this.mouseNoMundo = mira.alvo ? mira.ponto : pontoNaDirecao(lider, mira.angulo, controlesDeToque.distanciaSemAlvo)
+    this.alvoDoToque = mira.alvo
+    if (!lider.caido) {
+      this.anguloDaMira = mira.angulo
+      lider.anguloDaMira = mira.angulo
+    }
+  }
+
+  // Um botão de toque (ControlesDeToque.jsx → ponte → aqui): { acao, x, y, angulo, indice }
+  receberToque({ acao, x = 0, y = 0, angulo = null, indice = 0 }) {
+    const toque = this.toque
+    if (!toque) return
+    if (acao === 'mover') toque.mover = { x: Number(x) || 0, y: Number(y) || 0 }
+    if (acao === 'apertarAtaque') {
+      toque.atacando = true
+      toque.arraste = null
+      toque.pedidos.push({ tipo: 'ataque' })
+    }
+    if (acao === 'mirarAtaque') toque.arraste = Number.isFinite(angulo) ? angulo : null
+    if (acao === 'soltarAtaque') {
+      toque.atacando = false
+      // O arco solta na hora, na direção do arraste (ou da mira de agora)
+      const lider = this.lider
+      if (lider?.puxando && lider.puxando.msParaSoltar === null) {
+        if (Number.isFinite(angulo)) this.anguloDaMira = angulo
+        this.soltarFlecha(lider, this.anguloDaMira)
+      }
+      toque.arraste = null
+    }
+    if (acao === 'habilidade') toque.pedidos.push({ tipo: 'habilidade', indice, angulo })
+    if (acao === 'esquiva') toque.pedidos.push({ tipo: 'esquiva' })
+    if (acao === 'interagir') toque.pedidos.push({ tipo: 'interagir' })
+    if (acao === 'soltarTudo') {
+      toque.mover = { x: 0, y: 0 }
+      toque.atacando = false
+      toque.arraste = null
+    }
+  }
+
+  // Os pedidos de um toque, no quadro (com o Líder de pé e a mochila fechada); segurar o ataque repete o golpe (a
+  // recarga de sempre); o arco puxa ao apertar e solta ao largar (receberToque)
+  fazerPedidosDoToque(agora, dx, dy) {
+    const lider = this.lider
+    for (const pedido of this.toque.pedidos.splice(0)) {
+      if (pedido.tipo === 'esquiva') this.esquivar(agora, dx, dy)
+      if (pedido.tipo === 'interagir') this.coletar(agora)
+      if (pedido.tipo === 'habilidade') {
+        const mira = Number.isFinite(pedido.angulo)
+          ? { angulo: pedido.angulo, ponto: pontoNaDirecao(lider, pedido.angulo, controlesDeToque.distanciaSemAlvo) }
+          : this.miraDoLider()
+        this.usarHabilidade(lider, pedido.indice, mira)
+      }
+      if (pedido.tipo === 'ataque' && usaArco(lider)) {
+        if (podePuxar(lider, agora)) {
+          comecarAPuxar(lider, agora)
+          tocarEfeito('arcoPuxar')
+        }
+      } else if (pedido.tipo === 'ataque') this.usarAtaque(lider, this.anguloDaMira)
+    }
+    if (this.toque.atacando && !usaArco(lider)) this.usarAtaque(lider, this.anguloDaMira)
+  }
+
+  // O Líder segura o ataque? (o clique do mouse ou, no toque, o botão de ataque)
+  liderSegurandoOAtaque() {
+    return this.modoToque ? this.toque.atacando : this.input.activePointer.leftButtonDown()
   }
 
   // Para onde o Líder mira: o ângulo e o ponto do mouse (o Meteoro cai nele, até o alcance)
@@ -1235,7 +1339,7 @@ export default class CenaArena extends Phaser.Scene {
       if (!membro.puxando) continue
       if (membro.caido) membro.puxando = null
       else if (membro.lider) {
-        if (membro.puxando.msParaSoltar === null && !this.input.activePointer.leftButtonDown()) this.soltarFlecha(membro, this.anguloDaMira)
+        if (membro.puxando.msParaSoltar === null && !this.liderSegurandoOAtaque()) this.soltarFlecha(membro, this.anguloDaMira)
       } else if (!temInimigo) membro.puxando = null
       else if (horaDeSoltar(membro, agora) && !this.pedraNoTiroDoArco(membro)) this.soltarFlecha(membro, membro.anguloDaMira)
     }
@@ -1850,6 +1954,7 @@ export default class CenaArena extends Phaser.Scene {
     }
     if (comando.tipo === 'usarItem') this.usarItem(comando.id, comando.em)
     if (comando.tipo === 'descartarItem') this.descartarItem(comando.id, comando.quantidade)
+    if (comando.tipo === 'toque') this.receberToque(comando)
     // Barra de teste: só no npm run dev (no jogo publicado a faixa mostra só as teclas e nenhum comando de teste vale)
     if (import.meta.env.DEV) this.comandoDeTeste(comando)
     if (this.terminou) return

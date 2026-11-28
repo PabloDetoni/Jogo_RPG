@@ -82,7 +82,7 @@ Como ler as colunas:
 |---|---|---|---|
 | RNF01 | Interface em React (disciplina de Desenvolvimento Web 2). A partida é… | o código (React + Phaser) | Feito |
 | RNF02 | Autenticação e banco no Supabase, com políticas RLS | `conferir:configuracao` (RLS); `testar:contas` | Feito |
-| RNF03 | Somente computador (desktop), com teclado e mouse. A interface se… | `testar:botoes`, `testar:camadas` (1366×768 a 1920×1080) | Feito |
+| RNF03 | Computador e celular (Parte 14): teclado e mouse no computador; toque no celular e no tablet, deitados… | `testar:botoes`, `testar:camadas` (1366×768 a 1920×1080); `testar:celular` (Pixel 7, iPhone 14, 640×360 e 932×430); protótipos em [celular/](../prototipos/celular/README.md) | Feito |
 | RNF04 | Estilo pixel art em telas, menus e gameplay. Textos e botões são… | Guia de Arte; `testar:arte`, `testar:camadas` | Em parte: o Reino e o Mapa com as peças do Pablo; personagens, mobs, animais e NPCs em blocos (RNF15); a pixel art definitiva é trabalho futuro |
 | RNF05 | Para não sobrecarregar o banco, o Supabase recebe dados só nos… | fluxo, pontaAPonta | Feito |
 | RNF06 | Controle de versão do estado | contas, fluxo (versão do save) | Feito |

@@ -3,6 +3,8 @@
 // O número é o CENTRO do elemento. "grande: true" deixa o botão maior; "principal: true" pinta a ação principal da tela
 // (o vermelho e dourado do JOGAR, visual novo de 20/10; o "grande" também é principal).
 // Quando a arte entrar, ajuste só os números daqui.
+// "toque" (Parte 14): outro lugar só no celular e no tablet, onde o texto é maior ({ x, y } e "altura", a altura máxima
+// em % da tela: o bloco rola por dentro quando não cabe). Sem "toque", o lugar é o mesmo do computador.
 // Dentro das janelas (Configurações, Pausa, Como jogar) os botões ficam em coluna, sem posição.
 
 export const posicoes = {
@@ -11,9 +13,9 @@ export const posicoes = {
   trilha: { x: 50, y: 3.6 }, // "Reino › Forja › Equipar" (ajustes de 14/10)
   dica: { x: 50, y: 22 }, // a dica da primeira visita, logo abaixo do título
   cantos: {
-    salaoGloria: { x: 9, y: 11 },
-    configuracoes: { x: 93, y: 11 },
-    ajuda: { x: 83.6, y: 11 }, // o "?" (Fase 4.5): como a tela funciona
+    salaoGloria: { x: 9, y: 11, toque: { x: 10.5 } },
+    configuracoes: { x: 93, y: 11, toque: { x: 90 } },
+    ajuda: { x: 83.6, y: 11, toque: { x: 77.5 } }, // o "?" (Fase 4.5): como a tela funciona
   },
   avisos: { x: 50, y: 30 }, // mensagens por cima da tela (partida descartada, aba ocupada...)
   avisosDeConquista: { x: 86, y: 22 }, // conquista nova (Fase 4.5): no canto, some sozinha, não tapa as abas
@@ -27,25 +29,25 @@ export const posicoes = {
   // Fase 2: as mensagens (e-mail confirmado, senha errada, conta em uso...) ficam logo abaixo do título
   login: {
     mensagem: { x: 50, y: 19 },
-    continuar: { x: 50, y: 27 }, // "Continuar como ...": a conta que o Supabase lembra neste navegador
-    email: { x: 50, y: 36 },
-    senha: { x: 50, y: 47 },
-    entrar: { x: 50, y: 57, principal: true },
-    reenviar: { x: 72, y: 57 }, // só com o e-mail ainda não confirmado (RF04)
-    criarConta: { x: 38, y: 67 },
-    esqueciSenha: { x: 62, y: 67 },
-    jogarComoConvidado: { x: 50, y: 78 },
-    avisoConvidado: { x: 50, y: 86 },
-    voltar: { x: 10, y: 90 },
+    continuar: { x: 50, y: 27, toque: { y: 22 } }, // "Continuar como ...": a conta que o Supabase lembra neste navegador
+    email: { x: 50, y: 36, toque: { y: 34 } },
+    senha: { x: 50, y: 47, toque: { y: 50 } },
+    entrar: { x: 50, y: 57, principal: true, toque: { y: 62.5 } },
+    reenviar: { x: 72, y: 57, toque: { x: 78, y: 62.5 } }, // só com o e-mail ainda não confirmado (RF04)
+    criarConta: { x: 38, y: 67, toque: { x: 36, y: 74 } },
+    esqueciSenha: { x: 62, y: 67, toque: { x: 64, y: 74 } },
+    jogarComoConvidado: { x: 50, y: 78, toque: { y: 85 } },
+    avisoConvidado: { x: 50, y: 86, toque: { x: 57, y: 94.5 } },
+    voltar: { x: 10, y: 90, toque: { y: 25 } },
   },
   criarConta: {
     mensagem: { x: 50, y: 19 },
-    email: { x: 50, y: 29 },
-    senha: { x: 50, y: 41 },
-    apelido: { x: 50, y: 53 },
-    regras: { x: 50, y: 63 },
-    criarConta: { x: 50, y: 73, principal: true },
-    voltarAoLogin: { x: 10, y: 90 },
+    email: { x: 50, y: 29, toque: { y: 28 } },
+    senha: { x: 50, y: 41, toque: { y: 43 } },
+    apelido: { x: 50, y: 53, toque: { y: 58 } },
+    regras: { x: 50, y: 63, toque: { y: 70 } },
+    criarConta: { x: 50, y: 73, principal: true, toque: { y: 81 } },
+    voltarAoLogin: { x: 10, y: 90, toque: { y: 92 } },
   },
   confirmeEmail: {
     mensagem: { x: 50, y: 38 },
@@ -164,37 +166,37 @@ export const posicoes = {
   // npc: a conversa com o NPC do lugar (Parte 9); falarComNpc: o botão que volta à conversa
   guilda: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 29.5 }, // preso pelo topo (ConteudoComAbas noTopo): as cartas e o quadro não sobem nas abas
+    conteudo: { x: 50, y: 29.5, toque: { altura: 55 } }, // preso pelo topo (ConteudoComAbas noTopo): as cartas e o quadro não sobem nas abas
     voltarAoReino: { x: 10, y: 90 },
     npc: { x: 50, y: 55 },
-    falarComNpc: { x: 27, y: 90 },
+    falarComNpc: { x: 27, y: 90, toque: { x: 34 } },
   },
   mercado: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 57 },
+    conteudo: { x: 50, y: 57, toque: { y: 56, altura: 56 } },
     voltarAoReino: { x: 10, y: 90 },
     npc: { x: 50, y: 55 },
-    falarComNpc: { x: 27, y: 90 },
+    falarComNpc: { x: 27, y: 90, toque: { x: 34 } },
   },
   forja: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 57 },
+    conteudo: { x: 50, y: 57, toque: { y: 58, altura: 52 } },
     voltarAoReino: { x: 10, y: 90 },
     npc: { x: 50, y: 55 },
-    falarComNpc: { x: 27, y: 90 },
+    falarComNpc: { x: 27, y: 90, toque: { x: 34 } },
   },
   mochila: {
-    conteudo: { x: 50, y: 53 },
+    conteudo: { x: 50, y: 53, toque: { altura: 62 } },
     voltarAoReino: { x: 10, y: 90 },
   },
   arvores: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 30 }, // preso pelo topo (ConteudoComAbas noTopo)
+    conteudo: { x: 50, y: 30, toque: { altura: 54 } }, // preso pelo topo (ConteudoComAbas noTopo)
     voltarAoReino: { x: 10, y: 90 },
   },
   salaoGloria: {
     abas: { x: 50, y: 25 },
-    conteudo: { x: 50, y: 52 },
+    conteudo: { x: 50, y: 52, toque: { y: 57, altura: 52 } },
     voltar: { x: 10, y: 90 },
   },
 
@@ -209,7 +211,8 @@ export const posicoes = {
     imagem: { largura: 1920, altura: 1080 },
     // Os lugares do Planalto ficam por cima de tudo (o clique vale no de cima)
     planalto: {
-      reino: { x: 898.4, y: 413.9, largura: 146.4, altura: 130, peca: 'mapa-castelo', placa: { x: 971.8, y: 577.6 } },
+      // no toque (Parte 14) as placas aparecem sempre: a do castelo desce um pouco, para não ficar na linha da Fazenda e da Mina
+      reino: { x: 898.4, y: 413.9, largura: 146.4, altura: 130, peca: 'mapa-castelo', placa: { x: 971.8, y: 577.6, toque: { y: 668 } } },
       mina: { x: 1039.9, y: 432.2, largura: 164, altura: 120.4, peca: 'mapa-mina', placa: { x: 1126.3, y: 589.4 } },
       fazenda: { x: 707.2, y: 437.4, largura: 200.7, altura: 124.3, peca: 'mapa-fazenda', placa: { x: 805.5, y: 589.4 } },
       lago: { x: 835.6, y: 319.6, largura: 245.3, altura: 170, peca: 'mapa-lago', placa: { x: 962.6, y: 309.1 } },
@@ -237,7 +240,7 @@ export const posicoes = {
         { peca: 'floresta', x: 829.7, y: 841.5, largura: 44.8, altura: 71 },
       ],
     },
-    arenaDeTeste: { x: 8, y: 93 }, // só no npm run dev (em % da tela, como os botões)
+    arenaDeTeste: { x: 8, y: 93, toque: { x: 10, y: 91 } }, // só no npm run dev (em % da tela, como os botões)
   },
   // Usada pelas telas de Fazenda, Mina e Lago
   minijogo: {
@@ -246,7 +249,7 @@ export const posicoes = {
   },
   pontoPartida: {
     bioma: { x: 50, y: 21 },
-    paradas: { x: 50, y: 55 }, // a Caravana (Parte 7): a lista das paradas
+    paradas: { x: 50, y: 55, toque: { y: 54, altura: 60 } }, // a Caravana (Parte 7): a lista das paradas
     inicio: { x: 50, y: 32 },
     facil: { x: 50, y: 43 },
     media: { x: 50, y: 53 },
@@ -260,13 +263,13 @@ export const posicoes = {
     mochila: { x: 70, y: 48 },
     comecarPartida: { x: 80, y: 88, grande: true },
     voltarAoReino: { x: 10, y: 90 },
-    voltarAoMapa: { x: 27, y: 90 },
+    voltarAoMapa: { x: 27, y: 90, toque: { x: 33 } },
   },
   // HUD (faixa de cima) e barra de teste (faixa de baixo) têm a altura de dados/arenaDeTeste.js.
   // Configurações fica dentro da faixa do HUD, no canto direito (menor que nas outras telas), para não cobrir a área
   // jogável. As contagens do Q e da fuga e as mensagens ficam logo abaixo do HUD (HudDaPartida.jsx).
   partida: {
-    configuracoes: { x: 92.4, y: 3.2 }, // em cima à direita, logo acima do minimapa (ajustes de 14/10)
+    configuracoes: { x: 92.4, y: 3.2, toque: { x: 90, y: 6.5 } }, // em cima à direita, logo acima do minimapa (ajustes de 14/10)
     dica: { x: 50, y: 68 }, // a dica da primeira partida, em cima da barra de ações
   },
   cutsceneDerrota: {

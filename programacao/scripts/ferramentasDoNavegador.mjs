@@ -310,6 +310,137 @@ function criarAba(cdp, nome, pastaDosPrints) {
       if (!centro) throw new Error(`(${nome}) não achei ${seletor}`)
       await aba.moverMouse(centro.x, centro.y)
     },
+    // ---------- Celular (Parte 14): o aparelho emulado e o dedo ----------
+    // Um celular deitado (paisagem) ou em pé: o tamanho da tela em px de CSS, a densidade, o toque ("pointer: coarse")
+    async emularCelular({ largura, altura, densidade = 2, emPe = false }) {
+      const [w, h] = emPe ? [Math.min(largura, altura), Math.max(largura, altura)] : [Math.max(largura, altura), Math.min(largura, altura)]
+      await cdp.enviar('Emulation.setDeviceMetricsOverride', {
+        width: w,
+        height: h,
+        deviceScaleFactor: densidade,
+        mobile: true,
+        screenWidth: w,
+        screenHeight: h,
+        screenOrientation: emPe ? { type: 'portraitPrimary', angle: 0 } : { type: 'landscapePrimary', angle: 90 },
+      })
+      await cdp.enviar('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 })
+      await pausa(250)
+    },
+    // Fecha esta aba (Parte 14: a aba do celular em pé, depois de girar, não volta a desenhar)
+    // (às vezes a aba travada não responde: o roteiro segue depois de 3 s)
+    fechar: () => Promise.race([cdp.enviar('Page.close').catch(() => {}), pausa(3000)]),
+    async voltarAoComputador() {
+      await cdp.enviar('Emulation.setTouchEmulationEnabled', { enabled: false })
+      await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
+      await pausa(250)
+    },
+    // Dedos na tela: pontos = [{ x, y, id }]; tipo: touchStart, touchMove, touchEnd
+    dedos: (tipo, pontos) => cdp.enviar('Input.dispatchTouchEvent', { type: tipo, touchPoints: pontos.map(({ x, y, id = 1 }) => ({ x, y, id, radiusX: 8, radiusY: 8, force: 1 })) }),
+    // Um toque rápido (como o dedo de verdade: encosta, espera um pouco e solta)
+    async tocar(x, y, ms = 60) {
+      await aba.dedos('touchStart', [{ x, y }])
+      await pausa(ms)
+      await aba.dedos('touchEnd', [])
+      await pausa(220)
+    },
+    async tocarNoElemento(seletor, ms = 60) {
+      const centro = await aba.centroDe(seletor)
+      if (!centro) throw new Error(`(${nome}) não achei ${seletor} para tocar`)
+      await aba.tocar(centro.x, centro.y, ms)
+    },
+    // O botão pelo texto (o começo), tocado com o dedo no meio dele
+    async tocarNoBotao(texto) {
+      const centro = await aba.avaliar(`(() => {
+        const alvo = [...document.querySelectorAll('button')].filter((b) => !b.disabled && b.offsetParent !== null).find((b) => b.textContent.trim().startsWith(${JSON.stringify(texto)}) || b.getAttribute('aria-label') === ${JSON.stringify(texto)})
+        if (!alvo) return null
+        alvo.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        const r = alvo.getBoundingClientRect()
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+      })()`)
+      if (!centro) throw new Error(`(${nome}) não achei o botão "${texto}" para tocar`)
+      await aba.tocar(centro.x, centro.y)
+    },
+    // Arrasta um dedo de (x0, y0) até (x1, y1) em "passos", segura "msParado" no fim e (soltar = true) solta
+    async arrastarDedo(x0, y0, x1, y1, { passos = 8, msParado = 0, soltar = true, id = 1 } = {}) {
+      await aba.dedos('touchStart', [{ x: x0, y: y0, id }])
+      await pausa(40)
+      for (let i = 1; i <= passos; i++) {
+        await aba.dedos('touchMove', [{ x: x0 + ((x1 - x0) * i) / passos, y: y0 + ((y1 - y0) * i) / passos, id }])
+        await pausa(25)
+      }
+      if (msParado) await pausa(msParado)
+      if (soltar) {
+        await aba.dedos('touchEnd', [])
+        await pausa(150)
+      }
+    },
+    // O que está cortado ou pequeno demais na tela agora: letras menores que 12 px, elementos com texto que saem da
+    // moldura (sem uma lista que role) e textos cortados por dentro de uma caixa (sem as reticências de propósito)
+    problemasNaTela: () =>
+      aba.avaliar(`(() => {
+        const moldura = document.querySelector('.moldura')
+        if (!moldura) return { letraPequena: [], foraDaTela: [], cortados: [] }
+        const caixa = moldura.getBoundingClientRect()
+        const visivel = (e) => {
+          const r = e.getBoundingClientRect()
+          if (r.width < 1 || r.height < 1) return false
+          for (let a = e; a && a !== document.body; a = a.parentElement) {
+            const s = getComputedStyle(a)
+            if (s.display === 'none' || s.visibility === 'hidden' || Number(s.opacity) === 0) return false
+          }
+          return true
+        }
+        const temTexto = (e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 0)
+        const rola = (e) => {
+          for (let a = e.parentElement; a && a !== moldura; a = a.parentElement) {
+            const s = getComputedStyle(a)
+            if (/(auto|scroll)/.test(s.overflowY + s.overflowX)) return a
+          }
+          return null
+        }
+        const nomeDe = (e) => (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\\s+/).slice(0, 2).join('.') : e.tagName.toLowerCase()) + ' "' + (e.textContent || '').trim().slice(0, 30) + '"'
+        const letraPequena = []
+        const foraDaTela = []
+        const cortados = []
+        const ignorar = '.painel-dev, .painel-dev-mini, .barra-de-teste, .so-leitor, [aria-hidden="true"], .camada-do-mouse'
+        for (const e of moldura.querySelectorAll('*')) {
+          if (e.closest(ignorar) || !temTexto(e) || !visivel(e)) continue
+          const s = getComputedStyle(e)
+          const tamanho = parseFloat(s.fontSize)
+          if (tamanho < 11.9) letraPequena.push(nomeDe(e) + ' ' + tamanho.toFixed(1) + 'px')
+          const r = e.getBoundingClientRect()
+          const fora = r.left < caixa.left - 1 || r.right > caixa.right + 1 || r.top < caixa.top - 1 || r.bottom > caixa.bottom + 1
+          if (fora && !rola(e)) foraDaTela.push(nomeDe(e))
+          if (s.textOverflow !== 'ellipsis' && /(hidden|clip)/.test(s.overflowX + s.overflowY) && (e.scrollWidth > e.clientWidth + 2 || e.scrollHeight > e.clientHeight + 2)) cortados.push(nomeDe(e))
+          // cortado por uma caixa em volta que esconde o que passa (e não rola)
+          for (let a = e.parentElement; a && a !== moldura; a = a.parentElement) {
+            const sa = getComputedStyle(a)
+            if (/(auto|scroll)/.test(sa.overflowX + sa.overflowY)) break
+            if (!/(hidden|clip)/.test(sa.overflowX + sa.overflowY)) continue
+            const ra = a.getBoundingClientRect()
+            if (r.left < ra.left - 2 || r.right > ra.right + 2 || r.top < ra.top - 2 || r.bottom > ra.bottom + 2) cortados.push(nomeDe(e) + ' (dentro de ' + nomeDe(a).split(' ')[0] + ')')
+            break
+          }
+        }
+        // encavalados: dois blocos posicionados da tela (botões, áreas, título, trilha) um em cima do outro
+        const encavalados = []
+        // (a dica da primeira visita fica por cima de propósito: fecha com "Entendi")
+        const blocos = [...moldura.querySelectorAll('.tela > .posicionado, .tela > .area, .tela > * > .botao.posicionado')].filter((e) => !e.closest(ignorar) && !e.classList.contains('so-leitor') && !e.classList.contains('dica-da-tela') && visivel(e))
+        for (let i = 0; i < blocos.length; i++) {
+          for (let j = i + 1; j < blocos.length; j++) {
+            const a = blocos[i]
+            const b = blocos[j]
+            if (a.contains(b) || b.contains(a)) continue
+            const ra = a.getBoundingClientRect()
+            const rb = b.getBoundingClientRect()
+            const x = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left)
+            const y = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top)
+            if (x > 3 && y > 3) encavalados.push(nomeDe(a) + ' × ' + nomeDe(b))
+          }
+        }
+        const unicos = (lista) => [...new Set(lista)].slice(0, 12)
+        return { letraPequena: unicos(letraPequena), foraDaTela: unicos(foraDaTela), cortados: unicos(cortados), encavalados: unicos(encavalados) }
+      })()`),
     async print(arquivo) {
       await aba.avaliar(`(() => { for (const p of document.querySelectorAll('.painel-dev, .painel-dev-mini')) p.style.visibility = 'hidden' })()`)
       const r = await cdp.enviar('Page.captureScreenshot', { format: 'png' })

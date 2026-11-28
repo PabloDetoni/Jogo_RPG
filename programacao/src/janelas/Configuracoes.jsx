@@ -5,6 +5,13 @@ import { useReduzirMovimento } from '../componentes/cenario/useReduzirMovimento.
 import { telas } from '../dados/telas.js'
 import { useJogo } from '../estado/contexto.js'
 
+const nomesDoModoLeve = { automatico: 'automático', ligado: 'ligado', desligado: 'desligado' }
+const explicacaoDoModoLeve = {
+  automatico: 'No celular, liga sozinho se o jogo ficar lento (menos partículas e desenho só perto da câmera).',
+  ligado: 'Menos partículas e desenho só perto da câmera, sempre.',
+  desligado: 'O jogo desenha tudo, mesmo se ficar lento.',
+}
+
 // Configurações (RF18). Música, som e mudo só mudam o botão por enquanto (ainda não há som); o tema já troca o cinza
 // das telas e janelas. Todos ficam salvos no navegador e valem antes do login. O mudo também liga e desliga com M.
 export default function Configuracoes() {
@@ -75,6 +82,11 @@ export default function Configuracoes() {
         Animações do cenário: {preferencias.animacoesDoCenario ? 'ligadas' : 'desligadas'}
       </Botao>
       {reduzirMovimento && preferencias.animacoesDoCenario && <p className="dica-das-configuracoes">O computador pede menos movimento: o cenário fica parado.</p>}
+      {/* Parte 14: menos partículas e desenho só perto da câmera, para o jogo rodar liso no celular */}
+      <Botao selecionado={preferencias.modoLeve === 'ligado'} onClick={() => acoes.alternarPreferencia('modoLeve')}>
+        Modo leve: {nomesDoModoLeve[preferencias.modoLeve] ?? preferencias.modoLeve}
+      </Botao>
+      <p className="dica-das-configuracoes">{explicacaoDoModoLeve[preferencias.modoLeve]}</p>
 
       <Botao onClick={acoes.fecharJanela}>Fechar</Botao>
     </Janela>

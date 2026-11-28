@@ -29,6 +29,14 @@ export const dicasDasTelas = {
   resumo: 'Como foi a partida e o que você ganhou. Só o ouro paga taxa; o XP nunca.',
 }
 
+// No toque (celular e tablet, Parte 14): as dicas que falam de teclas e do mouse. As outras só trocam "clique" por
+// "toque" (regras/toque.js, textoParaOToque).
+export const dicasNoToque = {
+  mochila: 'Tudo o que você tem no Reino. Toque num item para pegar (segurar pega a metade) e toque noutro lugar ou na lixeira.',
+  mapa: 'Toque na Floresta para jogar. No Planalto, o castelo volta ao Reino e a fazenda, a mina e o lago abrem os minijogos.',
+  partida: 'O polegar esquerdo anda (o joystick aparece onde encostar); o botão grande ataca o inimigo mais perto (arraste para mirar; o Arqueiro segura e solta). Em cima: mochila, mapa, pausa e "Mais" (voltar, fugir, mudo).',
+}
+
 export const ajudaDasTelas = {
   reino: [
     'O Reino é a sua base entre as partidas. Cada lugar faz uma coisa:',

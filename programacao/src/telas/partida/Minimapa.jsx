@@ -100,7 +100,8 @@ export default function Minimapa({ bioma, minimapa, aoClicar }) {
 }
 
 // O mapa inteiro, com a névoa do que não foi descoberto (na pausa: Partida.jsx)
-export function MapaInteiro({ bioma, minimapa }) {
+// aoFechar (Parte 14, o botão Mapa do toque): o mapa abre no meio, sem pausar, com o botão Fechar
+export function MapaInteiro({ bioma, minimapa, aoFechar }) {
   const tela = useRef(null)
   const celulas = useCelulas(bioma)
   const { largura, altura } = celulas.mapa.tamanho
@@ -112,7 +113,7 @@ export function MapaInteiro({ bioma, minimapa }) {
     desenhar(tela.current, celulas, minimapa, { x: 0, y: 0, largura, altura })
   }, [celulas, minimapa, largura, altura])
   return (
-    <div className="mapa-inteiro" aria-label="Mapa inteiro">
+    <div className={`mapa-inteiro${aoFechar ? ' mapa-inteiro-do-toque' : ''}`} aria-label="Mapa inteiro">
       <span className="mapa-inteiro-titulo">Mapa · {celulas.mapa.nome}</span>
       <div className="mapa-inteiro-desenho">
         <canvas ref={tela} width={Math.round((520 * largura) / Math.max(largura, altura))} height={Math.round((520 * altura) / Math.max(largura, altura))} />
@@ -123,6 +124,11 @@ export function MapaInteiro({ bioma, minimapa }) {
           </span>
         ))}
       </div>
+      {aoFechar && (
+        <button type="button" className="botao mapa-inteiro-fechar" onClick={aoFechar}>
+          Fechar o mapa
+        </button>
+      )}
     </div>
   )
 }

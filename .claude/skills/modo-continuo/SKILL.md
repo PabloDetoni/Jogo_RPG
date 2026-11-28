@@ -9,6 +9,15 @@ O Claude programa o resto do jogo até a entrega (dezembro de 2026, sem data fix
 entre as fases. Se a sessão acabar no meio, o Pablo manda "Continue o modo contínuo de onde parou": ler o
 **"Onde parei"** no topo do `PLANO.md` e seguir.
 
+## Regras de trabalho (Pablo, 28/11; valem para todas as mensagens)
+
+1. **Não parar no meio.** Trabalhar até terminar tudo o que a mensagem pede ou até o limite de uso acabar. Não parar
+   para pedir "posso continuar?", nem no fim de uma parte para esperar ok, nem para resumir. Parar só se uma decisão
+   for impossível de tomar sozinho (e, nesse caso, adiantar todo o resto antes de perguntar).
+2. **Avisar antes de cada teste ou roteiro demorado**, numa linha só:
+   `Rodando o testar:floresta (cerca de 6 min). Começou às 14h20; deve terminar perto das 14h26.`
+3. Se o limite acabar no meio, o "Onde parei" do `PLANO.md` diz exatamente o próximo passo (manter atualizado).
+
 ## Cada parte
 
 1. Plano curto escrito no `PLANO.md` (arquivos, abordagem, valores provisórios). Não esperar o ok.

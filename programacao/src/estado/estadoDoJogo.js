@@ -11,6 +11,7 @@ import { comPedido, controleInicialDaPartida } from './controleDaPartida.js'
 import { contratarTodasAsClasses, definirAtributo, itensDeTeste, mudarNivel, quaseSubir } from './ferramentasDeDev.js'
 import { navegar } from './navegacao.js'
 import { novoPersonagem, progressoInicial } from './progresso.js'
+import { modosLeves } from './preferencias.js'
 import { dicasDasTelas } from '../dados/ajuda.js'
 import { dicaVisivel, registrarItensVistos, telaDeCima } from '../regras/interface.js'
 import { custoDaCaravana } from '../regras/caravana.js'
@@ -446,10 +447,14 @@ function atualizarSemConquistas(estado, acao) {
     // Música, som e mudo ligam/desligam (o mudo também pela tecla M); o tema alterna entre claro e escuro.
     case 'alternarPreferencia': {
       const { preferencias } = estado
+      // o tema troca entre claro e escuro; o modo leve (Parte 14) passa por automático, ligado e desligado
+      const proximoModoLeve = modosLeves[(modosLeves.indexOf(preferencias.modoLeve) + 1) % modosLeves.length]
       const valor =
         acao.chave === 'tema'
           ? preferencias.tema === 'claro' ? 'escuro' : 'claro'
-          : !preferencias[acao.chave]
+          : acao.chave === 'modoLeve'
+            ? proximoModoLeve
+            : !preferencias[acao.chave]
       return { ...estado, preferencias: { ...preferencias, [acao.chave]: valor } }
     }
 

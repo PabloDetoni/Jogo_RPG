@@ -102,7 +102,16 @@ export default function Mapa() {
               >
                 {lugar.nome}
               </button>
-              <div className="placa-do-lugar posicionado" style={estiloPosicao(pontoEmPorcentagem(lugar.placa, pos.imagem))} aria-hidden="true">
+              {/* No toque (Parte 14) não há "mouse em cima": as placas aparecem sempre e tocar nelas também abre */}
+              <div
+                className="placa-do-lugar posicionado"
+                style={estiloPosicao({
+                  ...pontoEmPorcentagem(lugar.placa, pos.imagem),
+                  toque: lugar.placa.toque ? pontoEmPorcentagem({ ...lugar.placa, ...lugar.placa.toque }, pos.imagem) : undefined,
+                })}
+                aria-hidden="true"
+                onClick={() => !lugar.bloqueado && lugar.aoAbrir()}
+              >
                 {lugar.bloqueado && !lugar.minijogo && <Cadeado />}
                 <strong>{lugar.nome}</strong>
                 {lugar.detalhe && <span className="placa-do-lugar-detalhe">{lugar.detalhe}</span>}

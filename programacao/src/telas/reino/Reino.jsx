@@ -39,7 +39,8 @@ const pecas = Object.entries(pos.pecas)
   .map(([id, r]) => ({ id, ...r, url: fundo ? urlDaArte(camadasDoReino.peca(id)) : null, clicavel: !r.enfeite, className: r.gira ? 'peca-que-gira' : '' }))
   .filter((peca) => (fundo ? peca.url : peca.clicavel))
 // O tamanho da letra da placa acompanha a altura dela (em % da largura da tela, cqw)
-const letraDaPlaca = (placa) => `${((placa.altura * (placa.linhas === 2 ? 0.3 : 0.42)) / pos.imagem.largura) * 100}cqw`
+// no toque (Parte 14), nunca menor que a letra mínima (12 px)
+const letraDaPlaca = (placa) => `max(${((placa.altura * (placa.linhas === 2 ? 0.3 : 0.42)) / pos.imagem.largura) * 100}cqw, var(--letra-minima, 0px))`
 // O símbolo (a plaquinha de cima) em % da placa
 const dentroDaPlaca = (simbolo, placa) => ({
   left: `${((simbolo.x - placa.x) / placa.largura) * 100}%`,
