@@ -82,5 +82,5 @@ dois (computador e celular). O computador tem que ficar exatamente igual ao de h
 2. **Página do grupo** com prints do celular e um GIF jogando com o toque.
 3. Relatório em `mensagens-claude/2026-11-XX-relatorio-parte-14.md` com o **"Teste para o Pablo no celular"**: o
    endereço, como instalar na tela inicial e o que conferir.
-4. **Depois de terminar o mobile, não pare:** comece a preparar (sem publicar) o que der da próxima mensagem se ela já
-   estiver em `mensagens-claude/`; se não estiver, termine.
+4. **Depois de terminar e publicar o mobile, não pare:** leia `mensagens-claude/2026-11-28-para-o-claude-code-parte-15-administracao.md`
+   e siga direto, sem esperar o Pablo.
